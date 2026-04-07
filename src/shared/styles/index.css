@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+@import "tailwindcss";
+
+/* 
+  Custom Theme Configuration (Tailwind CSS v4 Native) 
+  Centralize all design tokens here so they can be changed in one place.
+*/
+
+@theme {
+  /* Fonts */
+  --font-sans: "Inter", "sans-serif";
+  --font-heading: "Manrope", "sans-serif";
+
+  /* Colors */
+  --color-primary: #0284C7;
+  --color-secondary: #5C7A96;
+  --color-tertiary: #B96A01;
+  --color-neutral: #F8FAFC;
+
+  /* Custom Font Sizes (Industrial Standard) */
+  --font-size-headline-lg: 32px;
+  --font-size-headline-sm: 24px;
+  --font-size-body-md: 14px;
+  --font-size-label-md: 12px;
+
+  /* Custom Shadows */
+  --shadow-soft: 0px 20px 40px rgba(25,28,30,0.06);
+
+  /* Overriding some default values to fit the new colors */
+  --color-blue-600: var(--color-primary);
+}
+
+/* Base Body Styles */
+@layer base {
+  body {
+    @apply font-sans bg-neutral text-slate-900 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
