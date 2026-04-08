@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../app/providers/AuthProvider';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -95,19 +96,27 @@ const LoginForm = () => {
             <div className="relative">
               <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-red-400' : 'text-slate-400'}`} size={20} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null }));
                 }}
-                className={`block w-full rounded-xl border py-3 pl-10 pr-3 transition-all sm:text-sm font-medium outline-none ${
+                className={`block w-full rounded-xl border py-3 pl-10 pr-12 transition-all sm:text-sm font-medium outline-none ${
                   fieldErrors.password 
                     ? 'border-red-300 bg-red-50 text-red-900 placeholder-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500' 
                     : 'border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
                 }`}
                 placeholder="Password"
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             {fieldErrors.password && (
               <p className="text-xs font-semibold text-red-500 pl-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.password}</p>

@@ -6,25 +6,131 @@ import {
   Briefcase, 
   CheckSquare, 
   Settings,
-  X
+  X,
+  Activity,
+  PlayCircle,
+  BarChart3,
+  ClipboardCheck,
+  Users2,
+  Building2,
+  PieChart
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { PERMISSIONS } from '../../../lib/constants/permissions';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
 const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Leads', path: '/leads', icon: UserPlus },
-  { name: 'Customers', path: '/customers', icon: Users },
-  { name: 'Deals', path: '/deals', icon: Briefcase },
-  { name: 'Tasks', path: '/tasks', icon: CheckSquare },
-  { name: 'Settings', path: '/settings', icon: Settings },
+  { 
+    name: 'Dashboard', 
+    path: '/dashboard', 
+    icon: LayoutDashboard,
+    permission: PERMISSIONS.VIEW_DASHBOARD 
+  },
+  { 
+    name: 'Company Dashboard', 
+    path: '/dashboard/company', 
+    icon: PieChart,
+    permission: PERMISSIONS.VIEW_COMPANY_DASHBOARD 
+  },
+  { 
+    name: 'Prospects', 
+    path: '/prospects', 
+    icon: UserPlus,
+    permission: PERMISSIONS.VIEW_PROSPECTS 
+  },
+  { 
+    name: 'Activities', 
+    path: '/activities', 
+    icon: Activity,
+    permission: PERMISSIONS.VIEW_ACTIVITIES 
+  },
+  { 
+    name: 'Sessions', 
+    path: '/sessions', 
+    icon: PlayCircle,
+    permission: PERMISSIONS.VIEW_SESSIONS 
+  },
+  { 
+    name: 'Leads', 
+    path: '/leads', 
+    icon: UserPlus,
+    permission: PERMISSIONS.VIEW_LEADS 
+  },
+  { 
+    name: 'Customers', 
+    path: '/customers', 
+    icon: Users,
+    permission: PERMISSIONS.VIEW_CUSTOMERS 
+  },
+  { 
+    name: 'Deals', 
+    path: '/deals', 
+    icon: Briefcase,
+    permission: PERMISSIONS.VIEW_DEALS 
+  },
+  { 
+    name: 'Tasks', 
+    path: '/tasks', 
+    icon: CheckSquare,
+    permission: PERMISSIONS.VIEW_TASKS 
+  },
+  { 
+    name: 'Team Reports', 
+    path: '/reports/team', 
+    icon: BarChart3,
+    permission: PERMISSIONS.VIEW_TEAM_REPORTS 
+  },
+  { 
+    name: 'Reports', 
+    path: '/reports', 
+    icon: BarChart3,
+    permission: PERMISSIONS.VIEW_REPORTS 
+  },
+  { 
+    name: 'Transfer Approvals', 
+    path: '/approvals', 
+    icon: ClipboardCheck,
+    permission: PERMISSIONS.APPROVE_TRANSFERS 
+  },
+  { 
+    name: 'User Management', 
+    path: '/users', 
+    icon: Users2,
+    permission: PERMISSIONS.VIEW_USERS 
+  },
+  { 
+    name: 'Branch Settings', 
+    path: '/settings/branch', 
+    icon: Settings,
+    permission: PERMISSIONS.VIEW_BRANCH_SETTINGS 
+  },
+  { 
+    name: 'Company Setup', 
+    path: '/settings/company', 
+    icon: Building2,
+    permission: PERMISSIONS.VIEW_COMPANY_SETUP 
+  },
+  { 
+    name: 'Settings', 
+    path: '/settings', 
+    icon: Settings,
+    permission: PERMISSIONS.VIEW_SETTINGS 
+  },
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const { hasPermission } = useAuth();
+
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navItems.filter(item => 
+    !item.permission || hasPermission(item.permission)
+  );
+
   return (
     <aside
       className={cn(
@@ -43,7 +149,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -68,8 +174,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Footer info */}
         <div className="p-4 border-t border-slate-800">
           <div className="bg-slate-800/50 rounded-lg p-3">
-            <p className="text-xs text-slate-500 uppercase font-semibold">Project Phase</p>
-            <p className="text-sm font-bold text-primary mt-1">Foundation Setup</p>
+            <p className="text-xs text-slate-500 uppercase font-semibold">User Access</p>
+            <p className="text-sm font-bold text-primary mt-1">Role-Based Secured</p>
           </div>
         </div>
       </div>

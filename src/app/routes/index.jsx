@@ -8,6 +8,13 @@ import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
 import TasksPage from '../../features/tasks/pages/TasksPage';
 import SettingsPage from '../../features/settings/pages/SettingsPage';
+import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
+import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
+import SessionsPage from '../../features/sessions/pages/SessionsPage';
+import ReportsPage from '../../features/reports/pages/ReportsPage';
+import UsersPage from '../../features/users/pages/UsersPage';
+import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
+import { PERMISSIONS } from '../../lib/constants/permissions';
 
 export const router = createBrowserRouter([
   {
@@ -28,27 +35,131 @@ export const router = createBrowserRouter([
       },
       {
         path: 'dashboard',
-        element: <DashboardPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DASHBOARD}>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/company',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_DASHBOARD}>
+            <DashboardPage title="Company Dashboard" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'prospects',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PROSPECTS}>
+            <ProspectsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'activities',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ACTIVITIES}>
+            <ActivitiesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'sessions',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SESSIONS}>
+            <SessionsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'leads',
-        element: <LeadsPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <LeadsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'customers',
-        element: <CustomersPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_CUSTOMERS}>
+            <CustomersPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'deals',
-        element: <DealsPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DEALS}>
+            <DealsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'tasks',
-        element: <TasksPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TASKS}>
+            <TasksPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'reports',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+            <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'reports/team',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAM_REPORTS}>
+            <ReportsPage title="Team Reports" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'approvals',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.APPROVE_TRANSFERS}>
+            <ApprovalsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'users',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_USERS}>
+            <UsersPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'settings',
-        element: <SettingsPage />,
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
+            <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/branch',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_SETTINGS}>
+            <SettingsPage title="Branch Settings" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/company',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_SETUP}>
+            <SettingsPage title="Company Setup" />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

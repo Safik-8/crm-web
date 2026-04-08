@@ -1,0 +1,7 @@
+export const ROLES = {
+  ISE: 'ISE',
+  MANAGER: 'MANAGER',
+  BRANCH_ADMIN: 'BRANCH_ADMIN',
+  CEO: 'CEO',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+};

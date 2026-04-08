@@ -45,19 +45,25 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
         {/* Profile */}
         <div className="flex items-center gap-3 pl-2">
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-bold text-slate-800 font-heading leading-tight">{user?.name || 'Jane Smith'}</p>
-            <p className="text-xs font-medium text-slate-500">{user?.role || 'Sales Administrator'}</p>
+            <p className="text-sm font-bold text-slate-800 font-heading leading-tight italic">
+              {user?.name || 'Guest User'}
+            </p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/5 px-2 py-0.5 rounded-full mt-0.5 border border-primary/10">
+              {user?.designation || user?.roles?.[0] || 'Unknown Role'}
+            </p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm transition-transform hover:scale-105 cursor-pointer">
-            <User size={20} />
+          <div className="group relative">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-200 text-white transition-all hover:scale-105 cursor-pointer ring-2 ring-white">
+              <User size={20} />
+            </div>
           </div>
           
           <button 
             onClick={logout}
-            className="ml-2 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all group"
+            className="ml-2 rounded-xl p-2.5 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all group shrink-0"
             title="Log out"
           >
-            <LogOut size={20} className="group-active:scale-95" />
+            <LogOut size={20} className="group-active:scale-95 transition-transform" />
           </button>
         </div>
       </div>
