@@ -7,6 +7,8 @@ export const usePermission = () => {
     permissions,
     hasPermission,
     user,
-    isAdmin: user?.roles?.includes('SUPER_ADMIN'),
+    // Backend returns primaryRole as a direct string like 'Admin' or 'Super Admin'
+    isAdmin: user?.primaryRole === 'Super Admin' || user?.primaryRole === 'Admin',
   };
 };
+

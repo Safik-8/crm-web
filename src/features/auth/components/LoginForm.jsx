@@ -44,12 +44,35 @@ const LoginForm = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(email.trim(), password);
+      
       if (result.success) {
         toast.success('Successfully logged in');
         navigate(from, { replace: true });
       } else {
-        toast.error('Invalid credentials. Please try again.');
+        // Handle explicit backend errors passed through context
+        if (result.error) {
+           const { code, message, details, statusCode } = result.error;
+           
+           if (statusCode === 400 && details && Array.isArray(details)) {
+              // It's a field validation error
+              const newFieldErrors = {};
+              details.forEach(err => {
+                 newFieldErrors[err.field] = err.message;
+              });
+              setFieldErrors(newFieldErrors);
+              toast.error(message || 'Validation failed');
+           } else if (statusCode === 401) {
+              // Unauthorized credentials
+              toast.error(message || 'Invalid email or password');
+           } else {
+              // Other server error types mapped by the API
+              toast.error(message || 'Login failed from server.');
+           }
+        } else {
+           // Generic fallback if standard message is provided
+           toast.error(result.message || 'Invalid credentials. Please try again.');
+        }
       }
     } catch (err) {
       toast.error('Something went wrong. Please try again.');
@@ -57,6 +80,7 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 animate-in fade-in zoom-in duration-500">

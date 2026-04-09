@@ -1,57 +1,111 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getPermissionsByRoles } from '../../lib/config/rbac-config';
-import { MOCK_USERS } from '../../services/mock/mockUsers';
+import { apiClient } from '../../lib/api/api';
 
 const AuthContext = createContext(undefined);
+
+// RBAC Adapter Mapping
+// Maps frontend permission string identifiers to backend UPPERCASE module names + CRUD booleans.
+// Backend module keys: COMPANY, BRANCH, USER, PROSPECT, ACTIVITY, TASK, PIPELINE, SESSION, REPORT, AUDIT, TARGET, NOTIFICATION
+const RBAC_ADAPTER_MAP = {
+  // Navigation / View Permissions
+  // Dashboard has no dedicated backend module — grant to all authenticated users by using null module
+  'view:dashboard':         { module: null, action: null },          // Always true if authenticated
+  'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
+  'view:prospects':         { module: 'PROSPECT', action: 'canView' },
+  'view:activities':        { module: 'ACTIVITY', action: 'canView' },
+  'view:sessions':          { module: 'SESSION', action: 'canView' },
+  'view:tasks':             { module: 'TASK', action: 'canView' },
+  'view:reports':           { module: 'REPORT', action: 'canView' },
+  'view:team_reports':      { module: 'REPORT', action: 'canView' },
+  'view:settings':          { module: 'BRANCH', action: 'canView' },
+  'view:branch_settings':   { module: 'BRANCH', action: 'canEdit' },
+  'view:company_setup':     { module: 'COMPANY', action: 'canEdit' },
+  'view:users':             { module: 'USER', action: 'canView' },
+  'view:leads':             { module: 'PIPELINE', action: 'canView' },
+  'view:customers':         { module: 'PIPELINE', action: 'canView' },
+  'view:deals':             { module: 'PIPELINE', action: 'canView' },
+
+  // Action Permissions
+  'action:approve_transfers': { module: 'BRANCH', action: 'canEdit' },
+  'action:manage_users':      { module: 'USER', action: 'canEdit' },
+  'action:manage_all_users':  { module: 'USER', action: 'canEdit' },
+  'action:read_only_reports': { module: 'REPORT', action: 'canView' },
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Derive permissions from user roles
-  const permissions = user ? getPermissionsByRoles(user.roles) : [];
+  // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object
+  const hasPermission = useCallback((permissionStr) => {
+    if (!user) return false;
 
-  const hasPermission = useCallback((permission) => {
-    return permissions.includes(permission);
-  }, [permissions]);
+    const mapping = RBAC_ADAPTER_MAP[permissionStr];
+    if (!mapping) return false;
+
+    // null module means "grant to all authenticated users" (e.g. dashboard)
+    if (mapping.module === null) return true;
+
+    // Safely evaluate `user.permissions.<UPPERCASE_MODULE>.<canAction>`
+    return !!(user.permissions?.[mapping.module]?.[mapping.action]);
+  }, [user]);
 
   useEffect(() => {
-    // Check for stored session on load
-    const token = localStorage.getItem('crm_token');
-    if (token) {
-      // Find user by token in mock data or use a default
-      const savedUser = Object.values(MOCK_USERS).find(u => u.token === token) || MOCK_USERS.ise_user;
-      setUser(savedUser);
-    }
-    setLoading(false);
+    let isMounted = true;
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await apiClient('/auth/me', { method: 'GET' });
+        if (isMounted && response?.success && response?.data?.user) {
+          setUser(response.data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    
+    fetchCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email, password) => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800)); // Delay
     
-    // Simulate real login by matching both email and password
-    const foundUser = Object.values(MOCK_USERS).find(
-      u => u.email === email && u.password === password
-    );
-    
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('crm_token', foundUser.token);
+    try {
+      const response = await apiClient('/auth/login', {
+        method: 'POST',
+        body: { email, password }
+      });
+      
+      if (response && response.success && response.data?.user) {
+        setUser(response.data.user);
+        setLoading(false);
+        return { success: true };
+      }
+      
       setLoading(false);
-      return { success: true };
+      return { success: false, message: response?.message || 'Login failed', rawData: response };
+    } catch (error) {
+      setLoading(false);
+      // Pass the fully parsed HTTP error block upstream for precise UI validation handling
+      return { success: false, error }; 
     }
-    
-    setLoading(false);
-    return { 
-      success: false, 
-      message: 'Invalid credentials. Use arjun@stackdot.com or priya@stackdot.com and password "password123"' 
-    };
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('crm_token');
+  const logout = async () => {
+    try {
+      await apiClient('/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error', err);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
@@ -61,7 +115,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       loading, 
       isAuthenticated: !!user,
-      permissions,
+      permissions: user?.permissions || {}, // Exposing raw backend permissions instead of array
       hasPermission
     }}>
       {children}

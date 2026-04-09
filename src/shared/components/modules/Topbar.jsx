@@ -49,7 +49,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
               {user?.name || 'Guest User'}
             </p>
             <p className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/5 px-2 py-0.5 rounded-full mt-0.5 border border-primary/10">
-              {user?.designation || user?.roles?.[0] || 'Unknown Role'}
+              {user?.primaryRole || user?.designation || 'Unknown Role'}
             </p>
           </div>
           <div className="group relative">
