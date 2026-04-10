@@ -24,6 +24,9 @@ const RBAC_ADAPTER_MAP = {
   'view:leads':             { module: 'PIPELINE', action: 'canView' },
   'view:customers':         { module: 'PIPELINE', action: 'canView' },
   'view:deals':             { module: 'PIPELINE', action: 'canView' },
+  'view:audit':             { module: 'AUDIT',    action: 'canView' },
+  'view:targets':           { module: 'TARGET',   action: 'canView' },
+  'view:notifications':     { module: 'NOTIFICATION', action: 'canView' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'BRANCH', action: 'canEdit' },

@@ -13,7 +13,10 @@ import {
   ClipboardCheck,
   Users2,
   Building2,
-  PieChart
+  PieChart,
+  Target,
+  Bell,
+  ClipboardList
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -26,21 +29,36 @@ function cn(...inputs) {
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
-  { name: 'Company Dashboard', path: '/dashboard/company', icon: PieChart, permission: PERMISSIONS.VIEW_COMPANY_DASHBOARD },
-  { name: 'Prospects', path: '/prospects', icon: UserPlus, permission: PERMISSIONS.VIEW_PROSPECTS },
-  { name: 'Activities', path: '/activities', icon: Activity, permission: PERMISSIONS.VIEW_ACTIVITIES },
-  { name: 'Sessions', path: '/sessions', icon: PlayCircle, permission: PERMISSIONS.VIEW_SESSIONS },
-  { name: 'Leads', path: '/leads', icon: UserPlus, permission: PERMISSIONS.VIEW_LEADS },
+  //{ name: 'Company Dashboard', path: '/dashboard/company', icon: PieChart, permission: PERMISSIONS.VIEW_COMPANY_DASHBOARD },
+   
+  // Settings
+   { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
+   { name: 'Branch Settings', path: '/settings/branch', icon: Settings, permission: PERMISSIONS.VIEW_BRANCH_SETTINGS },
+  //{ name: 'Settings', path: '/settings', icon: Settings, permission: PERMISSIONS.VIEW_SETTINGS },
+
+  // Pipeline
+ // { name: 'Leads', path: '/leads', icon: UserPlus, permission: PERMISSIONS.VIEW_LEADS },
   { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
   { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
+  { name: 'Prospects', path: '/prospects', icon: UserPlus, permission: PERMISSIONS.VIEW_PROSPECTS },
+  
+  // Operations
+  { name: 'Activities', path: '/activities', icon: Activity, permission: PERMISSIONS.VIEW_ACTIVITIES },
   { name: 'Tasks', path: '/tasks', icon: CheckSquare, permission: PERMISSIONS.VIEW_TASKS },
-  { name: 'Team Reports', path: '/reports/team', icon: BarChart3, permission: PERMISSIONS.VIEW_TEAM_REPORTS },
+  { name: 'Sessions', path: '/sessions', icon: PlayCircle, permission: PERMISSIONS.VIEW_SESSIONS },
+  { name: 'Targets', path: '/targets', icon: Target, permission: PERMISSIONS.VIEW_TARGETS },
+  
+  // Reports
+  //{ name: 'Team Reports', path: '/reports/team', icon: BarChart3, permission: PERMISSIONS.VIEW_TEAM_REPORTS },
   { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
+  
+  // System Tools
+  //{ name: 'Notifications', path: '/notifications', icon: Bell, permission: PERMISSIONS.VIEW_NOTIFICATIONS },
+  { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
   { name: 'Transfer Approvals', path: '/approvals', icon: ClipboardCheck, permission: PERMISSIONS.APPROVE_TRANSFERS },
   { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
-  { name: 'Branch Settings', path: '/settings/branch', icon: Settings, permission: PERMISSIONS.VIEW_BRANCH_SETTINGS },
-  { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
-  { name: 'Settings', path: '/settings', icon: Settings, permission: PERMISSIONS.VIEW_SETTINGS },
+  
+  
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {

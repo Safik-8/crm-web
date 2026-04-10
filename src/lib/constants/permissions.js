@@ -15,6 +15,9 @@ export const PERMISSIONS = {
   VIEW_LEADS: 'view:leads',
   VIEW_CUSTOMERS: 'view:customers',
   VIEW_DEALS: 'view:deals',
+  VIEW_AUDIT: 'view:audit',
+  VIEW_TARGETS: 'view:targets',
+  VIEW_NOTIFICATIONS: 'view:notifications',
 
   // Action Permissions
   APPROVE_TRANSFERS: 'action:approve_transfers',

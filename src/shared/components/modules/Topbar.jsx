@@ -1,9 +1,10 @@
 import { Search, Bell, Menu, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const Topbar = ({ toggleSidebar, pageTitle }) => {
   const { logout, user } = useAuth();
-
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md">
       {/* Left section: Toggle & Title */}
@@ -34,7 +35,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
         </div>
 
         {/* Notifications */}
-        <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 transition-colors">
+        <button onClick={() => navigate('/notifications')} className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 transition-colors">
           <Bell size={20} />
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-white"></span>
         </button>

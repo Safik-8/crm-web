@@ -7,13 +7,17 @@ import LeadsPage from '../../features/leads/pages/LeadsPage';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
 import TasksPage from '../../features/tasks/pages/TasksPage';
-import SettingsPage from '../../features/settings/pages/SettingsPage';
+import CompanySettingsPage from '../../features/company/pages/CompanySettingsPage';
+import BranchSettingsPage from '../../features/branches/pages/BranchSettingsPage';
 import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
 import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
 import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 import UsersPage from '../../features/users/pages/UsersPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
+import AuditPage from '../../features/audit/pages/AuditPage';
+import TargetsPage from '../../features/targets/pages/TargetsPage';
+import NotificationsPage from '../../features/notifications/pages/NotificationsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 export const router = createBrowserRouter([
@@ -141,7 +145,7 @@ export const router = createBrowserRouter([
         path: 'settings',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
-            <SettingsPage />
+            <CompanySettingsPage />
           </ProtectedRoute>
         ),
       },
@@ -149,7 +153,7 @@ export const router = createBrowserRouter([
         path: 'settings/branch',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_SETTINGS}>
-            <SettingsPage title="Branch Settings" />
+            <BranchSettingsPage />
           </ProtectedRoute>
         ),
       },
@@ -157,7 +161,31 @@ export const router = createBrowserRouter([
         path: 'settings/company',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_SETUP}>
-            <SettingsPage title="Company Setup" />
+            <CompanySettingsPage title="Company Setup" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'audit',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_AUDIT}>
+            <AuditPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'targets',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TARGETS}>
+            <TargetsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'notifications',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_NOTIFICATIONS}>
+            <NotificationsPage />
           </ProtectedRoute>
         ),
       },
