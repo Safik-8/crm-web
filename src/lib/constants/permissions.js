@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   VIEW_COMPANY_DASHBOARD: 'view:company_dashboard',
   VIEW_SETTINGS: 'view:settings',
   VIEW_BRANCH_SETTINGS: 'view:branch_settings',
+  VIEW_BRANCHES: 'view:branches',
   VIEW_COMPANY_SETUP: 'view:company_setup',
   VIEW_USERS: 'view:users',
   VIEW_LEADS: 'view:leads',

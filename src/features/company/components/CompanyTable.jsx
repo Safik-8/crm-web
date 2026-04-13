@@ -1,5 +1,6 @@
 import React from 'react';
-import { Edit2, Building2, Users, Layers, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Edit2, Building2, Users, Layers, Calendar, GitBranch } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 /**
@@ -12,6 +13,7 @@ import Skeleton from '../../../shared/components/elements/Skeleton';
  * @param {boolean} canEdit - RBAC permission check
  */
 const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
+  const navigate = useNavigate();
   
   // Render loading skeletons
   const renderSkeletons = () => (
@@ -91,12 +93,16 @@ const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                        <Layers size={14} />
+                    <button
+                      onClick={() => navigate(`/companies/${company.id}/branches`)}
+                      className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch"
+                      title="View Branches"
+                    >
+                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all">
+                        <GitBranch size={14} />
                       </div>
-                      <span className="font-bold text-sm tracking-tight">{company._count?.branches || 0}</span>
-                    </div>
+                      <span className="font-bold text-sm tracking-tight group-hover/branch:text-primary transition-colors">{company._count?.branches || 0}</span>
+                    </button>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2 text-slate-600">

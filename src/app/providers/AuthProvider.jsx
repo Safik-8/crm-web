@@ -18,6 +18,7 @@ const RBAC_ADAPTER_MAP = {
   'view:reports': { module: 'REPORT', action: 'canView' },
   'view:team_reports': { module: 'REPORT', action: 'canView' },
   'view:settings': { module: 'BRANCH', action: 'canView' },
+  'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
   'view:company_setup': { module: 'COMPANY', action: 'canEdit' },
   'view:users': { module: 'USER', action: 'canView' },

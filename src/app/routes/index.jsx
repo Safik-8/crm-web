@@ -8,7 +8,7 @@ import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
 import TasksPage from '../../features/tasks/pages/TasksPage';
 import CompanyRoutes from '../../features/company/routes/CompanyRoutes';
-import BranchSettingsPage from '../../features/branches/pages/BranchSettingsPage';
+import BranchRoutes from '../../features/branch/routes/BranchRoutes';
 import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
 import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
 import SessionsPage from '../../features/sessions/pages/SessionsPage';
@@ -150,10 +150,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings/branch',
+        path: 'companies/:companyId/branches/*',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_SETTINGS}>
-            <BranchSettingsPage />
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCHES}>
+            <BranchRoutes />
           </ProtectedRoute>
         ),
       },

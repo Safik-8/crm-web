@@ -15,7 +15,9 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  // Always redirect to dashboard after login — avoids cross-user URL leakage
+  const redirectTo = '/dashboard';
+
 
   const validate = () => {
     const errors = {};
@@ -48,7 +50,7 @@ const LoginForm = () => {
       
       if (result.success) {
         toast.success('Successfully logged in');
-        navigate(from, { replace: true });
+        navigate(redirectTo, { replace: true });
       } else {
         // Handle explicit backend errors passed through context
         if (result.error) {

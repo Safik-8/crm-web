@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,7 +17,8 @@ import {
   PieChart,
   Target,
   Bell,
-  ClipboardList
+  ClipboardList,
+  GitBranch
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -33,7 +35,6 @@ const navItems = [
 
   // Settings
   { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
-  { name: 'Branch Settings', path: '/settings/branch', icon: Settings, permission: PERMISSIONS.VIEW_BRANCH_SETTINGS },
   //{ name: 'Settings', path: '/settings', icon: Settings, permission: PERMISSIONS.VIEW_SETTINGS },
 
   // Pipeline
@@ -62,9 +63,29 @@ const navItems = [
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
 
-  const filteredNavItems = navItems.filter(item =>
+  // Build nav items dynamically — inject Branches link using the user's own companyId
+  const allNavItems = React.useMemo(() => {
+    const items = [...navItems];
+
+    // Derive companyId from user profile (handle both nested and flat shapes)
+    const companyId = user?.company?.id || user?.companyId;
+    if (companyId) {
+      const companySetupIndex = items.findIndex(i => i.path === '/settings/company');
+      const branchItem = {
+        name: 'Branches',
+        path: `/companies/${companyId}/branches`,
+        icon: GitBranch,
+        permission: PERMISSIONS.VIEW_BRANCHES  // Uses BRANCH.canView — accessible to all branch roles
+      };
+      items.splice(companySetupIndex + 1, 0, branchItem);
+    }
+
+    return items;
+  }, [user?.company?.id, user?.companyId]);
+
+  const filteredNavItems = allNavItems.filter(item =>
     !item.permission || hasPermission(item.permission)
   );
 
