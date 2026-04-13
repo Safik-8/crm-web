@@ -7,7 +7,7 @@ import LeadsPage from '../../features/leads/pages/LeadsPage';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
 import TasksPage from '../../features/tasks/pages/TasksPage';
-import CompanySettingsPage from '../../features/company/pages/CompanySettingsPage';
+import CompanyRoutes from '../../features/company/routes/CompanyRoutes';
 import BranchSettingsPage from '../../features/branches/pages/BranchSettingsPage';
 import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
 import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
@@ -142,10 +142,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings',
+        path: 'settings/*',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
-            <CompanySettingsPage />
+            <CompanyRoutes />
           </ProtectedRoute>
         ),
       },
@@ -158,10 +158,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings/company',
+        path: 'settings/company/*',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_SETUP}>
-            <CompanySettingsPage title="Company Setup" />
+            <CompanyRoutes />
           </ProtectedRoute>
         ),
       },

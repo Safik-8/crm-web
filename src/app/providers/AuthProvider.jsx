@@ -9,29 +9,29 @@ const AuthContext = createContext(undefined);
 const RBAC_ADAPTER_MAP = {
   // Navigation / View Permissions
   // Dashboard has no dedicated backend module — grant to all authenticated users by using null module
-  'view:dashboard':         { module: null, action: null },          // Always true if authenticated
+  'view:dashboard': { module: null, action: null },          // Always true if authenticated
   'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
-  'view:prospects':         { module: 'PROSPECT', action: 'canView' },
-  'view:activities':        { module: 'ACTIVITY', action: 'canView' },
-  'view:sessions':          { module: 'SESSION', action: 'canView' },
-  'view:tasks':             { module: 'TASK', action: 'canView' },
-  'view:reports':           { module: 'REPORT', action: 'canView' },
-  'view:team_reports':      { module: 'REPORT', action: 'canView' },
-  'view:settings':          { module: 'BRANCH', action: 'canView' },
-  'view:branch_settings':   { module: 'BRANCH', action: 'canEdit' },
-  'view:company_setup':     { module: 'COMPANY', action: 'canEdit' },
-  'view:users':             { module: 'USER', action: 'canView' },
-  'view:leads':             { module: 'PIPELINE', action: 'canView' },
-  'view:customers':         { module: 'PIPELINE', action: 'canView' },
-  'view:deals':             { module: 'PIPELINE', action: 'canView' },
-  'view:audit':             { module: 'AUDIT',    action: 'canView' },
-  'view:targets':           { module: 'TARGET',   action: 'canView' },
-  'view:notifications':     { module: 'NOTIFICATION', action: 'canView' },
+  'view:prospects': { module: 'PROSPECT', action: 'canView' },
+  'view:activities': { module: 'ACTIVITY', action: 'canView' },
+  'view:sessions': { module: 'SESSION', action: 'canView' },
+  'view:tasks': { module: 'TASK', action: 'canView' },
+  'view:reports': { module: 'REPORT', action: 'canView' },
+  'view:team_reports': { module: 'REPORT', action: 'canView' },
+  'view:settings': { module: 'BRANCH', action: 'canView' },
+  'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
+  'view:company_setup': { module: 'COMPANY', action: 'canEdit' },
+  'view:users': { module: 'USER', action: 'canView' },
+  'view:leads': { module: 'PIPELINE', action: 'canView' },
+  'view:customers': { module: 'PIPELINE', action: 'canView' },
+  'view:deals': { module: 'PIPELINE', action: 'canView' },
+  'view:audit': { module: 'AUDIT', action: 'canView' },
+  'view:targets': { module: 'TARGET', action: 'canView' },
+  'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'BRANCH', action: 'canEdit' },
-  'action:manage_users':      { module: 'USER', action: 'canEdit' },
-  'action:manage_all_users':  { module: 'USER', action: 'canEdit' },
+  'action:manage_users': { module: 'USER', action: 'canEdit' },
+  'action:manage_all_users': { module: 'USER', action: 'canEdit' },
   'action:read_only_reports': { module: 'REPORT', action: 'canView' },
 };
 
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         if (isMounted) setLoading(false);
       }
     };
-    
+
     fetchCurrentUser();
 
     return () => {
@@ -79,25 +79,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     setLoading(true);
-    
+
     try {
       const response = await apiClient('/auth/login', {
         method: 'POST',
         body: { email, password }
       });
-      
+
       if (response && response.success && response.data?.user) {
         setUser(response.data.user);
         setLoading(false);
         return { success: true };
       }
-      
+
       setLoading(false);
       return { success: false, message: response?.message || 'Login failed', rawData: response };
     } catch (error) {
       setLoading(false);
       // Pass the fully parsed HTTP error block upstream for precise UI validation handling
-      return { success: false, error }; 
+      return { success: false, error };
     }
   };
 
@@ -112,11 +112,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      loading, 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      loading,
       isAuthenticated: !!user,
       permissions: user?.permissions || {}, // Exposing raw backend permissions instead of array
       hasPermission

@@ -96,6 +96,8 @@ const LoginForm = () => {
             <div className="relative">
               <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.email ? 'text-red-400' : 'text-slate-400'}`} size={20} />
               <input
+                id="login-email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -120,6 +122,8 @@ const LoginForm = () => {
             <div className="relative">
               <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-red-400' : 'text-slate-400'}`} size={20} />
               <input
+                id="login-password"
+                name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => {
