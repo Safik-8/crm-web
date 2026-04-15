@@ -16,7 +16,7 @@ const LoginForm = () => {
   const location = useLocation();
 
   // Always redirect to dashboard after login — avoids cross-user URL leakage
-  const redirectTo = '/dashboard';
+  const redirectTo = '/dashboard';                                  
 
 
   const validate = () => {
