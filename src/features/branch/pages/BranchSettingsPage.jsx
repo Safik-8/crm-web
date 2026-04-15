@@ -93,33 +93,81 @@ const BranchSettingsPage = () => {
         >
             <div className="flex flex-col gap-6">
                 {/* Header Actions */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => navigate('/settings/company')}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
-                            title="Back to Company Registry"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <button
-                            onClick={fetchBranches}
-                            disabled={isLoading}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
-                            title="Refresh Data"
-                        >
-                            <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-                        </button>
-                        <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
+                <div className="flex flex-col gap-4">
+                    {/* Mobile Header */}
+                    <div className="flex items-center justify-between lg:hidden">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => navigate('/settings/company')}
+                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 active:scale-95"
+                                title="Back to Company Registry"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={fetchBranches}
+                                disabled={isLoading}
+                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 disabled:opacity-50 active:scale-95"
+                                title="Refresh Data"
+                            >
+                                <RefreshCcw size={20} className={isLoading ? 'animate-spin' : ''} />
+                            </button>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800 font-heading">Branches</h2>
+                                <p className="text-sm text-slate-500 font-medium">Hub Directory</p>
+                            </div>
+                        </div>
+                        {branchPerms.canCreate && (
+                            <button
+                                onClick={handleAddBranch}
+                                className="h-12 w-12 flex items-center justify-center bg-primary text-white rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+                                title="Add Branch"
+                            >
+                                <Plus size={20} />
+                            </button>
+                        )}
                     </div>
 
+                    {/* Desktop Header */}
+                    <div className="hidden lg:flex lg:items-center lg:justify-between">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => navigate('/settings/company')}
+                                className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
+                                title="Back to Company Registry"
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+                            <button
+                                onClick={fetchBranches}
+                                disabled={isLoading}
+                                className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
+                                title="Refresh Data"
+                            >
+                                <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
+                            </button>
+                            <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
+                        </div>
+
+                        {branchPerms.canCreate && (
+                            <button
+                                onClick={handleAddBranch}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
+                            >
+                                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                                Add Branch
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Mobile Add Button - Full Width */}
                     {branchPerms.canCreate && (
                         <button
                             onClick={handleAddBranch}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
+                            className="lg:hidden flex items-center justify-center gap-3 py-4 bg-primary text-white rounded-xl text-base font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 w-full"
                         >
-                            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                            Add Branch
+                            <Plus size={20} />
+                            Add New Branch
                         </button>
                     )}
                 </div>

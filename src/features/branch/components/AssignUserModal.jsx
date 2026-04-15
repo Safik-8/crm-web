@@ -108,8 +108,8 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
   };
 
   const renderField = (id, name, label, type = 'text', placeholder = '') => (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-[13px] font-bold text-slate-700 ml-1 uppercase tracking-tight">{label}</label>
+    <div className="space-y-3">
+      <label htmlFor={id} className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">{label}</label>
       <div className="relative">
         <input
           id={id}
@@ -119,7 +119,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
           onChange={handleChange}
           placeholder={placeholder}
           className={cn(
-            "w-full px-4 py-3.5 rounded-2xl border transition-all outline-none font-semibold text-slate-900 placeholder:text-slate-300 placeholder:font-medium",
+            "w-full px-4 py-4 sm:py-3.5 rounded-2xl border transition-all outline-none font-semibold text-slate-900 placeholder:text-slate-300 placeholder:font-medium text-base sm:text-sm",
             name === 'password' && "pr-12",
             errors[name] ? "border-red-500 bg-red-50/20" : "border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
           )}
@@ -128,15 +128,15 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
           <button
             type="button"
             onClick={() => setShowPassword(prev => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         )}
       </div>
       {errors[name] && (
-        <div className="flex items-center gap-2 text-red-500 text-[11px] font-bold mt-2 ml-1 animate-in slide-in-from-top-1 duration-300">
-          <AlertCircle size={14} strokeWidth={2.5} />
+        <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-3 ml-1 animate-in slide-in-from-top-1 duration-300">
+          <AlertCircle size={16} strokeWidth={2.5} />
           {errors[name]}
         </div>
       )}
@@ -155,50 +155,53 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
       />
 
       {/* Modal */}
-      <div className="flex items-center justify-center min-h-full p-4">
+      <div className="flex items-center justify-center min-h-full p-2 sm:p-4">
         <div
           className={cn(
-            "relative w-full max-w-lg bg-white rounded-3xl shadow-2xl transform transition-all duration-300 ease-in-out",
+            "relative w-full max-w-sm sm:max-w-lg bg-white rounded-3xl shadow-2xl transform transition-all duration-300 ease-in-out",
             isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
           )}
         >
           {/* Header */}
-          <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-3xl">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                <UserPlus size={20} />
+          <div className="px-4 sm:px-6 py-5 sm:py-6 border-b border-slate-100 bg-slate-50/50 rounded-t-3xl">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
+                  <UserPlus size={20} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-heading tracking-tight leading-tight">Create & Assign User</h2>
+                  <p className="text-sm text-slate-500 font-medium mt-1 truncate">
+                    Registering to <span className="font-bold text-primary">{branch?.name}</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 font-heading tracking-tight">Create & Assign User</h2>
-                <p className="text-[12px] text-slate-500 font-medium mt-0.5">
-                  Registering to <span className="font-bold text-primary">{branch?.name}</span>
-                </p>
-              </div>
+              <button
+                onClick={onClose}
+                className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 flex-shrink-0 active:scale-95"
+                title="Close"
+              >
+                <X size={20} className="sm:w-6 sm:h-6" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200"
-            >
-              <X size={20} />
-            </button>
           </div>
 
           {/* Body */}
-          <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
+          <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-6 space-y-6">
             {renderField('assign-user-name', 'name', 'Full Name', 'text', 'Enter user full name...')}
             {renderField('assign-user-email', 'email', 'Email Address', 'email', 'user@company.com')}
             {renderField('assign-user-password', 'password', 'Password', 'password', 'Minimum 6 characters')}
 
             {/* Role Dropdown */}
-            <div className="space-y-1.5">
-              <label htmlFor="assign-user-role" className="text-[13px] font-bold text-slate-700 ml-1 uppercase tracking-tight">Assign Role</label>
+            <div className="space-y-3">
+              <label htmlFor="assign-user-role" className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Assign Role</label>
               <select
                 id="assign-user-role"
                 name="roleName"
                 value={formData.roleName}
                 onChange={handleChange}
                 className={cn(
-                  "w-full px-4 py-3.5 rounded-2xl border transition-all outline-none font-bold text-slate-900 bg-white appearance-none cursor-pointer",
+                  "w-full px-4 py-4 sm:py-3.5 rounded-2xl border transition-all outline-none font-bold text-slate-900 bg-white appearance-none cursor-pointer text-base sm:text-sm",
                   errors.roleName ? "border-red-500 bg-red-50/20" : "border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
                 )}
               >
@@ -207,26 +210,26 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
                 ))}
               </select>
               {errors.roleName && (
-                <div className="flex items-center gap-2 text-red-500 text-[11px] font-bold mt-2 ml-1 animate-in slide-in-from-top-1 duration-300">
-                  <AlertCircle size={14} strokeWidth={2.5} />
+                <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-3 ml-1 animate-in slide-in-from-top-1 duration-300">
+                  <AlertCircle size={16} strokeWidth={2.5} />
                   {errors.roleName}
                 </div>
               )}
             </div>
 
             {/* Actions */}
-            <div className="pt-4 flex flex-col gap-3">
+            <div className="pt-6 space-y-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-600/20 disabled:opacity-75 disabled:cursor-not-allowed transform active:scale-95 group overflow-hidden relative"
+                className="w-full flex items-center justify-center gap-3 py-5 sm:py-4 bg-emerald-600 text-white rounded-2xl font-black text-base sm:text-sm uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-600/20 disabled:opacity-75 disabled:cursor-not-allowed transform active:scale-95 group overflow-hidden relative"
               >
                 {loading ? (
-                  <Loader2 size={20} className="animate-spin" />
+                  <Loader2 size={24} className="sm:w-5 sm:h-5 animate-spin" />
                 ) : (
                   <>
                     <div className="absolute inset-0 bg-white/10 translate-y-full hover:translate-y-0 transition-transform duration-500" />
-                    <UserPlus size={18} className="group-hover:scale-110 transition-transform" />
+                    <UserPlus size={20} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
                     Create & Assign User
                   </>
                 )}
@@ -235,7 +238,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 rounded-2xl transition-all"
+                className="w-full py-4 sm:py-3 text-slate-400 font-bold text-sm uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 rounded-2xl transition-all active:scale-95"
               >
                 Cancel
               </button>
