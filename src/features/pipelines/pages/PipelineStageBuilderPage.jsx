@@ -51,8 +51,8 @@ const PipelineStageBuilderPage = () => {
         const all = Array.isArray(rawStages)
           ? rawStages
           : Array.isArray(rawStages?.stages)
-          ? rawStages.stages
-          : [];
+            ? rawStages.stages
+            : [];
         setPipeline(p);
         setMasterStages(all);
 
@@ -101,7 +101,7 @@ const PipelineStageBuilderPage = () => {
 
     try {
       const res = await createStage({ name });
-      const newStage = res?.data?.stage || res?.data; 
+      const newStage = res?.data?.stage || res?.data;
       if (!newStage || !newStage.id) throw new Error('Invalid stage data returned');
 
       setMasterStages(prev => [...prev, newStage]);
@@ -121,7 +121,7 @@ const PipelineStageBuilderPage = () => {
     setSaving(true);
     try {
       const stageIds = selectedStages.map(s => s.id);
-      
+
       // Submit the full list of IDs and their current order
       await assignPipelineStages(id, {
         stageIds,
@@ -170,9 +170,9 @@ const PipelineStageBuilderPage = () => {
   const isTruncated = !searchTerm && allFiltered.length > 25;
   const displayStages = isTruncated
     ? [
-        ...allFiltered.filter(s => selectedIds.has(s.id)),
-        ...allFiltered.filter(s => !selectedIds.has(s.id)).slice(0, 15)
-      ]
+      ...allFiltered.filter(s => selectedIds.has(s.id)),
+      ...allFiltered.filter(s => !selectedIds.has(s.id)).slice(0, 15)
+    ]
     : allFiltered;
 
   const totalUnselected = masterStages.length - selectedIds.size;
@@ -240,7 +240,7 @@ const PipelineStageBuilderPage = () => {
                   className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-100 rounded-xl outline-none focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all text-slate-600 font-medium"
                 />
                 {searchTerm && (
-                  <button 
+                  <button
                     onClick={() => setSearchTerm('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 hover:text-primary uppercase tracking-widest"
                   >
@@ -258,17 +258,15 @@ const PipelineStageBuilderPage = () => {
                 const checked = selectedIds.has(stage.id);
                 return (
                   <button key={stage.id} type="button" onClick={() => toggleStage(stage)}
-                    className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border ${
-                      checked
+                    className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border ${checked
                         ? 'bg-white border-slate-100 border-l-[4px] border-l-primary shadow-sm shadow-primary/5'
                         : 'border-slate-50 bg-white text-slate-400 hover:border-slate-200 hover:shadow-md'
-                    }`}
+                      }`}
                   >
-                    <div className={`h-4 w-4 rounded-md flex items-center justify-center border-2 transition-all flex-shrink-0 ${
-                      checked 
-                        ? 'border-primary bg-primary' 
+                    <div className={`h-4 w-4 rounded-md flex items-center justify-center border-2 transition-all flex-shrink-0 ${checked
+                        ? 'border-primary bg-primary'
                         : 'border-slate-100 bg-slate-50/50'
-                    }`}>
+                      }`}>
                       {checked && <Check size={11} className="text-white" strokeWidth={5} />}
                     </div>
                     <span className={`truncate font-bold tracking-tight ${checked ? "text-primary" : "text-slate-600 group-hover:text-slate-900"}`}>{stage.name}</span>
@@ -291,8 +289,8 @@ const PipelineStageBuilderPage = () => {
             {isTruncated && displayStages.length < allFiltered.length && (
               <div className="py-4 text-center">
                 <p className="text-[11px] font-medium text-slate-400 italic">
-                  Showing top {displayStages.length} of {allFiltered.length} stages. 
-                  <br/>Search to find more.
+                  Showing top {displayStages.length} of {allFiltered.length} stages.
+                  <br />Search to find more.
                 </p>
               </div>
             )}

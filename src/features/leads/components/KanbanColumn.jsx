@@ -34,9 +34,8 @@ const KanbanColumn = ({ stage, leads, loading, onLeadClick }) => {
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex-1 rounded-2xl p-3 space-y-3 min-h-32 transition-colors ${
-          isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
-        }`}
+        className={`flex-1 rounded-2xl p-3 space-y-3 min-h-32 transition-colors ${isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
+          }`}
       >
         {loading ? (
           <>

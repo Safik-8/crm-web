@@ -24,12 +24,12 @@ const LeadsKanbanPage = () => {
   const { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch } = useKanban(pipelineId);
 
   const [activeCard, setActiveCard] = useState(null);   // card being dragged (for DragOverlay)
-  const [activeFrom, setActiveFrom]   = useState(null);  // source stage id
-  const [showForm, setShowForm]       = useState(false);
+  const [activeFrom, setActiveFrom] = useState(null);  // source stage id
+  const [showForm, setShowForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null); // for detail drawer
 
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
-  const canEdit   = hasPermission(PERMISSIONS.EDIT_LEAD);
+  const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -125,24 +125,24 @@ const LeadsKanbanPage = () => {
           <div className="flex gap-5 p-6 md:p-8 h-full items-start">
             {loading
               ? [...Array(3)].map((_, i) => (
-                  <div key={i} className="w-72 flex-shrink-0">
-                    <div className="h-6 bg-slate-100 rounded-lg animate-pulse mb-3 w-32" />
-                    <div className="space-y-3">
-                      {[...Array(2)].map((_, j) => (
-                        <div key={j} className="h-24 bg-slate-100 rounded-xl animate-pulse" />
-                      ))}
-                    </div>
+                <div key={i} className="w-72 flex-shrink-0">
+                  <div className="h-6 bg-slate-100 rounded-lg animate-pulse mb-3 w-32" />
+                  <div className="space-y-3">
+                    {[...Array(2)].map((_, j) => (
+                      <div key={j} className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+                    ))}
                   </div>
-                ))
+                </div>
+              ))
               : orderedStages.map(stage => (
-                  <KanbanColumn
-                    key={stage.id}
-                    stage={stage}
-                    leads={columns[stage.id]?.leads || []}
-                    loading={loading}
-                    onLeadClick={setSelectedLead}
-                  />
-                ))
+                <KanbanColumn
+                  key={stage.id}
+                  stage={stage}
+                  leads={columns[stage.id]?.leads || []}
+                  loading={loading}
+                  onLeadClick={setSelectedLead}
+                />
+              ))
             }
           </div>
 
@@ -150,7 +150,7 @@ const LeadsKanbanPage = () => {
           <DragOverlay>
             {activeCard ? (
               <div className="w-72 rotate-2 shadow-2xl">
-                <LeadCard lead={activeCard} onClick={() => {}} />
+                <LeadCard lead={activeCard} onClick={() => { }} />
               </div>
             ) : null}
           </DragOverlay>

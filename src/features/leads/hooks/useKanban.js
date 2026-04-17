@@ -24,14 +24,14 @@ export const useKanban = (pipelineId) => {
       const rawStages = stagesRes?.data;
       const stages = Array.isArray(rawStages) ? rawStages
         : Array.isArray(rawStages?.stages) ? rawStages.stages
-        : [];
+          : [];
 
       // 2. Fetch all leads for this pipeline
       const leadsRes = await getLeads({ pipelineId });
       const rawLeads = leadsRes?.data;
       const leads = Array.isArray(rawLeads) ? rawLeads
         : Array.isArray(rawLeads?.leads) ? rawLeads.leads
-        : [];
+          : [];
 
       // 3. Bucket leads into their respective stage columns
       const cols = {};
