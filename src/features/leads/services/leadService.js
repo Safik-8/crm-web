@@ -1,0 +1,22 @@
+import { apiClient } from '../../../lib/api/api';
+
+export const getLeads = (params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.pipelineId) qs.set('pipelineId', params.pipelineId);
+  if (params.stageId)    qs.set('stageId', params.stageId);
+  if (params.page)       qs.set('page', params.page);
+  if (params.limit)      qs.set('limit', params.limit);
+  return apiClient(`/leads?${qs.toString()}`, { method: 'GET' });
+};
+
+export const createLead = (data) =>
+  apiClient('/leads', { method: 'POST', body: data });
+
+export const updateLeadStage = (leadId, stageId) =>
+  apiClient(`/leads/${leadId}/stage`, { method: 'PATCH', body: { stageId } });
+
+export const getLeadComments = (leadId) =>
+  apiClient(`/leads/${leadId}/comments`, { method: 'GET' });
+
+export const addLeadComment = (leadId, comment) =>
+  apiClient(`/leads/${leadId}/comments`, { method: 'POST', body: { comment } });

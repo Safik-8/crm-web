@@ -7,7 +7,7 @@ import '../shared/styles/index.css';
 
 function App() {
   return (
-    <div className="antialiased text-slate-900 bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="antialiased text-slate-900 bg-slate-50 font-sans selection:bg-primary/20 selection:text-primary">
       <Toaster 
         position="top-right" 
         richColors
@@ -79,7 +79,7 @@ function App() {
             </div>
           ),
           info: (
-            <div className="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
+            <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M12 16v-4"/>

@@ -34,6 +34,21 @@ const RBAC_ADAPTER_MAP = {
   'action:manage_users': { module: 'USER', action: 'canEdit' },
   'action:manage_all_users': { module: 'USER', action: 'canEdit' },
   'action:read_only_reports': { module: 'REPORT', action: 'canView' },
+
+  // Pipeline & Stage Permissions (Phase 1)
+  'view:pipelines':   { module: 'PIPELINE', action: 'canView' },
+  'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
+  'view:stages':      { module: 'STAGE',    action: 'canView' },
+  'manage:stages':    { module: 'STAGE',    action: 'canEdit' },
+
+  // Lead Permissions (Phase 1)
+  'view:leads_kanban': { module: 'LEAD', action: 'canView' },
+  'create:lead':       { module: 'LEAD', action: 'canCreate' },
+  'edit:lead':         { module: 'LEAD', action: 'canEdit' },
+
+  // Activity / Comment Permissions (Phase 1)
+  'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
+  'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 };
 
 export const AuthProvider = ({ children }) => {

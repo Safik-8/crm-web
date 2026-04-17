@@ -18,6 +18,9 @@ import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
 import TargetsPage from '../../features/targets/pages/TargetsPage';
 import NotificationsPage from '../../features/notifications/pages/NotificationsPage';
+import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
+import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
+import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 export const router = createBrowserRouter([
@@ -186,6 +189,31 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_NOTIFICATIONS}>
             <NotificationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      // ---- Phase 1: Pipeline & Kanban routes ----
+      {
+        path: 'pipelines',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PIPELINES}>
+            <PipelinesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'pipelines/:id/stages',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_PIPELINES}>
+            <PipelineStageBuilderPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'pipelines/:id/board',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS_KANBAN}>
+            <LeadsKanbanPage />
           </ProtectedRoute>
         ),
       },

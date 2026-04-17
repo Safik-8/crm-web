@@ -25,11 +25,11 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
         {/* Search placeholder */}
         <div className="hidden sm:block">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
             <input
               type="text"
               placeholder="Search..."
-              className="h-10 w-64 rounded-full bg-slate-100 pl-10 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-1 focus:ring-blue-500/20 lg:w-80"
+              className="h-10 w-64 rounded-full bg-slate-100 pl-10 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-1 focus:ring-primary/20 lg:w-80"
             />
           </div>
         </div>

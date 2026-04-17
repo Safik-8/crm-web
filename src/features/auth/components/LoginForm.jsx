@@ -85,7 +85,7 @@ const LoginForm = () => {
 
 
   return (
-    <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 animate-in fade-in zoom-in duration-500">
+    <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-0 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 animate-in fade-in zoom-in duration-500">
       <div className="text-center">
         <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight font-heading">Welcome Back</h2>
         <p className="mt-2 text-sm font-medium text-slate-500 uppercase tracking-widest">Login to your dashboard</p>

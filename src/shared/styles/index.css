@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* 
@@ -8,14 +8,15 @@
 
 @theme {
   /* Fonts */
-  --font-sans: "Inter", "sans-serif";
-  --font-heading: "Manrope", "sans-serif";
+  --font-sans: "DM Sans", "sans-serif";
+  --font-heading: "Sora", "sans-serif";
 
   /* Colors */
-  --color-primary: #0284C7;
-  --color-secondary: #5C7A96;
+  --color-primary: #F86F03;
+  --color-secondary: #000000;
   --color-tertiary: #B96A01;
-  --color-neutral: #F8FAFC;
+  --color-neutral: #FFF5EB; /* Brand Warm White */
+  --color-grey-light: #F4F4F4; /* Used for inputs */
 
   /* Custom Font Sizes (Industrial Standard) */
   --font-size-headline-lg: 32px;
@@ -26,7 +27,7 @@
   /* Custom Shadows */
   --shadow-soft: 0px 20px 40px rgba(25,28,30,0.06);
 
-  /* Overriding some default values to fit the new colors */
+  /* Mapping legacy color variables to brand primary */
   --color-blue-600: var(--color-primary);
 }
 
@@ -56,20 +57,20 @@
   /* Toast Container Animations */
   [data-sonner-toaster] {
     --normal-bg: #ffffff;
-    --normal-border: rgb(226 232 240);
-    --normal-text: rgb(15 23 42);
-    --success-bg: rgb(240 253 244);
-    --success-border: rgb(187 247 208);
-    --success-text: rgb(21 128 61);
-    --error-bg: rgb(254 242 242);
-    --error-border: rgb(252 165 165);
-    --error-text: rgb(185 28 28);
-    --warning-bg: rgb(255 251 235);
-    --warning-border: rgb(253 230 138);
-    --warning-text: rgb(180 83 9);
-    --info-bg: rgb(239 246 255);
-    --info-border: rgb(147 197 253);
-    --info-text: rgb(29 78 216);
+    --normal-border: #F4F4F4;
+    --normal-text: #000000;
+    --success-bg: #F0FDF4;
+    --success-border: #DCFCE7;
+    --success-text: #16A34A;
+    --error-bg: #FEF2F2;
+    --error-border: #FEE2E2;
+    --error-text: #DC2626;
+    --warning-bg: #FFFBEB;
+    --warning-border: #FEF3C7;
+    --warning-text: #D97706;
+    --info-bg: #EFF6FF;
+    --info-border: #DBEAFE;
+    --info-text: #2563EB;
   }
 
   /* Toast Entry Animation */

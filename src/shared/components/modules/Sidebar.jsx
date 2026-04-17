@@ -18,7 +18,8 @@ import {
   Target,
   Bell,
   ClipboardList,
-  GitBranch
+  GitBranch,
+  Kanban,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -42,6 +43,9 @@ const navItems = [
   { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
   { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
   { name: 'Prospects', path: '/prospects', icon: UserPlus, permission: PERMISSIONS.VIEW_PROSPECTS },
+
+  // Phase 1 — Pipelines
+  { name: 'Pipelines', path: '/pipelines', icon: Kanban, permission: PERMISSIONS.VIEW_PIPELINES },
 
   // Operations
   { name: 'Activities', path: '/activities', icon: Activity, permission: PERMISSIONS.VIEW_ACTIVITIES },
@@ -97,17 +101,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       )}
     >
       {/* Header (STATIC) */}
-      <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800 shrink-0">
-        <span className="text-xl font-black tracking-wider text-primary font-heading italic uppercase">
-          STACKDOT CRM
-        </span>
-        <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white">
+      <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800 shrink-0 relative overflow-hidden" style={{ backgroundColor:'black' }}>
+        <div className="flex-1 flex items-center h-full">
+          <img 
+            src="/logos/logo-official.png" 
+            alt="StackCode" 
+            className=" w-auto object-contain brightness-0 invert" 
+          />
+        </div>
+        <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white z-10 transition-colors">
           <X size={24} />
         </button>
       </div>
 
       {/* Navigation (SCROLLABLE) */}
-      <nav className="flex-1 overflow-y-auto h-0 space-y-1 p-4 scrollbar-hide">
+      <nav className="flex-1 overflow-y-auto h-0 space-y-1 p-4 scrollbar-hide" style={{ backgroundColor:'black' }}>
         {filteredNavItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -131,7 +139,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </nav>
 
       {/* Footer (STATIC) */}
-      <div className="p-4 border-t border-slate-800 shrink-0">
+      <div className="p-4 border-t border-slate-800 shrink-0" style={{ backgroundColor:'black' }}>
         <div className="bg-slate-800/50 rounded-lg p-3">
           <p className="text-xs text-slate-500 uppercase font-semibold">User Access</p>
           <p className="text-sm font-bold text-primary mt-1">Role-Based Secured</p>

@@ -20,6 +20,21 @@ export const PERMISSIONS = {
   VIEW_TARGETS: 'view:targets',
   VIEW_NOTIFICATIONS: 'view:notifications',
 
+  // Pipeline & Stage Permissions (Phase 1)
+  VIEW_PIPELINES: 'view:pipelines',
+  MANAGE_PIPELINES: 'manage:pipelines',
+  VIEW_STAGES: 'view:stages',
+  MANAGE_STAGES: 'manage:stages',
+
+  // Lead Permissions (Phase 1)
+  VIEW_LEADS_KANBAN: 'view:leads_kanban',
+  CREATE_LEAD: 'create:lead',
+  EDIT_LEAD: 'edit:lead',
+
+  // Activity / Comment Permissions (Phase 1)
+  VIEW_ACTIVITY_FEED: 'view:activity_feed',
+  CREATE_ACTIVITY: 'create:activity',
+
   // Action Permissions
   APPROVE_TRANSFERS: 'action:approve_transfers',
   MANAGE_USERS: 'action:manage_users',
