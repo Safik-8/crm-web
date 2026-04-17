@@ -101,15 +101,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       )}
     >
       {/* Header (STATIC) */}
-      <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800 shrink-0 relative overflow-hidden" style={{ backgroundColor:'black' }}>
-        <div className="flex-1 flex items-center h-full">
+      <div className="flex h-20 items-center justify-between px-6 border-b border-white/5 shrink-0 relative overflow-hidden bg-black/95 backdrop-blur-xl">
+        {/* Subtle ambient glow behind logo */}
+        <div className="absolute top-1/2 left-0 w-32 h-16 bg-primary/20 blur-[30px] rounded-full pointer-events-none"></div>
+        
+        <div className="flex-1 flex items-center h-full z-10">
           <img 
             src="/logos/logo-official.png" 
             alt="StackCode" 
-            className=" w-auto object-contain brightness-0 invert" 
+            className=" w-auto object-contain invert hue-rotate-180 transition-all duration-500 hover:scale-[1.02] mix-blend-screen" 
+            style={{ paddingTop: '10px' }}
           />
         </div>
-        <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white z-10 transition-colors">
+        <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white z-10 transition-colors p-1.5 hover:bg-white/10 rounded-lg ml-2">
           <X size={24} />
         </button>
       </div>

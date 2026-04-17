@@ -85,13 +85,25 @@ const LoginForm = () => {
 
 
   return (
-    <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-0 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 animate-in fade-in zoom-in duration-500">
-      <div className="text-center">
-        <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight font-heading">Welcome Back</h2>
-        <p className="mt-2 text-sm font-medium text-slate-500 uppercase tracking-widest">Login to your dashboard</p>
+    <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl p-8 sm:p-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 animate-in fade-in zoom-in duration-700">
+      {/* Decorative gradient overlay */}
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary/80 via-primary to-orange-500"></div>
+      
+      <div className="flex flex-col items-center text-center">
+        {/* Using negative bottom margin (-mb-6) specifically to eliminate the massive empty whitespace built into the bottom of the provided PNG image file */}
+        <div className="-mt-2 -mb-4 sm:-mb-6 flex justify-center w-full relative group">
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors duration-500"></div>
+          <img 
+            src="/logos/logo-official.png" 
+            alt="StackCode Training Institute" 
+            className="relative w-full max-w-[220px] sm:max-w-[250px] h-auto object-contain hover:scale-[1.03] transition-all duration-500 drop-shadow-sm" 
+          />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-800 leading-tight font-heading mt-2">Welcome Back</h2>
+        <p className="mt-1 text-xs font-semibold text-slate-500 uppercase tracking-widest">Login to your dashboard</p>
       </div>
 
-      <form className="mt-8 space-y-6" noValidate onSubmit={handleSubmit}>
+      <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit}>
         <div className="space-y-4 rounded-md">
           {/* Email Field */}
           <div className="space-y-1">
