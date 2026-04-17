@@ -1,21 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Kanban, Settings2, Trash2, Pencil, GitBranch, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePipelines } from '../hooks/usePipelines';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
+import { companyApi } from '../../company/api/companyApi';
+import { branchApi } from '../../branch/api/branchApi';
+import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
+  const { user } = useAuth();
+  
+  const inherentCompanyId = user?.company?.id || user?.companyId;
+  const inherentBranchId = user?.branch?.id || user?.branchId;
+
   const [name, setName] = useState(initial?.name || '');
+  const [selectedCompanyId, setSelectedCompanyId] = useState(inherentCompanyId || '');
+  const [selectedBranchId, setSelectedBranchId] = useState(inherentBranchId || '');
+  
+  const [companies, setCompanies] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [busy, setBusy] = useState(false);
+
+  // Fetch companies for super admins
+  useEffect(() => {
+    if (!initial && !inherentCompanyId) {
+      companyApi.getCompanies().then(res => {
+        const data = res?.data?.companies || res?.data || [];
+        setCompanies(Array.isArray(data) ? data : []);
+      }).catch(console.error);
+    }
+  }, [initial, inherentCompanyId]);
+
+  // Fetch branches once we have a companyId to fetch for
+  useEffect(() => {
+    if (!initial && !inherentBranchId && selectedCompanyId) {
+      branchApi.getBranches(selectedCompanyId).then(res => {
+        const data = res?.data?.branches || res?.data || [];
+        setBranches(Array.isArray(data) ? data : []);
+      }).catch(console.error);
+    } else if (!selectedCompanyId) {
+      setBranches([]);
+    }
+  }, [initial, inherentBranchId, selectedCompanyId]);
+
+  const handleCompanyChange = (e) => {
+    setSelectedCompanyId(e.target.value);
+    setSelectedBranchId('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) { toast.error('Pipeline name is required'); return; }
+    
+    if (!initial) {
+      if (!inherentCompanyId && !selectedCompanyId) { toast.error('Please select a company'); return; }
+      if (!inherentBranchId && !selectedBranchId) { toast.error('Please select a branch'); return; }
+    }
+    
     setBusy(true);
-    await onSubmit(name.trim());
+    await onSubmit({
+      name: name.trim(),
+      companyId: selectedCompanyId,
+      branchId: selectedBranchId
+    });
     setBusy(false);
   };
 
@@ -26,17 +76,48 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
           {initial ? 'Rename Pipeline' : 'New Pipeline'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Pipeline Name</label>
-            <input
-              autoFocus
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="e.g. Admissions 2026"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-white transition-all"
-            />
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Pipeline Name <span className="text-red-500">*</span></label>
+              <input
+                autoFocus
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. Admissions 2026"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-medium outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-slate-300 focus:bg-white transition-all"
+              />
+            </div>
+            
+            {!initial && !inherentCompanyId && (
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Target Company <span className="text-red-500">*</span></label>
+                <SearchableSelect
+                  options={companies}
+                  value={selectedCompanyId}
+                  onChange={(id) => {
+                    setSelectedCompanyId(id);
+                    setSelectedBranchId('');
+                  }}
+                  placeholder="Select Company..."
+                />
+              </div>
+            )}
+
+            {!initial && !inherentBranchId && (
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Target Branch <span className="text-red-500">*</span></label>
+                <SearchableSelect
+                  options={branches}
+                  value={selectedBranchId}
+                  onChange={setSelectedBranchId}
+                  placeholder="Select Branch..."
+                  disabled={!selectedCompanyId}
+                />
+              </div>
+            )}
           </div>
-          <div className="flex gap-3 justify-end pt-2">
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-slate-50">
             <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
               Cancel
             </button>
@@ -63,8 +144,8 @@ const PipelinesPage = () => {
 
   const canManage = hasPermission(PERMISSIONS.MANAGE_PIPELINES);
 
-  const handleCreate = async (name) => {
-    const res = await addPipeline({ name });
+  const handleCreate = async (data) => {
+    const res = await addPipeline(data);
     if (res.success) {
       setShowModal(false);
       // Go directly to stage builder for the new pipeline
@@ -72,8 +153,8 @@ const PipelinesPage = () => {
     }
   };
 
-  const handleEdit = async (name) => {
-    await editPipeline(editTarget.id, { name });
+  const handleEdit = async (data) => {
+    await editPipeline(editTarget.id, { name: data.name });
     setEditTarget(null);
   };
 
