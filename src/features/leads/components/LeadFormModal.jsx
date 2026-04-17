@@ -16,6 +16,7 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
   const validate = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Name is required';
+    else if (!/^[a-zA-Z\s.]+$/.test(form.name.trim())) errs.name = 'Name should only contain letters';
     if (!form.mobile.trim()) errs.mobile = 'Mobile is required';
     else if (!/^\d{10}$/.test(form.mobile.trim())) errs.mobile = 'Enter a valid 10-digit mobile';
     if (!form.date) errs.date = 'Date is required';

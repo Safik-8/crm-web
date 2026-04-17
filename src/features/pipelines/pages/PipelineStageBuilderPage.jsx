@@ -18,7 +18,7 @@ import { getPipelineById, assignPipelineStages } from '../services/pipelineServi
 import { getAllStages, createStage } from '../services/stageService';
 import { toast } from 'sonner';
 import SortableStageRow from '../components/SortableStageRow';
-import { ArrowLeft, Check, Plus, Loader2, AlertCircle, ListChecks } from 'lucide-react';
+import { ArrowLeft, Check, Plus, Loader2, AlertCircle, ListChecks, Search } from 'lucide-react';
 
 const PipelineStageBuilderPage = () => {
   const { id } = useParams();
@@ -30,6 +30,7 @@ const PipelineStageBuilderPage = () => {
   const [newStageName, setNewStageName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -90,8 +91,8 @@ const PipelineStageBuilderPage = () => {
     }
   };
 
-  const handleAddNewStage = async () => {
-    const name = newStageName.trim();
+  const handleAddNewStage = async (overrideName) => {
+    const name = (overrideName || newStageName || (searchTerm.length > 0 ? searchTerm : '')).trim();
     if (!name) return;
     if (selectedStages.some(s => s.name.toLowerCase() === name.toLowerCase())) {
       toast.error('A stage with this name already exists in your selection');
@@ -152,6 +153,30 @@ const PipelineStageBuilderPage = () => {
 
   const selectedIds = new Set(selectedStages.map(s => s.id));
 
+  // Filter and sort: Default first, then selected, then alphabetical
+  const allFiltered = masterStages
+    .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      if (a.isDefault) return -1;
+      if (b.isDefault) return 1;
+      const aSelected = selectedIds.has(a.id);
+      const bSelected = selectedIds.has(b.id);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  // truncation logic: show all selected + limited unselected if no search
+  const isTruncated = !searchTerm && allFiltered.length > 25;
+  const displayStages = isTruncated
+    ? [
+        ...allFiltered.filter(s => selectedIds.has(s.id)),
+        ...allFiltered.filter(s => !selectedIds.has(s.id)).slice(0, 15)
+      ]
+    : allFiltered;
+
+  const totalUnselected = masterStages.length - selectedIds.size;
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
@@ -172,51 +197,108 @@ const PipelineStageBuilderPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* LEFT: Master stage selector */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3">
-          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Available Stages</h3>
-          <div className="space-y-2">
-            {masterStages.map(stage => {
-              const checked = selectedIds.has(stage.id);
-              return (
-                <button key={stage.id} type="button" onClick={() => toggleStage(stage)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
-                    checked
-                      ? stage.isDefault
-                        ? 'bg-primary/5 border-primary/30 text-primary'
-                        : 'bg-slate-900 border-slate-900 text-white'
-                      : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className={`h-4 w-4 rounded flex items-center justify-center border flex-shrink-0 ${
-                    checked ? (stage.isDefault ? 'border-primary bg-primary' : 'border-slate-900 bg-slate-900') : 'border-slate-300 bg-white'
-                  }`}>
-                    {checked && <Check size={10} className="text-white" strokeWidth={3} />}
-                  </span>
-                  {stage.name}
-                  {stage.isDefault && <span className="ml-auto text-[10px] font-bold text-primary">Required</span>}
-                </button>
-              );
-            })}
-          </div>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col overflow-hidden h-[480px]">
+          {/* List Header */}
+          <div className="p-5 border-b border-slate-50 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em]">Available Stages</h3>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-lg">
+                  {selectedIds.size - 1} Selected
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-50 text-slate-400 rounded-lg">
+                  {masterStages.length} Total
+                </span>
+              </div>
+            </div>
 
-          {/* Create new stage */}
-          <div className="pt-2 border-t border-slate-100">
-            <p className="text-xs font-semibold text-slate-500 mb-2">+ Create new stage</p>
-            <div className="flex gap-2">
-              <input
-                value={newStageName}
-                onChange={e => setNewStageName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddNewStage()}
-                placeholder="Stage name..."
-                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              />
-              <button type="button" onClick={handleAddNewStage}
-                className="p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-700 transition-colors">
-                <Plus size={16} />
-              </button>
+            {/* Premium Input Section */}
+            <div className="space-y-2">
+              <div className="flex gap-2 group">
+                <div className="flex-1 relative">
+                  <Plus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" />
+                  <input
+                    value={newStageName}
+                    onChange={e => setNewStageName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAddNewStage()}
+                    placeholder="Quick add stage..."
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50/50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all font-medium"
+                  />
+                </div>
+                <button type="button" onClick={handleAddNewStage}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black transition-all shadow-md active:scale-95 font-bold text-xs uppercase tracking-wider">
+                  Add
+                </button>
+              </div>
+
+              <div className="relative group">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" />
+                <input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Filter by name..."
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-100 rounded-xl outline-none focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all text-slate-600 font-medium"
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 hover:text-primary uppercase tracking-widest"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* List Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            {displayStages.length > 0 ? (
+              displayStages.map(stage => {
+                const checked = selectedIds.has(stage.id);
+                return (
+                  <button key={stage.id} type="button" onClick={() => toggleStage(stage)}
+                    className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border ${
+                      checked
+                        ? 'bg-white border-slate-100 border-l-[4px] border-l-primary shadow-sm shadow-primary/5'
+                        : 'border-slate-50 bg-white text-slate-400 hover:border-slate-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`h-4 w-4 rounded-md flex items-center justify-center border-2 transition-all flex-shrink-0 ${
+                      checked 
+                        ? 'border-primary bg-primary' 
+                        : 'border-slate-100 bg-slate-50/50'
+                    }`}>
+                      {checked && <Check size={11} className="text-white" strokeWidth={5} />}
+                    </div>
+                    <span className={`truncate font-bold tracking-tight ${checked ? "text-primary" : "text-slate-600 group-hover:text-slate-900"}`}>{stage.name}</span>
+                    {stage.isDefault && <span className="ml-auto text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded-md">Required</span>}
+                    {!checked && <Plus size={14} className="ml-auto opacity-0 group-hover:opacity-100 text-slate-400 transition-opacity" />}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="py-12 text-center space-y-2">
+                <p className="text-sm text-slate-400">No stages found</p>
+                {searchTerm && (
+                  <button onClick={() => handleAddNewStage()} className="text-xs font-bold text-primary hover:underline">
+                    Create "{searchTerm}" as a new stage?
+                  </button>
+                )}
+              </div>
+            )}
+
+            {isTruncated && displayStages.length < allFiltered.length && (
+              <div className="py-4 text-center">
+                <p className="text-[11px] font-medium text-slate-400 italic">
+                  Showing top {displayStages.length} of {allFiltered.length} stages. 
+                  <br/>Search to find more.
+                </p>
+              </div>
+            )}
+          </div>
+
+
         </div>
 
         {/* RIGHT: Ordered selected stages (DND) */}
