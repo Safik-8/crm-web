@@ -35,7 +35,10 @@ export const useKanban = (pipelineId) => {
 
       // 3. Bucket leads into their respective stage columns
       const cols = {};
-      stages.forEach(stage => {
+      // Sort stages by orderNo before bucketing to maintain deterministic order
+      const sortedStages = [...stages].sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
+      
+      sortedStages.forEach(stage => {
         cols[stage.id] = {
           stage,
           leads: leads.filter(l => l.stageId === stage.id || l.stage_id === stage.id),
@@ -91,8 +94,10 @@ export const useKanban = (pipelineId) => {
     });
   }, []);
 
-  // Ordered stage list for rendering columns left-to-right
-  const orderedStages = Object.values(columns).map(c => c.stage);
+  // Ordered stage list for rendering columns left-to-right (sorted by orderNo)
+  const orderedStages = Object.values(columns)
+    .map(c => c.stage)
+    .sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
 
   return { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch: fetchBoard };
 };

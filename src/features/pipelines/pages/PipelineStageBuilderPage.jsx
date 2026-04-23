@@ -118,20 +118,26 @@ const PipelineStageBuilderPage = () => {
       toast.error('Please select at least one stage');
       return;
     }
+    
     setSaving(true);
+    toast.info('Saving stage configuration...');
+    
     try {
       const stageIds = selectedStages.map(s => s.id);
+      
+      console.log('Saving stages for pipeline:', id, 'IDs:', stageIds);
 
       // Submit the full list of IDs and their current order
       await assignPipelineStages(id, {
         stageIds,
-        newStages: [], // No longer needed as we create them immediately
+        newStages: [], 
         orderedStageIds: stageIds,
       });
 
-      toast.success('Stages saved! Opening board...');
+      toast.success('Stages saved successfully!');
       setTimeout(() => navigate(`/pipelines/${id}/board`), 800);
     } catch (err) {
+      console.error('Failed to save stages:', err);
       toast.error(err?.message || 'Failed to save stages');
     } finally {
       setSaving(false);

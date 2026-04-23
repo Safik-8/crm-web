@@ -50,8 +50,8 @@ const CommentThread = ({ leadId }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+<div className="flex flex-col h-full min-h-0">    
+    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
         <MessageSquare size={14} className="text-primary" /> Activity & Comments
       </h3>
 

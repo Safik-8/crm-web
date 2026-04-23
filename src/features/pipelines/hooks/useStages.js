@@ -17,6 +17,7 @@ export const useStages = (pipelineId = null) => {
         const arr = Array.isArray(raw) ? raw
           : Array.isArray(raw?.stages) ? raw.stages
           : [];
+        arr.sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
         setStages(arr);
       } else {
         res = await getAllStages();
@@ -24,6 +25,7 @@ export const useStages = (pipelineId = null) => {
         const arr = Array.isArray(raw) ? raw
           : Array.isArray(raw?.stages) ? raw.stages
           : [];
+        arr.sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
         setStages(arr);
       }
     } catch (err) {

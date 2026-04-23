@@ -12,6 +12,9 @@ const BaseLayout = () => {
   // Extract page title from pathname
   const pageTitle = location.pathname.split('/').pop() || 'Overview';
 
+  // Check if current page should be full width (e.g. Kanban board)
+  const isFullWidthPage = location.pathname.includes('/board') || location.pathname.includes('/stages');
+
   return (
     <div className="flex bg-neutral h-screen overflow-hidden">
       {/* Sidebar Navigation - Fixed */}
@@ -23,8 +26,8 @@ const BaseLayout = () => {
         <Topbar toggleSidebar={toggleSidebar} pageTitle={pageTitle} />
         
         {/* Main Content - Scrollable */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 bg-white">
-          <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <main className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${isFullWidthPage ? 'p-0' : 'p-6 md:p-8'} bg-white`}>
+          <div className={`mx-auto h-full ${isFullWidthPage ? 'max-w-none' : 'max-w-7xl'} animate-in fade-in slide-in-from-bottom-5 duration-700`}>
             <Outlet />
           </div>
         </main>

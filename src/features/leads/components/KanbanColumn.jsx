@@ -19,39 +19,44 @@ const KanbanColumn = ({ stage, leads, loading, onLeadClick }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
   return (
-    <div className="flex flex-col w-72 flex-shrink-0">
+    <div className="flex flex-col w-64 sm:w-72 flex-shrink-0 h-full">
       {/* Column header */}
-      <div className={`flex items-center justify-between mb-3 px-1 ${stage.isDefault ? '' : ''}`}>
-        <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${stage.isDefault ? 'bg-primary' : 'bg-slate-400'}`} />
-          <h3 className="font-bold text-sm text-slate-800 font-heading truncate max-w-44">{stage.name}</h3>
+      <div className={`flex items-center justify-between mb-2 sm:mb-3 px-1 shrink-0 ${stage.isDefault ? '' : ''}`}>
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <span className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full flex-shrink-0 ${stage.isDefault ? 'bg-primary' : 'bg-slate-400'}`} />
+          <h3 className="font-bold text-xs sm:text-sm text-slate-800 font-heading truncate max-w-32 sm:max-w-44">{stage.name}</h3>
         </div>
-        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full min-w-[28px] text-center">
+        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full min-w-[24px] sm:min-w-[28px] text-center">
           {leads.length}
         </span>
       </div>
 
-      {/* Drop zone */}
+      {/* Drop zone with individual vertical scrolling */}
       <div
         ref={setNodeRef}
-        className={`flex-1 rounded-2xl p-3 space-y-3 min-h-32 transition-colors ${isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
-          }`}
+        className={`flex-1 min-h-0 flex flex-col rounded-xl sm:rounded-2xl transition-colors overflow-hidden ${
+          isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
+        }`}
       >
         {loading ? (
-          <>
+          <div className="p-2 sm:p-3 space-y-2 sm:space-y-3 overflow-hidden">
             <SkeletonCard />
             <SkeletonCard />
-          </>
+            <SkeletonCard />
+          </div>
         ) : leads.length === 0 ? (
-          <div className="flex items-center justify-center h-24 text-xs text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-xl">
-            Drop leads here
+          <div className="flex items-center justify-center flex-1 min-h-24 sm:min-h-32 text-xs text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-lg sm:rounded-xl m-2 sm:m-3">
+            <span className="hidden sm:inline">Drop leads here</span>
+            <span className="sm:hidden">Drop here</span>
           </div>
         ) : (
-          <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
-            {leads.map(lead => (
-              <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick(lead)} />
-            ))}
-          </SortableContext>
+          <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-2 sm:p-3 space-y-2 sm:space-y-3">
+            <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
+              {leads.map(lead => (
+                <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick(lead)} />
+              ))}
+            </SortableContext>
+          </div>
         )}
       </div>
     </div>

@@ -85,7 +85,7 @@ const LoginForm = () => {
 
 
   return (
-    <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl p-8 sm:p-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 animate-in fade-in zoom-in duration-700">
+    <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white backdrop-blur-xl p-8 sm:p-10 shadow-2xl shadow-slate-900/10 ring-1 ring-slate-200 border border-slate-100 animate-in fade-in zoom-in duration-700">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary/80 via-primary to-orange-500"></div>
       
