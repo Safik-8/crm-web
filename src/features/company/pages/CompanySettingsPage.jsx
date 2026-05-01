@@ -70,69 +70,60 @@ const CompanySettingsPage = () => {
             description="Manage your organization's global identity, branding, and legal entity details."
             icon={Building2}
         >
-            <div className="flex flex-col gap-6">
-                {/* Header Actions */}
-                <div className="flex flex-col gap-4">
-                    {/* Mobile Header */}
-                    <div className="flex items-center justify-between lg:hidden">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={fetchCompanies}
-                                disabled={isLoading}
-                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 disabled:opacity-50 active:scale-95"
-                                title="Refresh Data"
-                            >
-                                <RefreshCcw size={20} className={isLoading ? 'animate-spin' : ''} />
-                            </button>
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-800 font-heading">Companies</h2>
-                                <p className="text-sm text-slate-500 font-medium">Entity Registry</p>
-                            </div>
+            <div className="flex flex-col gap-3 sm:gap-4">
+
+                {/* ── Mobile section header ── */}
+                <div className="flex items-center justify-between lg:hidden bg-white rounded-2xl px-3 sm:px-4 py-3 border border-slate-200/60 shadow-sm">
+                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                        <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0">
+                            <Building2 size={16} />
                         </div>
+                        <div className="min-w-0">
+                            <h2 className="text-sm font-bold text-slate-800 font-heading leading-tight">Companies</h2>
+                            <p className="text-[11px] text-slate-500 font-medium">Entity Registry</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-2">
+                        <button
+                            onClick={fetchCompanies}
+                            disabled={isLoading}
+                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                            title="Refresh"
+                        >
+                            <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
                         {companyPerms.canCreate && (
                             <button
                                 onClick={handleAddCompany}
-                                className="h-12 w-12 flex items-center justify-center bg-primary text-white rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
-                                title="Add Company"
+                                className="flex items-center gap-1.5 h-9 px-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 active:scale-95 whitespace-nowrap"
                             >
-                                <Plus size={20} />
+                                <Plus size={15} />
+                                Add
                             </button>
                         )}
                     </div>
+                </div>
 
-                    {/* Desktop Header */}
-                    <div className="hidden lg:flex lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={fetchCompanies}
-                                disabled={isLoading}
-                                className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
-                                title="Refresh Data"
-                            >
-                                <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-                            </button>
-                            <h2 className="text-lg font-bold text-slate-800 font-heading">Entity Registry</h2>
-                        </div>
-
-                        {companyPerms.canCreate && (
-                            <button
-                                onClick={handleAddCompany}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
-                            >
-                                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                                Add Company
-                            </button>
-                        )}
+                {/* ── Desktop section header ── */}
+                <div className="hidden lg:flex lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={fetchCompanies}
+                            disabled={isLoading}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
+                            title="Refresh Data"
+                        >
+                            <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
+                        <h2 className="text-lg font-bold text-slate-800 font-heading">Entity Registry</h2>
                     </div>
-
-                    {/* Mobile Add Button - Full Width */}
                     {companyPerms.canCreate && (
                         <button
                             onClick={handleAddCompany}
-                            className="lg:hidden flex items-center justify-center gap-3 py-4 bg-primary text-white rounded-xl text-base font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 w-full"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
                         >
-                            <Plus size={20} />
-                            Add New Company
+                            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Add Company
                         </button>
                     )}
                 </div>

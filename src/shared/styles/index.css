@@ -40,6 +40,10 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
   }
+
+  main {
+    background-color: beige;
+  }
 }
 
 /* Hide scrollbar */
@@ -52,192 +56,304 @@
   scrollbar-width: none;
 }
 
-/* Toast Animations & Styling */
-@layer components {
-  /* Toast Container Animations */
-  [data-sonner-toaster] {
-    --normal-bg: #ffffff;
-    --normal-border: #F4F4F4;
-    --normal-text: #000000;
-    --success-bg: #F0FDF4;
-    --success-border: #DCFCE7;
-    --success-text: #16A34A;
-    --error-bg: #FEF2F2;
-    --error-border: #FEE2E2;
-    --error-text: #DC2626;
-    --warning-bg: #FFFBEB;
-    --warning-border: #FEF3C7;
-    --warning-text: #D97706;
-    --info-bg: #EFF6FF;
-    --info-border: #DBEAFE;
-    --info-text: #2563EB;
-  }
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST SYSTEM — Orange Gradient Glass  (unstyled: true → full CSS control)
+   ═══════════════════════════════════════════════════════════════════════════
 
-  /* Toast Entry Animation */
-  [data-sonner-toast] {
-    animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: top right;
-  }
+   Architecture
+   ─────────────
+   .toast-root          → the card itself  (gradient + glass)
+   .toast-icon          → icon badge       (glass pill, color per type)
+   [data-title]         → bold white title
+   [data-description]   → soft white/80 description
+   [data-close-button]  → glass X button
 
-  /* Toast Exit Animation */
-  [data-sonner-toast][data-removed="true"] {
-    animation: toast-slide-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
-  }
+   Type differentiation via outer glow + icon badge tint:
+     success  → emerald glow  + green  badge
+     error    → red glow      + red    badge
+     warning  → amber glow    + amber  badge
+     info     → white glow    + white  badge
+     loading  → pulsing ring  + white  badge (spinning)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-  /* Toast Hover Effects */
-  [data-sonner-toast]:hover {
-    transform: scale(1.02) translateY(-2px);
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+/* ── 1. Card shell ─────────────────────────────────────────────────────────── */
+.toast-root {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 356px;
+  max-width: calc(100vw - 32px);
+  min-height: 60px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  font-family: "DM Sans", sans-serif;
 
-  /* Close Button Styling */
-  [data-sonner-toast] button[data-close-button] {
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  /* Orange gradient */
+  background:
+    linear-gradient(135deg,
+      #FF8C2A 0%,
+      #F86F03 35%,
+      #E05E00 70%,
+      #C45200 100%);
 
-  [data-sonner-toast]:hover button[data-close-button] {
-    opacity: 1;
-    transform: scale(1);
-  }
+  /* Glass border */
+  border: 1px solid rgba(255, 255, 255, 0.20);
 
-  [data-sonner-toast] button[data-close-button]:hover {
-    background: rgb(241 245 249) !important;
-    color: rgb(51 65 85) !important;
-    transform: scale(1.1);
-  }
+  /* Depth shadow — default orange glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 8px  rgba(248,111,3, 0.25),
+    0 8px 24px rgba(200, 80, 0, 0.22),
+    0 20px 48px rgba(160, 60, 0, 0.16);
 
-  [data-sonner-toast] button[data-close-button]:active {
-    transform: scale(0.95);
-  }
+  /* Animations */
+  animation: t-in 0.44s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.22s ease;
+}
 
-  /* Success Toast Styling */
-  [data-sonner-toast][data-type="success"] {
-    background: var(--success-bg);
-    border-color: var(--success-border);
-    color: var(--success-text);
-  }
+/* Shimmer highlight layer */
+.toast-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.22) 0%,
+    rgba(255,255,255,0.06) 40%,
+    rgba(255,255,255,0.00) 100%
+  );
+  pointer-events: none;
+}
 
-  /* Error Toast Styling */
-  [data-sonner-toast][data-type="error"] {
-    background: var(--error-bg);
-    border-color: var(--error-border);
-    color: var(--error-text);
-  }
+/* Hover lift */
+.toast-root:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 4px 12px  rgba(248,111,3, 0.35),
+    0 14px 36px rgba(200, 80, 0, 0.30),
+    0 28px 60px rgba(160, 60, 0, 0.22);
+}
 
-  /* Warning Toast Styling */
-  [data-sonner-toast][data-type="warning"] {
-    background: var(--warning-bg);
-    border-color: var(--warning-border);
-    color: var(--warning-text);
-  }
+/* Exit */
+.toast-root[data-removed="true"] {
+  animation: t-out 0.26s cubic-bezier(0.4,0,1,1) forwards;
+}
 
-  /* Info Toast Styling */
-  [data-sonner-toast][data-type="info"] {
-    background: var(--info-bg);
-    border-color: var(--info-border);
-    color: var(--info-text);
-  }
+/* ── 2. Type glow overrides ────────────────────────────────────────────────── */
+.toast-root[data-type="success"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 8px  rgba(34,197,94, 0.30),
+    0 8px 24px rgba(22,163,74, 0.25),
+    0 20px 48px rgba(15,120,55, 0.18);
+}
+.toast-root[data-type="error"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 8px  rgba(239,68,68, 0.30),
+    0 8px 24px rgba(220,38,38, 0.25),
+    0 20px 48px rgba(185,28,28, 0.18);
+}
+.toast-root[data-type="warning"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 8px  rgba(251,191,36, 0.30),
+    0 8px 24px rgba(217,119,6,  0.25),
+    0 20px 48px rgba(180,90,0,  0.18);
+}
 
-  /* Loading Toast Styling */
-  [data-sonner-toast][data-type="loading"] {
-    background: rgb(248 250 252);
-    border-color: rgb(203 213 225);
-    color: rgb(71 85 105);
-  }
+/* ── 3. Text ───────────────────────────────────────────────────────────────── */
+.toast-root [data-title] {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.toast-root [data-description] {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.5;
+  margin-top: 2px;
+}
 
-  /* Toast Progress Bar */
-  [data-sonner-toast] [data-progress] {
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
-    height: 2px;
-    border-radius: 1px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    animation: toast-progress 5s linear;
-  }
+/* ── 4. Icon badge ─────────────────────────────────────────────────────────── */
+.toast-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.16);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    0 2px 6px rgba(0,0,0,0.12);
+  backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 1;
+}
 
-  /* Success Progress Bar */
-  [data-sonner-toast][data-type="success"] [data-progress] {
-    background: linear-gradient(90deg, transparent, rgb(34 197 94), transparent);
-  }
+/* Success — emerald tint */
+.toast-icon--success {
+  background: rgba(34,197,94, 0.28);
+  border-color: rgba(134,239,172, 0.45);
+  color: #bbf7d0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 0 10px rgba(34,197,94, 0.40),
+    0 2px 6px rgba(0,0,0,0.10);
+}
 
-  /* Error Progress Bar */
-  [data-sonner-toast][data-type="error"] [data-progress] {
-    background: linear-gradient(90deg, transparent, rgb(239 68 68), transparent);
-  }
+/* Error — red tint */
+.toast-icon--error {
+  background: rgba(239,68,68, 0.28);
+  border-color: rgba(252,165,165, 0.45);
+  color: #fecaca;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 0 10px rgba(239,68,68, 0.40),
+    0 2px 6px rgba(0,0,0,0.10);
+}
 
-  /* Warning Progress Bar */
-  [data-sonner-toast][data-type="warning"] {
-    background: linear-gradient(90deg, transparent, rgb(245 158 11), transparent);
-  }
+/* Warning — amber tint */
+.toast-icon--warning {
+  background: rgba(251,191,36, 0.28);
+  border-color: rgba(253,230,138, 0.45);
+  color: #fde68a;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 0 10px rgba(251,191,36, 0.40),
+    0 2px 6px rgba(0,0,0,0.10);
+}
 
-  /* Info Progress Bar */
-  [data-sonner-toast][data-type="info"] [data-progress] {
-    background: linear-gradient(90deg, transparent, rgb(59 130 246), transparent);
+/* Info — white tint */
+.toast-icon--info {
+  background: rgba(255,255,255, 0.22);
+  border-color: rgba(255,255,255, 0.40);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    0 0 10px rgba(255,255,255, 0.18),
+    0 2px 6px rgba(0,0,0,0.10);
+}
+
+/* Loading — pulsing white */
+.toast-icon--loading {
+  background: rgba(255,255,255, 0.18);
+  border-color: rgba(255,255,255, 0.35);
+  color: #ffffff;
+  animation: t-icon-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── 5. Close button ───────────────────────────────────────────────────────── */
+.toast-root [data-close-button] {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 7px !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  background: rgba(255,255,255,0.14) !important;
+  color: rgba(255,255,255,0.65) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  opacity: 0 !important;
+  transform: scale(0.8) !important;
+  transition: all 0.16s cubic-bezier(0.16,1,0.3,1) !important;
+  backdrop-filter: blur(4px) !important;
+}
+.toast-root:hover [data-close-button] {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+.toast-root [data-close-button]:hover {
+  background: rgba(255,255,255,0.28) !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.45) !important;
+  transform: scale(1.12) !important;
+}
+
+/* ── 6. Mobile — always show close button ──────────────────────────────────── */
+@media (max-width: 600px) {
+  .toast-root [data-close-button] {
+    opacity: 1 !important;
+    transform: scale(1) !important;
   }
 }
 
-/* Toast Keyframe Animations */
-@keyframes toast-slide-in {
-  0% {
-    transform: translateX(100%) scale(0.9);
-    opacity: 0;
-  }
-  50% {
-    transform: translateX(-5%) scale(1.02);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
+/* ── 7. Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes t-in {
+  0%   { opacity:0; transform: translateX(calc(100% + 28px)) scale(0.90); }
+  55%  { opacity:1; transform: translateX(-7px) scale(1.02); }
+  78%  { transform: translateX(3px) scale(0.99); }
+  100% { opacity:1; transform: translateX(0) scale(1); }
+}
+@keyframes t-out {
+  0%   { opacity:1; transform: translateX(0) scale(1); }
+  100% { opacity:0; transform: translateX(calc(100% + 28px)) scale(0.90); }
+}
+@keyframes t-up {
+  0%   { opacity:0; transform: translateY(110%) scale(0.92); }
+  55%  { opacity:1; transform: translateY(-7px) scale(1.02); }
+  78%  { transform: translateY(3px) scale(0.99); }
+  100% { opacity:1; transform: translateY(0) scale(1); }
+}
+@keyframes t-down {
+  0%   { opacity:1; transform: translateY(0) scale(1); }
+  100% { opacity:0; transform: translateY(calc(100% + 20px)) scale(0.92); }
+}
+@keyframes t-icon-pulse {
+  0%,100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 0 0 rgba(255,255,255,0.30); }
+  50%      { box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 0 5px rgba(255,255,255,0.00); }
+}
+@keyframes toast-spin {
+  to { transform: rotate(360deg); }
 }
 
-@keyframes toast-slide-out {
-  0% {
-    transform: translateX(0) scale(1);
-    opacity: 1;
+/* ── 8. Mobile container ───────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  [data-sonner-toaster][data-position="bottom-center"] {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    padding: 0 0 calc(10px + env(safe-area-inset-bottom)) !important;
+    align-items: stretch !important;
   }
-  100% {
-    transform: translateX(100%) scale(0.9);
-    opacity: 0;
+  [data-sonner-toaster][data-position="bottom-center"] .toast-root {
+    width: calc(100% - 20px) !important;
+    max-width: 100% !important;
+    margin: 0 10px !important;
+    border-radius: 16px !important;
+    animation: t-up 0.44s cubic-bezier(0.16,1,0.3,1) both !important;
   }
-}
-
-@keyframes toast-progress {
-  0% {
-    transform: scaleX(0);
-    transform-origin: left;
+  [data-sonner-toaster][data-position="bottom-center"] .toast-root[data-removed="true"] {
+    animation: t-down 0.26s cubic-bezier(0.4,0,1,1) forwards !important;
   }
-  100% {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
-}
-
-/* Mobile Toast Adjustments */
-@media (max-width: 640px) {
-  [data-sonner-toaster] {
-    left: 16px !important;
-    right: 16px !important;
-    width: auto !important;
-  }
-  
-  [data-sonner-toast] {
-    border-radius: 12px;
-    padding: 12px 16px;
-    min-height: 56px;
-  }
-  
-  [data-sonner-toast] button[data-close-button] {
-    width: 28px;
-    height: 28px;
-    right: 8px;
-    top: 8px;
+  [data-sonner-toaster][data-position="bottom-center"] .toast-root:hover {
+    transform: none !important;
   }
 }
 
@@ -285,3 +401,5 @@
     @apply bg-primary/60;
   }
 }
+
+

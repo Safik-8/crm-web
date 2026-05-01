@@ -1,16 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, Building2, Users, Layers, Calendar, GitBranch, ChevronRight, MoreVertical } from 'lucide-react';
+import { Edit2, Building2, Users, Calendar, GitBranch, ChevronRight } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 /**
  * CompanyTable Component
  * Mobile-first responsive design with card layout for mobile and table for desktop
- * 
- * @param {Array} companies - Data to display
- * @param {boolean} isLoading - Loading state for skeletons
- * @param {function} onEdit - Edit action callback
- * @param {boolean} canEdit - RBAC permission check
  */
 const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
   const navigate = useNavigate();
@@ -19,23 +14,21 @@ const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
   const renderMobileSkeletons = () => (
     <div className="space-y-3">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-xl p-4 border border-slate-200/60">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3 flex-1">
-              <Skeleton className="h-10 w-10 rounded-xl" />
-              <div className="flex-1">
-                <Skeleton className="h-5 w-32 mb-2" />
-                <Skeleton className="h-4 w-20" />
+        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+          <div className="flex items-start gap-3 mb-4">
+            <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
+            <div className="flex-1 min-w-0">
+              <Skeleton className="h-5 w-32 mb-2" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-16 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
               </div>
             </div>
-            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
           </div>
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
           </div>
         </div>
       ))}
@@ -63,7 +56,7 @@ const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
   const renderMobileCards = () => {
     if (companies.length === 0) {
       return (
-        <div className="bg-white rounded-xl p-8 border border-slate-200/60 text-center">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200/60 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
               <Building2 size={32} />
@@ -78,85 +71,95 @@ const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {companies.map((company) => (
-          <div key={company.id} className="bg-white rounded-xl border border-slate-200/60 overflow-hidden hover:shadow-md transition-all duration-200 group">
-            {/* Card Header */}
+          <div 
+            key={company.id} 
+            className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
+          >
             <div className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 flex-shrink-0">
-                    <Building2 size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-slate-900 font-heading text-base truncate">{company.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wider">
-                        {company.code}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${
-                        company.status === 'ACTIVE' 
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                          : 'bg-slate-50 text-slate-600 border-slate-100'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full mr-1 ${
-                          company.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                        }`} />
-                        {company.status}
-                      </span>
-                    </div>
+              {/* Top row: icon + name/badges + edit */}
+              <div className="flex items-start gap-3 mb-3">
+                {/* Icon — smaller, softer */}
+                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                  <Building2 size={18} />
+                </div>
+
+                {/* Name + badges */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 font-heading text-[15px] leading-tight mb-1.5 line-clamp-2">
+                    {company.name}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">
+                      {company.code}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${
+                      company.status === 'ACTIVE' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                        : 'bg-slate-50 text-slate-500 border-slate-100'
+                    }`}>
+                      <span className={`w-1 h-1 rounded-full mr-1 ${
+                        company.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                      }`} />
+                      {company.status}
+                    </span>
                   </div>
                 </div>
+
+                {/* Edit */}
                 {canEdit && (
                   <button 
                     onClick={() => onEdit(company)}
-                    className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200 flex-shrink-0"
+                    className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
                     title="Edit Company"
                   >
-                    <Edit2 size={18} strokeWidth={2.5} />
+                    <Edit2 size={15} strokeWidth={2.5} />
                   </button>
                 )}
               </div>
 
-              {/* Card Stats */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              {/* Stats row — horizontal, compact */}
+              <div className="flex items-center gap-1.5 sm:gap-2 pt-3 border-t border-slate-100">
+                {/* Branches */}
                 <button
                   onClick={() => navigate(`/companies/${company.id}/branches`)}
-                  className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch py-2 px-3 -mx-3 rounded-lg hover:bg-primary/5"
+                  className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 px-2 sm:px-3 py-2 bg-slate-50 hover:bg-primary/5 rounded-xl transition-all group/branch border border-transparent hover:border-primary/20"
                   title="View Branches"
                 >
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all">
-                    <GitBranch size={16} />
+                  <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:text-primary transition-colors shadow-sm shrink-0">
+                    <GitBranch size={13} />
                   </div>
-                  <div className="text-left">
-                    <div className="font-bold text-sm tracking-tight group-hover/branch:text-primary transition-colors">{company._count?.branches || 0}</div>
-                    <div className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Branches</div>
+                  <div className="text-left min-w-0">
+                    <div className="font-black text-sm text-slate-900 group-hover/branch:text-primary transition-colors leading-none">
+                      {company._count?.branches || 0}
+                    </div>
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">Branches</div>
                   </div>
-                  <ChevronRight size={14} className="text-slate-300 group-hover/branch:text-primary transition-colors" />
+                  <ChevronRight size={12} className="text-slate-300 group-hover/branch:text-primary transition-colors ml-auto shrink-0" />
                 </button>
-                
-                <div className="flex items-center gap-2 text-slate-600 py-2 px-3">
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                    <Users size={16} />
+
+                {/* Users */}
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 px-2 sm:px-3 py-2 bg-slate-50 rounded-xl border border-transparent">
+                  <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+                    <Users size={13} />
                   </div>
-                  <div className="text-left">
-                    <div className="font-bold text-sm tracking-tight">{company._count?.users || 0}</div>
-                    <div className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Users</div>
+                  <div className="text-left min-w-0">
+                    <div className="font-black text-sm text-slate-900 leading-none">
+                      {company._count?.users || 0}
+                    </div>
+                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">Users</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-slate-500 py-2 px-3">
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                    <Calendar size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-[11px] tracking-tight">
-                      {new Date(company.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
+                {/* Created date */}
+                <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-2 shrink-0">
+                  <Calendar size={12} className="text-slate-400 shrink-0" />
+                  <div>
+                    <div className="text-[11px] font-bold text-slate-700 leading-none whitespace-nowrap">
+                      {new Date(company.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Created</div>
+                    <div className="text-[9px] text-slate-400 font-medium uppercase tracking-wide mt-0.5">Created</div>
                   </div>
                 </div>
               </div>
@@ -170,7 +173,7 @@ const CompanyTable = ({ companies = [], isLoading, onEdit, canEdit }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
       {/* Mobile Layout */}
-      <div className="block lg:hidden p-4">
+      <div className="block lg:hidden p-3 sm:p-4">
         {isLoading ? renderMobileSkeletons() : renderMobileCards()}
       </div>
 

@@ -10,6 +10,7 @@ const RBAC_ADAPTER_MAP = {
   // Navigation / View Permissions
   // Dashboard has no dedicated backend module — grant to all authenticated users by using null module
   'view:dashboard': { module: null, action: null },          // Always true if authenticated
+  'view:branch_dashboard': { module: null, action: null },
   'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
   'view:prospects': { module: 'PROSPECT', action: 'canView' },
   'view:activities': { module: 'ACTIVITY', action: 'canView' },
@@ -49,6 +50,10 @@ const RBAC_ADAPTER_MAP = {
   // Activity / Comment Permissions (Phase 1)
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
+
+  // Daily Report (ISE) — Publicly accessible to ISE role specifically
+  'view:daily_report': { module: null, action: null },
+  'create:daily_report': { module: null, action: null },
 };
 
 export const AuthProvider = ({ children }) => {
@@ -62,8 +67,15 @@ export const AuthProvider = ({ children }) => {
     const mapping = RBAC_ADAPTER_MAP[permissionStr];
     if (!mapping) return false;
 
-    // null module means "grant to all authenticated users" (e.g. dashboard)
-    if (mapping.module === null) return true;
+    // null module means "grant to all authenticated users"
+    if (mapping.module === null) {
+      // Explicitly restrict Dashboard to high-level roles only
+      if (permissionStr === 'view:branch_dashboard') {
+        const role = user.primaryRole;
+        return role === 'BRANCH_ADMIN' || role === 'Admin' || role === 'Super Admin';
+      }
+      return true;
+    }
 
     // Safely evaluate `user.permissions.<UPPERCASE_MODULE>.<canAction>`
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);

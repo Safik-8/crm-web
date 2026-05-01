@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getPipelineStages } from '../../pipelines/services/stageService';
 import { getLeads, updateLeadStage } from '../services/leadService';
 import { toast } from 'sonner';
@@ -6,12 +6,24 @@ import { toast } from 'sonner';
 /**
  * Manages the full Kanban state for a single pipeline.
  * columns: { [stageId]: { stage, leads: [] } }
+ *
+ * Performance notes:
+ * - columnsRef mirrors columns state so moveCard never needs columns in its
+ *   dependency array — eliminates the "new function every render" problem.
+ * - orderedStages is memoised so downstream components don't re-render when
+ *   unrelated state changes.
  */
 export const useKanban = (pipelineId) => {
   const [columns, setColumns] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Keep a snapshot for rollback on failed DND moves
+
+  // Mirror of columns kept in a ref so moveCard can read the latest value
+  // without being recreated every time columns changes.
+  const columnsRef = useRef(columns);
+  columnsRef.current = columns;
+
+  // Snapshot ref for optimistic-update rollback
   const snapshotRef = useRef(null);
 
   const fetchBoard = useCallback(async () => {
@@ -19,25 +31,26 @@ export const useKanban = (pipelineId) => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch ordered stage columns
-      const stagesRes = await getPipelineStages(pipelineId);
+      const [stagesRes, leadsRes] = await Promise.all([
+        getPipelineStages(pipelineId),
+        getLeads({ pipelineId }),
+      ]);
+
       const rawStages = stagesRes?.data;
       const stages = Array.isArray(rawStages) ? rawStages
         : Array.isArray(rawStages?.stages) ? rawStages.stages
-          : [];
+        : [];
 
-      // 2. Fetch all leads for this pipeline
-      const leadsRes = await getLeads({ pipelineId });
       const rawLeads = leadsRes?.data;
       const leads = Array.isArray(rawLeads) ? rawLeads
         : Array.isArray(rawLeads?.leads) ? rawLeads.leads
-          : [];
+        : [];
 
-      // 3. Bucket leads into their respective stage columns
+      const sortedStages = [...stages].sort(
+        (a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0)
+      );
+
       const cols = {};
-      // Sort stages by orderNo before bucketing to maintain deterministic order
-      const sortedStages = [...stages].sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
-      
       sortedStages.forEach(stage => {
         cols[stage.id] = {
           stage,
@@ -56,33 +69,41 @@ export const useKanban = (pipelineId) => {
   useEffect(() => { fetchBoard(); }, [fetchBoard]);
 
   /**
-   * Optimistic card move. Moves a lead card from one column to another,
-   * then calls the API. Rolls back on failure.
+   * Optimistic card move.
+   * Reads current columns from columnsRef — no dependency on columns state,
+   * so this function is created exactly once per mount.
    */
   const moveCard = useCallback(async (leadId, fromStageId, toStageId) => {
     if (fromStageId === toStageId) return;
 
-    // Snapshot for rollback
-    snapshotRef.current = JSON.parse(JSON.stringify(columns));
+    // Deep-clone current state for rollback
+    snapshotRef.current = JSON.parse(JSON.stringify(columnsRef.current));
 
-    // Optimistic update
+    // Optimistic update — functional form so React batches correctly
     setColumns(prev => {
-      const next = { ...prev };
-      const lead = next[fromStageId]?.leads.find(l => l.id === leadId);
+      const lead = prev[fromStageId]?.leads.find(l => l.id === leadId);
       if (!lead) return prev;
-      next[fromStageId] = { ...next[fromStageId], leads: next[fromStageId].leads.filter(l => l.id !== leadId) };
-      next[toStageId] = { ...next[toStageId], leads: [...(next[toStageId]?.leads || []), { ...lead, stageId: toStageId }] };
-      return next;
+      return {
+        ...prev,
+        [fromStageId]: {
+          ...prev[fromStageId],
+          leads: prev[fromStageId].leads.filter(l => l.id !== leadId),
+        },
+        [toStageId]: {
+          ...prev[toStageId],
+          leads: [...(prev[toStageId]?.leads || []), { ...lead, stageId: toStageId }],
+        },
+      };
     });
 
     try {
       await updateLeadStage(leadId, toStageId);
     } catch (err) {
-      // Rollback
-      setColumns(snapshotRef.current);
+      // Rollback to snapshot
+      if (snapshotRef.current) setColumns(snapshotRef.current);
       toast.error(err?.message || 'Could not move lead. Try again.');
     }
-  }, [columns]);
+  }, []); // ← stable: no columns dependency
 
   const addLeadToColumn = useCallback((stageId, lead) => {
     setColumns(prev => {
@@ -94,10 +115,14 @@ export const useKanban = (pipelineId) => {
     });
   }, []);
 
-  // Ordered stage list for rendering columns left-to-right (sorted by orderNo)
-  const orderedStages = Object.values(columns)
-    .map(c => c.stage)
-    .sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0));
+  // Memoised so consumers don't re-render when unrelated state changes
+  const orderedStages = useMemo(
+    () =>
+      Object.values(columns)
+        .map(c => c.stage)
+        .sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0)),
+    [columns]
+  );
 
   return { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch: fetchBoard };
 };

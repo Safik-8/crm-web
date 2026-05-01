@@ -35,9 +35,17 @@ export const apiClient = async (endpoint, options = {}) => {
     return null;
   }
 
-  // If response not ok, throw the parsed data as an error so we can catch it seamlessly
-  // maintaining the backend's provided structure
+  // If response not ok, handle errors
   if (!response.ok) {
+    // Option B: Automatically navigate to login on authentication failure (401)
+    const isLoginRequest = endpoint.includes('/auth/login');
+    const isLoginPage = window.location.pathname === '/login';
+
+    if (response.status === 401 && !isLoginRequest && !isLoginPage) {
+      // Option B: Redirect to login with a flag to show a toast message
+      window.location.href = '/login?session=expired';
+    }
+
     throw data;
   }
 

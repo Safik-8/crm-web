@@ -1,17 +1,10 @@
 import React from 'react';
-import { Edit2, GitBranch, Users, Hash, UserPlus, ChevronRight, Calendar } from 'lucide-react';
+import { Edit2, GitBranch, Users, Hash, UserPlus, Calendar } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 /**
  * BranchTable Component
  * Mobile-first responsive design with card layout for mobile and table for desktop.
- * Displays branches with premium industry styling, matching Company module aesthetic.
- *
- * @param {Array} branches - Branch data array
- * @param {boolean} isLoading - Loading state for skeletons
- * @param {function} onEdit - Edit action callback
- * @param {function} onAssignUser - Assign user action callback
- * @param {boolean} canEdit - RBAC permission check
  */
 const BranchTable = ({ branches = [], isLoading, onEdit, onAssignUser, canEdit }) => {
 
@@ -19,23 +12,24 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onAssignUser, canEdit }
   const renderMobileSkeletons = () => (
     <div className="space-y-3">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-xl p-4 border border-slate-200/60">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3 flex-1">
-              <Skeleton className="h-10 w-10 rounded-xl" />
-              <div className="flex-1">
-                <Skeleton className="h-5 w-32 mb-2" />
-                <Skeleton className="h-4 w-20" />
+        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+          <div className="flex items-start gap-3 mb-4">
+            <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
+            <div className="flex-1 min-w-0">
+              <Skeleton className="h-5 w-32 mb-2" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-16 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
               </div>
             </div>
             <div className="flex gap-1">
-              <Skeleton className="h-8 w-8 rounded-lg" />
-              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+              <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-4 w-12" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
           </div>
         </div>
       ))}
@@ -61,7 +55,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onAssignUser, canEdit }
   const renderMobileCards = () => {
     if (branches.length === 0) {
       return (
-        <div className="bg-white rounded-xl p-8 border border-slate-200/60 text-center">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200/60 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
               <GitBranch size={32} />
@@ -78,83 +72,87 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onAssignUser, canEdit }
     return (
       <div className="space-y-3">
         {branches.map((branch) => (
-          <div key={branch.id} className="bg-white rounded-xl border border-slate-200/60 overflow-hidden hover:shadow-md transition-all duration-200 group">
-            {/* Card Header */}
+          <div 
+            key={branch.id} 
+            className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
+          >
             <div className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 flex-shrink-0">
-                    <GitBranch size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-slate-900 font-heading text-base truncate">{branch.name}</h3>
-                    {branch.company && (
-                      <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{branch.company.name}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wider">
-                        <Hash size={8} className="opacity-50" />
-                        {branch.code}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${
-                        branch.status === 'ACTIVE'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                          : 'bg-slate-50 text-slate-600 border-slate-100'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full mr-1 ${
-                          branch.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                        }`} />
-                        {branch.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {canEdit && (
-                    <>
-                      <button
-                        onClick={() => onEdit(branch)}
-                        className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
-                        title="Edit Branch"
-                      >
-                        <Edit2 size={18} strokeWidth={2.5} />
-                      </button>
-                      <button
-                        onClick={() => onAssignUser(branch)}
-                        className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-200"
-                        title="Create & Assign User"
-                      >
-                        <UserPlus size={18} strokeWidth={2.5} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Card Stats */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <div className="flex items-center gap-2 text-slate-600 py-2 px-3 -mx-3 rounded-lg">
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                    <Users size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</div>
-                    <div className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Users</div>
-                  </div>
+              {/* Top Row: Icon + Name + Actions */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-11 w-11 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shrink-0">
+                  <GitBranch size={20} />
                 </div>
                 
-                <div className="flex items-center gap-2 text-slate-500 py-2 px-3">
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                    <Calendar size={16} />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 font-heading text-base leading-tight mb-1">
+                    {branch.name}
+                  </h3>
+                  {branch.company && (
+                    <p className="text-xs text-slate-400 font-medium truncate">{branch.company.name}</p>
+                  )}
+                </div>
+
+                {canEdit && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => onEdit(branch)}
+                      className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                      title="Edit"
+                    >
+                      <Edit2 size={15} strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={() => onAssignUser(branch)}
+                      className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                      title="Assign User"
+                    >
+                      <UserPlus size={15} strokeWidth={2.5} />
+                    </button>
                   </div>
-                  <div className="text-left">
-                    <div className="font-bold text-[11px] tracking-tight">
+                )}
+              </div>
+
+              {/* Badges Row */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wider">
+                  <Hash size={8} className="opacity-50" />
+                  {branch.code}
+                </span>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${
+                  branch.status === 'ACTIVE'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                    : 'bg-slate-50 text-slate-600 border-slate-100'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full mr-1 ${
+                    branch.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                  }`} />
+                  {branch.status}
+                </span>
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                    <Users size={15} />
+                  </div>
+                  <div>
+                    <div className="font-black text-base text-slate-900 leading-none">{branch._count?.users || 0}</div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">Users</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-slate-500">
+                  <Calendar size={14} className="opacity-70" />
+                  <div className="text-right">
+                    <div className="font-bold text-xs text-slate-700 leading-none">
                       {branch.createdAt ? new Date(branch.createdAt).toLocaleDateString(undefined, {
                         month: 'short',
-                        day: 'numeric'
+                        day: 'numeric',
+                        year: '2-digit'
                       }) : 'N/A'}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Created</div>
+                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wide mt-0.5">Created</div>
                   </div>
                 </div>
               </div>
@@ -168,7 +166,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onAssignUser, canEdit }
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
       {/* Mobile Layout */}
-      <div className="block lg:hidden p-4">
+      <div className="block lg:hidden p-3 sm:p-4">
         {isLoading ? renderMobileSkeletons() : renderMobileCards()}
       </div>
 

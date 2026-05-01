@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,6 +14,18 @@ const LoginForm = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check for expired session on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('session') === 'expired') {
+      toast.error('Unauthorized user, please login again', {
+        id: 'session-expired', // Prevent duplicate toasts
+      });
+      // Clean up the URL without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // Always redirect to dashboard after login — avoids cross-user URL leakage
   const redirectTo = '/dashboard';                                  

@@ -1,6 +1,7 @@
 export const PERMISSIONS = {
   // Navigation / View Permissions
   VIEW_DASHBOARD: 'view:dashboard',
+  VIEW_BRANCH_DASHBOARD: 'view:branch_dashboard',
   VIEW_PROSPECTS: 'view:prospects',
   VIEW_ACTIVITIES: 'view:activities',
   VIEW_SESSIONS: 'view:sessions',
@@ -40,4 +41,8 @@ export const PERMISSIONS = {
   MANAGE_USERS: 'action:manage_users',
   MANAGE_ALL_USERS: 'action:manage_all_users',
   READ_ONLY_REPORTS: 'action:read_only_reports',
+
+  // Daily Report (ISE)
+  VIEW_DAILY_REPORT: 'view:daily_report',
+  CREATE_DAILY_REPORT: 'create:daily_report',
 };

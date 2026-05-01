@@ -91,83 +91,74 @@ const BranchSettingsPage = () => {
             description="Manage geographical and functional hubs for the selected company."
             icon={GitBranch}
         >
-            <div className="flex flex-col gap-6">
-                {/* Header Actions */}
-                <div className="flex flex-col gap-4">
-                    {/* Mobile Header */}
-                    <div className="flex items-center justify-between lg:hidden">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => navigate('/settings/company')}
-                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 active:scale-95"
-                                title="Back to Company Registry"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            <button
-                                onClick={fetchBranches}
-                                disabled={isLoading}
-                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 disabled:opacity-50 active:scale-95"
-                                title="Refresh Data"
-                            >
-                                <RefreshCcw size={20} className={isLoading ? 'animate-spin' : ''} />
-                            </button>
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-800 font-heading">Branches</h2>
-                                <p className="text-sm text-slate-500 font-medium">Hub Directory</p>
-                            </div>
+            <div className="flex flex-col gap-3 sm:gap-4">
+
+                {/* ── Mobile section header ── */}
+                <div className="flex items-center justify-between lg:hidden bg-white rounded-2xl px-4 py-3 border border-slate-200/60 shadow-sm">
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            onClick={() => navigate('/settings/company')}
+                            className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-all active:scale-95"
+                            title="Back to Company Registry"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                            <GitBranch size={15} />
                         </div>
+                        <div>
+                            <h2 className="text-sm font-bold text-slate-800 font-heading leading-tight">Branches</h2>
+                            <p className="text-[11px] text-slate-500 font-medium">Hub Directory</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={fetchBranches}
+                            disabled={isLoading}
+                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                            title="Refresh"
+                        >
+                            <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
                         {branchPerms.canCreate && (
                             <button
                                 onClick={handleAddBranch}
-                                className="h-12 w-12 flex items-center justify-center bg-primary text-white rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
-                                title="Add Branch"
+                                className="flex items-center gap-1.5 h-9 px-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 active:scale-95"
                             >
-                                <Plus size={20} />
+                                <Plus size={15} />
+                                Add
                             </button>
                         )}
                     </div>
+                </div>
 
-                    {/* Desktop Header */}
-                    <div className="hidden lg:flex lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => navigate('/settings/company')}
-                                className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
-                                title="Back to Company Registry"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <button
-                                onClick={fetchBranches}
-                                disabled={isLoading}
-                                className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
-                                title="Refresh Data"
-                            >
-                                <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-                            </button>
-                            <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
-                        </div>
-
-                        {branchPerms.canCreate && (
-                            <button
-                                onClick={handleAddBranch}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
-                            >
-                                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                                Add Branch
-                            </button>
-                        )}
+                {/* ── Desktop section header ── */}
+                <div className="hidden lg:flex lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => navigate('/settings/company')}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
+                            title="Back to Company Registry"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <button
+                            onClick={fetchBranches}
+                            disabled={isLoading}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
+                            title="Refresh Data"
+                        >
+                            <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
+                        <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
                     </div>
-
-                    {/* Mobile Add Button - Full Width */}
                     {branchPerms.canCreate && (
                         <button
                             onClick={handleAddBranch}
-                            className="lg:hidden flex items-center justify-center gap-3 py-4 bg-primary text-white rounded-xl text-base font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 w-full"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
                         >
-                            <Plus size={20} />
-                            Add New Branch
+                            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Add Branch
                         </button>
                     )}
                 </div>

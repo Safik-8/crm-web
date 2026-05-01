@@ -5,6 +5,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -34,6 +35,10 @@ const PipelineStageBuilderPage = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      // 200ms hold before drag starts — lets normal scrolling work uninterrupted
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 

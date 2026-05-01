@@ -1,8 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
+import RootRedirect from './RootRedirect';
 import LoginPage from '../../features/auth/pages/LoginPage';
 import BaseLayout from '../../shared/layouts/BaseLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
+import BranchDashboardPage from '../../features/dashboard/pages/BranchDashboardPage';
 import LeadsPage from '../../features/leads/pages/LeadsPage';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
@@ -13,6 +15,7 @@ import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
 import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
 import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
+import DailyReportPage from '../../features/reports/pages/DailyReportPage';
 import UsersPage from '../../features/users/pages/UsersPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
@@ -38,13 +41,13 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <RootRedirect />,
       },
       {
         path: 'dashboard',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DASHBOARD}>
-            <DashboardPage />
+          <ProtectedRoute>
+            <RootRedirect />
           </ProtectedRoute>
         ),
       },
@@ -53,6 +56,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_DASHBOARD}>
             <DashboardPage title="Company Dashboard" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/branch',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_DASHBOARD}>
+            <BranchDashboardPage />
           </ProtectedRoute>
         ),
       },
@@ -109,6 +120,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TASKS}>
             <TasksPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'reports/daily',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DAILY_REPORT}>
+            <DailyReportPage />
           </ProtectedRoute>
         ),
       },
@@ -221,6 +240,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <Navigate to="/dashboard" replace />,
+    element: <RootRedirect />,
   },
 ]);

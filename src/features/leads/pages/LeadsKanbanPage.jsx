@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -33,61 +33,92 @@ const LeadsKanbanPage = () => {
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
 
   const scrollContainerRef = useRef(null);
+  // Track live pointer/touch position for auto-scroll during drag
+  const dragPositionRef = useRef({ x: 0, y: 0 });
+  const autoScrollRafRef = useRef(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 100,
-        tolerance: 5
-      }
+      activationConstraint: { distance: 8 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5
-      }
+      activationConstraint: { delay: 200, tolerance: 8 },
     })
   );
 
-  // Find which column a lead sits in
-  const findColumn = (leadId) => {
+  // Continuous auto-scroll loop — runs via rAF while a drag is active
+  const startAutoScroll = useCallback(() => {
+    const tick = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const { x, y } = dragPositionRef.current;
+      const edgeH = 80; // horizontal edge threshold (px)
+      const edgeV = 60; // vertical edge threshold (px)
+      const speedH = 12;
+      const speedV = 10;
+
+      // Horizontal scroll
+      const relX = x - rect.left;
+      if (relX < edgeH && container.scrollLeft > 0) {
+        container.scrollLeft -= speedH;
+      } else if (relX > rect.width - edgeH) {
+        container.scrollLeft += speedH;
+      }
+
+      // Vertical scroll (for the window, since the board is full-height)
+      const relY = y - rect.top;
+      if (relY < edgeV && container.scrollTop > 0) {
+        container.scrollTop -= speedV;
+      } else if (relY > rect.height - edgeV) {
+        container.scrollTop += speedV;
+      }
+
+      autoScrollRafRef.current = requestAnimationFrame(tick);
+    };
+    autoScrollRafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRafRef.current) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+  }, []);
+
+  // Find which column a lead sits in — memoised to avoid re-creation every render
+  const findColumn = useCallback((leadId) => {
     for (const [stageId, col] of Object.entries(columns)) {
       if (col.leads.some(l => l.id === leadId)) return stageId;
     }
     return null;
-  };
+  }, [columns]);
+
+  // Stable set-lead callback so KanbanColumn doesn't re-render on unrelated state changes
+  const handleLeadClick = useCallback((lead) => setSelectedLead(lead), []);
 
   const handleDragStart = ({ active }) => {
     const col = findColumn(active.id);
     if (!col) return;
     setActiveFrom(col);
     setActiveCard(columns[col]?.leads.find(l => l.id === active.id));
+    startAutoScroll();
   };
 
-  // Auto-scroll when dragging near edges
-  const handleDragMove = useCallback(({ activatorEvent }) => {
-    if (!scrollContainerRef.current || !activeCard) return;
-
-    const container = scrollContainerRef.current;
-    const containerRect = container.getBoundingClientRect();
-    const scrollSpeed = 15;
-    const edgeThreshold = 80;
-
-    // Get current touch/mouse position
-    const clientX = activatorEvent?.clientX || 0;
-    const relativeX = clientX - containerRect.left;
-
-    // Auto-scroll left
-    if (relativeX < edgeThreshold && container.scrollLeft > 0) {
-      container.scrollLeft -= scrollSpeed;
-    }
-    // Auto-scroll right
-    else if (relativeX > containerRect.width - edgeThreshold) {
-      container.scrollLeft += scrollSpeed;
-    }
-  }, [activeCard]);
+  // Track live pointer/touch position for auto-scroll
+  const handleDragMove = useCallback(({ activatorEvent, delta }) => {
+    // activatorEvent is the original start event; add delta to get current position
+    const startX = activatorEvent?.clientX ?? activatorEvent?.touches?.[0]?.clientX ?? 0;
+    const startY = activatorEvent?.clientY ?? activatorEvent?.touches?.[0]?.clientY ?? 0;
+    dragPositionRef.current = {
+      x: startX + (delta?.x ?? 0),
+      y: startY + (delta?.y ?? 0),
+    };
+  }, []);
 
   const handleDragEnd = async ({ active, over }) => {
+    stopAutoScroll();
     setActiveCard(null);
     setActiveFrom(null);
     if (!over || !canEdit) return;
@@ -96,13 +127,13 @@ const LeadsKanbanPage = () => {
     await moveCard(active.id, activeFrom, toStageId);
   };
 
-  // Find stage name for the drawer
-  const stageForLead = (lead) => {
+  // Find stage name for the drawer — memoised
+  const stageForLead = useCallback((lead) => {
     for (const col of Object.values(columns)) {
       if (col.leads.some(l => l.id === lead?.id)) return col.stage?.name;
     }
     return null;
-  };
+  }, [columns]);
 
   // Called when a new lead is created — place it in the Prospect column
   const handleLeadCreated = (lead) => {
@@ -134,18 +165,18 @@ const LeadsKanbanPage = () => {
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <Kanban size={18} sm:size={20} className="text-primary shrink-0" />
+            <Kanban size={18} className="text-primary shrink-0" />
             <h1 className="text-base sm:text-lg font-bold font-heading text-slate-900 truncate">Pipeline Board</h1>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button onClick={refetch} className="p-1.5 sm:p-2 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors" title="Refresh">
-            <RefreshCw size={14} sm:size={15} />
+            <RefreshCw size={15} />
           </button>
           {canCreate && (
             <button onClick={() => setShowForm(true)}
               className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
-              <Plus size={14} sm:size={15} /> <span className="hidden sm:inline">Add Lead</span><span className="sm:hidden">Add</span>
+              <Plus size={15} /> <span className="hidden sm:inline">Add Lead</span><span className="sm:hidden">Add</span>
             </button>
           )}
         </div>
@@ -161,10 +192,10 @@ const LeadsKanbanPage = () => {
           onDragEnd={handleDragEnd}
         >
           <div ref={scrollContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
-            <div className="flex gap-3 sm:gap-4 md:gap-5 p-4 sm:p-6 md:p-8 h-full items-stretch min-w-max">
+            <div className="flex gap-3 sm:gap-4 md:gap-5 p-3 sm:p-6 md:p-8 h-full items-stretch min-w-max">
               {loading
                 ? [...Array(3)].map((_, i) => (
-                  <div key={i} className="w-64 sm:w-72 flex-shrink-0">
+                  <div key={i} className="w-[72vw] sm:w-[272px] md:w-72 flex-shrink-0">
                     <div className="h-6 bg-slate-100 rounded-lg animate-pulse mb-3 w-32" />
                     <div className="space-y-3">
                       {[...Array(2)].map((_, j) => (
@@ -179,7 +210,7 @@ const LeadsKanbanPage = () => {
                     stage={stage}
                     leads={columns[stage.id]?.leads || []}
                     loading={loading}
-                    onLeadClick={setSelectedLead}
+                    onLeadClick={handleLeadClick}
                   />
                 ))
               }
@@ -188,7 +219,7 @@ const LeadsKanbanPage = () => {
           {/* Drag overlay — card ghost while dragging */}
           <DragOverlay>
             {activeCard ? (
-              <div className="w-64 sm:w-72 rotate-1 sm:rotate-2 shadow-2xl opacity-90">
+              <div className="w-[72vw] sm:w-[272px] md:w-72 rotate-1 sm:rotate-2 shadow-2xl opacity-90">
                 <LeadCard lead={activeCard} onClick={() => { }} />
               </div>
             ) : null}
