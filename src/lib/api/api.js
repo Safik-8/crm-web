@@ -4,7 +4,7 @@
  * Responsibilities:
  *  - Attach credentials (httpOnly cookie auth)
  *  - Serialize JSON bodies
- *  - Drive the global page loader via loaderBridge
+ *  - Optionally drive the global page loader via loaderBridge (opt-in)
  *  - Handle 401 → redirect to /login?session=expired
  *  - Surface parsed error objects to callers
  *
@@ -27,7 +27,8 @@ const loaderBridge = {
 
 /**
  * Wire up the global loader to the API client.
- * Call this once from the component tree (see ApiLoaderBridge.jsx).
+ * Optional: call this from the component tree only if any request opts in
+ * with `showLoader: true`.
  *
  * @param {{ show: (msg?: string) => void, hide: () => void, forceHide: () => void }} bridge
  */
@@ -59,7 +60,8 @@ export const registerLoaderBridge = (bridge) => {
  */
 export const apiClient = async (endpoint, options = {}) => {
   const {
-    showLoader: shouldShowLoader = true,
+    // API calls are silent by default; global loader is route-driven.
+    showLoader: shouldShowLoader = false,
     silent = false,
     loaderMessage = '',
     signal,
