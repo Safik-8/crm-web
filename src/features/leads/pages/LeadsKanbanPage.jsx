@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -13,6 +13,7 @@ import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban } from 'lucide-react';
 import { useKanban } from '../hooks/useKanban';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import KanbanColumn from '../components/KanbanColumn';
 import LeadCard from '../components/LeadCard';
 import LeadFormModal from '../components/LeadFormModal';
@@ -22,7 +23,9 @@ const LeadsKanbanPage = () => {
   const { id: pipelineId } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const { forceHideLoader } = useLoader();
   const { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch } = useKanban(pipelineId);
+  const didHideInitialRouteLoaderRef = useRef(false);
 
   const [activeCard, setActiveCard] = useState(null);   // card being dragged (for DragOverlay)
   const [activeFrom, setActiveFrom] = useState(null);  // source stage id
@@ -142,6 +145,17 @@ const LeadsKanbanPage = () => {
     if (prospectStage) addLeadToColumn(prospectStage.id, lead);
     else refetch();
   };
+
+  // End route-level global loader once initial board data resolves.
+  useEffect(() => {
+    if (
+      !didHideInitialRouteLoaderRef.current &&
+      Object.keys(columns).length > 0
+    ) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [columns, forceHideLoader]);
 
   if (error) return (
     <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">

@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useBranchReports } from '../hooks/useBranchReports';
 import { toast } from 'sonner';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import {
   PhoneIncoming,
   UserCheck,
@@ -230,6 +231,8 @@ const LazyStatCard = ({ stat, formatValue, index, eager = false }) => {
 // ─── Main component ───────────────────────────────────────────────────────────
 const BranchDashboardPage = () => {
   const today = getTodayDate();
+  const { forceHideLoader } = useLoader();
+  const didHideInitialRouteLoaderRef = useRef(false);
 
   const [tempStartDate, setTempStartDate] = useState(today);
   const [tempEndDate,   setTempEndDate]   = useState(today);
@@ -239,6 +242,13 @@ const BranchDashboardPage = () => {
     startDate: filters.startDate || undefined,
     endDate:   filters.endDate   || undefined,
   });
+
+  useEffect(() => {
+    if (!didHideInitialRouteLoaderRef.current && !loading) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [loading, forceHideLoader]);
 
   const handleApplyFilter = () => {
     if (tempStartDate && tempEndDate && tempStartDate > tempEndDate) {

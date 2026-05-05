@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GitBranch, Plus, RefreshCcw, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import { branchApi } from '../api/branchApi';
 import BranchTable from '../components/BranchTable';
 import BranchForm from '../components/BranchForm';
@@ -18,6 +19,8 @@ const BranchSettingsPage = () => {
     const { companyId } = useParams();
     const navigate = useNavigate();
     const { permissions } = useAuth();
+    const { forceHideLoader } = useLoader();
+    const didHideInitialRouteLoaderRef = React.useRef(false);
 
     // Data state
     const [branches, setBranches] = useState([]);
@@ -61,6 +64,18 @@ const BranchSettingsPage = () => {
             fetchBranches();
         }
     }, [companyId]);
+
+    useEffect(() => {
+        const hasRenderableData = branches.length > 0;
+        const hasRenderableResolvedState = !isLoading && (branches.length === 0 || Boolean(fetchError));
+        if (
+            !didHideInitialRouteLoaderRef.current &&
+            (hasRenderableData || hasRenderableResolvedState)
+        ) {
+            forceHideLoader();
+            didHideInitialRouteLoaderRef.current = true;
+        }
+    }, [branches, isLoading, fetchError, forceHideLoader]);
 
     const handleAddBranch = () => {
         setSelectedBranch(null);

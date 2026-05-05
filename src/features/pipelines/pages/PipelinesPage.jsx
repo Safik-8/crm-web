@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Kanban, Settings2, Trash2, Pencil, GitBranch, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePipelines } from '../hooks/usePipelines';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import { companyApi } from '../../company/api/companyApi';
 import { branchApi } from '../../branch/api/branchApi';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
@@ -136,13 +137,27 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
 const PipelinesPage = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const { forceHideLoader } = useLoader();
   const { pipelines, loading, error, addPipeline, editPipeline, removePipeline } = usePipelines();
+  const didHideInitialRouteLoaderRef = useRef(false);
 
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
   const canManage = hasPermission(PERMISSIONS.MANAGE_PIPELINES);
+
+  useEffect(() => {
+    const hasRenderableData = pipelines.length > 0;
+    const hasRenderableEmptyOrErrorState = !loading && (pipelines.length === 0 || Boolean(error));
+    if (
+      !didHideInitialRouteLoaderRef.current &&
+      (hasRenderableData || hasRenderableEmptyOrErrorState)
+    ) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [pipelines, loading, error, forceHideLoader]);
 
   const handleCreate = async (data) => {
     const res = await addPipeline(data);

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Building2, Plus, RefreshCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import useCompanies from '../hooks/useCompanies';
 import CompanyTable from '../components/CompanyTable';
 import CompanyFilters from '../components/CompanyFilters';
@@ -15,6 +16,8 @@ import GenericPage from '../../../shared/components/templates/GenericPage';
  */
 const CompanySettingsPage = () => {
   const { permissions } = useAuth();
+  const { forceHideLoader } = useLoader();
+  const didHideInitialRouteLoaderRef = useRef(false);
   const companyPerms = permissions?.COMPANY || {};
 
   // ── Paginated data + filter state (all in one hook) ──────────────────────
@@ -60,6 +63,19 @@ const CompanySettingsPage = () => {
 
   const hasActiveFilters = !!(search || status);
   const isLoading = loadingState === 'loading';
+
+  useEffect(() => {
+    const hasRenderableData = companies.length > 0;
+    const hasRenderableResolvedState =
+      loadingState === 'empty' || loadingState === 'error';
+    if (
+      !didHideInitialRouteLoaderRef.current &&
+      (hasRenderableData || hasRenderableResolvedState)
+    ) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [companies, loadingState, forceHideLoader]);
 
   return (
     <GenericPage
