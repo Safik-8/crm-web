@@ -42,6 +42,7 @@ export const registerLoaderBridge = (bridge) => {
 /**
  * @typedef {RequestInit & {
  *   showLoader?: boolean,
+ *   silent?: boolean,
  *   loaderMessage?: string,
  *   signal?: AbortSignal,
  * }} ApiClientOptions
@@ -59,10 +60,12 @@ export const registerLoaderBridge = (bridge) => {
 export const apiClient = async (endpoint, options = {}) => {
   const {
     showLoader: shouldShowLoader = true,
+    silent = false,
     loaderMessage = '',
     signal,
     ...fetchOptions
   } = options;
+  const shouldUseLoader = shouldShowLoader && !silent;
 
   const url = `${BASE_URL}${endpoint}`;
 
@@ -83,7 +86,7 @@ export const apiClient = async (endpoint, options = {}) => {
   }
 
   // Show loader before the request fires
-  if (shouldShowLoader) {
+  if (shouldUseLoader) {
     loaderBridge.show?.(loaderMessage);
   }
 
@@ -126,7 +129,7 @@ export const apiClient = async (endpoint, options = {}) => {
     throw error;
   } finally {
     // Always decrement the loader counter, even on error or cancellation
-    if (shouldShowLoader) {
+    if (shouldUseLoader) {
       loaderBridge.hide?.();
     }
   }

@@ -13,7 +13,11 @@ export const createLead = (data) =>
   apiClient('/leads', { method: 'POST', body: data });
 
 export const updateLeadStage = (leadId, stageId) =>
-  apiClient(`/leads/${leadId}/stage`, { method: 'PATCH', body: { stageId } });
+  apiClient(`/leads/${leadId}/stage`, {
+    method: 'PATCH',
+    body: { stageId },
+    silent: true,
+  });
 
 export const getLeadComments = (leadId) =>
   apiClient(`/leads/${leadId}/comments`, { method: 'GET' });
