@@ -8,11 +8,33 @@ const BASE_PATH = '/companies';
  */
 export const companyApi = {
   /**
-   * Fetch all companies
+   * Fetch all companies (legacy – kept for backward compatibility)
    * GET /api/companies
    */
   getCompanies: () => {
     return apiClient(BASE_PATH, { method: 'GET' });
+  },
+
+  /**
+   * Fetch paginated companies
+   * GET /api/companies/paginated?page=1&limit=10&search=&status=&sortBy=createdAt&sortOrder=desc
+   * @param {Object} params - Query parameters
+   * @param {number} params.page
+   * @param {number} params.limit
+   * @param {string} params.search
+   * @param {string} params.status  - '' | 'ACTIVE' | 'INACTIVE'
+   * @param {string} params.sortBy  - 'createdAt' | 'name'
+   * @param {string} params.sortOrder - 'asc' | 'desc'
+   */
+  getPaginatedCompanies: ({ page = 1, limit = 10, search = '', status = '', sortBy = 'createdAt', sortOrder = 'desc' } = {}) => {
+    const params = new URLSearchParams();
+    params.set('page', page);
+    params.set('limit', limit);
+    if (search)    params.set('search', search);
+    if (status)    params.set('status', status);
+    if (sortBy)    params.set('sortBy', sortBy);
+    if (sortOrder) params.set('sortOrder', sortOrder);
+    return apiClient(`${BASE_PATH}/paginated?${params.toString()}`, { method: 'GET' });
   },
 
   /**

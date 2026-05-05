@@ -1,53 +1,133 @@
+/**
+ * apiClient — Central fetch wrapper
+ *
+ * Responsibilities:
+ *  - Attach credentials (httpOnly cookie auth)
+ *  - Serialize JSON bodies
+ *  - Drive the global page loader via loaderBridge
+ *  - Handle 401 → redirect to /login?session=expired
+ *  - Surface parsed error objects to callers
+ *
+ * Loader integration uses a lightweight "bridge" pattern:
+ * The React context cannot be imported directly into a plain JS module, so
+ * we expose a `registerLoaderBridge` function that AuthProvider (or App) calls
+ * once on mount to wire up showLoader / hideLoader callbacks.
+ */
+
 const BASE_URL = '/api';
+
+// ─── Loader bridge ────────────────────────────────────────────────────────────
+// Populated at runtime by `registerLoaderBridge` called from LoaderProvider.
+
+const loaderBridge = {
+  show: /** @type {((msg?: string) => void) | null} */ (null),
+  hide: /** @type {(() => void) | null} */ (null),
+  forceHide: /** @type {(() => void) | null} */ (null),
+};
+
+/**
+ * Wire up the global loader to the API client.
+ * Call this once from the component tree (see ApiLoaderBridge.jsx).
+ *
+ * @param {{ show: (msg?: string) => void, hide: () => void, forceHide: () => void }} bridge
+ */
+export const registerLoaderBridge = (bridge) => {
+  loaderBridge.show = bridge.show;
+  loaderBridge.hide = bridge.hide;
+  loaderBridge.forceHide = bridge.forceHide;
+};
+
+// ─── Request options ──────────────────────────────────────────────────────────
+
+/**
+ * @typedef {RequestInit & {
+ *   showLoader?: boolean,
+ *   loaderMessage?: string,
+ *   signal?: AbortSignal,
+ * }} ApiClientOptions
+ */
+
+// ─── Core client ─────────────────────────────────────────────────────────────
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
  * and properly sets Content-Type for JSON payloads.
+ *
+ * @param {string} endpoint  - Path relative to BASE_URL (e.g. '/auth/me')
+ * @param {ApiClientOptions} options
  */
 export const apiClient = async (endpoint, options = {}) => {
+  const {
+    showLoader: shouldShowLoader = true,
+    loaderMessage = '',
+    signal,
+    ...fetchOptions
+  } = options;
+
   const url = `${BASE_URL}${endpoint}`;
-  
+
   const headers = {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
+    ...(fetchOptions.headers || {}),
   };
 
-  const fetchOptions = {
-    ...options,
+  const config = {
+    ...fetchOptions,
     headers,
-    credentials: 'include', // Extremely important for receiving/sending httpOnly tokens
+    credentials: /** @type {RequestCredentials} */ ('include'),
+    ...(signal ? { signal } : {}),
   };
 
-  if (fetchOptions.body && typeof fetchOptions.body !== 'string') {
-    fetchOptions.body = JSON.stringify(fetchOptions.body);
+  if (config.body && typeof config.body !== 'string') {
+    config.body = JSON.stringify(config.body);
   }
 
-  const response = await fetch(url, fetchOptions);
-  
-  // Try to parse JSON, if it fails, throw a standard error
-  let data;
+  // Show loader before the request fires
+  if (shouldShowLoader) {
+    loaderBridge.show?.(loaderMessage);
+  }
+
   try {
-    data = await response.json();
-  } catch (error) {
+    const response = await fetch(url, config);
+
+    // ── Parse response body ──────────────────────────────────────────────────
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return null;
+    }
+
+    // ── Handle HTTP errors ───────────────────────────────────────────────────
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return null;
-  }
+      const isLoginRequest = endpoint.includes('/auth/login');
+      const isLoginPage = window.location.pathname === '/login';
 
-  // If response not ok, handle errors
-  if (!response.ok) {
-    // Option B: Automatically navigate to login on authentication failure (401)
-    const isLoginRequest = endpoint.includes('/auth/login');
-    const isLoginPage = window.location.pathname === '/login';
+      if (response.status === 401 && !isLoginRequest && !isLoginPage) {
+        // Force-hide loader before redirecting so it doesn't persist on the
+        // login page if the browser reuses the same JS context.
+        loaderBridge.forceHide?.();
+        window.location.href = '/login?session=expired';
+      }
 
-    if (response.status === 401 && !isLoginRequest && !isLoginPage) {
-      // Option B: Redirect to login with a flag to show a toast message
-      window.location.href = '/login?session=expired';
+      throw data;
     }
 
-    throw data;
+    return data;
+  } catch (error) {
+    // ── Swallow AbortError silently (request cancellation) ───────────────────
+    if (error?.name === 'AbortError') {
+      // Do not re-throw; callers can check their own abort signal if needed.
+      return null;
+    }
+    throw error;
+  } finally {
+    // Always decrement the loader counter, even on error or cancellation
+    if (shouldShowLoader) {
+      loaderBridge.hide?.();
+    }
   }
-
-  return data;
 };

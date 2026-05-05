@@ -403,3 +403,125 @@
 }
 
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL PAGE LOADER — Full-screen Lottie overlay
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Z-index layering:
+     .loader-overlay   → 9998  (below Sonner toasts at 9999)
+     Sonner toasts     → 9999  (always on top — notifications stay visible)
+
+   Fade transitions use CSS opacity + pointer-events so the overlay can
+   animate out without blocking user interaction during the fade.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base overlay shell ────────────────────────────────────────────────────── */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+
+  /* Frosted warm-white backdrop — matches brand neutral */
+  background: rgba(255, 245, 235, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  /* Transition: opacity for fade, visibility for a11y */
+  transition:
+    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Visible state ─────────────────────────────────────────────────────────── */
+.loader-overlay--visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+
+/* ── Hidden state (fade-out complete) ─────────────────────────────────────── */
+.loader-overlay--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── Orange radial glow — brand accent ────────────────────────────────────── */
+.loader-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(248, 111, 3, 0.18) 0%,
+    rgba(248, 111, 3, 0.08) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: loader-glow-pulse 2.4s ease-in-out infinite;
+}
+
+/* ── Animation wrapper ─────────────────────────────────────────────────────── */
+.loader-animation-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 24px rgba(248, 111, 3, 0.22));
+}
+
+/* ── Optional loading message ──────────────────────────────────────────────── */
+.loader-message {
+  position: relative;
+  z-index: 1;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #B96A01;
+  letter-spacing: 0.02em;
+  text-align: center;
+  max-width: 240px;
+  animation: loader-message-fade 0.4s ease both;
+}
+
+/* ── Dark mode overrides ───────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .loader-overlay {
+    background: rgba(18, 12, 6, 0.85);
+  }
+
+  .loader-message {
+    color: #F8A55A;
+  }
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes loader-glow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes loader-message-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -2,8 +2,7 @@ import LoginForm from '../components/LoginForm';
 
 const LoginPage = () => {
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center bg-white relative overflow-hidden">
-      {/* Background set to White per brand guidelines (masks the logo's background perfectly) */}
+<div className="flex min-h-screen w-screen items-center justify-center bg-amber-50 relative overflow-hidden">      {/* Background set to White per brand guidelines (masks the logo's background perfectly) */}
 
       <div className="z-10 w-full px-4 flex flex-col items-center">
         <LoginForm />

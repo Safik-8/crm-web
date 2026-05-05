@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/modules/Sidebar';
 import Topbar from '../components/modules/Topbar';
+import useRouteLoader from '../hooks/useRouteLoader';
 
 const BaseLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+
+  // Drives the global loader on every route transition
+  useRouteLoader();
+
+  // Close the mobile sidebar on every navigation so the new page
+  // doesn't render with the drawer still open
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 

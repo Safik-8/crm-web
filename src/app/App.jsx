@@ -1,14 +1,43 @@
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { X } from 'lucide-react';
 import { AuthProvider } from './providers/AuthProvider.jsx';
 import { router } from './routes/index.jsx';
+import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
+import GlobalLoader from '../shared/components/elements/GlobalLoader.jsx';
+import ApiLoaderBridge from '../shared/components/elements/ApiLoaderBridge.jsx';
 import '../shared/styles/index.css';
 
 function App() {
   return (
-    <div className="antialiased text-slate-900 bg-slate-50 font-sans selection:bg-primary/20 selection:text-primary">
-      <Toaster 
+    /*
+     * Provider order (outermost → innermost):
+     *   LoaderProvider  — must wrap everything so both ApiLoaderBridge and
+     *                     route components can access the loader context.
+     *   AuthProvider    — auth state, depends on apiClient (loader already wired)
+     *   RouterProvider  — page routing
+     *
+     * GlobalLoader renders the full-screen overlay; it is intentionally placed
+     * OUTSIDE RouterProvider so it is never unmounted during route transitions.
+     *
+     * ApiLoaderBridge wires the React context callbacks into the plain-JS
+     * apiClient module. It renders nothing.
+     *
+     * Toaster z-index (9999) sits above GlobalLoader (9998) so notifications
+     * remain visible while the loader is active.
+     */
+    <LoaderProvider>
+      {/* Wire loader context → apiClient (must be inside LoaderProvider) */}
+      <ApiLoaderBridge />
+
+      {/* Full-screen Lottie overlay — always mounted, fades in/out via CSS */}
+      <GlobalLoader />
+
+      {/*
+       * Sonner toast container.
+       * Declared before AuthProvider/RouterProvider so it is never
+       * re-mounted during auth state changes.
+       */}
+      <Toaster
         position="bottom-right"
         mobilePosition="bottom-center"
         closeButton
@@ -61,10 +90,13 @@ function App() {
           ),
         }}
       />
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </div>
+
+      <div className="antialiased text-slate-900 bg-slate-50 font-sans selection:bg-primary/20 selection:text-primary">
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </div>
+    </LoaderProvider>
   );
 }
 
