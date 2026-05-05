@@ -7,7 +7,10 @@ const SessionsPage = () => {
   const { forceHideLoader } = useLoader();
 
   useEffect(() => {
-    forceHideLoader();
+    const timer = setTimeout(() => {
+      forceHideLoader();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [forceHideLoader]);
 
   return (
