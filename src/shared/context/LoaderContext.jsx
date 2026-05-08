@@ -32,8 +32,9 @@ export const LoaderProvider = ({ children }) => {
     safetyTimerRef.current = setTimeout(() => {
       setRequestCount(0);
       setMessage('');
-    }, 15_000);
+    }, 10_000);
   }, []);
+  
 
   /** Hide the loader. Decrements the counter; hides when it reaches 0. */
   const hideLoader = useCallback(() => {

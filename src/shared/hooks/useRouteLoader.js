@@ -5,13 +5,15 @@
  *
  * Strategy:
  *  - Watch `useLocation` and show the global loader whenever pathname changes.
- *  - Loader hide is handled by page-level readiness (initial data complete),
- *    not by timeout-based auto-hide.
+ *  - Use a module-level guard to prevent duplicate triggers during StrictMode or remounts.
+ *  - useLayoutEffect is used to ensure showLoader runs BEFORE child component useEffects
+ *    (where forceHideLoader is typically called), avoiding race conditions.
+ *  - useRef is maintained to ensure hook count remains consistent for HMR stability.
  *
  * Usage: call once inside a component that is always mounted (e.g. BaseLayout).
  */
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLoader } from '../context/LoaderContext';
 
@@ -21,18 +23,17 @@ let lastTriggeredPathname = null;
 const useRouteLoader = () => {
   const { showLoader } = useLoader();
   const location = useLocation();
-
-  // ── Location change (catches initial render + hash/search changes) ────────
+  
+  // Track previous path to maintain hook count and detect changes.
   const prevPathRef = useRef(location.pathname);
 
-  useEffect(() => {
-    if (prevPathRef.current !== location.pathname) {
-      prevPathRef.current = location.pathname;
-      // Show loader for route transition; destination page decides when to hide.
+  useLayoutEffect(() => {
+    if (prevPathRef.current !== location.pathname || lastTriggeredPathname !== location.pathname) {
       if (lastTriggeredPathname !== location.pathname) {
         showLoader();
         lastTriggeredPathname = location.pathname;
       }
+      prevPathRef.current = location.pathname;
     }
   }, [location.pathname, showLoader]);
 };

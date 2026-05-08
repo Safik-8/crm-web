@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useLoader } from '../../../shared/context/LoaderContext';
 import {
   DndContext,
   closestCenter,
@@ -24,6 +25,8 @@ import { ArrowLeft, Check, Plus, Loader2, AlertCircle, ListChecks, Search } from
 const PipelineStageBuilderPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { forceHideLoader } = useLoader();
+  const didHideInitialRouteLoaderRef = useRef(false);
 
   const [pipeline, setPipeline] = useState(null);
   const [masterStages, setMasterStages] = useState([]);  // all global stages from backend
@@ -74,6 +77,19 @@ const PipelineStageBuilderPage = () => {
     };
     init();
   }, [id]);
+
+  useEffect(() => {
+    const hasRenderableData = !!pipeline && masterStages.length > 0;
+    const hasRenderableResolvedState = !loading;
+
+    if (
+      !didHideInitialRouteLoaderRef.current &&
+      (hasRenderableData || hasRenderableResolvedState)
+    ) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [pipeline, masterStages, loading, forceHideLoader]);
 
   const handleDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;

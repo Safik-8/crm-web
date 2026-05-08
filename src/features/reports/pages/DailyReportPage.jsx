@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import DailyReportForm from '../components/DailyReportForm';
 import { ClipboardCheck, Sparkles } from 'lucide-react';
+import { useLoader } from '../../../shared/context/LoaderContext';
 
 const DailyReportPage = () => {
+  const { forceHideLoader } = useLoader();
+  const didHideInitialRouteLoaderRef = useRef(false);
+
+  useEffect(() => {
+    if (!didHideInitialRouteLoaderRef.current) {
+      forceHideLoader();
+      didHideInitialRouteLoaderRef.current = true;
+    }
+  }, [forceHideLoader]);
+
   return (
     <div className="container mx-auto px-3 sm:px-6 py-5 sm:py-8 pb-20 max-w-7xl">
       {/* Page Header */}
