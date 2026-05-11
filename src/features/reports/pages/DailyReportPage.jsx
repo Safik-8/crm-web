@@ -60,23 +60,31 @@ const DailyReportPage = () => {
   return (
     <div className="container mx-auto px-3 sm:px-6 pb-20 max-w-7xl">
       {/* ── Premium Page Header ─────────────────────────────── */}
-      <div ref={headerRef} className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl sm:rounded-3xl" style={{ minHeight: '180px' }}>
+      <div ref={headerRef} className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.08]" style={{ minHeight: '190px' }}>
 
-        {/* ── Base — pure black ── */}
-        <div className="absolute inset-0 bg-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_110%_-10%,_rgba(249,115,22,0.08)_0%,_transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_-5%_110%,_rgba(249,115,22,0.05)_0%,_transparent_55%)]" />
+        {/* ── Base — Deep Midnight Navy ── */}
+        <div className="absolute inset-0 bg-[#020617]" />
+        
+        {/* ── Primary Mesh Gradients ── */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-20%,_rgba(249,115,22,0.15)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_120%,_rgba(251,191,36,0.1)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,_rgba(99,102,241,0.05)_0%,_transparent_60%)]" />
+
+        {/* ── Secondary Ambient Glows ── */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-600/10 blur-[100px] rounded-full" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-amber-500/5 blur-[100px] rounded-full" />
 
         {/* ── Parallax star field layers ── */}
         {/* Layer 1 — far stars (slow) */}
         <div
-          className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out"
+          className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out opacity-40"
           style={{ transform: `translate(${mousePos.x * 10}px, ${mousePos.y * 10}px)` }}
         >
           {stars.far.map((star) => (
             <div
               key={`far-${star.id}`}
-              className="absolute rounded-full bg-white/25"
+              className="absolute rounded-full bg-white/40"
               style={{
                 width: star.size + 'px',
                 height: star.size + 'px',
@@ -90,13 +98,13 @@ const DailyReportPage = () => {
 
         {/* Layer 2 — mid stars (medium) */}
         <div
-          className="absolute inset-0 pointer-events-none transition-transform duration-500 ease-out"
+          className="absolute inset-0 pointer-events-none transition-transform duration-500 ease-out opacity-60"
           style={{ transform: `translate(${mousePos.x * 18}px, ${mousePos.y * 18}px)` }}
         >
           {stars.mid.map((star) => (
             <div
               key={`mid-${star.id}`}
-              className="absolute rounded-full bg-orange-300/35"
+              className="absolute rounded-full bg-orange-300/50"
               style={{
                 width: star.size + 'px',
                 height: star.size + 'px',
@@ -116,7 +124,7 @@ const DailyReportPage = () => {
           {stars.near.map((star) => (
             <div
               key={`near-${star.id}`}
-              className="absolute rounded-full bg-amber-200/45"
+              className="absolute rounded-full bg-amber-200/60"
               style={{
                 width: star.size + 'px',
                 height: star.size + 'px',
@@ -128,62 +136,46 @@ const DailyReportPage = () => {
           ))}
         </div>
 
-        {/* ── Gradient mesh overlay ── */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_110%_-10%,_rgba(249,115,22,0.18)_0%,_transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_-10%_110%,_rgba(249,115,22,0.10)_0%,_transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_40%_40%_at_50%_120%,_rgba(251,191,36,0.06)_0%,_transparent_60%)]" />
+        {/* ── Refined Mesh Lighting ── */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_110%_-10%,_rgba(249,115,22,0.12)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_-10%_110%,_rgba(249,115,22,0.08)_0%,_transparent_55%)]" />
 
-        {/* ── Animated floating orbs ── */}
+        {/* ── Animated floating orbs (Subtle) ── */}
         <div
-          className="absolute rounded-full pointer-events-none"
+          className="absolute rounded-full pointer-events-none opacity-40"
           style={{
-            width: 320, height: 320,
-            top: '-80px', right: '-60px',
-            background: 'radial-gradient(circle, rgba(249,115,22,0.22) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-            animation: 'floatOrb1 9s ease-in-out infinite',
+            width: 400, height: 400,
+            top: '-100px', right: '-80px',
+            background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)',
+            filter: 'blur(60px)',
+            animation: 'floatOrb1 12s ease-in-out infinite',
           }}
         />
         <div
-          className="absolute rounded-full pointer-events-none"
+          className="absolute rounded-full pointer-events-none opacity-30"
           style={{
-            width: 220, height: 220,
-            bottom: '-60px', left: '15%',
-            background: 'radial-gradient(circle, rgba(251,191,36,0.14) 0%, transparent 70%)',
-            filter: 'blur(35px)',
-            animation: 'floatOrb2 12s ease-in-out infinite',
-          }}
-        />
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: 160, height: 160,
-            top: '20%', left: '45%',
-            background: 'radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%)',
-            filter: 'blur(30px)',
-            animation: 'floatOrb3 15s ease-in-out infinite',
+            width: 300, height: 300,
+            bottom: '-80px', left: '10%',
+            background: 'radial-gradient(circle, rgba(251,191,36,0.1) 0%, transparent 70%)',
+            filter: 'blur(50px)',
+            animation: 'floatOrb2 15s ease-in-out infinite',
           }}
         />
 
-        {/* ── Subtle dot-grid pattern ── */}
+        {/* ── Premium Dot-Grid Pattern ── */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.07]"
+          className="absolute inset-0 pointer-events-none opacity-[0.05]"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,1) 0.5px, transparent 0.5px)',
+            backgroundSize: '24px 24px',
           }}
         />
 
-        {/* ── Top edge highlight line ── */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
-        {/* ── Bottom edge subtle glow ── */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-
-        {/* ── Noise/grain texture overlay ── */}
+        {/* ── Grain texture overlay ── */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          className="absolute inset-0 pointer-events-none opacity-[0.02]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
             backgroundRepeat: 'repeat',
             backgroundSize: '128px 128px',
           }}

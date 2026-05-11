@@ -33,11 +33,8 @@ const fields = [
   { key: 'counsellingBooked',  label: 'Counselling Booked', icon: CalendarCheck, color: 'pink'    },
   { key: 'officeVisits',       label: 'Office Visits',      icon: Building,      color: 'orange'  },
   { key: 'closures',           label: 'Closures',           icon: CheckCircle,   color: 'emerald' },
-  { key: 'revenue',            label: 'Revenue',            icon: Banknote,      color: 'amber',  isCurrency: true },
   { key: 'followupsDone',      label: 'Follow-ups Done',    icon: Repeat,        color: 'sky'     },
   { key: 'pendingFollowups',   label: 'Pending Follow-ups', icon: Clock,         color: 'rose'    },
-  { key: 'seminarTasks',       label: 'Seminar Tasks',      icon: Users,         color: 'violet'  },
-  { key: 'joiningFormalities', label: 'Joining Formalities',icon: Signature,     color: 'cyan'    },
 ];
 
 // ─── Per-metric colour tokens ─────────────────────────────────────────────────
@@ -293,8 +290,6 @@ const BranchDashboardPage = () => {
 
   const topPerformerName = useMemo(() => {
     if (!reportData || reportData.length === 0) return null;
-    const revenueCard = reportData.find(c => c.metric === 'revenue');
-    if (revenueCard?.topPerformers?.length > 0) return revenueCard.topPerformers[0].user.name;
     for (const card of reportData)
       if (card.topPerformers?.length > 0) return card.topPerformers[0].user.name;
     return null;
@@ -551,8 +546,8 @@ const BranchDashboardPage = () => {
           { key: 'callsReceived',  label: 'Total Calls',     icon: PhoneIncoming, accent: 'bg-blue-50 text-blue-600 border-blue-100'       },
           { key: 'qualifiedLeads', label: 'Qualified Leads', icon: UserCheck,     accent: 'bg-indigo-50 text-indigo-600 border-indigo-100'  },
           { key: 'closures',       label: 'Closures',        icon: CheckCircle,   accent: 'bg-emerald-50 text-emerald-600 border-emerald-100'},
-          { key: 'revenue',        label: 'Revenue',         icon: Banknote,      accent: 'bg-amber-50 text-amber-600 border-amber-100', isCurrency: true },
-          ].map(({ key, label, icon: Icon, accent, isCurrency }) => {
+          { key: 'followupsDone',  label: 'Follow-ups',      icon: Repeat,        accent: 'bg-sky-50 text-sky-600 border-sky-100'        },
+          ].map(({ key, label, icon: Icon, accent }) => {
             const val = stats.find(s => s.key === key)?.total ?? 0;
             return (
               <div key={key} className="bg-white rounded-xl sm:rounded-2xl border border-slate-100 shadow-soft px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-2 sm:gap-3">
@@ -563,9 +558,7 @@ const BranchDashboardPage = () => {
                   {/* Full label — wraps instead of truncating */}
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">{label}</p>
                   <p className="text-sm sm:text-base font-black text-slate-900 font-heading leading-tight mt-0.5">
-                    {isCurrency
-                      ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val)
-                      : val.toLocaleString()}
+                    {val.toLocaleString()}
                   </p>
                 </div>
                 <TrendingUp size={13} className="text-primary/40 shrink-0 hidden xs:block" />

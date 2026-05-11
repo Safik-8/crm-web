@@ -23,6 +23,14 @@ export const useDailyReport = () => {
         throw new Error(response?.message || 'Failed to submit report');
       }
     } catch (err) {
+      // Handle 409 Conflict specifically
+      if (err?.status === 409) {
+        const conflictMessage = "You have already submitted today's report.";
+        setError(conflictMessage);
+        toast.error(conflictMessage);
+        return { success: false, error: err, isConflict: true };
+      }
+
       const errorMessage = err?.message || 'Something went wrong';
       setError(errorMessage);
       

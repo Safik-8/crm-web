@@ -155,40 +155,33 @@ const DailyReportForm = () => {
 
   const [form, setForm] = useState({
     reportDate: new Date().toISOString().split('T')[0],
-    callsReceived: 0,
-    qualifiedLeads: 0,
-    counsellingDone: 0,
-    counsellingBooked: 0,
-    officeVisits: 0,
-    closures: 0,
-    revenue: 0,
-    followupsDone: 0,
-    pendingFollowups: 0,
-    seminarTasks: 0,
-    joiningFormalities: 0,
+    callsReceived: '',
+    qualifiedLeads: '',
+    counsellingDone: '',
+    counsellingBooked: '',
+    officeVisits: '',
+    closures: '',
+    followupsDone: '',
+    pendingFollowups: '',
   });
 
   const handleChange = (field) => (e) => {
     let value = e.target.value;
     if (field === 'reportDate') { setForm(prev => ({ ...prev, [field]: value })); return; }
     if (value === '') { setForm(prev => ({ ...prev, [field]: 0 })); return; }
-    if (field === 'revenue') {
-      const parsed = parseFloat(value);
-      if (!isNaN(parsed)) setForm(prev => ({ ...prev, [field]: parsed }));
-    } else {
-      const parsed = parseInt(value, 10);
-      if (!isNaN(parsed)) setForm(prev => ({ ...prev, [field]: parsed }));
-    }
+    const parsed = parseInt(value, 10);
+    if (!isNaN(parsed)) setForm(prev => ({ ...prev, [field]: parsed }));
   };
 
   const validateForm = () => {
     const requiredFields = [
       'reportDate', 'callsReceived', 'qualifiedLeads', 'counsellingDone',
-      'counsellingBooked', 'officeVisits', 'closures', 'revenue',
-      'followupsDone', 'pendingFollowups', 'seminarTasks', 'joiningFormalities',
+      'counsellingBooked', 'officeVisits', 'closures',
+      'followupsDone', 'pendingFollowups',
     ];
     for (const field of requiredFields) {
       if (form[field] === undefined || form[field] === null || form[field] === '') return false;
+      if (field !== 'reportDate' && parseInt(form[field], 10) < 1) return false;
     }
     return true;
   };
@@ -200,9 +193,9 @@ const DailyReportForm = () => {
     if (result.success) {
       setForm({
         reportDate: new Date().toISOString().split('T')[0],
-        callsReceived: 0, qualifiedLeads: 0, counsellingDone: 0,
-        counsellingBooked: 0, officeVisits: 0, closures: 0, revenue: 0,
-        followupsDone: 0, pendingFollowups: 0, seminarTasks: 0, joiningFormalities: 0,
+        callsReceived: '', qualifiedLeads: '', counsellingDone: '',
+        counsellingBooked: '', officeVisits: '', closures: '',
+        followupsDone: '', pendingFollowups: '',
       });
     }
   };
@@ -214,11 +207,8 @@ const DailyReportForm = () => {
     { key: 'counsellingBooked', label: 'Counselling Booked',   icon: CalendarCheck },
     { key: 'officeVisits',      label: 'Office Visits',        icon: Building },
     { key: 'closures',          label: 'Closures',             icon: CheckCircle },
-    { key: 'revenue',           label: 'Revenue',              icon: Banknote, step: '0.01' },
     { key: 'followupsDone',     label: 'Follow-ups Done',      icon: Repeat },
     { key: 'pendingFollowups',  label: 'Pending Follow-ups',   icon: Clock },
-    { key: 'seminarTasks',      label: 'Seminar Tasks',        icon: Users },
-    { key: 'joiningFormalities',label: 'Joining Formalities',  icon: Signature },
   ];
 
   return (
