@@ -14,7 +14,7 @@
  * once on mount to wire up showLoader / hideLoader callbacks.
  */
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // ─── Loader bridge ────────────────────────────────────────────────────────────
 // Populated at runtime by `registerLoaderBridge` called from LoaderProvider.
