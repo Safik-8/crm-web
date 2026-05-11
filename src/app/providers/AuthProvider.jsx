@@ -38,7 +38,9 @@ const RBAC_ADAPTER_MAP = {
 
   // Pipeline & Stage Permissions (Phase 1)
   'view:pipelines':   { module: 'PIPELINE', action: 'canView' },
+  'create:pipeline':  { module: 'PIPELINE', action: 'canCreate' },
   'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
+  'delete:pipeline':  { module: 'PIPELINE', action: 'canDelete' },
   'view:stages':      { module: 'STAGE',    action: 'canView' },
   'manage:stages':    { module: 'STAGE',    action: 'canEdit' },
 

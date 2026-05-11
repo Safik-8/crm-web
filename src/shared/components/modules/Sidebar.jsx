@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import logoOfficial from '../../../assets/logos/logo-official.png';
 import {
   LayoutDashboard,
   Users,
@@ -55,9 +56,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         
         <div className="flex-1 flex items-center h-full z-10">
           <img 
-            src="/logos/logo-official.png" 
+            src={logoOfficial} 
             alt="StackCode" 
-            className=" w-auto object-contain invert hue-rotate-180 transition-all duration-500 hover:scale-[1.02] mix-blend-screen" 
+            className="w-auto object-contain invert hue-rotate-180 transition-all duration-500 hover:scale-[1.02] mix-blend-screen" 
             style={{ paddingTop: '10px' }}
           />
         </div>

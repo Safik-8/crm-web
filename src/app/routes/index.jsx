@@ -223,7 +223,7 @@ export const router = createBrowserRouter([
       {
         path: 'pipelines/:id/stages',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_PIPELINES}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_STAGES}>
             <PipelineStageBuilderPage />
           </ProtectedRoute>
         ),

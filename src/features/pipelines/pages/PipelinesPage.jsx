@@ -145,7 +145,10 @@ const PipelinesPage = () => {
   const [editTarget, setEditTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const canManage = hasPermission(PERMISSIONS.MANAGE_PIPELINES);
+  const canCreate = hasPermission(PERMISSIONS.CREATE_PIPELINE);
+  const canEdit = hasPermission(PERMISSIONS.MANAGE_PIPELINES);
+  const canDelete = hasPermission(PERMISSIONS.DELETE_PIPELINE);
+  const canManageStages = hasPermission(PERMISSIONS.MANAGE_STAGES);
 
   useEffect(() => {
     const hasRenderableData = pipelines.length > 0;
@@ -206,7 +209,7 @@ const PipelinesPage = () => {
           </h1>
           <p className="text-sm text-slate-500 mt-1">Build your sales flow. Track every lead.</p>
         </div>
-        {canManage && (
+        {canCreate && (
           <button onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
             <Plus size={18} /> New Pipeline
@@ -219,7 +222,7 @@ const PipelinesPage = () => {
         <div className="flex flex-col items-center justify-center py-24 gap-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400">
           <Kanban size={48} className="text-slate-300" />
           <p className="font-semibold text-slate-500 text-lg">No pipelines yet</p>
-          {canManage && (
+          {canCreate && (
             <button onClick={() => setShowModal(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90">
               <Plus size={16} /> Create your first pipeline
@@ -247,16 +250,20 @@ const PipelinesPage = () => {
                 </div>
               </div>
               {/* Actions */}
-              {canManage && (
+              {(canCreate || canDelete) && (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditTarget(pipeline)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors">
-                    <Pencil size={15} />
-                  </button>
-                  <button onClick={() => handleDelete(pipeline.id)} disabled={deletingId === pipeline.id}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-                    {deletingId === pipeline.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-                  </button>
+                  {canCreate && (
+                    <button onClick={() => setEditTarget(pipeline)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors">
+                      <Pencil size={15} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button onClick={() => handleDelete(pipeline.id)} disabled={deletingId === pipeline.id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                      {deletingId === pipeline.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -267,7 +274,7 @@ const PipelinesPage = () => {
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow shadow-primary/20">
                 <Kanban size={14} /> Open Board
               </button>
-              {canManage && (
+              {canManageStages && (
                 <button onClick={() => navigate(`/pipelines/${pipeline.id}/stages`)}
                   className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-xs font-semibold hover:bg-slate-50 transition-colors">
                   <Settings2 size={14} /> Stages

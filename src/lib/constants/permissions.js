@@ -23,7 +23,9 @@ export const PERMISSIONS = {
 
   // Pipeline & Stage Permissions (Phase 1)
   VIEW_PIPELINES: 'view:pipelines',
+  CREATE_PIPELINE: 'create:pipeline',
   MANAGE_PIPELINES: 'manage:pipelines',
+  DELETE_PIPELINE: 'delete:pipeline',
   VIEW_STAGES: 'view:stages',
   MANAGE_STAGES: 'manage:stages',
 
