@@ -165,24 +165,33 @@ const DailyReportForm = () => {
     pendingFollowups: '',
   });
 
+  const [validationError, setValidationError] = useState('');
+
   const handleChange = (field) => (e) => {
-    let value = e.target.value;
+    const value = e.target.value;
     if (field === 'reportDate') { setForm(prev => ({ ...prev, [field]: value })); return; }
-    if (value === '') { setForm(prev => ({ ...prev, [field]: 0 })); return; }
+    if (value === '') { setForm(prev => ({ ...prev, [field]: '' })); return; }
     const parsed = parseInt(value, 10);
-    if (!isNaN(parsed)) setForm(prev => ({ ...prev, [field]: parsed }));
+    if (!isNaN(parsed)) {
+      setForm(prev => ({ ...prev, [field]: Math.max(0, parsed) }));
+      setValidationError('');
+    }
   };
 
+  const numericFields = [
+    'callsReceived', 'qualifiedLeads', 'counsellingDone',
+    'counsellingBooked', 'officeVisits', 'closures',
+    'followupsDone', 'pendingFollowups',
+  ];
+
   const validateForm = () => {
-    const requiredFields = [
-      'reportDate', 'callsReceived', 'qualifiedLeads', 'counsellingDone',
-      'counsellingBooked', 'officeVisits', 'closures',
-      'followupsDone', 'pendingFollowups',
-    ];
-    for (const field of requiredFields) {
-      if (form[field] === undefined || form[field] === null || form[field] === '') return false;
-      if (field !== 'reportDate' && parseInt(form[field], 10) < 1) return false;
+    // All numeric fields are empty → nothing filled in at all
+    const allEmpty = numericFields.every(f => form[f] === '' || form[f] === null || form[f] === undefined);
+    if (allEmpty) {
+      setValidationError('Please fill in at least one field before submitting the report.');
+      return false;
     }
+    setValidationError('');
     return true;
   };
 
@@ -197,6 +206,7 @@ const DailyReportForm = () => {
         counsellingBooked: '', officeVisits: '', closures: '',
         followupsDone: '', pendingFollowups: '',
       });
+      setValidationError('');
     }
   };
 
