@@ -1,7 +1,9 @@
 export const ROLES = {
   ISE: 'ISE',
+  SALES_TEAM: 'SALES_TEAM',
   MANAGER: 'MANAGER',
   BRANCH_ADMIN: 'BRANCH_ADMIN',
   CEO: 'CEO',
   SUPER_ADMIN: 'SUPER_ADMIN',
 };
+

@@ -3,8 +3,17 @@ import { apiClient } from '../../../lib/api/api';
 export const getPipelines = () =>
   apiClient('/pipelines', { method: 'GET' });
 
-export const getPipelineById = (id) =>
-  apiClient(`/pipelines/${id}`, { method: 'GET' });
+export const getPipelineById = (id, params = {}, options = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== null && val !== '') {
+      qs.set(key, val);
+    }
+  });
+  const queryString = qs.toString();
+  const endpoint = `/pipelines/${id}${queryString ? `?${queryString}` : ''}`;
+  return apiClient(endpoint, { method: 'GET', ...options });
+};
 
 export const createPipeline = (data) =>
   apiClient('/pipelines', { method: 'POST', body: data });

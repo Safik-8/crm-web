@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { getPipelineStages } from '../../pipelines/services/stageService';
-import { getLeads, updateLeadStage } from '../services/leadService';
+import { getPipelineById } from '../../pipelines/services/pipelineService';
+import { updateLeadStage } from '../services/leadService';
 import { toast } from 'sonner';
 
 /**
- * Manages the full Kanban state for a single pipeline.
+ * Manages the full Kanban state for a single pipeline using backend filters and sorting.
  * columns: { [stageId]: { stage, leads: [] } }
  *
  * Performance notes:
@@ -13,10 +13,11 @@ import { toast } from 'sonner';
  * - orderedStages is memoised so downstream components don't re-render when
  *   unrelated state changes.
  */
-export const useKanban = (pipelineId) => {
+export const useKanban = (pipelineId, filters = {}) => {
   const [columns, setColumns] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pipelineName, setPipelineName] = useState('');
 
   // Mirror of columns kept in a ref so moveCard can read the latest value
   // without being recreated every time columns changes.
@@ -26,47 +27,73 @@ export const useKanban = (pipelineId) => {
   // Snapshot ref for optimistic-update rollback
   const snapshotRef = useRef(null);
 
-  const fetchBoard = useCallback(async () => {
+  // Track request sequence to prevent out-of-order stale response race conditions
+  const activeRequestSeqRef = useRef(0);
+
+  // Deep-stringify filters object so useEffect dependencies are stable and don't re-trigger on reference changes
+  const stringifiedFilters = JSON.stringify(filters);
+
+  const fetchBoard = useCallback(async (signal = null) => {
     if (!pipelineId) return;
+    
+    // Increment local request sequence token
+    const currentSeq = ++activeRequestSeqRef.current;
+    
     setLoading(true);
     setError(null);
+    
     try {
-      const [stagesRes, leadsRes] = await Promise.all([
-        getPipelineStages(pipelineId),
-        getLeads({ pipelineId }),
-      ]);
+      const res = await getPipelineById(pipelineId, filters, { signal });
+      
+      // Stop execution if a newer request has already started or request was cancelled
+      if (currentSeq !== activeRequestSeqRef.current) return;
+      if (!res) return;
 
-      const rawStages = stagesRes?.data;
-      const stages = Array.isArray(rawStages) ? rawStages
-        : Array.isArray(rawStages?.stages) ? rawStages.stages
-        : [];
+      const pipeline = res?.data?.pipeline || res?.pipeline;
+      if (!pipeline) {
+        throw new Error('Pipeline board details not found');
+      }
 
-      const rawLeads = leadsRes?.data;
-      const leads = Array.isArray(rawLeads) ? rawLeads
-        : Array.isArray(rawLeads?.leads) ? rawLeads.leads
-        : [];
+      setPipelineName(pipeline.name || '');
 
-      const sortedStages = [...stages].sort(
-        (a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0)
-      );
-
+      const stages = pipeline.stages || [];
       const cols = {};
-      sortedStages.forEach(stage => {
+
+      // Map backend stages and backend-grouped/filtered/sorted leads directly to columns
+      stages.forEach(stage => {
         cols[stage.id] = {
-          stage,
-          leads: leads.filter(l => l.stageId === stage.id || l.stage_id === stage.id),
+          stage: {
+            id: stage.id,
+            name: stage.name,
+            isDefault: stage.isDefault,
+            orderNo: stage.orderNo,
+          },
+          leads: stage.leads || [],
         };
       });
 
       setColumns(cols);
     } catch (err) {
-      setError(err?.message || 'Failed to load board');
+      if (currentSeq !== activeRequestSeqRef.current) return;
+      if (err?.name !== 'AbortError') {
+        setError(err?.message || 'Failed to load board');
+      }
     } finally {
-      setLoading(false);
+      if (currentSeq === activeRequestSeqRef.current) {
+        setLoading(false);
+      }
     }
-  }, [pipelineId]);
+  }, [pipelineId, stringifiedFilters]);
 
-  useEffect(() => { fetchBoard(); }, [fetchBoard]);
+  // Trigger board refetch on mount and whenever filters/pipelineId change
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchBoard(controller.signal);
+    
+    return () => {
+      controller.abort();
+    };
+  }, [fetchBoard]);
 
   /**
    * Optimistic card move.
@@ -83,6 +110,7 @@ export const useKanban = (pipelineId) => {
     setColumns(prev => {
       const lead = prev[fromStageId]?.leads.find(l => l.id === leadId);
       if (!lead) return prev;
+      
       return {
         ...prev,
         [fromStageId]: {
@@ -97,9 +125,10 @@ export const useKanban = (pipelineId) => {
     });
 
     try {
+      // Patch backend stage; do NOT refetch full board to prevent layout flickers
       await updateLeadStage(leadId, toStageId);
     } catch (err) {
-      // Rollback to snapshot
+      // Rollback to snapshot on failure
       if (snapshotRef.current) setColumns(snapshotRef.current);
       toast.error(err?.message || 'Could not move lead. Try again.');
     }
@@ -124,5 +153,14 @@ export const useKanban = (pipelineId) => {
     [columns]
   );
 
-  return { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch: fetchBoard };
+  return {
+    columns,
+    orderedStages,
+    loading,
+    error,
+    moveCard,
+    addLeadToColumn,
+    refetch: () => fetchBoard(null),
+    pipelineName,
+  };
 };

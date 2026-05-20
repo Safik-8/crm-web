@@ -24,3 +24,13 @@ export const getLeadComments = (leadId) =>
 
 export const addLeadComment = (leadId, comment) =>
   apiClient(`/leads/${leadId}/comments`, { method: 'POST', body: { comment } });
+
+export const getBranchUsers = () =>
+  apiClient('/leads/branch-users', { method: 'GET' });
+
+export const importLeads = (formData) =>
+  apiClient('/leads/import-excel', {
+    method: 'POST',
+    body: formData,
+  });
+

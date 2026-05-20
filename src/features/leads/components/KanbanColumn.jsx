@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import LeadCard from './LeadCard';
@@ -16,8 +16,11 @@ const SkeletonCard = () => (
   </div>
 );
 
-const KanbanColumn = memo(({ stage, leads, loading, onLeadClick }) => {
+const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+
+  // Memoize lead IDs array to keep SortableContext items array reference stable
+  const leadIds = useMemo(() => leads.map(l => l.id), [leads]);
 
   return (
     /*
@@ -36,7 +39,7 @@ const KanbanColumn = memo(({ stage, leads, loading, onLeadClick }) => {
             {stage.name}
           </h3>
         </div>
-        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full min-w-[24px] sm:min-w-[28px] text-center">
+        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full min-w-[24px] sm:min-w-[28px] text-center animate-in fade-in duration-200">
           {leads.length}
         </span>
       </div>
@@ -44,7 +47,8 @@ const KanbanColumn = memo(({ stage, leads, loading, onLeadClick }) => {
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-0 flex flex-col rounded-xl sm:rounded-2xl transition-colors overflow-hidden ${
+        style={{ opacity: isRefetching ? 0.75 : 1 }}
+        className={`flex-1 min-h-0 flex flex-col rounded-xl sm:rounded-2xl transition-all duration-200 overflow-hidden ${
           isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
         }`}
       >
@@ -54,16 +58,20 @@ const KanbanColumn = memo(({ stage, leads, loading, onLeadClick }) => {
             <SkeletonCard />
           </div>
         ) : leads.length === 0 ? (
-          <div className={`flex items-center justify-center flex-1 min-h-24 sm:min-h-32 text-xs font-medium border-2 border-dashed rounded-lg sm:rounded-xl m-2 sm:m-3 transition-colors ${
+          <div className={`flex flex-col items-center justify-center flex-1 min-h-24 sm:min-h-32 text-xs font-medium border-2 border-dashed rounded-lg sm:rounded-xl m-2 sm:m-3 transition-colors ${
             isOver ? 'border-primary/40 text-primary' : 'border-slate-200 text-slate-400'
           }`}>
-            Drop here
+            {isFiltered ? (
+              <span className="text-slate-400 font-normal">No matching leads</span>
+            ) : (
+              <span>Drop here</span>
+            )}
           </div>
         ) : (
           /* touch-pan-x lets the user scroll the board horizontally even when
              their finger starts on a card — only the drag handle triggers DnD */
           <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-2 sm:p-3 space-y-2 sm:space-y-3">
-            <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={leadIds} strategy={verticalListSortingStrategy}>
               {leads.map(lead => (
                 <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick(lead)} />
               ))}

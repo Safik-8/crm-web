@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../../lib/api/api';
 
 const AuthContext = createContext(undefined);
@@ -61,6 +61,9 @@ const RBAC_ADAPTER_MAP = {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // Prevent duplicate logout calls
+  const logoutInFlightRef = useRef(false);
 
   // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object
   const hasPermission = useCallback((permissionStr) => {
@@ -132,12 +135,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // Prevent duplicate calls (double-click, race conditions)
+    if (logoutInFlightRef.current) return;
+    logoutInFlightRef.current = true;
+    setIsLoggingOut(true);
+
+    // ── Optimistic logout ────────────────────────────────────────────────────
+    // Clear auth state immediately so the UI reacts at once — no waiting for
+    // the network. The ProtectedRoute will redirect to /login as soon as
+    // `isAuthenticated` becomes false.
+    setUser(null);
+
+    // ── Background API call ──────────────────────────────────────────────────
+    // Fire-and-forget: the session cookie is invalidated server-side.
+    // We don't await this before navigating — the UX is already instant.
     try {
-      await apiClient('/auth/logout', { method: 'POST' });
+      await apiClient('/auth/logout', { method: 'POST', silent: true });
     } catch (err) {
-      console.error('Logout error', err);
+      // Swallow silently — user is already logged out locally.
+      // The server-side session will expire naturally.
+      console.warn('[Auth] Logout API call failed (user already cleared):', err);
     } finally {
-      setUser(null);
+      logoutInFlightRef.current = false;
+      setIsLoggingOut(false);
     }
   };
 
@@ -147,6 +167,7 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       loading,
+      isLoggingOut,
       isAuthenticated: !!user,
       permissions: user?.permissions || {}, // Exposing raw backend permissions instead of array
       hasPermission

@@ -71,8 +71,10 @@ export const apiClient = async (endpoint, options = {}) => {
 
   const url = `${BASE_URL}${endpoint}`;
 
+  const isFormData = fetchOptions.body instanceof FormData;
+
   const headers = {
-    'Content-Type': 'application/json',
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(fetchOptions.headers || {}),
   };
 
@@ -83,9 +85,10 @@ export const apiClient = async (endpoint, options = {}) => {
     ...(signal ? { signal } : {}),
   };
 
-  if (config.body && typeof config.body !== 'string') {
+  if (config.body && typeof config.body !== 'string' && !isFormData) {
     config.body = JSON.stringify(config.body);
   }
+
 
   // Show loader before the request fires
   if (shouldUseLoader) {

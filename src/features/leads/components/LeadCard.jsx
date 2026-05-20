@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Phone, Calendar, BookOpen } from 'lucide-react';
+import { Phone, Calendar, BookOpen, User } from 'lucide-react';
 
 /**
  * LeadCard
@@ -79,6 +79,16 @@ const LeadCard = memo(({ lead, onClick }) => {
             </div>
           </div>
         )}
+
+        {/* Assigned User */}
+        <div className="mt-4 flex items-center gap-2 pointer-events-none">
+          <div className="h-5 w-5 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+            <User size={10} />
+          </div>
+          <span className={`text-[11px] font-bold truncate ${lead.assignedTo ? 'text-slate-700' : 'text-slate-400 italic'}`}>
+            {lead.assignedTo?.name || 'Unassigned'}
+          </span>
+        </div>
 
         <div className="mt-5 flex items-center justify-between text-slate-500 border-t border-slate-50 pt-4 pointer-events-none">
           <div className="flex items-center gap-2">

@@ -525,3 +525,80 @@
     transform: translateY(0);
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATION PANEL — Floating dropdown + mobile bottom sheet
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Z-index layering:
+     Backdrop          → 9990
+     Panel             → 9991
+     GlobalLoader      → 9998  (intentionally above panel)
+     Sonner toasts     → 9999  (always on top)
+
+   Desktop: slides down + fades in from the Bell icon anchor.
+   Mobile:  slides up from the bottom edge (bottom sheet pattern).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Desktop panel ─────────────────────────────────────────────────────────── */
+.notif-panel--open {
+  animation: notif-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.notif-panel--close {
+  animation: notif-panel-out 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes notif-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes notif-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+
+/* ── Mobile bottom sheet ───────────────────────────────────────────────────── */
+.notif-panel-mobile--open {
+  animation: notif-sheet-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.notif-panel-mobile--close {
+  animation: notif-sheet-out 0.20s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes notif-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notif-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}

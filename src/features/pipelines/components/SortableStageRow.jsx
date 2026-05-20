@@ -1,17 +1,40 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Lock, X } from 'lucide-react';
+import { GripVertical, Lock, X, Pencil, Trash2, Loader2 } from 'lucide-react';
+import InlineStageNameEditor from './InlineStageNameEditor';
+import { isMandatoryStage } from '../utils/stageRules';
 
 /**
- * A single sortable stage row used inside the Stage Aligner.
- * Prospect stage is locked (cannot be removed or dragged away from position 1).
+ * Sortable stage row for the Stage Order (right) panel.
  *
- * Mobile notes:
- * - Drag handle has a larger touch target (min 44px) for easy grabbing
- * - Remove button is always visible on mobile (no hover state on touch)
- * - TouchSensor is configured in the parent DndContext
+ * Mandatory stages (Prospect, Closure) are fully locked — no drag, rename, remove, or delete.
+ *
+ * Props:
+ *  stage        - stage object
+ *  onRemove     - (stageId) => void  — deselect from pipeline
+ *  canRename    - bool
+ *  isEditing / editValue / onEditChange / onEditCommit / onEditCancel / renaming / onStartEdit
+ *  canDelete    - bool   — show global delete button
+ *  isDeleting   - bool   — spinner while API call in-flight
+ *  onDelete     - () => void — triggers confirmation modal in parent
  */
-const SortableStageRow = ({ stage, onRemove }) => {
+const SortableStageRow = ({
+  stage,
+  onRemove,
+  canRename = false,
+  isEditing = false,
+  editValue = '',
+  onEditChange,
+  onEditCommit,
+  onEditCancel,
+  renaming = false,
+  onStartEdit,
+  canDelete = false,
+  isDeleting = false,
+  onDelete,
+}) => {
+  const mandatory = isMandatoryStage(stage);
+
   const {
     attributes,
     listeners,
@@ -19,12 +42,12 @@ const SortableStageRow = ({ stage, onRemove }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: stage.id, disabled: stage.isDefault });
+  } = useSortable({ id: stage.id, disabled: mandatory || isEditing || isDeleting });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.45 : isDeleting ? 0.55 : 1,
     zIndex: isDragging ? 50 : 'auto',
   };
 
@@ -32,55 +55,120 @@ const SortableStageRow = ({ stage, onRemove }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center gap-3 bg-white border rounded-xl px-3 sm:px-4 py-3 sm:py-3.5 transition-all ${
+      className={`group flex items-center gap-3 bg-white border rounded-xl px-4 py-3.5 transition-all ${
         isDragging
-          ? 'border-primary/50 shadow-2xl scale-[1.02] ring-4 ring-primary/5 z-50'
-          : 'border-slate-100 border-l-[4px] border-l-primary shadow-sm hover:border-slate-200 hover:shadow-md'
+          ? 'border-primary/40 shadow-2xl scale-[1.02] ring-4 ring-primary/8'
+          : isEditing
+            ? 'border-primary/30 shadow-md ring-2 ring-primary/10'
+            : isDeleting
+              ? 'border-red-200 bg-red-50/30'
+              : mandatory
+                ? 'border-primary/25 border-l-[3px] border-l-primary bg-primary/[0.02] shadow-sm'
+                : 'border-slate-200 border-l-[3px] border-l-primary shadow-sm hover:shadow-md hover:border-slate-300'
       }`}
     >
-      {/* Drag handle — larger touch target on mobile */}
+      {/* Drag handle / lock */}
       <div
-        {...(stage.isDefault ? {} : { ...attributes, ...listeners })}
+        {...(mandatory || isEditing || isDeleting ? {} : { ...attributes, ...listeners })}
         className={`flex-shrink-0 flex items-center justify-center transition-colors
-          min-h-[44px] min-w-[32px] sm:min-h-0 sm:min-w-0
-          ${stage.isDefault
+          min-h-[40px] min-w-[28px] sm:min-h-0 sm:min-w-0
+          ${mandatory
             ? 'text-primary/40 cursor-not-allowed'
-            : 'text-slate-300 group-hover:text-primary/60 cursor-grab active:cursor-grabbing touch-none'
+            : isEditing || isDeleting
+              ? 'text-slate-200 cursor-default'
+              : 'text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none'
           }`}
         style={{ touchAction: 'none' }}
+        title={mandatory ? 'Mandatory system stage — cannot be moved' : undefined}
       >
-        {stage.isDefault
-          ? <Lock size={14} strokeWidth={3} />
-          : <GripVertical size={20} strokeWidth={2.5} />
+        {mandatory
+          ? <Lock size={14} strokeWidth={2.5} />
+          : <GripVertical size={18} strokeWidth={2} />
         }
       </div>
 
-      {/* Stage name */}
-      <span className={`flex-1 text-sm font-bold tracking-tight ${stage.isDefault ? 'text-primary' : 'text-slate-900'}`}>
-        {stage.name}
-      </span>
-
-      {/* Prospect badge */}
-      {stage.isDefault && (
-        <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
-          Required
+      {/* Stage name or inline editor */}
+      {isEditing ? (
+        <InlineStageNameEditor
+          value={editValue}
+          onChange={onEditChange}
+          onCommit={onEditCommit}
+          onCancel={onEditCancel}
+          loading={renaming}
+        />
+      ) : (
+        <span className={`flex-1 text-sm font-semibold truncate transition-colors ${
+          mandatory ? 'text-primary' : isDeleting ? 'text-slate-400' : 'text-slate-800'
+        }`}>
+          {stage.name}
         </span>
       )}
 
-      {/* Remove button
-          Desktop: hidden until hover (opacity-0 group-hover:opacity-100)
-          Mobile:  always visible (sm:opacity-0 sm:group-hover:opacity-100) */}
-      {!stage.isDefault && (
-        <button
-          type="button"
-          onClick={() => onRemove(stage.id)}
-          className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50
-            opacity-100 sm:opacity-0 sm:group-hover:opacity-100
-            transition-all focus:opacity-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
-          title="Remove stage"
-        >
-          <X size={15} />
-        </button>
+      {/* Right side actions */}
+      {!isEditing && (
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+          {mandatory ? (
+            <span
+              className="text-[10px] font-black text-primary uppercase tracking-widest
+                bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-lg"
+              title="Mandatory system stage — always required"
+            >
+              REQUIRED
+            </span>
+          ) : (
+            <>
+              {/* Rename */}
+              {canRename && !isDeleting && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onStartEdit?.(); }}
+                  className="p-2 rounded-lg bg-slate-100 text-slate-500
+                    hover:bg-primary/10 hover:text-primary
+                    transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  title="Rename stage"
+                  aria-label={`Rename ${stage.name}`}
+                >
+                  <Pencil size={13} strokeWidth={2} />
+                </button>
+              )}
+
+              {/* Global delete */}
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                  disabled={isDeleting}
+                  className="p-2 rounded-lg bg-slate-100 text-slate-500
+                    hover:bg-red-50 hover:text-red-500
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-all focus:outline-none focus:ring-2 focus:ring-red-200"
+                  title="Delete stage globally"
+                  aria-label={`Delete ${stage.name}`}
+                >
+                  {isDeleting
+                    ? <Loader2 size={13} className="animate-spin text-red-400" />
+                    : <Trash2 size={13} strokeWidth={2} />
+                  }
+                </button>
+              )}
+
+              {/* Remove from pipeline (deselect) */}
+              {!isDeleting && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(stage.id)}
+                  className="p-2 rounded-lg bg-slate-100 text-slate-500
+                    hover:bg-red-50 hover:text-red-500
+                    transition-all focus:outline-none focus:ring-2 focus:ring-red-200"
+                  title="Remove from pipeline"
+                  aria-label={`Remove ${stage.name} from pipeline`}
+                >
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

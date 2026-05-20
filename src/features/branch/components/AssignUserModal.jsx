@@ -4,15 +4,17 @@ import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { branchApi } from '../api/branchApi';
+import { ROLES } from '../../../lib/constants/roles';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
 const ROLE_OPTIONS = [
-  { value: 'BRANCH_ADMIN', label: 'Branch Admin' },
-  { value: 'MANAGER', label: 'Manager' },
-  { value: 'ISE', label: 'ISE' }
+  { value: ROLES.BRANCH_ADMIN, label: 'Branch Admin' },
+  { value: ROLES.MANAGER, label: 'Manager' },
+  { value: ROLES.SALES_TEAM, label: 'Sales Team' },
+  { value: ROLES.ISE, label: 'ISE' }
 ];
 
 /**

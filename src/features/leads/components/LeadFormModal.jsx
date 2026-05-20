@@ -1,12 +1,33 @@
-import { useState } from 'react';
-import { X, Loader2, User, Phone, Calendar, BookOpen } from 'lucide-react';
-import { createLead } from '../services/leadService';
+import { useState, useEffect } from 'react';
+import { X, Loader2, User, Phone, Calendar, BookOpen, UserCheck } from 'lucide-react';
+import { createLead, getBranchUsers } from '../services/leadService';
 import { toast } from 'sonner';
 
 const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
-  const [form, setForm] = useState({ name: '', mobile: '', date: '', interested_for: '' });
+  const [form, setForm] = useState({ name: '', mobile: '', date: '', interested_for: '', assignedToId: '' });
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const res = await getBranchUsers();
+        if (mounted && res?.success) {
+          setUsers(res.data.users || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch branch users:', err);
+      } finally {
+        if (mounted) setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+    return () => { mounted = false; };
+  }, []);
 
   const set = (field) => (e) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }));
@@ -30,7 +51,12 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setBusy(true);
     try {
-      const res = await createLead({ ...form, pipelineId, date: new Date(form.date).toISOString() });
+      const res = await createLead({
+        ...form,
+        pipelineId,
+        date: new Date(form.date).toISOString(),
+        assignedToId: form.assignedToId ? Number(form.assignedToId) : null
+      });
       const lead = res?.data?.lead;
       toast.success('Lead added!');
       onCreated(lead);
@@ -81,6 +107,27 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
               {errors[key] && <p className="text-xs font-semibold text-red-500">{errors[key]}</p>}
             </div>
           ))}
+
+          {/* Assign To Dropdown */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-slate-700">Assign To</label>
+            <div className="relative">
+              <UserCheck size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <select
+                value={form.assignedToId}
+                onChange={set('assignedToId')}
+                disabled={loadingUsers || busy}
+                className="w-full rounded-xl border pl-9 pr-3 py-2.5 text-sm font-medium outline-none transition-all border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="">-- Unassigned --</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} {u.role ? `(${u.role})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}

@@ -9,14 +9,17 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban } from 'lucide-react';
+import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload } from 'lucide-react';
 import { useKanban } from '../hooks/useKanban';
+import { useKanbanFilters } from '../hooks/useKanbanFilters';
+import { KanbanFiltersToolbar } from '../components/KanbanFiltersToolbar';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import KanbanColumn from '../components/KanbanColumn';
 import LeadCard from '../components/LeadCard';
 import LeadFormModal from '../components/LeadFormModal';
+import LeadImportModal from '../components/LeadImportModal';
 import LeadDetailDrawer from '../components/LeadDetailDrawer';
 
 const LeadsKanbanPage = () => {
@@ -24,13 +27,29 @@ const LeadsKanbanPage = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
-  const { columns, orderedStages, loading, error, moveCard, addLeadToColumn, refetch } = useKanban(pipelineId);
+
+  // URL Query parameter filter state management
+  const { filters, setFilters, resetFilters, apiParams, hasActiveFilters } = useKanbanFilters();
+
+  // Board state derived from API parameters
+  const {
+    columns,
+    orderedStages,
+    loading,
+    error,
+    moveCard,
+    addLeadToColumn,
+    refetch,
+    pipelineName,
+  } = useKanban(pipelineId, apiParams);
+
   const didHideInitialRouteLoaderRef = useRef(false);
 
   const [activeCard, setActiveCard] = useState(null);   // card being dragged (for DragOverlay)
   const [activeFrom, setActiveFrom] = useState(null);  // source stage id
   const [showForm, setShowForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null); // for detail drawer
+  const [showImport, setShowImport] = useState(false);
 
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
@@ -157,6 +176,11 @@ const LeadsKanbanPage = () => {
     }
   }, [columns, forceHideLoader]);
 
+  // Calculate total leads count across all columns to evaluate empty states
+  const totalLeadsCount = useMemo(() => {
+    return Object.values(columns).reduce((sum, col) => sum + (col.leads?.length || 0), 0);
+  }, [columns]);
+
   if (error) return (
     <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">
       <AlertCircle size={36} className="text-red-400" />
@@ -167,12 +191,12 @@ const LeadsKanbanPage = () => {
     </div>
   );
 
-  const pipelineName = orderedStages[0] ? undefined : undefined; // derived from backend for now
+  const boardTitle = pipelineName || 'Pipeline Board';
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50">
       {/* Page header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 border-b border-slate-200 bg-white">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button onClick={() => navigate('/pipelines')}
             className="p-1.5 sm:p-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors shrink-0">
@@ -180,7 +204,9 @@ const LeadsKanbanPage = () => {
           </button>
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <Kanban size={18} className="text-primary shrink-0" />
-            <h1 className="text-base sm:text-lg font-bold font-heading text-slate-900 truncate">Pipeline Board</h1>
+            <h1 className="text-base sm:text-lg font-bold font-heading text-slate-900 truncate">
+              {boardTitle}
+            </h1>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -188,13 +214,28 @@ const LeadsKanbanPage = () => {
             <RefreshCw size={15} />
           </button>
           {canCreate && (
-            <button onClick={() => setShowForm(true)}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
-              <Plus size={15} /> <span className="hidden sm:inline">Add Lead</span><span className="sm:hidden">Add</span>
-            </button>
+            <>
+              <button onClick={() => setShowImport(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                <Upload size={15} /> Import
+              </button>
+              <button onClick={() => setShowForm(true)}
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
+                <Plus size={15} /> <span className="hidden sm:inline">Add Lead</span><span className="sm:hidden">Add</span>
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Sticky, lightweight filters and sort toolbar */}
+      <KanbanFiltersToolbar
+        filters={filters}
+        setFilters={setFilters}
+        resetFilters={resetFilters}
+        hasActiveFilters={hasActiveFilters}
+        stages={orderedStages}
+      />
 
       {/* Kanban board — horizontal scroll */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -207,8 +248,9 @@ const LeadsKanbanPage = () => {
         >
           <div ref={scrollContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
             <div className="flex gap-3 sm:gap-4 md:gap-5 p-3 sm:p-6 md:p-8 h-full items-stretch min-w-max">
-              {loading
-                ? [...Array(3)].map((_, i) => (
+              {loading && Object.keys(columns).length === 0 ? (
+                // Initial board skeleton loading state
+                [...Array(3)].map((_, i) => (
                   <div key={i} className="w-[72vw] sm:w-[272px] md:w-72 flex-shrink-0">
                     <div className="h-6 bg-slate-100 rounded-lg animate-pulse mb-3 w-32" />
                     <div className="space-y-3">
@@ -218,16 +260,67 @@ const LeadsKanbanPage = () => {
                     </div>
                   </div>
                 ))
-                : orderedStages.map(stage => (
+              ) : totalLeadsCount === 0 && !loading ? (
+                // Multi-level empty board states (Pipeline empty vs Filters empty)
+                hasActiveFilters ? (
+                  <div className="flex flex-col items-center justify-center w-full py-20 text-center animate-in fade-in duration-300 min-w-[70vw] lg:min-w-[80vw]">
+                    <div className="h-16 w-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-4 mx-auto shadow-sm border border-slate-200/50">
+                      <AlertCircle size={28} />
+                    </div>
+                    <h2 className="text-base font-bold text-slate-850 mb-1">No Matching Leads</h2>
+                    <p className="text-xs text-slate-500 max-w-sm mb-5 mx-auto leading-relaxed">
+                      No leads match your active filters. Try resetting or clearing some constraints to view your leads.
+                    </p>
+                    <button
+                      onClick={resetFilters}
+                      className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center w-full py-20 text-center animate-in fade-in duration-300 min-w-[70vw] lg:min-w-[80vw]">
+                    <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 mx-auto shadow-sm">
+                      <Kanban size={28} />
+                    </div>
+                    <h2 className="text-base font-bold text-slate-850 mb-1">Your Pipeline is Empty</h2>
+                    <p className="text-xs text-slate-500 max-w-sm mb-5 mx-auto leading-relaxed">
+                      Get started by adding your first lead to this pipeline, or import your lead records directly from Excel.
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      {canCreate && (
+                        <>
+                          <button
+                            onClick={() => setShowImport(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 bg-white transition-all shadow-sm cursor-pointer"
+                          >
+                            <Upload size={13} /> Import Excel
+                          </button>
+                          <button
+                            onClick={() => setShowForm(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary/90 transition-all active:scale-95 cursor-pointer"
+                          >
+                            <Plus size={13} /> Add Lead
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              ) : (
+                // Columns grid displaying leads
+                orderedStages.map(stage => (
                   <KanbanColumn
                     key={stage.id}
                     stage={stage}
                     leads={columns[stage.id]?.leads || []}
-                    loading={loading}
+                    loading={loading && Object.keys(columns).length === 0}
+                    isRefetching={loading}
+                    isFiltered={hasActiveFilters}
                     onLeadClick={handleLeadClick}
                   />
                 ))
-              }
+              )}
             </div>
           </div>
           {/* Drag overlay — card ghost while dragging */}
@@ -247,6 +340,15 @@ const LeadsKanbanPage = () => {
           pipelineId={Number(pipelineId)}
           onClose={() => setShowForm(false)}
           onCreated={handleLeadCreated}
+        />
+      )}
+
+      {/* Lead Import Modal */}
+      {showImport && (
+        <LeadImportModal
+          initialPipelineId={pipelineId}
+          onClose={() => setShowImport(false)}
+          onImported={refetch}
         />
       )}
 
