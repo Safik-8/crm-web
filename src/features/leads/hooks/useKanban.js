@@ -1,23 +1,33 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getPipelineById } from '../../pipelines/services/pipelineService';
 import { updateLeadStage } from '../services/leadService';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 
 /**
- * Manages the full Kanban state for a single pipeline using backend filters and sorting.
+ * useKanban — Manages full Kanban board state for a single pipeline.
+ *
  * columns: { [stageId]: { stage, leads: [] } }
  *
- * Performance notes:
- * - columnsRef mirrors columns state so moveCard never needs columns in its
- *   dependency array — eliminates the "new function every render" problem.
- * - orderedStages is memoised so downstream components don't re-render when
- *   unrelated state changes.
+ * Loading states:
+ *   loading      → true only on the FIRST load (no columns yet). Shows skeleton.
+ *   isRefetching → true on subsequent fetches (columns already visible). Shows
+ *                  subtle overlay — board stays mounted, no flash.
+ *
+ * Performance:
+ *   - columnsRef mirrors columns so moveCard never needs columns in its dep array.
+ *   - orderedStages is memoised to prevent downstream re-renders.
+ *   - Request sequence tracking prevents stale response race conditions.
+ *   - AbortController cancels in-flight requests on unmount / filter change.
  */
 export const useKanban = (pipelineId, filters = {}) => {
   const [columns, setColumns] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);       // initial skeleton load
+  const [isRefetching, setIsRefetching] = useState(false); // background refresh
   const [error, setError] = useState(null);
   const [pipelineName, setPipelineName] = useState('');
+  // Users assignable within this pipeline — sourced directly from pipeline response.
+  // No separate API call needed; backend guarantees branch/company-scoped correctness.
+  const [assignableUsers, setAssignableUsers] = useState([]);
 
   // Mirror of columns kept in a ref so moveCard can read the latest value
   // without being recreated every time columns changes.
@@ -30,66 +40,71 @@ export const useKanban = (pipelineId, filters = {}) => {
   // Track request sequence to prevent out-of-order stale response race conditions
   const activeRequestSeqRef = useRef(0);
 
-  // Deep-stringify filters object so useEffect dependencies are stable and don't re-trigger on reference changes
+  // Deep-stringify filters so useEffect dependencies are stable
   const stringifiedFilters = JSON.stringify(filters);
 
-  const fetchBoard = useCallback(async (signal = null) => {
-    if (!pipelineId) return;
-    
-    // Increment local request sequence token
-    const currentSeq = ++activeRequestSeqRef.current;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const res = await getPipelineById(pipelineId, filters, { signal });
-      
-      // Stop execution if a newer request has already started or request was cancelled
-      if (currentSeq !== activeRequestSeqRef.current) return;
-      if (!res) return;
+  const fetchBoard = useCallback(
+    async (signal = null) => {
+      if (!pipelineId) return;
 
-      const pipeline = res?.data?.pipeline || res?.pipeline;
-      if (!pipeline) {
-        throw new Error('Pipeline board details not found');
+      const currentSeq = ++activeRequestSeqRef.current;
+      const isInitialLoad = Object.keys(columnsRef.current).length === 0;
+
+      if (isInitialLoad) {
+        setLoading(true);
+      } else {
+        setIsRefetching(true);
       }
+      setError(null);
 
-      setPipelineName(pipeline.name || '');
+      try {
+        const res = await getPipelineById(pipelineId, filters, { signal });
 
-      const stages = pipeline.stages || [];
-      const cols = {};
+        // Discard if a newer request has already started or request was cancelled
+        if (currentSeq !== activeRequestSeqRef.current) return;
+        if (!res) return;
 
-      // Map backend stages and backend-grouped/filtered/sorted leads directly to columns
-      stages.forEach(stage => {
-        cols[stage.id] = {
-          stage: {
-            id: stage.id,
-            name: stage.name,
-            isDefault: stage.isDefault,
-            orderNo: stage.orderNo,
-          },
-          leads: stage.leads || [],
-        };
-      });
+        const pipeline = res?.data?.pipeline || res?.pipeline;
+        if (!pipeline) throw new Error('Pipeline board details not found');
 
-      setColumns(cols);
-    } catch (err) {
-      if (currentSeq !== activeRequestSeqRef.current) return;
-      if (err?.name !== 'AbortError') {
+        setPipelineName(pipeline.name || '');
+        setAssignableUsers(pipeline.assignableUsers || []);
+
+        const stages = pipeline.stages || [];
+        const cols = {};
+        stages.forEach((stage) => {
+          cols[stage.id] = {
+            stage: {
+              id: stage.id,
+              name: stage.name,
+              isDefault: stage.isDefault,
+              orderNo: stage.orderNo,
+            },
+            leads: stage.leads || [],
+          };
+        });
+
+        setColumns(cols);
+      } catch (err) {
+        if (currentSeq !== activeRequestSeqRef.current) return;
+        // AbortError is intentional cancellation — swallow silently, no toast
+        if (err?.name === 'AbortError') return;
         setError(err?.message || 'Failed to load board');
+      } finally {
+        if (currentSeq === activeRequestSeqRef.current) {
+          setLoading(false);
+          setIsRefetching(false);
+        }
       }
-    } finally {
-      if (currentSeq === activeRequestSeqRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [pipelineId, stringifiedFilters]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pipelineId, stringifiedFilters]
+  );
 
   // Trigger board refetch on mount and whenever filters/pipelineId change
   useEffect(() => {
     const controller = new AbortController();
     fetchBoard(controller.signal);
-    
     return () => {
       controller.abort();
     };
@@ -106,16 +121,14 @@ export const useKanban = (pipelineId, filters = {}) => {
     // Deep-clone current state for rollback
     snapshotRef.current = JSON.parse(JSON.stringify(columnsRef.current));
 
-    // Optimistic update — functional form so React batches correctly
-    setColumns(prev => {
-      const lead = prev[fromStageId]?.leads.find(l => l.id === leadId);
+    setColumns((prev) => {
+      const lead = prev[fromStageId]?.leads.find((l) => l.id === leadId);
       if (!lead) return prev;
-      
       return {
         ...prev,
         [fromStageId]: {
           ...prev[fromStageId],
-          leads: prev[fromStageId].leads.filter(l => l.id !== leadId),
+          leads: prev[fromStageId].leads.filter((l) => l.id !== leadId),
         },
         [toStageId]: {
           ...prev[toStageId],
@@ -125,17 +138,15 @@ export const useKanban = (pipelineId, filters = {}) => {
     });
 
     try {
-      // Patch backend stage; do NOT refetch full board to prevent layout flickers
       await updateLeadStage(leadId, toStageId);
     } catch (err) {
-      // Rollback to snapshot on failure
       if (snapshotRef.current) setColumns(snapshotRef.current);
       toast.error(err?.message || 'Could not move lead. Try again.');
     }
-  }, []); // ← stable: no columns dependency
+  }, []); // stable: no columns dependency
 
   const addLeadToColumn = useCallback((stageId, lead) => {
-    setColumns(prev => {
+    setColumns((prev) => {
       if (!prev[stageId]) return prev;
       return {
         ...prev,
@@ -144,12 +155,14 @@ export const useKanban = (pipelineId, filters = {}) => {
     });
   }, []);
 
-  // Memoised so consumers don't re-render when unrelated state changes
   const orderedStages = useMemo(
     () =>
       Object.values(columns)
-        .map(c => c.stage)
-        .sort((a, b) => (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0)),
+        .map((c) => c.stage)
+        .sort(
+          (a, b) =>
+            (a.orderNo ?? a.order_no ?? 0) - (b.orderNo ?? b.order_no ?? 0)
+        ),
     [columns]
   );
 
@@ -157,10 +170,12 @@ export const useKanban = (pipelineId, filters = {}) => {
     columns,
     orderedStages,
     loading,
+    isRefetching,
     error,
     moveCard,
     addLeadToColumn,
     refetch: () => fetchBoard(null),
     pipelineName,
+    assignableUsers,
   };
 };

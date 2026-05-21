@@ -3,13 +3,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Phone, Calendar, BookOpen, User } from 'lucide-react';
 
-/**
- * LeadCard
- * The entire card is the drag handle — listeners are on the root div.
- * A separate click handler on the content area opens the detail drawer.
- * touch-none on the root prevents the browser from stealing the touch
- * for page scroll before dnd-kit can capture it.
- */
 const LeadCard = memo(({ lead, onClick }) => {
   const {
     attributes,
@@ -23,10 +16,10 @@ const LeadCard = memo(({ lead, onClick }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? 'none' : transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.45 : 1,
     zIndex: isDragging ? 50 : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
-    touchAction: 'none', // must be inline — Tailwind touch-none alone isn't enough for dnd-kit
+    touchAction: 'none',
   };
 
   const maskedMobile = lead.mobile
@@ -43,65 +36,68 @@ const LeadCard = memo(({ lead, onClick }) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative bg-white rounded-2xl border border-slate-100 shadow-soft select-none overflow-hidden group
+      className={`relative bg-white rounded-2xl border select-none overflow-hidden group
         cursor-grab active:cursor-grabbing
         ${isDragging
-          ? 'shadow-2xl ring-2 ring-primary/40 rotate-1'
-          : 'hover:shadow-xl hover:-translate-y-0.5 hover:border-primary/30 transition-[transform,box-shadow,border-color] duration-200'
+          ? 'shadow-2xl ring-2 ring-primary/50 rotate-1 border-primary/30'
+          : 'border-slate-200 shadow-[0_1px_4px_rgba(0,0,0,0.07),0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-primary/25 transition-[transform,box-shadow,border-color] duration-200'
         }`}
     >
-      {/* Left accent bar */}
-      <div className={`absolute top-0 left-0 w-1.5 h-full z-10 ${lead.interested_for ? 'bg-primary' : 'bg-primary/20'}`} />
+      {/* Left accent bar — full-height, vivid when interested_for set */}
+      <div className={`absolute top-0 left-0 w-[3px] h-full z-10 rounded-l-2xl ${
+        lead.interested_for ? 'bg-primary' : 'bg-slate-200'
+      }`} />
 
       {/* Card content */}
-      <div className="relative z-10 p-4">
-        {/* Name row — click opens detail drawer, pointer-events isolated */}
+      <div className="relative z-10 px-4 pt-3.5 pb-3">
+
+        {/* Name */}
         <div
-          className="pr-2 cursor-pointer"
-          onClick={(e) => {
-            // Only fire click if the pointer didn't move (i.e. not a drag)
-            e.stopPropagation();
-            onClick?.();
-          }}
+          className="pr-1 cursor-pointer"
+          onClick={(e) => { e.stopPropagation(); onClick?.(); }}
         >
-          <p className="font-heading font-bold text-slate-900 text-[15px] leading-snug group-hover:text-primary transition-colors duration-150">
+          <p className="font-heading font-bold text-slate-900 text-[14px] leading-snug group-hover:text-primary transition-colors duration-150 truncate">
             {lead.name}
           </p>
         </div>
 
+        {/* Interest badge */}
         {lead.interested_for && (
-          <div className="mt-3 flex pointer-events-none">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-orange-50 border border-orange-100/50">
-              <BookOpen size={12} className="text-primary/70" />
-              <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
+          <div className="mt-2.5 flex pointer-events-none">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-200/70">
+              <BookOpen size={11} className="text-primary shrink-0" />
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wide truncate max-w-[140px]">
                 {lead.interested_for}
               </span>
             </div>
           </div>
         )}
 
-        {/* Assigned User */}
-        <div className="mt-4 flex items-center gap-2 pointer-events-none">
-          <div className="h-5 w-5 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+        {/* Assigned user */}
+        <div className="mt-3 flex items-center gap-2 pointer-events-none">
+          <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200 shrink-0">
             <User size={10} />
           </div>
-          <span className={`text-[11px] font-bold truncate ${lead.assignedTo ? 'text-slate-700' : 'text-slate-400 italic'}`}>
+          <span className={`text-[11px] font-semibold truncate ${
+            lead.assignedTo ? 'text-slate-700' : 'text-slate-400 italic'
+          }`}>
             {lead.assignedTo?.name || 'Unassigned'}
           </span>
         </div>
 
-        <div className="mt-5 flex items-center justify-between text-slate-500 border-t border-slate-50 pt-4 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400">
-              <Phone size={12} />
+        {/* Footer: mobile + date */}
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 pointer-events-none">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 rounded-md bg-slate-100 text-slate-500">
+              <Phone size={11} />
             </div>
-            <span className="text-xs font-semibold tracking-tight">{maskedMobile}</span>
+            <span className="text-[11px] font-semibold text-slate-600 tracking-tight">{maskedMobile}</span>
           </div>
 
           {date && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-50/50 text-slate-400">
-              <Calendar size={11} />
-              <span className="text-[11px] font-medium">{date}</span>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+              <Calendar size={10} />
+              <span className="text-[10px] font-semibold">{date}</span>
             </div>
           )}
         </div>

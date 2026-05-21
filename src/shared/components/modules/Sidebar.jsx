@@ -50,15 +50,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       )}
     >
       {/* Header (STATIC) */}
-      <div className="flex h-20 items-center justify-between px-6 border-b border-white/5 shrink-0 relative overflow-hidden bg-black/95 backdrop-blur-xl">
+      <div className="flex h-20 items-center justify-between p-6   border-b border-white/5 shrink-0 relative overflow-hidden bg-white backdrop-blur-xl">
         {/* Subtle ambient glow behind logo */}
-        <div className="absolute top-1/2 left-0 w-32 h-16 bg-primary/20 blur-[30px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/2 left-0 w-32 h-16 blur-[30px] rounded-full pointer-events-none"></div>
         
         <div className="flex-1 flex items-center h-full z-10">
           <img 
             src={logoOfficial} 
             alt="StackCode" 
-            className="w-auto object-contain invert hue-rotate-180 transition-all duration-500 hover:scale-[1.02] mix-blend-screen" 
+            className="w-auto object-contain  transition-all duration-500 hover:scale-[1.02] " 
             style={{ paddingTop: '10px' }}
           />
         </div>
@@ -68,7 +68,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Navigation (SCROLLABLE) */}
-      <nav className="flex-1 overflow-y-auto h-0 space-y-1 p-4 scrollbar-hide" style={{ backgroundColor:'black' }}>
+      <nav className="flex-1 overflow-y-auto h-0 bg-white space-y-1 p-4 scrollbar-hide">
         {filteredNavItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -79,8 +79,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group",
                   isActive
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    ? "bg-orange-50  text-white shadow text-orange-500"
+                    : "text-slate-400 hover:bg-orange-500/5  hover:text-orange-500"
                 )
               }
             >
@@ -92,9 +92,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </nav>
 
       {/* Footer (STATIC) */}
-      <div className="p-4 border-t border-slate-800 shrink-0" style={{ backgroundColor:'black' }}>
-        <div className="bg-slate-800/50 rounded-lg p-3">
-          <p className="text-xs text-slate-500 uppercase font-semibold">User Access</p>
+      <div className="p-4 border-t border-slate-800 shrink-0" style={{ backgroundColor:'white' }}>
+        <div className="bg-orange-50 shadow-inner rounded-lg p-3">
+          <p className="text-xs text-slate-500 uppercase font-black">User Access</p>
           <p className="text-sm font-bold text-primary mt-1">Role-Based Secured</p>
         </div>
       </div>

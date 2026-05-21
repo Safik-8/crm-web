@@ -3,43 +3,48 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import LeadCard from './LeadCard';
 
-// Skeleton card shown while loading
+// Skeleton card — higher contrast so it's visible on the column background
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl border border-slate-100 p-4 space-y-2 animate-pulse">
-    <div className="h-4 bg-slate-100 rounded-lg w-3/4" />
-    <div className="h-3 bg-slate-100 rounded-lg w-1/2" />
-    <div className="h-px bg-slate-100 my-2" />
-    <div className="flex justify-between">
-      <div className="h-3 bg-slate-100 rounded w-20" />
-      <div className="h-3 bg-slate-100 rounded w-12" />
+  <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5 animate-pulse shadow-sm">
+    <div className="h-3.5 bg-slate-200 rounded-md w-3/4" />
+    <div className="h-3 bg-slate-150 rounded-md w-1/2" style={{ backgroundColor: '#e8ecf0' }} />
+    <div className="h-px bg-slate-200 my-1" />
+    <div className="flex justify-between items-center">
+      <div className="h-3 bg-slate-200 rounded w-20" />
+      <div className="h-3 bg-slate-200 rounded w-12" />
     </div>
   </div>
 );
 
 const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
-
-  // Memoize lead IDs array to keep SortableContext items array reference stable
-  const leadIds = useMemo(() => leads.map(l => l.id), [leads]);
+  const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
 
   return (
-    /*
-     * Width:
-     *   mobile  → 72vw  (shows ~1.3 columns, hinting there's more to swipe)
-     *   sm      → 17rem (272px)
-     *   md+     → 18rem (288px)
-     * flex-shrink-0 keeps columns from collapsing inside the horizontal scroll container.
-     */
     <div className="flex flex-col w-[72vw] sm:w-[272px] md:w-72 flex-shrink-0 h-full">
+
       {/* Column header */}
-      <div className="flex items-center justify-between mb-2 sm:mb-3 px-1 shrink-0">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <span className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full flex-shrink-0 ${stage.isDefault ? 'bg-primary' : 'bg-slate-400'}`} />
-          <h3 className="font-bold text-xs sm:text-sm text-slate-800 font-heading truncate max-w-[120px] sm:max-w-44">
+      <div className="flex items-center justify-between mb-2.5 px-1 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 transition-colors duration-300 ${
+            isRefetching
+              ? 'bg-slate-300 animate-pulse'
+              : stage.isDefault
+              ? 'bg-primary shadow-[0_0_0_3px_rgba(248,111,3,0.15)]'
+              : 'bg-slate-400'
+          }`} />
+          <h3 className="font-bold text-sm text-slate-800 font-heading truncate max-w-[140px] sm:max-w-44">
             {stage.name}
           </h3>
         </div>
-        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full min-w-[24px] sm:min-w-[28px] text-center animate-in fade-in duration-200">
+        {/* Lead count badge — stronger contrast */}
+        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[28px] text-center transition-all duration-300 ${
+          isRefetching
+            ? 'text-slate-300 bg-slate-100 animate-pulse'
+            : leads.length > 0
+            ? 'text-primary bg-primary/10 border border-primary/20'
+            : 'text-slate-500 bg-slate-200'
+        }`}>
           {leads.length}
         </span>
       </div>
@@ -47,32 +52,36 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        style={{ opacity: isRefetching ? 0.75 : 1 }}
-        className={`flex-1 min-h-0 flex flex-col rounded-xl sm:rounded-2xl transition-all duration-200 overflow-hidden ${
-          isOver ? 'bg-primary/5 ring-2 ring-primary/30' : 'bg-slate-100/70'
+        className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-all duration-200 overflow-hidden relative ${
+          isOver
+            ? 'bg-primary/8 ring-2 ring-primary/40 shadow-[inset_0_0_0_2px_rgba(248,111,3,0.15)]'
+            : 'bg-slate-200/60'
         }`}
+        style={isOver ? { backgroundColor: 'rgba(248,111,3,0.06)' } : {}}
       >
+        {/* Refetch overlay — subtle frosted glass */}
+        {isRefetching && !loading && (
+          <div className="absolute inset-0 z-10 rounded-2xl bg-white/50 backdrop-blur-[1px] pointer-events-none" />
+        )}
+
         {loading ? (
-          <div className="p-2 sm:p-3 space-y-2 sm:space-y-3 overflow-hidden">
+          <div className="p-2.5 space-y-2.5 overflow-hidden">
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : leads.length === 0 ? (
-          <div className={`flex flex-col items-center justify-center flex-1 min-h-24 sm:min-h-32 text-xs font-medium border-2 border-dashed rounded-lg sm:rounded-xl m-2 sm:m-3 transition-colors ${
-            isOver ? 'border-primary/40 text-primary' : 'border-slate-200 text-slate-400'
+          <div className={`flex flex-col items-center justify-center flex-1 min-h-28 text-xs font-medium border-2 border-dashed rounded-xl m-2.5 transition-colors ${
+            isOver ? 'border-primary/50 text-primary bg-primary/5' : 'border-slate-300 text-slate-400'
           }`}>
-            {isFiltered ? (
-              <span className="text-slate-400 font-normal">No matching leads</span>
-            ) : (
-              <span>Drop here</span>
-            )}
+            {isFiltered
+              ? <span className="text-slate-500 font-medium">No matching leads</span>
+              : <span className="text-slate-400">Drop here</span>
+            }
           </div>
         ) : (
-          /* touch-pan-x lets the user scroll the board horizontally even when
-             their finger starts on a card — only the drag handle triggers DnD */
-          <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-2 sm:p-3 space-y-2 sm:space-y-3">
+          <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-2.5 space-y-2.5">
             <SortableContext items={leadIds} strategy={verticalListSortingStrategy}>
-              {leads.map(lead => (
+              {leads.map((lead) => (
                 <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick(lead)} />
               ))}
             </SortableContext>

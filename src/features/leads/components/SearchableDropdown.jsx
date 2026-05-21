@@ -18,6 +18,7 @@ export const SearchableDropdown = ({
   onClear = null,
   emptyMessage = 'No results found',
   className = '',
+  block = false,        // When true: renders as block, trigger fills full width
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,20 +29,23 @@ export const SearchableDropdown = ({
   const listRef = useRef(null);
   const itemRefs = useRef([]);
 
-  // Normalize options to guarantee unified support for both { id, name } and { value, label } formats
+  // Normalize options to guarantee unified support for both { id, name } and { value, label } formats.
+  // Also preserves optional `subtitle` (e.g. email) for richer list rendering.
   const normalizedOptions = useMemo(() => {
     return options.map(opt => ({
       id: opt.id !== undefined ? opt.id : opt.value,
       name: opt.name !== undefined ? opt.name : opt.label,
+      subtitle: opt.subtitle || null,
     }));
   }, [options]);
 
-  // Client-side search filtering memoization
+  // Client-side search filtering — matches against both name and subtitle (e.g. email)
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return normalizedOptions;
     const lower = searchTerm.toLowerCase();
     return normalizedOptions.filter(opt =>
-      String(opt.name || '').toLowerCase().includes(lower)
+      String(opt.name || '').toLowerCase().includes(lower) ||
+      String(opt.subtitle || '').toLowerCase().includes(lower)
     );
   }, [normalizedOptions, searchTerm]);
 
@@ -160,7 +164,7 @@ export const SearchableDropdown = ({
   return (
     <div
       ref={wrapperRef}
-      className={`relative inline-block text-left ${className}`}
+      className={`relative text-left ${block ? 'block w-full' : 'inline-block'} ${className}`}
       onKeyDown={handleKeyDown}
     >
       <button
@@ -176,6 +180,8 @@ export const SearchableDropdown = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all outline-none ${
+          block ? 'w-full h-8' : ''
+        } ${
           disabled
             ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -219,7 +225,7 @@ export const SearchableDropdown = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 min-w-[200px] w-auto max-w-xs bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className={`absolute z-50 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 ${block ? 'w-full' : 'min-w-[200px] w-auto max-w-xs'}`}>
           {/* Sticky Search Field */}
           <div className="p-2 border-b border-slate-100 bg-slate-50/50 sticky top-0 z-10">
             <div className="relative">
@@ -264,7 +270,7 @@ export const SearchableDropdown = ({
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => handleSelectOption(opt.id)}
-                    className={`flex items-center justify-between gap-4 px-3 py-1.5 my-0.5 text-xs font-semibold rounded-md cursor-pointer transition-colors select-none ${
+                    className={`flex items-center justify-between gap-2 px-3 py-1.5 my-0.5 rounded-md cursor-pointer transition-colors select-none ${
                       isSelected
                         ? 'bg-primary/10 text-primary'
                         : isHighlighted
@@ -272,7 +278,17 @@ export const SearchableDropdown = ({
                         : 'text-slate-600 hover:bg-slate-50/50 hover:text-slate-900'
                     }`}
                   >
-                    <span className="truncate">{opt.name}</span>
+                    {/* Name + optional subtitle (e.g. email) */}
+                    <span className="flex flex-col min-w-0">
+                      <span className="truncate text-xs font-semibold">{opt.name}</span>
+                      {opt.subtitle && (
+                        <span className={`truncate text-[10px] font-normal leading-tight ${
+                          isSelected ? 'text-primary/70' : 'text-slate-400'
+                        }`}>
+                          {opt.subtitle}
+                        </span>
+                      )}
+                    </span>
                     {isSelected && <Check size={12} strokeWidth={2.5} className="text-primary shrink-0" />}
                   </li>
                 );
