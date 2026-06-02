@@ -74,10 +74,19 @@ export const AuthProvider = ({ children }) => {
 
     // null module means "grant to all authenticated users"
     if (mapping.module === null) {
-      // Explicitly restrict Dashboard to high-level roles only
+      // Restrict Branch Dashboard to the four roles that the backend supports.
+      // The dashboard UI itself handles view scoping via data.viewMode — all
+      // four roles land on the same page; the backend returns the correct data.
       if (permissionStr === 'view:branch_dashboard') {
         const role = user.primaryRole;
-        return role === 'BRANCH_ADMIN' || role === 'Admin' || role === 'Super Admin';
+        return (
+          role === 'BRANCH_ADMIN' ||
+          role === 'MANAGER'      ||
+          role === 'ISE'          ||
+          role === 'SALES_TEAM'   ||
+          role === 'Admin'        ||
+          role === 'Super Admin'
+        );
       }
       return true;
     }

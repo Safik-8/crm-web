@@ -15,16 +15,18 @@ import { useCallback, useMemo, useState } from 'react';
  *   2. User clicks Apply → draftFilters committed to URL → API refetch fires once
  *   3. User clicks Reset → URL cleared → API refetch fires once with defaults
  *   4. Browser back/forward → URL restores appliedFilters correctly
+ *
+ * Search param:
+ *   A single `search` field replaces the old leadName / mobile / interestedFor trio.
+ *   The backend performs OR-matching across name, mobile, and interestedFor.
  */
 
 const DEFAULT_SORT_BY = 'createdAt';
 const DEFAULT_SORT_ORDER = 'desc';
 
 const EMPTY_FILTERS = {
-  leadName: '',
-  mobile: '',
+  search: '',
   assignedToId: '',
-  interestedFor: '',
   dateFrom: '',
   dateTo: '',
   // Default to true: backend filters to today when no date params are sent,
@@ -37,10 +39,8 @@ const EMPTY_FILTERS = {
 
 /** Parse applied filters from URL search params */
 const parseAppliedFilters = (searchParams) => ({
-  leadName: searchParams.get('leadName')?.trim() || '',
-  mobile: searchParams.get('mobile')?.trim() || '',
+  search: searchParams.get('search')?.trim() || '',
   assignedToId: searchParams.get('assignedToId') || '',
-  interestedFor: searchParams.get('interestedFor')?.trim() || '',
   dateFrom: searchParams.get('dateFrom') || '',
   dateTo: searchParams.get('dateTo') || '',
   // Default true: when the URL has no allDates param AND no date range params,
@@ -57,9 +57,8 @@ const parseAppliedFilters = (searchParams) => ({
 const buildApiParams = (filters) => {
   const params = {};
 
-  if (filters.leadName) params.leadName = filters.leadName;
-  if (filters.mobile) params.mobile = filters.mobile;
-  if (filters.interestedFor) params.interestedFor = filters.interestedFor;
+  // Unified search — backend searches name, mobile, interestedFor via OR
+  if (filters.search?.trim()) params.search = filters.search.trim();
 
   const parsedUser = Number(filters.assignedToId);
   if (filters.assignedToId && !Number.isNaN(parsedUser)) {
@@ -92,10 +91,8 @@ const buildApiParams = (filters) => {
 /** Check if any non-default filter is active */
 const computeHasActiveFilters = (filters) =>
   !!(
-    filters.leadName ||
-    filters.mobile ||
+    filters.search ||
     filters.assignedToId ||
-    filters.interestedFor ||
     // allDates=false is non-default (user has switched to date-range mode)
     !filters.allDates ||
     filters.dateFrom ||
@@ -159,13 +156,6 @@ export const useKanbanFilters = () => {
     setSearchParams(new URLSearchParams());
   }, [setSearchParams]);
 
-  // Sync draft when URL changes externally (browser back/forward)
-  // We use a ref-based approach: only sync draft if URL changed from outside
-  // (i.e., not from our own applyFilters call). We detect this by comparing
-  // the stringified applied filters to the current draft.
-  // This is intentionally NOT in a useEffect to avoid infinite loops —
-  // the draft is only reset on explicit reset or external URL navigation.
-
   // Derived: has the draft diverged from what's currently applied?
   const isDirty = useMemo(() => {
     return JSON.stringify(draftFilters) !== JSON.stringify(appliedFilters);
@@ -192,7 +182,7 @@ export const useKanbanFilters = () => {
   );
 
   return {
-    // Draft state (toolbar binds to these)
+    // Draft state (sidebar binds to these)
     draftFilters,
     setDraftFilters,
 

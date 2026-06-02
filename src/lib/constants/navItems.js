@@ -19,7 +19,7 @@ import { PERMISSIONS } from '../constants/permissions';
 import { ROLES } from '../constants/roles';
 
 export const navItems = [
-  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD, role: ROLES.BRANCH_ADMIN },
+  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD, role: [ROLES.BRANCH_ADMIN, ROLES.MANAGER, ROLES.ISE, ROLES.SALES_TEAM] },
   
   // Settings
   { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },

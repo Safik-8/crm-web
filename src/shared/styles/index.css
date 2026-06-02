@@ -34,7 +34,7 @@
 /* Base Body Styles */
 @layer base {
   body {
-    @apply font-sans bg-neutral text-slate-900 antialiased;
+    @apply font-sans bg-zinc-50 text-slate-900 antialiased;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -42,7 +42,7 @@
   }
 
   main {
-    background-color: beige;
+    background-color: transparent;
   }
 }
 
@@ -427,15 +427,24 @@
   justify-content: center;
   gap: 20px;
 
-  /* Frosted warm-white backdrop — matches brand neutral */
-  background: rgba(255, 245, 235, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* Transparent — content visible but blocked via pointer-events */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 
   /* Transition: opacity for fade, visibility for a11y */
   transition:
     opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Content-area scoped variant ───────────────────────────────────────────── */
+/* Declared AFTER .loader-overlay so position:absolute overrides position:fixed */
+/* When rendered inside BaseLayout's content column (position:relative),        */
+/* the loader covers only the content area — sidebar stays fully visible.       */
+.loader-overlay--content {
+  position: absolute;
+  z-index: 80; /* above content, below modals/toasts */
 }
 
 /* ── Visible state ─────────────────────────────────────────────────────────── */
@@ -494,10 +503,6 @@
 
 /* ── Dark mode overrides ───────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .loader-overlay {
-    background: rgba(18, 12, 6, 0.85);
-  }
-
   .loader-message {
     color: #F8A55A;
   }

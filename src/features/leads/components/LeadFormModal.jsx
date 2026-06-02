@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, User, Phone, Calendar, BookOpen, UserCheck } from 'lucide-react';
+import { X, Loader2, User, Phone, Calendar, BookOpen, UserCheck, Plus } from 'lucide-react';
 import { createLead, getBranchUsers } from '../services/leadService';
 import { toast } from 'sonner';
 
@@ -9,6 +9,12 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -69,75 +75,103 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
   };
 
   const fields = [
-    { key: 'name', label: 'Full Name', icon: User, type: 'text', placeholder: 'e.g. Ravi Kumar' },
-    { key: 'mobile', label: 'Mobile', icon: Phone, type: 'tel', placeholder: '10-digit number' },
-    { key: 'date', label: 'Date', icon: Calendar, type: 'date', placeholder: '' },
-    { key: 'interested_for', label: 'Interested In', icon: BookOpen, type: 'text', placeholder: 'e.g. MBA, BBA, Full Stack...' },
+    { key: 'name',          label: 'Full Name',     icon: User,     type: 'text', placeholder: 'e.g. Ravi Kumar' },
+    { key: 'mobile',        label: 'Mobile',        icon: Phone,    type: 'tel',  placeholder: '10-digit number' },
+    { key: 'date',          label: 'Date',          icon: Calendar, type: 'date', placeholder: '' },
+    { key: 'interested_for', label: 'Interested In', icon: BookOpen, type: 'text', placeholder: 'e.g. MBA, BBA, Full Stack…' },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px] p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.18)] w-full max-w-md animate-in fade-in zoom-in-95 duration-250 overflow-hidden">
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold font-heading text-slate-900">Add Lead</h2>
-          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-            <X size={18} />
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-orange-50 border border-orange-100">
+              <Plus size={16} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="text-[16px] font-semibold font-heading text-zinc-900 tracking-tight">Add Lead</h2>
+              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Fill in the lead details below</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center w-8 h-8 rounded-xl text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors"
+          >
+            <X size={17} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4" noValidate>
           {fields.map(({ key, label, icon: Icon, type, placeholder }) => (
             <div key={key} className="space-y-1.5">
-              <label className="block text-sm font-semibold text-slate-700">{label}</label>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.12em]">{label}</label>
               <div className="relative">
-                <Icon size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors[key] ? 'text-red-400' : 'text-slate-400'}`} />
+                <Icon
+                  size={14}
+                  className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                    errors[key] ? 'text-red-400' : 'text-zinc-400'
+                  }`}
+                />
                 <input
                   type={type}
                   value={form[key]}
                   onChange={set(key)}
                   placeholder={placeholder}
-                  className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-sm font-medium outline-none transition-all ${
+                  className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-[13px] font-medium outline-none transition-all duration-150 ${
                     errors[key]
                       ? 'border-red-300 bg-red-50 focus:ring-4 focus:ring-red-500/10 focus:border-red-400'
-                      : 'border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
+                      : 'border-zinc-200 bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
                   }`}
                 />
               </div>
-              {errors[key] && <p className="text-xs font-semibold text-red-500">{errors[key]}</p>}
+              {errors[key] && (
+                <p className="text-[11px] font-semibold text-red-500 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {errors[key]}
+                </p>
+              )}
             </div>
           ))}
 
-          {/* Assign To Dropdown */}
+          {/* Assign To */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-slate-700">Assign To</label>
+            <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.12em]">Assign To</label>
             <div className="relative">
-              <UserCheck size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <UserCheck size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <select
                 value={form.assignedToId}
                 onChange={set('assignedToId')}
                 disabled={loadingUsers || busy}
-                className="w-full rounded-xl border pl-9 pr-3 py-2.5 text-sm font-medium outline-none transition-all border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
+                className="w-full rounded-xl border pl-9 pr-3 py-2.5 text-[13px] font-medium outline-none transition-all duration-150 border-zinc-200 bg-zinc-50 text-zinc-900 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
               >
-                <option value="">-- Unassigned --</option>
+                <option value="">— Unassigned —</option>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>
-                    {u.name} {u.role ? `(${u.role})` : ''}
+                    {u.name}{u.role ? ` (${u.role})` : ''}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-zinc-200 text-[13px] font-semibold text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 active:scale-[0.98]"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={busy}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 transition-colors">
-              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-              Add Lead
+            <button
+              type="submit"
+              disabled={busy}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-[13px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 transition-all duration-150 active:scale-[0.98]"
+            >
+              {busy ? <Loader2 size={15} className="animate-spin" /> : null}
+              {busy ? 'Adding…' : 'Add Lead'}
             </button>
           </div>
         </form>

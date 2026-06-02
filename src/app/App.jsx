@@ -3,7 +3,6 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './providers/AuthProvider.jsx';
 import { router } from './routes/index.jsx';
 import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
-import GlobalLoader from '../shared/components/elements/GlobalLoader.jsx';
 import '../shared/styles/index.css';
 
 function App() {
@@ -22,9 +21,6 @@ function App() {
      * remain visible while the loader is active.
      */
     <LoaderProvider>
-      {/* Full-screen Lottie overlay — always mounted, fades in/out via CSS */}
-      <GlobalLoader />
-
       {/*
        * Sonner toast container.
        * Declared before AuthProvider/RouterProvider so it is never
@@ -84,7 +80,7 @@ function App() {
         }}
       />
 
-      <div className="antialiased text-slate-900 bg-slate-50 font-sans selection:bg-primary/20 selection:text-primary">
+      <div className="antialiased text-zinc-900 bg-zinc-50 font-sans selection:bg-primary/20 selection:text-primary">
         <AuthProvider>
           <RouterProvider router={router} />
         </AuthProvider>

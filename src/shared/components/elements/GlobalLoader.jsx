@@ -43,7 +43,7 @@ function ensureLottieScript() {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-const GlobalLoader = () => {
+const GlobalLoader = ({ contentScoped = false }) => {
   const { isLoading, message } = useLoader();
   const overlayRef = useRef(null);
 
@@ -80,7 +80,7 @@ const GlobalLoader = () => {
   return (
     <div
       ref={overlayRef}
-      className="loader-overlay loader-overlay--hidden"
+      className={`loader-overlay loader-overlay--hidden${contentScoped ? ' loader-overlay--content' : ''}`}
       role="status"
       aria-live="polite"
       aria-label={message || 'Loading, please wait…'}

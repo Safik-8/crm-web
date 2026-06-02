@@ -114,25 +114,39 @@ export const useKanban = (pipelineId, filters = {}) => {
    * Optimistic card move.
    * Reads current columns from columnsRef — no dependency on columns state,
    * so this function is created exactly once per mount.
+   *
+   * RULE: Leads in the Closure stage are permanently locked — they cannot be
+   * moved to any other stage. This is enforced here (data layer) as the single
+   * source of truth, in addition to UI-layer guards in the page component.
    */
   const moveCard = useCallback(async (leadId, fromStageId, toStageId) => {
-    if (fromStageId === toStageId) return;
+    // Normalize to strings — JS object keys are always strings
+    const fromKey = String(fromStageId);
+    const toKey = String(toStageId);
+    if (fromKey === toKey) return;
+
+    // ── Closure lock: leads in the closure stage cannot be moved out ──────
+    const fromStage = columnsRef.current[fromKey]?.stage;
+    if (fromStage?.name?.toLowerCase() === 'closure') {
+      toast.error('Leads in Closure cannot be moved to another stage.');
+      return;
+    }
 
     // Deep-clone current state for rollback
     snapshotRef.current = JSON.parse(JSON.stringify(columnsRef.current));
 
     setColumns((prev) => {
-      const lead = prev[fromStageId]?.leads.find((l) => l.id === leadId);
+      const lead = prev[fromKey]?.leads.find((l) => l.id === leadId);
       if (!lead) return prev;
       return {
         ...prev,
-        [fromStageId]: {
-          ...prev[fromStageId],
-          leads: prev[fromStageId].leads.filter((l) => l.id !== leadId),
+        [fromKey]: {
+          ...prev[fromKey],
+          leads: prev[fromKey].leads.filter((l) => l.id !== leadId),
         },
-        [toStageId]: {
-          ...prev[toStageId],
-          leads: [...(prev[toStageId]?.leads || []), { ...lead, stageId: toStageId }],
+        [toKey]: {
+          ...prev[toKey],
+          leads: [...(prev[toKey]?.leads || []), { ...lead, stageId: Number(toStageId) }],
         },
       };
     });
@@ -155,6 +169,47 @@ export const useKanban = (pipelineId, filters = {}) => {
     });
   }, []);
 
+  /**
+   * Update a lead's data in local state (optimistic update after successful PUT).
+   * Finds the lead across all columns and merges the updated fields.
+   */
+  const updateLeadLocal = useCallback((leadId, updatedFields) => {
+    setColumns((prev) => {
+      const next = { ...prev };
+      for (const stageId of Object.keys(next)) {
+        const col = next[stageId];
+        const idx = col.leads.findIndex((l) => l.id === leadId);
+        if (idx !== -1) {
+          const updatedLeads = [...col.leads];
+          updatedLeads[idx] = { ...updatedLeads[idx], ...updatedFields };
+          next[stageId] = { ...col, leads: updatedLeads };
+          break;
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Remove a lead from local state immediately (after successful DELETE or 404).
+   */
+  const deleteLeadLocal = useCallback((leadId) => {
+    setColumns((prev) => {
+      const next = { ...prev };
+      for (const stageId of Object.keys(next)) {
+        const col = next[stageId];
+        if (col.leads.some((l) => l.id === leadId)) {
+          next[stageId] = {
+            ...col,
+            leads: col.leads.filter((l) => l.id !== leadId),
+          };
+          break;
+        }
+      }
+      return next;
+    });
+  }, []);
+
   const orderedStages = useMemo(
     () =>
       Object.values(columns)
@@ -174,6 +229,8 @@ export const useKanban = (pipelineId, filters = {}) => {
     error,
     moveCard,
     addLeadToColumn,
+    updateLeadLocal,
+    deleteLeadLocal,
     refetch: () => fetchBoard(null),
     pipelineName,
     assignableUsers,

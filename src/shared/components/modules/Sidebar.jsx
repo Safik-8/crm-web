@@ -1,32 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import logoOfficial from '../../../assets/logos/logo-official.png';
-import {
-  LayoutDashboard,
-  Users,
-  UserPlus,
-  Briefcase,
-  CheckSquare,
-  Settings,
-  X,
-  Activity,
-  PlayCircle,
-  BarChart3,
-  ClipboardCheck,
-  Users2,
-  Building2,
-  PieChart,
-  Target,
-  Bell,
-  ClipboardList,
-  GitBranch,
-  Kanban,
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { PERMISSIONS } from '../../../lib/constants/permissions';
-
 import { getFilteredNavItems } from '../../../lib/constants/navItems';
 
 function cn(...inputs) {
@@ -35,70 +13,111 @@ function cn(...inputs) {
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { hasPermission, user } = useAuth();
-  
-  const filteredNavItems = React.useMemo(() => 
-    getFilteredNavItems(user, hasPermission), 
+
+  const filteredNavItems = React.useMemo(
+    () => getFilteredNavItems(user, hasPermission),
     [user, hasPermission]
   );
 
-
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col h-full overflow-hidden",
-        !isOpen && "-translate-x-full lg:translate-x-0"
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] lg:hidden"
+          onClick={toggleSidebar}
+          aria-hidden="true"
+        />
       )}
-    >
-      {/* Header (STATIC) */}
-      <div className="flex h-20 items-center justify-between p-6   border-b border-white/5 shrink-0 relative overflow-hidden bg-white backdrop-blur-xl">
-        {/* Subtle ambient glow behind logo */}
-        <div className="absolute top-1/2 left-0 w-32 h-16 blur-[30px] rounded-full pointer-events-none"></div>
-        
-        <div className="flex-1 flex items-center h-full z-10">
-          <img 
-            src={logoOfficial} 
-            alt="StackCode" 
-            className="w-auto object-contain  transition-all duration-500 hover:scale-[1.02] " 
-            style={{ paddingTop: '10px' }}
-          />
-        </div>
-        <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white z-10 transition-colors p-1.5 hover:bg-white/10 rounded-lg ml-2">
-          <X size={24} />
-        </button>
-      </div>
 
-      {/* Navigation (SCROLLABLE) */}
-      <nav className="flex-1 overflow-y-auto h-0 bg-white space-y-1 p-4 scrollbar-hide">
-        {filteredNavItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group",
-                  isActive
-                    ? "bg-orange-50  text-white shadow text-orange-500"
-                    : "text-slate-400 hover:bg-orange-500/5  hover:text-orange-500"
-                )
-              }
-            >
-              <Icon size={20} className="shrink-0 transition-transform group-hover:scale-110" />
-              <span className="font-medium">{item.name}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Footer (STATIC) */}
-      <div className="p-4 border-t border-slate-800 shrink-0" style={{ backgroundColor:'white' }}>
-        <div className="bg-orange-50 shadow-inner rounded-lg p-3">
-          <p className="text-xs text-slate-500 uppercase font-black">User Access</p>
-          <p className="text-sm font-bold text-primary mt-1">Role-Based Secured</p>
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex flex-col h-full w-[220px] bg-white border-r border-zinc-200/80',
+          'shadow-[1px_0_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out',
+          'lg:relative lg:translate-x-0 lg:shadow-none',
+          !isOpen && '-translate-x-full lg:translate-x-0'
+        )}
+      >
+        {/* ── Logo header ── */}
+        <div className="flex h-[60px] items-center justify-between px-4 border-b border-zinc-100 shrink-0">
+          <div className="flex items-center h-full flex-1 min-w-0">
+            <img
+              src={logoOfficial}
+              alt="StackCode"
+              className="w-auto  object-contain transition-all duration-300 hover:opacity-80"
+            />
+          </div>
+          <button
+            onClick={toggleSidebar}
+            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors ml-2 shrink-0"
+            aria-label="Close sidebar"
+          >
+            <X size={16} />
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* ── Navigation ── */}
+        <nav className="flex-1 overflow-y-auto h-0 px-2.5 py-3 space-y-0.5 scrollbar-hide">
+          {filteredNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  cn(
+                    'group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+                    isActive
+                      ? 'bg-orange-50 text-orange-600 font-semibold'
+                      : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {/* Left accent line */}
+                    <span
+                      className={cn(
+                        'absolute left-0 w-[3px] h-5 rounded-r-full transition-all duration-200',
+                        isActive ? 'bg-orange-500 opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <Icon
+                      size={16}
+                      strokeWidth={isActive ? 2.2 : 1.8}
+                      className={cn(
+                        'shrink-0 transition-colors duration-150',
+                        isActive ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                      )}
+                    />
+                    <span className="truncate font-bold">{item.name}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* ── Footer ── */}
+        <div className="shrink-0 px-3 py-3 border-t border-zinc-100">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 shrink-0">
+              <span className="text-orange-600 text-[10px] font-black">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold text-zinc-800 truncate leading-tight">
+                {user?.name || 'User'}
+              </p>
+              <p className="text-[10px] font-semibold text-orange-500 truncate leading-tight mt-0.5">
+                {user?.primaryRole || user?.designation || 'Member'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 };
 

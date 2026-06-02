@@ -12,6 +12,12 @@ export const getLeads = (params = {}) => {
 export const createLead = (data) =>
   apiClient('/leads', { method: 'POST', body: data });
 
+export const updateLead = (leadId, data) =>
+  apiClient(`/leads/${leadId}`, { method: 'PUT', body: data });
+
+export const deleteLead = (leadId) =>
+  apiClient(`/leads/${leadId}`, { method: 'DELETE' });
+
 export const updateLeadStage = (leadId, stageId) =>
   apiClient(`/leads/${leadId}/stage`, {
     method: 'PATCH',
