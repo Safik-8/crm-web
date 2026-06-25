@@ -1,8 +1,11 @@
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './providers/AuthProvider.jsx';
 import { router } from './routes/index.jsx';
 import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
+import muiTheme from '../shared/theme/muiTheme.js';
 import '../shared/styles/index.css';
 
 function App() {
@@ -20,6 +23,13 @@ function App() {
      * Toaster z-index (9999) sits above GlobalLoader (9998) so notifications
      * remain visible while the loader is active.
      */
+    <ThemeProvider theme={muiTheme}>
+      {/*
+       * CssBaseline normalises browser defaults.
+       * We do NOT use enableColorScheme to avoid interfering with
+       * Tailwind's own base reset that is already applied globally.
+       */}
+      <CssBaseline enableColorScheme={false} />
     <LoaderProvider>
       {/*
        * Sonner toast container.
@@ -86,6 +96,7 @@ function App() {
         </AuthProvider>
       </div>
     </LoaderProvider>
+    </ThemeProvider>
   );
 }
 
