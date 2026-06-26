@@ -1,93 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Save, GitBranch } from 'lucide-react';
 import { toast } from 'sonner';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { branchApi } from '../api/branchApi';
-import Drawer from '../../../shared/components/elements/Drawer';
-
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import {
+  FormControl,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Typography,
+  OutlinedInput,
+  FormHelperText
+} from '@mui/material';
 
 /**
  * BranchForm Component
- * Slide-over Drawer for creating / editing branches.
- * Mirrors the CompanyForm design language precisely.
- *
- * @param {boolean} isOpen
- * @param {function} onClose
- * @param {Object|null} branch - null for create, object for edit
- * @param {number} companyId - required company context
- * @param {function} onSuccess - refetch callback
+ * Slide-over drawer form to create or edit a branch.
+ * Powered by reusable DynamicFormSlideover and styled with Material UI.
  */
 const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
   const isEdit = !!branch;
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    status: 'ACTIVE'
-  });
-  const [errors, setErrors] = useState({});
 
-  // Sync state when drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      if (branch) {
-        setFormData({
-          name: branch.name || '',
-          code: branch.code || '',
-          status: branch.status || 'ACTIVE'
-        });
-      } else {
-        setFormData({ name: '', code: '', status: 'ACTIVE' });
-      }
-      setErrors({});
-    }
-  }, [isOpen, branch]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'code' ? value.toUpperCase() : value
-    }));
-    // Clear field error on type
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Branch name is required.';
-    if (!isEdit && !formData.code.trim()) newErrors.code = 'Unique code is required.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setLoading(true);
-    setErrors({});
-
+  const handleSubmit = async (values) => {
     try {
       let response;
       if (isEdit) {
-        // Only name and status are mutable
         response = await branchApi.updateBranch(branch.id, {
-          name: formData.name,
-          status: formData.status
+          name: values.name,
+          status: values.status
         });
       } else {
         response = await branchApi.createBranch({
           companyId: Number(companyId),
-          name: formData.name,
-          code: formData.code,
-          status: formData.status
+          name: values.name,
+          code: values.code,
+          status: values.status
         });
       }
 
@@ -99,135 +46,211 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
         toast.error(response?.message || 'Operation failed');
       }
     } catch (error) {
-      // Handle 409 Conflict — code already exists
       if (error && (error.statusCode === 409 || error.status === 409)) {
-        setErrors({ code: 'This branch code is already active in the system.' });
         toast.error('The provided code is already in use.');
+        throw { code: 'This branch code is already active in the system.' };
       } else {
         toast.error(error?.message || 'An unexpected error occurred. Please try again.');
+        throw error;
       }
-    } finally {
-      setLoading(false);
     }
   };
 
+  const fields = [
+    {
+      key: 'name',
+      label: 'Branch Name',
+      type: 'text',
+      placeholder: 'Enter branch name...',
+      required: true
+    },
+    {
+      key: 'code',
+      label: 'Unique Branch Code',
+      required: !isEdit,
+      disabled: isEdit,
+      render: (value, onChange, formValues, errorText) => (
+        <FormControl
+          fullWidth
+          error={!!errorText}
+          disabled={isEdit}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '10px',
+              bgcolor: '#F8FAFC',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1E293B',
+              transition: 'all 0.15s ease-in-out',
+              '& fieldset': {
+                borderColor: '#E2E8F0',
+                borderWidth: '1px'
+              },
+              '&:hover': {
+                bgcolor: '#F1F5F9'
+              },
+              '&:hover fieldset': {
+                borderColor: '#CBD5E1'
+              },
+              '&.Mui-focused': {
+                bgcolor: '#FFFFFF',
+                boxShadow: '0 0 0 3px rgba(248,111,3,0.14), 0 2px 4px rgba(0,0,0,0.02)'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#F86F03',
+                borderWidth: '1px'
+              },
+              '& .MuiInputBase-input': {
+                py: 2.5,
+                px: 3.5,
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                '&::placeholder': {
+                  color: '#94A3B8',
+                  opacity: 0.8
+                }
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              mx: 1,
+              mt: 0.75,
+              fontSize: '11px',
+              fontWeight: 500
+            }
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              fontWeight: 600,
+              fontSize: '12px',
+              color: !!errorText ? 'error.main' : '#475569',
+              mb: 1,
+              ml: 0.5
+            }}
+          >
+            Unique Branch Code {!isEdit && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
+          </Typography>
+          <OutlinedInput
+            id="branch-code"
+            disabled={isEdit}
+            value={value || ''}
+            onChange={(e) => onChange('code', e.target.value.toUpperCase())}
+            placeholder="e.g. AHM_HQ"
+            error={!!errorText}
+          />
+          {errorText ? (
+            <FormHelperText>{errorText}</FormHelperText>
+          ) : (
+            !isEdit && (
+              <FormHelperText sx={{ color: 'text.secondary' }}>
+                System-wide unique identifier. Cannot be changed later.
+              </FormHelperText>
+            )
+          )}
+        </FormControl>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Operational Status',
+      render: (value, onChange, formValues) => {
+        const activeStatus = value || 'ACTIVE';
+        return (
+          <FormControl component="fieldset" fullWidth>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                fontWeight: 600,
+                fontSize: '12px',
+                color: '#475569',
+                mb: 1.5,
+                ml: 0.5
+              }}
+            >
+              Operational Status
+            </Typography>
+            <RadioGroup
+              row
+              value={activeStatus}
+              onChange={(e) => onChange('status', e.target.value)}
+              sx={{ display: 'flex', gap: 3, width: '100%' }}
+            >
+              {['ACTIVE', 'INACTIVE'].map((statusOption) => {
+                const isSelected = activeStatus === statusOption;
+                return (
+                  <FormControlLabel
+                    key={statusOption}
+                    value={statusOption}
+                    control={
+                      <Radio
+                        size="small"
+                        sx={{
+                          color: '#CBD5E1',
+                          '&.Mui-checked': {
+                            color: '#F86F03',
+                          },
+                          p: 1
+                        }}
+                      />
+                    }
+                    label={statusOption === 'ACTIVE' ? 'Active' : 'Inactive'}
+                    sx={{
+                      flex: 1,
+                      margin: 0,
+                      height: '42px',
+                      borderRadius: '10px',
+                      border: '1px solid',
+                      borderColor: isSelected ? '#F86F03' : '#CBD5E1',
+                      bgcolor: isSelected ? '#FFF5EB' : '#FFFFFF',
+                      transition: 'all 0.15s ease-in-out',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      px: 3,
+                      '&:hover': {
+                        borderColor: isSelected ? '#F86F03' : '#94A3B8',
+                        bgcolor: isSelected ? '#FFF5EB' : '#FAFAFA'
+                      },
+                      '& .MuiTypography-root': {
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: isSelected ? '#F86F03' : '#475569',
+                        ml: 1
+                      }
+                    }}
+                  />
+                );
+              })}
+            </RadioGroup>
+          </FormControl>
+        );
+      }
+    }
+  ];
+
+  const initialValues = {
+    name: branch?.name || '',
+    code: branch?.code || '',
+    status: branch?.status || 'ACTIVE'
+  };
+
   return (
-    <Drawer
+    <DynamicFormSlideover
       isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Refine Branch Details' : 'Register New Branch'}
       subtitle={isEdit ? 'Update identity for an existing branch' : 'Onboard a new geographical or functional hub'}
-    >
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Branch Name */}
-        <div className="space-y-3">
-          <label htmlFor="branch-name" className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Branch Name</label>
-          <input
-            id="branch-name"
-            type="text"
-            name="name"
-            required
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter branch name..."
-            className={cn(
-              "w-full px-4 py-4 sm:py-3.5 rounded-2xl border transition-all outline-none font-semibold text-slate-900 placeholder:text-slate-300 placeholder:font-medium text-base sm:text-sm",
-              errors.name ? "border-red-500 bg-red-50/20" : "border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
-            )}
-          />
-          {errors.name && (
-            <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-3 ml-1 animate-in slide-in-from-top-1 duration-300">
-              <AlertCircle size={16} strokeWidth={2.5} />
-              {errors.name}
-            </div>
-          )}
-        </div>
-
-        {/* Branch Code */}
-        <div className="space-y-3">
-          <label htmlFor="branch-code" className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Unique Branch Code</label>
-          <input
-            id="branch-code"
-            type="text"
-            name="code"
-            required={!isEdit}
-            disabled={isEdit}
-            value={formData.code}
-            onChange={handleChange}
-            placeholder="e.g. AHM_HQ"
-            className={cn(
-              "w-full px-4 py-4 sm:py-3.5 rounded-2xl border transition-all outline-none font-black tracking-[0.1em] placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300 uppercase text-base sm:text-sm",
-              errors.code ? "border-red-500 bg-red-50/20 text-red-600" : "border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10",
-              isEdit && "bg-slate-50 text-slate-400 cursor-not-allowed opacity-75 border-slate-100"
-            )}
-          />
-          {errors.code && (
-            <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-3 ml-1 animate-in slide-in-from-top-1 duration-300">
-              <AlertCircle size={16} strokeWidth={2.5} />
-              {errors.code}
-            </div>
-          )}
-          {!isEdit && !errors.code && (
-            <p className="text-xs text-slate-400 font-semibold ml-1 mt-2 uppercase tracking-tight">System-wide unique identifier. Cannot be changed later.</p>
-          )}
-        </div>
-
-        {/* Operational Status Toggles */}
-        <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Operational Status</label>
-          <div className="grid grid-cols-1 gap-3">
-            {['ACTIVE', 'INACTIVE'].map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, status }))}
-                className={cn(
-                  "py-4 sm:py-3.5 rounded-2xl border text-sm font-black transition-all flex items-center justify-center gap-3 group active:scale-95",
-                  formData.status === status
-                    ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
-                    : "bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
-                )}
-              >
-                <span className={cn(
-                  "w-2.5 h-2.5 rounded-full transition-all duration-300",
-                  status === 'ACTIVE'
-                    ? (formData.status === status ? 'bg-white shadow-[0_0_10px_white]' : 'bg-emerald-500 group-hover:scale-110')
-                    : (formData.status === status ? 'bg-white shadow-[0_0_10px_white]' : 'bg-slate-300 group-hover:scale-110')
-                )} />
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className="pt-8 space-y-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-5 sm:py-4 bg-primary text-white rounded-2xl font-black text-base sm:text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-2xl shadow-primary/30 disabled:opacity-75 disabled:cursor-not-allowed transform active:scale-95 group overflow-hidden relative"
-          >
-            {loading ? (
-              <Loader2 size={24} className="sm:w-5 sm:h-5 animate-spin" />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-white/10 translate-y-full hover:translate-y-0 transition-transform duration-500" />
-                <Save size={20} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                {isEdit ? 'Commit Changes' : 'Initialize Branch'}
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="w-full py-4 sm:py-3 text-slate-400 font-bold text-sm uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 rounded-2xl transition-all active:scale-95"
-          >
-            Cancel and Return
-          </button>
-        </div>
-      </form>
-    </Drawer>
+      icon={GitBranch}
+      fields={fields}
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      submitText={isEdit ? 'Commit Changes' : 'Initialize Branch'}
+      submitIcon={Save}
+    />
   );
 };
 

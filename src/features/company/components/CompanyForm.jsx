@@ -1,81 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, Loader2 } from 'lucide-react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import React from 'react';
+import { Save, Building } from 'lucide-react';
 import { companyApi } from '../api/companyApi';
-import Drawer from '../../../shared/components/elements/Drawer';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
-
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import {
+  FormControl,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Typography,
+  OutlinedInput,
+  FormHelperText
+} from '@mui/material';
 
 /**
  * CompanyForm Component
- * Handles Add/Edit logic for companies with premium styling and inline error handling.
+ * Slide-over drawer form to onboard/edit companies.
+ * Powered by reusable DynamicFormSlideover and styled with Material UI.
  */
 const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
   const isEdit = !!company;
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    status: 'ACTIVE'
-  });
-  const [errors, setErrors] = useState({});
 
-  // Sync state with selected company when drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      if (company) {
-        setFormData({
-          name: company.name || '',
-          code: company.code || '',
-          status: company.status || 'ACTIVE'
-        });
-      } else {
-        setFormData({ name: '', code: '', status: 'ACTIVE' });
-      }
-      setErrors({});
-    }
-  }, [isOpen, company]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'code' ? value.toUpperCase() : value
-    }));
-    // Clear field error when user types
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (!formData.name.trim() || !formData.code.trim()) {
-      enhancedToast.validationError('Please fill in all required fields');
-      return;
-    }
-
-    setLoading(true);
-    setErrors({});
-
+  const handleSubmit = async (values) => {
     try {
       let response;
       const loadingToastId = enhancedToast.saveProgress('Company');
       
       if (isEdit) {
-        // Only update name and status for editing
         response = await companyApi.updateCompany(company.id, {
-          name: formData.name,
-          status: formData.status
+          name: values.name,
+          status: values.status
         });
       } else {
-        response = await companyApi.createCompany(formData);
+        response = await companyApi.createCompany(values);
       }
 
       toast.dismiss(loadingToastId);
@@ -95,134 +52,220 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
         );
       }
     } catch (error) {
-      // Capture 409 Conflict and handle inline
       if (error && error.statusCode === 409) {
-        setErrors({ code: 'This company code is already active in the system.' });
         toast.error('Code Already Exists', {
           description: 'The provided company code is already in use by another company.',
         });
+        throw { code: 'This company code is already active in the system.' };
       } else if (error && error.statusCode >= 500) {
         enhancedToast.networkError();
+        throw error;
       } else {
         enhancedToast.operationError(
           isEdit ? 'update' : 'create',
           'company',
           error?.message
         );
+        throw error;
       }
-    } finally {
-      setLoading(false);
     }
   };
 
+  const fields = [
+    {
+      key: 'name',
+      label: 'Company Name',
+      type: 'text',
+      placeholder: 'Enter legal company name...',
+      required: true
+    },
+    {
+      key: 'code',
+      label: 'Unique Entity Code',
+      required: !isEdit,
+      disabled: isEdit,
+      render: (value, onChange, formValues, errorText) => (
+        <FormControl
+          fullWidth
+          error={!!errorText}
+          disabled={isEdit}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '10px',
+              bgcolor: '#F8FAFC',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1E293B',
+              transition: 'all 0.15s ease-in-out',
+              '& fieldset': {
+                borderColor: '#E2E8F0',
+                borderWidth: '1px'
+              },
+              '&:hover': {
+                bgcolor: '#F1F5F9'
+              },
+              '&:hover fieldset': {
+                borderColor: '#CBD5E1'
+              },
+              '&.Mui-focused': {
+                bgcolor: '#FFFFFF',
+                boxShadow: '0 0 0 3px rgba(248,111,3,0.14), 0 2px 4px rgba(0,0,0,0.02)'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#F86F03',
+                borderWidth: '1px'
+              },
+              '& .MuiInputBase-input': {
+                py: 2.5,
+                px: 3.5,
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                '&::placeholder': {
+                  color: '#94A3B8',
+                  opacity: 0.8
+                }
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              mx: 1,
+              mt: 0.75,
+              fontSize: '11px',
+              fontWeight: 500
+            }
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              fontWeight: 600,
+              fontSize: '12px',
+              color: !!errorText ? 'error.main' : '#475569',
+              mb: 1,
+              ml: 0.5
+            }}
+          >
+            Unique Entity Code {!isEdit && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
+          </Typography>
+          <OutlinedInput
+            id="company-code"
+            disabled={isEdit}
+            value={value || ''}
+            onChange={(e) => onChange('code', e.target.value.toUpperCase())}
+            placeholder="e.g. STKDT_LLC"
+            error={!!errorText}
+          />
+          {errorText ? (
+            <FormHelperText>{errorText}</FormHelperText>
+          ) : (
+            !isEdit && (
+              <FormHelperText sx={{ color: 'text.secondary' }}>
+                System-wide unique identifier. Cannot be changed later.
+              </FormHelperText>
+            )
+          )}
+        </FormControl>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Operational Status',
+      render: (value, onChange, formValues) => {
+        const activeStatus = value || 'ACTIVE';
+        return (
+          <FormControl component="fieldset" fullWidth>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                fontWeight: 600,
+                fontSize: '12px',
+                color: '#475569',
+                mb: 1.5,
+                ml: 0.5
+              }}
+            >
+              Operational Status
+            </Typography>
+            <RadioGroup
+              row
+              value={activeStatus}
+              onChange={(e) => onChange('status', e.target.value)}
+              sx={{ display: 'flex', gap: 3, width: '100%' }}
+            >
+              {['ACTIVE', 'INACTIVE'].map((statusOption) => {
+                const isSelected = activeStatus === statusOption;
+                return (
+                  <FormControlLabel
+                    key={statusOption}
+                    value={statusOption}
+                    control={
+                      <Radio
+                        size="small"
+                        sx={{
+                          color: '#CBD5E1',
+                          '&.Mui-checked': {
+                            color: '#F86F03',
+                          },
+                          p: 1
+                        }}
+                      />
+                    }
+                    label={statusOption === 'ACTIVE' ? 'Active' : 'Inactive'}
+                    sx={{
+                      flex: 1,
+                      margin: 0,
+                      height: '42px',
+                      borderRadius: '10px',
+                      border: '1px solid',
+                      borderColor: isSelected ? '#F86F03' : '#CBD5E1',
+                      bgcolor: isSelected ? '#FFF5EB' : '#FFFFFF',
+                      transition: 'all 0.15s ease-in-out',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      px: 3,
+                      '&:hover': {
+                        borderColor: isSelected ? '#F86F03' : '#94A3B8',
+                        bgcolor: isSelected ? '#FFF5EB' : '#FAFAFA'
+                      },
+                      '& .MuiTypography-root': {
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: isSelected ? '#F86F03' : '#475569',
+                        ml: 1
+                      }
+                    }}
+                  />
+                );
+              })}
+            </RadioGroup>
+          </FormControl>
+        );
+      }
+    }
+  ];
+
+  const initialValues = {
+    name: company?.name || '',
+    code: company?.code || '',
+    status: company?.status || 'ACTIVE'
+  };
+
   return (
-    <Drawer
+    <DynamicFormSlideover
       isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Refine Entity Details' : 'Register New Company'}
       subtitle={isEdit ? 'Updating global identity for an existing entity' : 'Onboard a new organization to the CRM cloud foundation'}
-    >
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Company Name */}
-        <div className="space-y-3">
-          <label htmlFor="company-name" className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Company Name</label>
-          <input
-            id="company-name"
-            type="text"
-            name="name"
-            required
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter legal company name..."
-            className="w-full px-4 py-4 sm:py-3.5 rounded-2xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none font-semibold text-slate-900 placeholder:text-slate-300 placeholder:font-medium text-base sm:text-sm"
-          />
-        </div>
-
-        {/* Company Code */}
-        <div className="space-y-3">
-          <label htmlFor="company-code" className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Unique Entity Code</label>
-          <input
-            id="company-code"
-            type="text"
-            name="code"
-            required
-            disabled={isEdit}
-            value={formData.code}
-            onChange={handleChange}
-            placeholder="e.g. STKDT_LLC"
-            className={cn(
-              "w-full px-4 py-4 sm:py-3.5 rounded-2xl border transition-all outline-none font-black tracking-[0.1em] placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300 uppercase text-base sm:text-sm",
-              errors.code ? "border-red-500 bg-red-50/20 text-red-600" : "border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10",
-              isEdit && "bg-slate-50 text-slate-400 cursor-not-allowed opacity-75 border-slate-100"
-            )}
-          />
-          {errors.code && (
-            <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-3 ml-1 animate-in slide-in-from-top-1 duration-300">
-              <AlertCircle size={16} strokeWidth={2.5} />
-              {errors.code}
-            </div>
-          )}
-          {!isEdit && !errors.code && (
-            <p className="text-xs text-slate-400 font-semibold ml-1 mt-2 uppercase tracking-tight">System-wide unique identifier. Cannot be changed later.</p>
-          )}
-        </div>
-
-        {/* Operational Status Toggles */}
-        <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 ml-1 uppercase tracking-tight block">Operational Status</label>
-          <div className="grid grid-cols-1 gap-3">
-            {['ACTIVE', 'INACTIVE'].map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, status }))}
-                className={cn(
-                  "py-4 sm:py-3.5 rounded-2xl border text-sm font-black transition-all flex items-center justify-center gap-3 group active:scale-95",
-                  formData.status === status
-                    ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
-                    : "bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
-                )}
-              >
-                <span className={cn(
-                  "w-2.5 h-2.5 rounded-full transition-all duration-300",
-                  status === 'ACTIVE' 
-                    ? (formData.status === status ? 'bg-white shadow-[0_0_10px_white]' : 'bg-emerald-500 group-hover:scale-110') 
-                    : (formData.status === status ? 'bg-white shadow-[0_0_10px_white]' : 'bg-slate-300 group-hover:scale-110')
-                )} />
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className="pt-8 space-y-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-5 sm:py-4 bg-primary text-white rounded-2xl font-black text-base sm:text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-2xl shadow-primary/30 disabled:opacity-75 disabled:cursor-not-allowed transform active:scale-95 group overflow-hidden relative"
-          >
-            {loading ? (
-              <Loader2 size={24} className="sm:w-5 sm:h-5 animate-spin" />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-white/10 translate-y-full hover:translate-y-0 transition-transform duration-500" />
-                <Save size={20} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                {isEdit ? 'Commit Changes' : 'Initialize Enterprise'}
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="w-full py-4 sm:py-3 text-slate-400 font-bold text-sm uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 rounded-2xl transition-all active:scale-95"
-          >
-            Cancel and Return
-          </button>
-        </div>
-      </form>
-    </Drawer>
+      icon={Building}
+      fields={fields}
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      submitText={isEdit ? 'Commit Changes' : 'Initialize Enterprise'}
+      submitIcon={Save}
+    />
   );
 };
 

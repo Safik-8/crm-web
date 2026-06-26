@@ -15,7 +15,7 @@ import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
 import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
 import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
-import DailyReportPage from '../../features/reports/pages/DailyReportPage';
+
 import UsersPage from '../../features/users/pages/UsersPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
@@ -123,14 +123,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'reports/daily',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DAILY_REPORT}>
-            <DailyReportPage />
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: 'reports',
         element: (

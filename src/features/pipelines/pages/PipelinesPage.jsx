@@ -9,6 +9,8 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import { companyApi } from '../../company/api/companyApi';
 import { branchApi } from '../../branch/api/branchApi';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
+import { FormControl, FormHelperText, Typography } from '@mui/material';
+import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
@@ -17,13 +19,9 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
   const inherentCompanyId = user?.company?.id || user?.companyId;
   const inherentBranchId = user?.branch?.id || user?.branchId;
 
-  const [name, setName] = useState(initial?.name || '');
-  const [selectedCompanyId, setSelectedCompanyId] = useState(inherentCompanyId || '');
-  const [selectedBranchId, setSelectedBranchId] = useState(inherentBranchId || '');
-  
   const [companies, setCompanies] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [busy, setBusy] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(inherentCompanyId || '');
 
   // Fetch companies for super admins
   useEffect(() => {
@@ -47,89 +45,85 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
     }
   }, [initial, inherentBranchId, selectedCompanyId]);
 
-  const handleCompanyChange = (e) => {
-    setSelectedCompanyId(e.target.value);
-    setSelectedBranchId('');
+  const handleSubmit = async (values) => {
+    if (!initial) {
+      if (!inherentCompanyId && !values.companyId) { toast.error('Please select a company'); return; }
+      if (!inherentBranchId && !values.branchId) { toast.error('Please select a branch'); return; }
+    }
+    await onSubmit({
+      name: values.name.trim(),
+      companyId: values.companyId || inherentCompanyId,
+      branchId: values.branchId || inherentBranchId
+    });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) { toast.error('Pipeline name is required'); return; }
-    
-    if (!initial) {
-      if (!inherentCompanyId && !selectedCompanyId) { toast.error('Please select a company'); return; }
-      if (!inherentBranchId && !selectedBranchId) { toast.error('Please select a branch'); return; }
-    }
-    
-    setBusy(true);
-    await onSubmit({
-      name: name.trim(),
-      companyId: selectedCompanyId,
-      branchId: selectedBranchId
+  const fields = [
+    { key: 'name', label: 'Pipeline Name', type: 'text', placeholder: 'e.g. Admissions 2026', required: true }
+  ];
+
+  if (!initial && !inherentCompanyId) {
+    fields.push({
+      key: 'companyId',
+      label: 'Target Company',
+      required: true,
+      render: (value, onChange, formValues, errorText) => (
+        <FormControl fullWidth error={!!errorText} size="small" variant="outlined" sx={{ mt: 1 }}>
+          <Typography variant="caption" sx={{ mb: 1, fontWeight: 700, display: 'block', color: 'text.secondary', textTransform: 'uppercase' }}>
+            Target Company *
+          </Typography>
+          <SearchableSelect
+            options={companies}
+            value={value}
+            onChange={(id) => {
+              onChange('companyId', id);
+              onChange('branchId', '');
+              setSelectedCompanyId(id);
+            }}
+            placeholder="Select Company..."
+          />
+          {errorText && <FormHelperText>{errorText}</FormHelperText>}
+        </FormControl>
+      )
     });
-    setBusy(false);
-  };
+  }
+
+  if (!initial && !inherentBranchId) {
+    fields.push({
+      key: 'branchId',
+      label: 'Target Branch',
+      required: true,
+      render: (value, onChange, formValues, errorText) => (
+        <FormControl fullWidth error={!!errorText} size="small" variant="outlined" sx={{ mt: 1 }}>
+          <Typography variant="caption" sx={{ mb: 1, fontWeight: 700, display: 'block', color: 'text.secondary', textTransform: 'uppercase' }}>
+            Target Branch *
+          </Typography>
+          <SearchableSelect
+            options={branches}
+            value={value}
+            onChange={(id) => onChange('branchId', id)}
+            placeholder="Select Branch..."
+            disabled={!formValues.companyId}
+          />
+          {errorText && <FormHelperText>{errorText}</FormHelperText>}
+        </FormControl>
+      )
+    });
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300">
-        <h2 className="text-xl font-bold font-heading text-slate-900 mb-6">
-          {initial ? 'Rename Pipeline' : 'New Pipeline'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Pipeline Name <span className="text-red-500">*</span></label>
-              <input
-                autoFocus
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. Admissions 2026"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-medium outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-slate-300 focus:bg-white transition-all"
-              />
-            </div>
-            
-            {!initial && !inherentCompanyId && (
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Target Company <span className="text-red-500">*</span></label>
-                <SearchableSelect
-                  options={companies}
-                  value={selectedCompanyId}
-                  onChange={(id) => {
-                    setSelectedCompanyId(id);
-                    setSelectedBranchId('');
-                  }}
-                  placeholder="Select Company..."
-                />
-              </div>
-            )}
-
-            {!initial && !inherentBranchId && (
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Target Branch <span className="text-red-500">*</span></label>
-                <SearchableSelect
-                  options={branches}
-                  value={selectedBranchId}
-                  onChange={setSelectedBranchId}
-                  placeholder="Select Branch..."
-                  disabled={!selectedCompanyId}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-slate-50">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
-              Cancel
-            </button>
-            <button type="submit" disabled={busy} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-lg shadow-primary/20">
-              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-              {initial ? 'Save Changes' : 'Create Pipeline'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <DynamicFormModal
+      isOpen={true}
+      onClose={onClose}
+      title={initial ? 'Rename Pipeline' : 'New Pipeline'}
+      fields={fields}
+      initialValues={{
+        name: initial?.name || '',
+        companyId: inherentCompanyId || '',
+        branchId: inherentBranchId || ''
+      }}
+      onSubmit={handleSubmit}
+      submitText={initial ? 'Save Changes' : 'Create Pipeline'}
+    />
   );
 };
 
