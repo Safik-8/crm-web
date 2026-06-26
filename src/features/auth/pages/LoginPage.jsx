@@ -1,26 +1,100 @@
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
 import LoginForm from '../components/LoginForm';
 
 const LoginPage = () => {
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-50 relative overflow-hidden">
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        width: '100vw',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'background.default',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-100/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-50/60 rounded-full blur-3xl" />
-      </div>
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '25%',
+            width: 384, // 96 units * 4
+            height: 384,
+            backgroundColor: 'rgba(255, 228, 196, 0.4)', // Peach / orange[100] with opacity
+            borderRadius: '50%',
+            filter: 'blur(64px)',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: '25%',
+            width: 320, // 80 units * 4
+            height: 320,
+            backgroundColor: 'rgba(255, 245, 235, 0.6)', // Brand warmWhite / orange[50] with opacity
+            borderRadius: '50%',
+            filter: 'blur(64px)',
+          }}
+        />
+      </Box>
 
-      <div className="z-10 w-full px-4 flex flex-col items-center">
+      <Box
+        sx={{
+          zIndex: 10,
+          width: '100%',
+          px: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <LoginForm />
 
-        <p className="mt-6 text-[13px] font-medium text-zinc-500">
+        <Typography
+          variant="body2"
+          sx={{
+            mt: 6,
+            fontWeight: 500,
+            color: 'text.secondary',
+            fontSize: '13px',
+          }}
+        >
           New to StackCode?{' '}
-          <a href="#" className="text-primary hover:text-primary/80 font-semibold transition-colors underline decoration-primary/30 underline-offset-4">
+          <Link
+            href="#"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 600,
+              textDecoration: 'underline',
+              textDecorationColor: 'rgba(248, 111, 3, 0.3)',
+              textUnderlineOffset: '4px',
+              transition: 'all 0.15s ease-in-out',
+              '&:hover': {
+                color: 'primary.dark',
+                textDecorationColor: 'primary.dark',
+              },
+            }}
+          >
             Learn more
-          </a>
-        </p>
-      </div>
-    </div>
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
 export default LoginPage;
+

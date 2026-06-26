@@ -1,8 +1,29 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../app/providers/AuthProvider';
+
+// Material-UI components
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Link from '@mui/material/Link';
+import CircularProgress from '@mui/material/CircularProgress';
+
+// Material-UI icons
+import {
+  MailOutlined as MailOutlineIcon,
+  LockOutlined as LockOutlinedIcon,
+  Visibility,
+  VisibilityOff,
+  ArrowForward as ArrowForwardIcon
+} from '@mui/icons-material';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -13,7 +34,6 @@ const LoginForm = () => {
   
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Check for expired session on mount
   useEffect(() => {
@@ -29,7 +49,6 @@ const LoginForm = () => {
 
   // Always redirect to dashboard after login — avoids cross-user URL leakage
   const redirectTo = '/dashboard';                                  
-
 
   const validate = () => {
     const errors = {};
@@ -66,7 +85,7 @@ const LoginForm = () => {
       } else {
         // Handle explicit backend errors passed through context
         if (result.error) {
-           const { code, message, details, statusCode } = result.error;
+           const { message, details, statusCode } = result.error;
            
            if (statusCode === 400 && details && Array.isArray(details)) {
               // It's a field validation error
@@ -89,144 +108,292 @@ const LoginForm = () => {
         }
       }
     } catch (err) {
+      console.error('Login error:', err);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   return (
-    <div className="relative w-full max-w-sm overflow-hidden rounded-2xl sm:rounded-3xl bg-white p-7 sm:p-9 shadow-[0_8px_40px_rgba(0,0,0,0.10)] ring-1 ring-zinc-200/60 animate-in fade-in zoom-in-95 duration-500">
+    <Card
+      sx={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 384, // max-w-sm (384px)
+        overflow: 'hidden',
+        animation: 'fadeInZoom 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        '@keyframes fadeInZoom': {
+          '0%': {
+            opacity: 0,
+            transform: 'scale(0.95) translateY(10px)',
+          },
+          '100%': {
+            opacity: 1,
+            transform: 'scale(1) translateY(0)',
+          },
+        },
+        p: { xs: 3.5, sm: 4.5 },
+      }}
+    >
       {/* Top accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-400 via-primary to-orange-500 rounded-t-3xl" />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: 'linear-gradient(90deg, #FB923C, #F86F03, #F97316)',
+        }}
+      />
 
-      <div className="flex flex-col items-center text-center">
-        <div className="-mt-1 -mb-3 sm:-mb-5 flex justify-center w-full">
-          <img
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          mb: 4,
+        }}
+      >
+        <Box
+          sx={{
+            mt: -1,
+            mb: { xs: -1.5, sm: -2.5 },
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          <Box
+            component="img"
             src="/logos/logo-official.png"
             alt="StackCode Training Institute"
-            className="w-full max-w-[200px] sm:max-w-[230px] h-auto object-contain hover:opacity-90 transition-opacity duration-300"
+            sx={{
+              width: '100%',
+              maxWidth: { xs: 200, sm: 230 },
+              height: 'auto',
+              objectFit: 'contain',
+              transition: 'opacity 0.3s ease',
+              '&:hover': {
+                opacity: 0.9,
+              },
+            }}
           />
-        </div>
-        <h2 className="text-[20px] sm:text-[22px] font-bold tracking-tight text-zinc-800 leading-tight font-heading mt-2">
+        </Box>
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: 'text.primary',
+            fontFamily: '"Sora", "DM Sans", sans-serif',
+            mt: 2,
+          }}
+        >
           Welcome back
-        </h2>
-        <p className="mt-1 text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.16em]">
+        </Typography>
+        <Typography
+          variant="overline"
+          sx={{
+            mt: 1,
+            color: 'text.secondary',
+            fontWeight: 700,
+            letterSpacing: '0.16em',
+            fontSize: '10px',
+            display: 'block',
+          }}
+        >
           Sign in to your dashboard
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
-      <form className="mt-7 space-y-4" noValidate onSubmit={handleSubmit}>
+      <Box
+        component="form"
+        noValidate
+        onSubmit={handleSubmit}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3.5,
+        }}
+      >
         {/* Email Field */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.12em]">Email</label>
-          <div className="relative">
-            <Mail
-              size={15}
-              className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
-                fieldErrors.email ? 'text-red-400' : 'text-zinc-400'
-              }`}
-            />
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null }));
-              }}
-              className={`block w-full rounded-xl border py-2.5 pl-9 pr-3 text-[13px] font-medium outline-none transition-all duration-150 ${
-                fieldErrors.email
-                  ? 'border-red-300 bg-red-50 text-red-900 placeholder-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-400'
-                  : 'border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-orange-100'
-              }`}
-              placeholder="name@example.com"
-            />
-          </div>
-          {fieldErrors.email && (
-            <p className="text-[11px] font-semibold text-red-500 animate-in fade-in slide-in-from-top-1 duration-150">
-              {fieldErrors.email}
-            </p>
-          )}
-        </div>
+        <TextField
+          fullWidth
+          id="login-email"
+          name="email"
+          type="email"
+          label="Email Address"
+          placeholder="name@example.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: null }));
+          }}
+          error={!!fieldErrors.email}
+          helperText={fieldErrors.email}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <MailOutlineIcon
+                  sx={{
+                    fontSize: 18,
+                    color: fieldErrors.email ? 'error.main' : 'text.secondary',
+                    transition: 'color 0.15s ease',
+                  }}
+                />
+              </InputAdornment>
+            ),
+          }}
+        />
 
         {/* Password Field */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.12em]">Password</label>
-          <div className="relative">
-            <Lock
-              size={15}
-              className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
-                fieldErrors.password ? 'text-red-400' : 'text-zinc-400'
-              }`}
-            />
-            <input
-              id="login-password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null }));
-              }}
-              className={`block w-full rounded-xl border py-2.5 pl-9 pr-10 text-[13px] font-medium outline-none transition-all duration-150 ${
-                fieldErrors.password
-                  ? 'border-red-300 bg-red-50 text-red-900 placeholder-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-400'
-                  : 'border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-orange-100'
-              }`}
-              placeholder="Your password"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
-          {fieldErrors.password && (
-            <p className="text-[11px] font-semibold text-red-500 animate-in fade-in slide-in-from-top-1 duration-150">
-              {fieldErrors.password}
-            </p>
-          )}
-        </div>
+        <TextField
+          fullWidth
+          id="login-password"
+          name="password"
+          type={showPassword ? 'text' : 'password'}
+          label="Password"
+          placeholder="Your password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: null }));
+          }}
+          error={!!fieldErrors.password}
+          helperText={fieldErrors.password}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <LockOutlinedIcon
+                  sx={{
+                    fontSize: 18,
+                    color: fieldErrors.password ? 'error.main' : 'text.secondary',
+                    transition: 'color 0.15s ease',
+                  }}
+                />
+              </InputAdornment>
+            ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    sx={{
+                      color: 'text.secondary',
+                      p: 1.5,
+                      '&:hover': {
+                        backgroundColor: 'rgba(248, 111, 3, 0.08)',
+                      },
+                    }}
+                  >
+                    {showPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+          }}
+        />
 
         {/* Remember me + Forgot password */}
-        <div className="flex items-center justify-between pt-0.5">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              id="remember-me"
-              type="checkbox"
-              className="h-3.5 w-3.5 rounded border-zinc-300 text-primary focus:ring-primary"
-            />
-            <span className="text-[12px] font-medium text-zinc-600">Remember me</span>
-          </label>
-          <a href="#" className="text-[12px] font-semibold text-primary hover:text-primary/80 transition-colors">
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mt: -0.5,
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="remember-me"
+                size="small"
+                sx={{
+                  color: '#CBD5E1',
+                  '&.Mui-checked': {
+                    color: 'primary.main',
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: 'text.secondary',
+                  userSelect: 'none',
+                }}
+              >
+                Remember me
+              </Typography>
+            }
+            sx={{ m: 0 }}
+          />
+          <Link
+            href="#"
+            sx={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'primary.main',
+              textDecoration: 'none',
+              transition: 'color 0.15s ease-in-out',
+              '&:hover': {
+                color: 'primary.dark',
+              },
+            }}
+          >
             Forgot password?
-          </a>
-        </div>
+          </Link>
+        </Box>
 
-        {/* Submit */}
-        <button
+        {/* Submit Button */}
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="group relative flex w-full justify-center items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-white shadow-sm shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-orange-100 disabled:bg-primary/40 disabled:cursor-not-allowed transition-all duration-150 active:scale-[0.98] mt-1"
+          variant="contained"
+          fullWidth
+          size="large"
+          endIcon={
+            isSubmitting ? null : (
+              <ArrowForwardIcon
+                sx={{
+                  fontSize: 16,
+                  transition: 'transform 0.2s ease',
+                  '.MuiButton-root:hover &': {
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              />
+            )
+          }
+          sx={{
+            mt: 1,
+            py: 2.5,
+            fontSize: '13px',
+            fontWeight: 700,
+          }}
         >
           {isSubmitting ? (
-            <Loader2 className="animate-spin" size={17} />
+            <CircularProgress
+              size={18}
+              thickness={5}
+              sx={{ color: 'primary.contrastText' }}
+            />
           ) : (
-            <>
-              Sign in
-              <ArrowRight size={15} className="translate-x-0 group-hover:translate-x-0.5 transition-transform" />
-            </>
+            'Sign in'
           )}
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Box>
+    </Card>
   );
 };
 
 export default LoginForm;
+
