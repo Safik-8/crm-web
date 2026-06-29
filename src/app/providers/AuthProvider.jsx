@@ -8,9 +8,8 @@ const AuthContext = createContext(undefined);
 // Backend module keys: COMPANY, BRANCH, USER, PROSPECT, ACTIVITY, TASK, PIPELINE, SESSION, REPORT, AUDIT, TARGET, NOTIFICATION
 const RBAC_ADAPTER_MAP = {
   // Navigation / View Permissions
-  // Dashboard has no dedicated backend module — grant to all authenticated users by using null module
-  'view:dashboard': { module: null, action: null },          // Always true if authenticated
-  'view:branch_dashboard': { module: null, action: null },
+  'view:dashboard': { module: 'DASHBOARD', action: 'canView' },
+  'view:branch_dashboard': { module: 'DASHBOARD', action: 'canView' },
   'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
   'view:prospects': { module: 'PROSPECT', action: 'canView' },
   'view:activities': { module: 'ACTIVITY', action: 'canView' },
@@ -53,9 +52,9 @@ const RBAC_ADAPTER_MAP = {
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 
-  // Daily Report (ISE) — Publicly accessible to ISE role specifically
-  'view:daily_report': { module: null, action: null },
-  'create:daily_report': { module: null, action: null },
+  // Daily Report (ISE)
+  'view:daily_report': { module: 'REPORT', action: 'canView' },
+  'create:daily_report': { module: 'REPORT', action: 'canCreate' },
 };
 
 export const AuthProvider = ({ children }) => {
@@ -71,25 +70,6 @@ export const AuthProvider = ({ children }) => {
 
     const mapping = RBAC_ADAPTER_MAP[permissionStr];
     if (!mapping) return false;
-
-    // null module means "grant to all authenticated users"
-    if (mapping.module === null) {
-      // Restrict Branch Dashboard to the four roles that the backend supports.
-      // The dashboard UI itself handles view scoping via data.viewMode — all
-      // four roles land on the same page; the backend returns the correct data.
-      if (permissionStr === 'view:branch_dashboard') {
-        const role = user.primaryRole;
-        return (
-          role === 'BRANCH_ADMIN' ||
-          role === 'MANAGER'      ||
-          role === 'ISE'          ||
-          role === 'SALES_TEAM'   ||
-          role === 'Admin'        ||
-          role === 'Super Admin'
-        );
-      }
-      return true;
-    }
 
     // Safely evaluate `user.permissions.<UPPERCASE_MODULE>.<canAction>`
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);

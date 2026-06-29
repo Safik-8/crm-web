@@ -121,6 +121,15 @@ export const apiClient = async (endpoint, options = {}) => {
         window.location.href = '/login?session=expired';
       }
 
+      if (response.status === 403 && !silent) {
+        try {
+          const { toast } = await import('../../shared/utils/toast');
+          toast.permissionDenied();
+        } catch (e) {
+          console.error('[API] Failed to show permission denied toast:', e);
+        }
+      }
+
       throw data;
     }
 

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import RootRedirect from './RootRedirect';
 import LoginPage from '../../features/auth/pages/LoginPage';
+import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
 import BaseLayout from '../../shared/layouts/BaseLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import BranchDashboardPage from '../../features/dashboard/pages/BranchDashboardPage';
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/unauthorized',
+    element: <UnauthorizedPage />,
   },
   {
     path: '/',

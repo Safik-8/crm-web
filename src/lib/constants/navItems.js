@@ -15,11 +15,11 @@ import {
   GitBranch,
   Kanban,
 } from 'lucide-react';
-import { PERMISSIONS } from '../constants/permissions';
-import { ROLES } from '../constants/roles';
+import {
+  PERMISSIONS } from '../constants/permissions';
 
 export const navItems = [
-  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD, role: [ROLES.BRANCH_ADMIN, ROLES.MANAGER, ROLES.ISE, ROLES.SALES_TEAM] },
+  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD },
   
   // Settings
   { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
@@ -39,7 +39,7 @@ export const navItems = [
   { name: 'Targets', path: '/targets', icon: Target, permission: PERMISSIONS.VIEW_TARGETS },
 
   // Reports
-  { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT, role: [ROLES.ISE, ROLES.SALES_TEAM] },
+  { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT },
   { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
 
   // System Tools
@@ -71,12 +71,7 @@ export const getFilteredNavItems = (user, hasPermission) => {
   }
 
   return items.filter(item => {
-    if (item.role) {
-      const allowedRoles = Array.isArray(item.role) ? item.role : [item.role];
-      if (!allowedRoles.includes(user?.primaryRole)) return false;
-    }
-    
-    // 2. Check Permission constraint
+    // Check Permission constraint
     return !item.permission || hasPermission(item.permission);
   });
 };

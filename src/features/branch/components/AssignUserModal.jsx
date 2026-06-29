@@ -6,9 +6,8 @@ import { ROLES } from '../../../lib/constants/roles';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
 const ROLE_OPTIONS = [
-  { value: ROLES.BRANCH_ADMIN, label: 'Branch Admin' },
-  { value: ROLES.MANAGER, label: 'Manager' },
-  { value: ROLES.SALES_TEAM, label: 'Sales Team' },
+  { value: ROLES.BRANCH_MANAGER, label: 'Branch Manager' },
+  { value: ROLES.BDE, label: 'BDE' },
   { value: ROLES.ISE, label: 'ISE' }
 ];
 
@@ -82,7 +81,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
       subtitle={branch ? `Registering to ${branch.name}` : ''}
       icon={UserPlus}
       fields={fields}
-      initialValues={{ name: '', email: '', password: '', roleName: 'BRANCH_ADMIN' }}
+      initialValues={{ name: '', email: '', password: '', roleName: 'BRANCH_MANAGER' }}
       onSubmit={handleSubmit}
       submitText="Create & Assign User"
       validate={validate}

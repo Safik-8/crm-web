@@ -13,7 +13,7 @@ export const MOCK_USERS = {
   manager_user: {
     id: 'u2',
     name: 'Priya Sharma',
-    roles: [ROLES.MANAGER],
+    roles: [ROLES.BRANCH_MANAGER],
     designation: 'Sales Manager',
     email: 'priya@stackdot.com',
     password: 'password123',
@@ -22,7 +22,7 @@ export const MOCK_USERS = {
   ceo_user: {
     id: 'u3',
     name: 'Vikram Malhotra',
-    roles: [ROLES.CEO],
+    roles: [ROLES.COMPANY_ADMIN],
     designation: 'Chief Executive Officer',
     email: 'vikram@stackdot.com',
     password: 'password123',
@@ -40,7 +40,7 @@ export const MOCK_USERS = {
   multi_role_user: {
     id: 'u5',
     name: 'Raj K.',
-    roles: [ROLES.ISE, ROLES.MANAGER],
+    roles: [ROLES.ISE, ROLES.BRANCH_MANAGER],
     designation: 'Senior Account Lead',
     email: 'raj@stackdot.com',
     password: 'password123',
