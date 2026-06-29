@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserPlus, User, Mail, Lock, ShieldAlert } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 import { branchApi } from '../api/branchApi';
 import { ROLES } from '../../../lib/constants/roles';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';

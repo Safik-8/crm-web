@@ -11,12 +11,13 @@ import {
   Trash2, 
   AlertTriangle 
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 import { getPipelines } from '../../pipelines/services/pipelineService';
 import { importLeads } from '../services/leadService';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
+import Alert from '../../../shared/components/elements/Alert';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -147,18 +148,9 @@ const LeadImportModal = ({ onClose, onImported, initialPipelineId }) => {
         <div className="space-y-6">
           {/* All-or-none failure alert */}
           {result.created === 0 && (
-            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
-              <div className="h-9 w-9 sm:h-12 sm:w-12 bg-white rounded-xl flex items-center justify-center text-red-500 shadow-sm shrink-0">
-                <AlertCircle size={20} className="sm:hidden" />
-                <AlertCircle size={28} className="hidden sm:block" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-lg font-bold text-red-700">Transaction Cancelled</h3>
-                <p className="text-xs sm:text-sm font-semibold text-red-600/80 mt-1 leading-relaxed">
-                  The import was halted because some rows failed validation. No data has been saved. Please fix all issues below and re-upload.
-                </p>
-              </div>
-            </div>
+            <Alert severity="error" title="Transaction Cancelled">
+              The import was halted because some rows failed validation. No data has been saved. Please fix all issues below and re-upload.
+            </Alert>
           )}
 
           {/* Summary cards */}
@@ -378,19 +370,9 @@ const LeadImportModal = ({ onClose, onImported, initialPipelineId }) => {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex items-start gap-3 relative group">
-            <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-red-600 leading-relaxed pr-6">{error}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="absolute right-2 top-2 p-1 rounded-lg text-red-400 hover:bg-red-100 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100"
-            >
-              <X size={13} />
-            </button>
-          </div>
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
         )}
       </div>
     </DynamicFormModal>

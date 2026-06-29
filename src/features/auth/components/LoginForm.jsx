@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 import { useAuth } from '../../../app/providers/AuthProvider';
 
 // Material-UI components
@@ -10,11 +10,10 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
+import Button from '../../../shared/components/elements/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
-import CircularProgress from '@mui/material/CircularProgress';
 
 // Material-UI icons
 import {
@@ -356,7 +355,7 @@ const LoginForm = () => {
         {/* Submit Button */}
         <Button
           type="submit"
-          disabled={isSubmitting}
+          isLoading={isSubmitting}
           variant="contained"
           fullWidth
           size="large"
@@ -380,15 +379,7 @@ const LoginForm = () => {
             fontWeight: 700,
           }}
         >
-          {isSubmitting ? (
-            <CircularProgress
-              size={18}
-              thickness={5}
-              sx={{ color: 'primary.contrastText' }}
-            />
-          ) : (
-            'Sign in'
-          )}
+          Sign in
         </Button>
       </Box>
     </Card>

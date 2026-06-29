@@ -3,14 +3,13 @@ import { Save, Building } from 'lucide-react';
 import { companyApi } from '../api/companyApi';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import TextField from '../../../shared/components/elements/TextField';
 import {
   FormControl,
   RadioGroup,
   FormControlLabel,
   Radio,
   Typography,
-  OutlinedInput,
-  FormHelperText
 } from '@mui/material';
 
 /**
@@ -85,87 +84,24 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
       required: !isEdit,
       disabled: isEdit,
       render: (value, onChange, formValues, errorText) => (
-        <FormControl
-          fullWidth
-          error={!!errorText}
+        <TextField
+          id="company-code"
+          label="Unique Entity Code"
           disabled={isEdit}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '10px',
-              bgcolor: '#F8FAFC',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#1E293B',
-              transition: 'all 0.15s ease-in-out',
-              '& fieldset': {
-                borderColor: '#E2E8F0',
-                borderWidth: '1px'
-              },
-              '&:hover': {
-                bgcolor: '#F1F5F9'
-              },
-              '&:hover fieldset': {
-                borderColor: '#CBD5E1'
-              },
-              '&.Mui-focused': {
-                bgcolor: '#FFFFFF',
-                boxShadow: '0 0 0 3px rgba(248,111,3,0.14), 0 2px 4px rgba(0,0,0,0.02)'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#F86F03',
-                borderWidth: '1px'
-              },
-              '& .MuiInputBase-input': {
-                py: 2.5,
-                px: 3.5,
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                '&::placeholder': {
-                  color: '#94A3B8',
-                  opacity: 0.8
-                }
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              mx: 1,
-              mt: 0.75,
-              fontSize: '11px',
-              fontWeight: 500
+          value={value || ''}
+          onChange={(val) => onChange('code', val.toUpperCase())}
+          placeholder="e.g. STKDT_LLC"
+          errorText={errorText}
+          required={!isEdit}
+          helperText={!isEdit ? "System-wide unique identifier. Cannot be changed later." : undefined}
+          inputSx={{
+            '& .MuiInputBase-input': {
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
             }
           }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              fontWeight: 600,
-              fontSize: '12px',
-              color: !!errorText ? 'error.main' : '#475569',
-              mb: 1,
-              ml: 0.5
-            }}
-          >
-            Unique Entity Code {!isEdit && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
-          </Typography>
-          <OutlinedInput
-            id="company-code"
-            disabled={isEdit}
-            value={value || ''}
-            onChange={(e) => onChange('code', e.target.value.toUpperCase())}
-            placeholder="e.g. STKDT_LLC"
-            error={!!errorText}
-          />
-          {errorText ? (
-            <FormHelperText>{errorText}</FormHelperText>
-          ) : (
-            !isEdit && (
-              <FormHelperText sx={{ color: 'text.secondary' }}>
-                System-wide unique identifier. Cannot be changed later.
-              </FormHelperText>
-            )
-          )}
-        </FormControl>
+        />
       )
     },
     {

@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Drawer,
   IconButton,
-  Button,
   Typography,
   Box,
-  CircularProgress
 } from '@mui/material';
 import { X } from 'lucide-react';
 import DynamicFormFields from './DynamicFormFields';
+import Button from './Button';
 
 /**
  * DynamicFormSlideover
@@ -231,18 +230,12 @@ export const DynamicFormSlideover = ({
                   onClick={onClose}
                   disabled={busy}
                   variant="text"
+                  color="inherit"
                   sx={{
-                    height: '42px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#475569', // Slate-600
+                    color: '#475569',
                     px: 4.5,
-                    textTransform: 'none',
-                    transition: 'all 0.15s',
                     '&:hover': {
                       color: '#0F172A',
-                      bgcolor: '#F1F5F9'
                     }
                   }}
                 >
@@ -252,39 +245,12 @@ export const DynamicFormSlideover = ({
                 {onSubmit && showSubmit && (
                   <Button
                     type="submit"
-                    disabled={busy || isLoading}
+                    isLoading={busy || isLoading}
                     variant="contained"
                     color={danger ? 'error' : 'primary'}
-                    sx={{
-                      height: '42px',
-                      borderRadius: '10px',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      boxShadow: danger ? '0 4px 10px rgba(239, 68, 68, 0.12)' : '0 4px 10px rgba(248, 111, 3, 0.15)',
-                      px: 6,
-                      ...(danger
-                        ? {
-                            bgcolor: '#EF4444',
-                            '&:hover': { bgcolor: '#DC2626' }
-                          }
-                        : {}),
-                      transition: 'all 0.15s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: danger ? '0 6px 14px rgba(239, 68, 68, 0.2)' : '0 6px 14px rgba(248, 111, 3, 0.25)'
-                      },
-                      '&:active': {
-                        transform: 'translateY(0)'
-                      }
-                    }}
-                    startIcon={
-                      busy ? (
-                        <CircularProgress size={14} color="inherit" />
-                      ) : SubmitIcon ? (
-                        <SubmitIcon size={14} />
-                      ) : null
-                    }
+                    danger={danger}
+                    startIcon={SubmitIcon ? <SubmitIcon size={14} /> : null}
+                    sx={{ px: 6 }}
                   >
                     {busy ? 'Saving...' : submitText}
                   </Button>

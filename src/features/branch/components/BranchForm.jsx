@@ -1,16 +1,15 @@
 import React from 'react';
 import { Save, GitBranch } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, enhancedToast } from '../../../shared/utils/toast';
 import { branchApi } from '../api/branchApi';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import TextField from '../../../shared/components/elements/TextField';
 import {
   FormControl,
   RadioGroup,
   FormControlLabel,
   Radio,
   Typography,
-  OutlinedInput,
-  FormHelperText
 } from '@mui/material';
 
 /**
@@ -24,6 +23,8 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
   const handleSubmit = async (values) => {
     try {
       let response;
+      const loadingToastId = enhancedToast.saveProgress('Branch');
+
       if (isEdit) {
         response = await branchApi.updateBranch(branch.id, {
           name: values.name,
@@ -38,19 +39,34 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
         });
       }
 
+      toast.dismiss(loadingToastId);
+
       if (response && response.success) {
-        toast.success(`Branch ${isEdit ? 'updated' : 'created'} successfully`);
+        enhancedToast.operationSuccess(
+          isEdit ? 'Updated' : 'Created',
+          'Branch'
+        );
         onSuccess?.();
         onClose();
       } else {
-        toast.error(response?.message || 'Operation failed');
+        enhancedToast.operationError(
+          isEdit ? 'update' : 'create',
+          'branch',
+          response?.message
+        );
       }
     } catch (error) {
       if (error && (error.statusCode === 409 || error.status === 409)) {
-        toast.error('The provided code is already in use.');
+        toast.error('Code Already Exists', {
+          description: 'The provided branch code is already in use.',
+        });
         throw { code: 'This branch code is already active in the system.' };
       } else {
-        toast.error(error?.message || 'An unexpected error occurred. Please try again.');
+        enhancedToast.operationError(
+          isEdit ? 'update' : 'create',
+          'branch',
+          error?.message
+        );
         throw error;
       }
     }
@@ -70,87 +86,24 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
       required: !isEdit,
       disabled: isEdit,
       render: (value, onChange, formValues, errorText) => (
-        <FormControl
-          fullWidth
-          error={!!errorText}
+        <TextField
+          id="branch-code"
+          label="Unique Branch Code"
           disabled={isEdit}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '10px',
-              bgcolor: '#F8FAFC',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#1E293B',
-              transition: 'all 0.15s ease-in-out',
-              '& fieldset': {
-                borderColor: '#E2E8F0',
-                borderWidth: '1px'
-              },
-              '&:hover': {
-                bgcolor: '#F1F5F9'
-              },
-              '&:hover fieldset': {
-                borderColor: '#CBD5E1'
-              },
-              '&.Mui-focused': {
-                bgcolor: '#FFFFFF',
-                boxShadow: '0 0 0 3px rgba(248,111,3,0.14), 0 2px 4px rgba(0,0,0,0.02)'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#F86F03',
-                borderWidth: '1px'
-              },
-              '& .MuiInputBase-input': {
-                py: 2.5,
-                px: 3.5,
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                '&::placeholder': {
-                  color: '#94A3B8',
-                  opacity: 0.8
-                }
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              mx: 1,
-              mt: 0.75,
-              fontSize: '11px',
-              fontWeight: 500
+          value={value || ''}
+          onChange={(val) => onChange('code', val.toUpperCase())}
+          placeholder="e.g. AHM_HQ"
+          errorText={errorText}
+          required={!isEdit}
+          helperText={!isEdit ? "System-wide unique identifier. Cannot be changed later." : undefined}
+          inputSx={{
+            '& .MuiInputBase-input': {
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
             }
           }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              fontWeight: 600,
-              fontSize: '12px',
-              color: !!errorText ? 'error.main' : '#475569',
-              mb: 1,
-              ml: 0.5
-            }}
-          >
-            Unique Branch Code {!isEdit && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
-          </Typography>
-          <OutlinedInput
-            id="branch-code"
-            disabled={isEdit}
-            value={value || ''}
-            onChange={(e) => onChange('code', e.target.value.toUpperCase())}
-            placeholder="e.g. AHM_HQ"
-            error={!!errorText}
-          />
-          {errorText ? (
-            <FormHelperText>{errorText}</FormHelperText>
-          ) : (
-            !isEdit && (
-              <FormHelperText sx={{ color: 'text.secondary' }}>
-                System-wide unique identifier. Cannot be changed later.
-              </FormHelperText>
-            )
-          )}
-        </FormControl>
+        />
       )
     },
     {

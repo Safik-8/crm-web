@@ -1,8 +1,9 @@
 import React from 'react';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { deleteLead } from '../services/leadService';
 import { toast } from '../../../shared/utils/toast';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
+import Alert from '../../../shared/components/elements/Alert';
 
 /**
  * LeadDeleteModal
@@ -39,14 +40,12 @@ const LeadDeleteModal = ({ lead, onClose, onDeleted }) => {
       cancelText="Cancel"
       danger={true}
     >
-      <div className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-100">
-        <AlertTriangle size={16} className="text-red-500 shrink-0 mt-0.5" />
-        <p className="text-[12px] font-medium text-red-700 leading-relaxed">
-          Lead <span className="font-bold">"{lead.name}"</span> will be removed from the pipeline. This action cannot be undone.
-        </p>
-      </div>
+      <Alert severity="error">
+        Lead <span className="font-bold">"{lead.name}"</span> will be removed from the pipeline. This action cannot be undone.
+      </Alert>
     </DynamicFormModal>
   );
 };
 
 export default LeadDeleteModal;
+

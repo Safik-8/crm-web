@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GitBranch, Plus, RefreshCcw, ChevronLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
+import Button from '../../../shared/components/elements/Button';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { branchApi } from '../api/branchApi';
@@ -136,13 +137,14 @@ const BranchSettingsPage = () => {
                             <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
                         </button>
                         {branchPerms.canCreate && (
-                            <button
+                            <Button
                                 onClick={handleAddBranch}
-                                className="flex items-center gap-1.5 h-9 px-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 active:scale-95"
+                                variant="contained"
+                                size="small"
+                                startIcon={<Plus size={15} />}
                             >
-                                <Plus size={15} />
                                 Add
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -168,13 +170,24 @@ const BranchSettingsPage = () => {
                         <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
                     </div>
                     {branchPerms.canCreate && (
-                        <button
+                        <Button
                             onClick={handleAddBranch}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group active:scale-95"
+                            variant="contained"
+                            size="medium"
+                            startIcon={<Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />}
+                            sx={{
+                              px: 5,
+                              '&:hover .MuiButton-startIcon svg': {
+                                transform: 'rotate(90deg)',
+                              },
+                              '& .MuiButton-startIcon svg': {
+                                transition: 'transform 0.3s ease-in-out',
+                              }
+                            }}
+                            className="group"
                         >
-                            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
                             Add Branch
-                        </button>
+                        </Button>
                     )}
                 </div>
 
