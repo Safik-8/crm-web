@@ -11,9 +11,9 @@ const RBAC_ADAPTER_MAP = {
   'view:dashboard': { module: 'DASHBOARD', action: 'canView' },
   'view:branch_dashboard': { module: 'DASHBOARD', action: 'canView' },
   'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
-  'view:prospects': { module: 'PROSPECT', action: 'canView' },
+  'view:prospects': { module: 'LEAD', action: 'canView' }, // Fixed from PROSPECT
   'view:activities': { module: 'ACTIVITY', action: 'canView' },
-  'view:sessions': { module: 'SESSION', action: 'canView' },
+  'view:sessions': { module: 'ACTIVITY', action: 'canView' }, // Fallback to ACTIVITY
   'view:tasks': { module: 'TASK', action: 'canView' },
   'view:reports': { module: 'REPORT', action: 'canView' },
   'view:team_reports': { module: 'REPORT', action: 'canView' },
@@ -23,14 +23,14 @@ const RBAC_ADAPTER_MAP = {
   'view:company_setup': { module: 'COMPANY', action: 'canEdit' },
   'view:users': { module: 'USER', action: 'canView' },
   'view:leads': { module: 'PIPELINE', action: 'canView' },
-  'view:customers': { module: 'PIPELINE', action: 'canView' },
+  'view:customers': { module: 'CUSTOMER', action: 'canView' }, // Fixed from PIPELINE
   'view:deals': { module: 'PIPELINE', action: 'canView' },
   'view:audit': { module: 'AUDIT', action: 'canView' },
   'view:targets': { module: 'TARGET', action: 'canView' },
   'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
 
   // Action Permissions
-  'action:approve_transfers': { module: 'BRANCH', action: 'canEdit' },
+  'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH
   'action:manage_users': { module: 'USER', action: 'canEdit' },
   'action:manage_all_users': { module: 'USER', action: 'canEdit' },
   'action:read_only_reports': { module: 'REPORT', action: 'canView' },
@@ -53,8 +53,8 @@ const RBAC_ADAPTER_MAP = {
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 
   // Daily Report (ISE)
-  'view:daily_report': { module: 'REPORT', action: 'canView' },
-  'create:daily_report': { module: 'REPORT', action: 'canCreate' },
+  'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
+  'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' }, 
 };
 
 export const AuthProvider = ({ children }) => {
@@ -64,14 +64,22 @@ export const AuthProvider = ({ children }) => {
   // Prevent duplicate logout calls
   const logoutInFlightRef = useRef(false);
 
-  // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object
-  const hasPermission = useCallback((permissionStr) => {
+  // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object.
+  // Supports both:
+  //   1. hasPermission('create:pipeline') -> looks up via RBAC_ADAPTER_MAP
+  //   2. hasPermission('PIPELINE', 'canCreate') -> directly evaluates backend permissions (fully dynamic/extendable)
+  const hasPermission = useCallback((moduleOrPermissionStr, action = null) => {
     if (!user) return false;
 
-    const mapping = RBAC_ADAPTER_MAP[permissionStr];
+    // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
+    if (action) {
+      return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);
+    }
+
+    // Mode B: Mapped check - hasPermission('permission_string')
+    const mapping = RBAC_ADAPTER_MAP[moduleOrPermissionStr];
     if (!mapping) return false;
 
-    // Safely evaluate `user.permissions.<UPPERCASE_MODULE>.<canAction>`
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);
   }, [user]);
 
