@@ -1,7 +1,9 @@
+// src/features/branch/components/BranchForm.jsx
+
 import React from 'react';
 import { Save, GitBranch } from 'lucide-react';
+import { useCreateBranch, useUpdateBranch } from '../hooks/useBranches';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
-import { branchApi } from '../api/branchApi';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
 import {
@@ -15,48 +17,48 @@ import {
 /**
  * BranchForm Component
  * Slide-over drawer form to create or edit a branch.
- * Powered by reusable DynamicFormSlideover and styled with Material UI.
+ * Integrated with TanStack Query.
  */
 const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
   const isEdit = !!branch;
+  const createBranchMutation = useCreateBranch();
+  const updateBranchMutation = useUpdateBranch();
 
   const handleSubmit = async (values) => {
+    const loadingToastId = enhancedToast.saveProgress('Branch');
     try {
-      let response;
-      const loadingToastId = enhancedToast.saveProgress('Branch');
-
       if (isEdit) {
-        response = await branchApi.updateBranch(branch.id, {
-          name: values.name,
-          status: values.status
+        await updateBranchMutation.mutateAsync({
+          id: branch.id,
+          data: {
+            name: values.name,
+            address: values.address,
+            location: values.location,
+            status: values.status
+          }
         });
       } else {
-        response = await branchApi.createBranch({
+        await createBranchMutation.mutateAsync({
           companyId: Number(companyId),
           name: values.name,
           code: values.code,
+          address: values.address,
+          location: values.location,
           status: values.status
         });
       }
 
       toast.dismiss(loadingToastId);
-
-      if (response && response.success) {
-        enhancedToast.operationSuccess(
-          isEdit ? 'Updated' : 'Created',
-          'Branch'
-        );
-        onSuccess?.();
-        onClose();
-      } else {
-        enhancedToast.operationError(
-          isEdit ? 'update' : 'create',
-          'branch',
-          response?.message
-        );
-      }
+      enhancedToast.operationSuccess(
+        isEdit ? 'Updated' : 'Created',
+        'Branch'
+      );
+      onSuccess?.();
+      onClose();
     } catch (error) {
-      if (error && (error.statusCode === 409 || error.status === 409)) {
+      toast.dismiss(loadingToastId);
+      
+      if (error && error.statusCode === 409) {
         toast.error('Code Already Exists', {
           description: 'The provided branch code is already in use.',
         });
@@ -95,7 +97,7 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
           placeholder="e.g. AHM_HQ"
           errorText={errorText}
           required={!isEdit}
-          helperText={!isEdit ? "System-wide unique identifier. Cannot be changed later." : undefined}
+          helperText={!isEdit ? "Unique identifier within the company. Cannot be changed later." : undefined}
           inputSx={{
             '& .MuiInputBase-input': {
               textTransform: 'uppercase',
@@ -105,6 +107,20 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
           }}
         />
       )
+    },
+    {
+      key: 'address',
+      label: 'Street Address',
+      type: 'text',
+      placeholder: 'Enter physical branch address...',
+      required: false
+    },
+    {
+      key: 'location',
+      label: 'Location / City',
+      type: 'text',
+      placeholder: 'e.g. Toronto, London, New York...',
+      required: false
     },
     {
       key: 'status',
@@ -188,6 +204,8 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
   const initialValues = {
     name: branch?.name || '',
     code: branch?.code || '',
+    address: branch?.address || '',
+    location: branch?.location || '',
     status: branch?.status || 'ACTIVE'
   };
 

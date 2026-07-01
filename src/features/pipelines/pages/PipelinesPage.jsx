@@ -7,7 +7,7 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { companyApi } from '../../company/api/companyApi';
-import { branchApi } from '../../branch/api/branchApi';
+import { branchService } from '../../branch/services/branchService';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 import { FormControl, FormHelperText, Typography } from '@mui/material';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
@@ -36,7 +36,7 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
   // Fetch branches once we have a companyId to fetch for
   useEffect(() => {
     if (!initial && !inherentBranchId && selectedCompanyId) {
-      branchApi.getBranches(selectedCompanyId).then(res => {
+      branchService.getBranchesRaw(selectedCompanyId).then(res => {
         const data = res?.data?.branches || res?.data || [];
         setBranches(Array.isArray(data) ? data : []);
       }).catch(console.error);

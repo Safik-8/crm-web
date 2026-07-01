@@ -1,7 +1,9 @@
+// src/features/branch/components/AssignUserModal.jsx
+
 import React from 'react';
 import { UserPlus, User, Mail, Lock, ShieldAlert } from 'lucide-react';
 import { toast } from '../../../shared/utils/toast';
-import { branchApi } from '../api/branchApi';
+import { useAssignUserToBranch } from '../hooks/useBranches';
 import { ROLES } from '../../../lib/constants/roles';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
@@ -14,9 +16,11 @@ const ROLE_OPTIONS = [
 /**
  * AssignUserModal Component
  * Centered dialog to CREATE a new user and assign to a branch.
- * Powered by reusable DynamicFormModal.
+ * Integrated with TanStack Query.
  */
 const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
+  const assignUserMutation = useAssignUserToBranch();
+
   const validate = (values) => {
     const errs = {};
     const email = (values.email || '').trim();
@@ -33,20 +37,19 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
 
   const handleSubmit = async (values) => {
     try {
-      const response = await branchApi.assignUser(branch.id, {
-        name: values.name,
-        email: values.email,
-        password: values.password,
-        roleName: values.roleName
+      await assignUserMutation.mutateAsync({
+        branchId: branch.id,
+        userData: {
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          roleName: values.roleName
+        }
       });
 
-      if (response && response.success) {
-        toast.success(`User "${values.name}" created & assigned to ${branch.name}`);
-        onSuccess?.();
-        onClose();
-      } else {
-        toast.error(response?.message || 'Failed to assign user');
-      }
+      toast.success(`User "${values.name}" created & assigned to ${branch.name}`);
+      onSuccess?.();
+      onClose();
     } catch (error) {
       if (error && (error.statusCode === 409 || error.status === 409)) {
         toast.error('Email is already in use.');

@@ -1,32 +1,39 @@
-import React, { useState, useEffect } from 'react';
+// src/features/branch/pages/BranchSettingsPage.jsx
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GitBranch, Plus, RefreshCcw, ChevronLeft } from 'lucide-react';
 import { toast } from '../../../shared/utils/toast';
 import Button from '../../../shared/components/elements/Button';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
-import { branchApi } from '../api/branchApi';
+import { useBranches, useToggleBranchStatus } from '../hooks/useBranches';
 import BranchTable from '../components/BranchTable';
 import BranchForm from '../components/BranchForm';
 import AssignUserModal from '../components/AssignUserModal';
+import BranchFilters from '../components/BranchFilters';
+import BranchPagination from '../components/BranchPagination';
 import GenericPage from '../../../shared/components/templates/GenericPage';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button as MuiButton
+} from '@mui/material';
 
 /**
  * BranchSettingsPage
  * Main listing page for branches, scoped to a company via route param.
- * Orchestrates table, drawer, and modal interactions with full RBAC.
+ * Orchestrates table, drawer, and modal interactions with full RBAC & caching.
  */
 const BranchSettingsPage = () => {
     const { companyId } = useParams();
     const navigate = useNavigate();
     const { permissions, user } = useAuth();
     const { forceHideLoader } = useLoader();
-    const didHideInitialRouteLoaderRef = React.useRef(false);
-
-    // Data state
-    const [branches, setBranches] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [fetchError, setFetchError] = useState(null);
+    const didHideInitialRouteLoaderRef = useRef(false);
 
     // Form/Drawer state
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -36,30 +43,33 @@ const BranchSettingsPage = () => {
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [assignBranch, setAssignBranch] = useState(null);
 
+    // Status Confirmation Dialog state
+    const [isToggleOpen, setIsToggleOpen] = useState(false);
+    const [branchToToggle, setBranchToToggle] = useState(null);
+
     // Derive permissions for the BRANCH module
     const branchPerms = permissions?.BRANCH || {};
 
-    const fetchBranches = async () => {
-        setIsLoading(true);
-        setFetchError(null);
-        try {
-            const response = await branchApi.getBranches(companyId);
-            if (response && response.success) {
-                const data = response.data;
-                setBranches(Array.isArray(data?.branches) ? data.branches : []);
-            } else {
-                toast.error(response?.message || 'Failed to fetch branches');
-                setFetchError('Failed to load branch data.');
-            }
-        } catch (error) {
-            console.error('Fetch branches error:', error);
-            toast.error(error?.message || 'Connection error to backend');
-            setFetchError('Unable to connect. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // TanStack Query list state
+    const {
+        branches,
+        pagination,
+        loadingState,
+        errorMessage,
+        search,
+        status,
+        handleSearchChange,
+        handleStatusChange,
+        setPage,
+        refetch
+    } = useBranches(companyId);
 
+    const toggleStatusMutation = useToggleBranchStatus();
+
+    const isLoading = loadingState === 'loading';
+    const hasError = loadingState === 'error';
+
+    // ── Scope Redirection Guard ──
     useEffect(() => {
         if (user && user.primaryRole !== 'SUPER_ADMIN') {
             const userCompanyId = user.company?.id || user.companyId;
@@ -70,15 +80,10 @@ const BranchSettingsPage = () => {
         }
     }, [companyId, user, navigate]);
 
-    useEffect(() => {
-        if (companyId) {
-            fetchBranches();
-        }
-    }, [companyId]);
-
+    // ── Hide initial full-page loader ──
     useEffect(() => {
         const hasRenderableData = branches.length > 0;
-        const hasRenderableResolvedState = !isLoading && (branches.length === 0 || Boolean(fetchError));
+        const hasRenderableResolvedState = !isLoading && (branches.length === 0 || hasError);
         if (
             !didHideInitialRouteLoaderRef.current &&
             (hasRenderableData || hasRenderableResolvedState)
@@ -86,7 +91,7 @@ const BranchSettingsPage = () => {
             forceHideLoader();
             didHideInitialRouteLoaderRef.current = true;
         }
-    }, [branches, isLoading, fetchError, forceHideLoader]);
+    }, [branches, isLoading, hasError, forceHideLoader]);
 
     const handleAddBranch = () => {
         setSelectedBranch(null);
@@ -103,12 +108,39 @@ const BranchSettingsPage = () => {
         setIsAssignModalOpen(true);
     };
 
+    const handleToggleStatusClick = (branch) => {
+        setBranchToToggle(branch);
+        setIsToggleOpen(true);
+    };
+
+    const handleConfirmToggle = async () => {
+        if (!branchToToggle) return;
+        setIsToggleOpen(false);
+        const loadingToastId = toast.loading('Updating branch operational status...');
+
+        try {
+            await toggleStatusMutation.mutateAsync({
+                id: branchToToggle.id,
+                currentStatus: branchToToggle.status
+            });
+            toast.dismiss(loadingToastId);
+            toast.success(
+                `Branch "${branchToToggle.name}" has been successfully ${
+                    branchToToggle.status === 'ACTIVE' ? 'deactivated' : 'activated'
+                }.`
+            );
+        } catch (error) {
+            toast.dismiss(loadingToastId);
+            toast.error(error?.message || 'Failed to update branch status.');
+        }
+    };
+
     const handleFormSuccess = () => {
-        fetchBranches();
+        refetch();
     };
 
     const handleAssignSuccess = () => {
-        fetchBranches();
+        refetch();
     };
 
     return (
@@ -139,7 +171,7 @@ const BranchSettingsPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={fetchBranches}
+                            onClick={() => refetch()}
                             disabled={isLoading}
                             className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
                             title="Refresh"
@@ -170,7 +202,7 @@ const BranchSettingsPage = () => {
                             <ChevronLeft size={18} />
                         </button>
                         <button
-                            onClick={fetchBranches}
+                            onClick={() => refetch()}
                             disabled={isLoading}
                             className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
                             title="Refresh Data"
@@ -184,16 +216,7 @@ const BranchSettingsPage = () => {
                             onClick={handleAddBranch}
                             variant="contained"
                             size="medium"
-                            startIcon={<Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />}
-                            sx={{
-                              px: 5,
-                              '&:hover .MuiButton-startIcon svg': {
-                                transform: 'rotate(90deg)',
-                              },
-                              '& .MuiButton-startIcon svg': {
-                                transition: 'transform 0.3s ease-in-out',
-                              }
-                            }}
+                            startIcon={<Plus size={18} />}
                             className="group"
                         >
                             Add Branch
@@ -201,12 +224,21 @@ const BranchSettingsPage = () => {
                     )}
                 </div>
 
+                {/* ── Filters bar ── */}
+                <BranchFilters
+                    search={search}
+                    status={status}
+                    onSearchChange={handleSearchChange}
+                    onStatusChange={handleStatusChange}
+                    isLoading={isLoading}
+                />
+
                 {/* Error State */}
-                {fetchError && !isLoading && (
+                {hasError && (
                     <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
-                        <p className="text-red-600 font-bold text-sm">{fetchError}</p>
+                        <p className="text-red-600 font-bold text-sm">{errorMessage || 'Failed to load branch data.'}</p>
                         <button
-                            onClick={fetchBranches}
+                            onClick={() => refetch()}
                             className="mt-3 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-all"
                         >
                             Retry
@@ -215,13 +247,23 @@ const BranchSettingsPage = () => {
                 )}
 
                 {/* Branch Table */}
-                {!fetchError && (
+                {!hasError && (
                     <BranchTable
                         branches={branches}
                         isLoading={isLoading}
                         onEdit={handleEditBranch}
+                        onToggleStatus={handleToggleStatusClick}
                         onAssignUser={handleAssignUser}
                         canEdit={branchPerms.canEdit}
+                    />
+                )}
+
+                {/* Pagination */}
+                {!hasError && (
+                    <BranchPagination
+                        pagination={pagination}
+                        onPageChange={setPage}
+                        isLoading={isLoading}
                     />
                 )}
 
@@ -241,6 +283,71 @@ const BranchSettingsPage = () => {
                     branch={assignBranch}
                     onSuccess={handleAssignSuccess}
                 />
+
+                {/* Status Change Confirmation Dialog */}
+                <Dialog
+                    open={isToggleOpen}
+                    onClose={() => setIsToggleOpen(false)}
+                    aria-labelledby="branch-status-dialog-title"
+                    aria-describedby="branch-status-dialog-description"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '20px',
+                            padding: '8px',
+                            maxWidth: '440px'
+                        }
+                    }}
+                >
+                    <DialogTitle id="branch-status-dialog-title" sx={{ fontWeight: 800, fontSize: '18px', color: '#1e293b', fontHeading: true }}>
+                        Confirm Status Change
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="branch-status-dialog-description" sx={{ fontSize: '14px', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+                            Are you sure you want to change the status of <strong>{branchToToggle?.name}</strong> to{' '}
+                            <strong className={branchToToggle?.status === 'ACTIVE' ? 'text-slate-500' : 'text-emerald-600'}>
+                                {branchToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
+                            </strong>?
+                            {branchToToggle?.status === 'ACTIVE' && (
+                                <span className="block mt-2 text-xs text-red-500 font-semibold bg-red-50 p-2.5 rounded-xl border border-red-100">
+                                    Warning: Setting this branch to Inactive will block access for all associated employees.
+                                </span>
+                            )}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2.5, gap: 1 }}>
+                        <MuiButton
+                            onClick={() => setIsToggleOpen(false)}
+                            sx={{
+                                borderRadius: '12px',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                color: '#64748b',
+                                px: 3,
+                                py: 1,
+                                bgcolor: '#f1f5f9',
+                                '&:hover': { bgcolor: '#e2e8f0' }
+                            }}
+                        >
+                            Cancel
+                        </MuiButton>
+                        <MuiButton
+                            onClick={handleConfirmToggle}
+                            variant="contained"
+                            color={branchToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
+                            sx={{
+                                borderRadius: '12px',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                px: 3,
+                                py: 1,
+                                boxShadow: 'none',
+                                '&:hover': { boxShadow: 'none' }
+                            }}
+                        >
+                            Yes, Confirm
+                        </MuiButton>
+                    </DialogActions>
+                </Dialog>
             </div>
         </GenericPage>
     );
