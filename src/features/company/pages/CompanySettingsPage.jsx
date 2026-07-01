@@ -1,19 +1,30 @@
+// src/features/company/pages/CompanySettingsPage.jsx
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Building2, Plus, RefreshCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import Button from '../../../shared/components/elements/Button';
-import useCompanies from '../hooks/useCompanies';
+import { useCompanies, useToggleCompanyStatus } from '../hooks/useCompanies';
 import CompanyTable from '../components/CompanyTable';
 import CompanyFilters from '../components/CompanyFilters';
 import CompanyPagination from '../components/CompanyPagination';
 import CompanyForm from '../components/CompanyForm';
 import GenericPage from '../../../shared/components/templates/GenericPage';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogContentText, 
+  DialogActions,
+  Button as MuiButton 
+} from '@mui/material';
+import { toast } from 'sonner';
 
 /**
  * CompanySettingsPage
  * Paginated companies listing with search, filter, sort, and full RBAC.
- * Uses GET /api/companies/paginated via the useCompanies hook.
+ * Integrated with Axios and TanStack Query.
  */
 const CompanySettingsPage = () => {
   const { permissions } = useAuth();
@@ -21,7 +32,7 @@ const CompanySettingsPage = () => {
   const didHideInitialRouteLoaderRef = useRef(false);
   const companyPerms = permissions?.COMPANY || {};
 
-  // ── Paginated data + filter state (all in one hook) ──────────────────────
+  // ── Paginated TanStack data + filter states ──────────────────────────────
   const {
     companies,
     pagination,
@@ -38,9 +49,16 @@ const CompanySettingsPage = () => {
     refetch,
   } = useCompanies();
 
-  // ── Form / drawer state ──────────────────────────────────────────────────
-  const [isFormOpen, setIsFormOpen]       = useState(false);
+  // ── Mutation hook for status toggles ──────────────────────────────────────
+  const toggleStatusMutation = useToggleCompanyStatus();
+
+  // ── Form slide-over state ────────────────────────────────────────────────
+  const [isFormOpen, setIsFormOpen]           = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+
+  // ── Status toggle modal confirmation state ─────────────────────────────────
+  const [isToggleOpen, setIsToggleOpen]       = useState(false);
+  const [companyToToggle, setCompanyToToggle] = useState(null);
 
   const handleAddCompany = () => {
     setSelectedCompany(null);
@@ -60,6 +78,33 @@ const CompanySettingsPage = () => {
   const handleClearFilters = () => {
     handleSearchChange('');
     handleStatusChange('');
+  };
+
+  // Triggered when clicking the power icon in the company table
+  const handleToggleStatusClick = (company) => {
+    setCompanyToToggle(company);
+    setIsToggleOpen(true);
+  };
+
+  // Triggered when confirming in the dialog modal
+  const handleConfirmToggle = async () => {
+    if (!companyToToggle) return;
+    
+    const isActivating = companyToToggle.status === 'INACTIVE';
+    const toastId = toast.loading(`Toggling status for ${companyToToggle.name}...`);
+    
+    try {
+      await toggleStatusMutation.mutateAsync({
+        id: companyToToggle.id,
+        currentStatus: companyToToggle.status
+      });
+      
+      toast.success(`${companyToToggle.name} is now ${isActivating ? 'ACTIVE' : 'INACTIVE'}`, { id: toastId });
+      setIsToggleOpen(false);
+      setCompanyToToggle(null);
+    } catch (err) {
+      toast.error(err?.message || 'Failed to toggle company status', { id: toastId });
+    }
   };
 
   const hasActiveFilters = !!(search || status);
@@ -146,16 +191,7 @@ const CompanySettingsPage = () => {
               onClick={handleAddCompany}
               variant="contained"
               size="medium"
-              startIcon={<Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />}
-              sx={{
-                px: 5,
-                '&:hover .MuiButton-startIcon svg': {
-                  transform: 'rotate(90deg)',
-                },
-                '& .MuiButton-startIcon svg': {
-                  transition: 'transform 0.3s ease-in-out',
-                }
-              }}
+              startIcon={<Plus size={18} />}
               className="group"
             >
               Add Company
@@ -181,6 +217,7 @@ const CompanySettingsPage = () => {
           loadingState={loadingState}
           errorMessage={errorMessage}
           onEdit={handleEditCompany}
+          onToggleStatus={handleToggleStatusClick}
           canEdit={companyPerms.canEdit}
           onRetry={refetch}
           hasActiveFilters={hasActiveFilters}
@@ -201,6 +238,71 @@ const CompanySettingsPage = () => {
           company={selectedCompany}
           onSuccess={handleFormSuccess}
         />
+
+        {/* ── Status Change Confirmation Dialog ─────────────────────────── */}
+        <Dialog
+          open={isToggleOpen}
+          onClose={() => setIsToggleOpen(false)}
+          aria-labelledby="status-dialog-title"
+          aria-describedby="status-dialog-description"
+          PaperProps={{
+            sx: {
+              borderRadius: '20px',
+              padding: '8px',
+              maxWidth: '440px'
+            }
+          }}
+        >
+          <DialogTitle id="status-dialog-title" sx={{ fontWeight: 800, fontSize: '18px', color: '#1e293b', fontHeading: true }}>
+            Confirm Status Change
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="status-dialog-description" sx={{ fontSize: '14px', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+              Are you sure you want to change the status of <strong>{companyToToggle?.name}</strong> to{' '}
+              <strong className={companyToToggle?.status === 'ACTIVE' ? 'text-slate-500' : 'text-emerald-600'}>
+                {companyToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
+              </strong>?
+              {companyToToggle?.status === 'ACTIVE' && (
+                <span className="block mt-2 text-xs text-red-500 font-semibold bg-red-50 p-2.5 rounded-xl border border-red-100">
+                  Warning: Setting this company to Inactive will block access for all associated employees.
+                </span>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <MuiButton
+              onClick={() => setIsToggleOpen(false)}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 700,
+                color: '#64748b',
+                px: 3,
+                py: 1,
+                bgcolor: '#f1f5f9',
+                '&:hover': { bgcolor: '#e2e8f0' }
+              }}
+            >
+              Cancel
+            </MuiButton>
+            <MuiButton
+              onClick={handleConfirmToggle}
+              variant="contained"
+              color={companyToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 700,
+                px: 3,
+                py: 1,
+                boxShadow: 'none',
+                '&:hover': { boxShadow: 'none' }
+              }}
+            >
+              Yes, Confirm
+            </MuiButton>
+          </DialogActions>
+        </Dialog>
       </div>
     </GenericPage>
   );

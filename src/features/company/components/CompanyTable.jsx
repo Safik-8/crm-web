@@ -1,30 +1,24 @@
+// src/features/company/components/CompanyTable.jsx
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Edit2, Building2, Users, Calendar, GitBranch,
   ChevronRight, AlertCircle, RefreshCcw, SearchX,
+  Power
 } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 /**
  * CompanyTable
- * Handles all four render states: loading | success | error | empty
- *
- * Props:
- *   companies    {Array}    - current page of companies
- *   loadingState {string}   - 'loading' | 'success' | 'error' | 'empty'
- *   errorMessage {string}   - message shown in error state
- *   onEdit       {Function}
- *   canEdit      {boolean}
- *   onRetry      {Function} - called when user clicks "Retry" in error state
- *   hasActiveFilters {boolean} - used to tailor the empty-state message
- *   onClearFilters   {Function}
+ * Renders the lists of organization entities using Material Design aesthetics.
  */
 const CompanyTable = ({
   companies = [],
   loadingState = 'loading',
   errorMessage = '',
   onEdit,
+  onToggleStatus,
   canEdit,
   onRetry,
   hasActiveFilters = false,
@@ -52,17 +46,15 @@ const CompanyTable = ({
     <>
       {[...Array(5)].map((_, i) => (
         <tr key={i} className="border-b border-slate-100 last:border-0">
-          <td className="py-4 px-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
-              <Skeleton className="h-5 w-40" />
-            </div>
-          </td>
+          <td className="py-4 px-6"><Skeleton className="h-10 w-10 rounded-xl" /></td>
+          <td className="py-4 px-6"><Skeleton className="h-5 w-40" /></td>
           <td className="py-4 px-6"><Skeleton className="h-6 w-16 rounded-lg" /></td>
+          <td className="py-4 px-6"><Skeleton className="h-5 w-24" /></td>
           <td className="py-4 px-6"><Skeleton className="h-6 w-20 rounded-full" /></td>
           <td className="py-4 px-6"><Skeleton className="h-5 w-10" /></td>
+          <td className="py-4 px-6"><Skeleton className="h-5 w-10" /></td>
           <td className="py-4 px-6"><Skeleton className="h-5 w-32" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-8 w-8 rounded-xl" /></td>
+          <td className="py-4 px-6"><Skeleton className="h-8 w-16 rounded-xl" /></td>
         </tr>
       ))}
     </>
@@ -82,7 +74,7 @@ const CompanyTable = ({
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
             </div>
-            <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+            <Skeleton className="h-8 w-16 rounded-lg shrink-0" />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <Skeleton className="h-14 rounded-xl" />
@@ -162,29 +154,65 @@ const CompanyTable = ({
       <div className="p-4">
         {/* Top row */}
         <div className="flex items-start gap-3 mb-3">
-          <div className="h-11 w-11 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+          {/* Logo with Image fallbacks */}
+          {company.logo ? (
+            <img
+              src={company.logo}
+              alt={`${company.name} logo`}
+              className="h-11 w-11 rounded-xl object-cover shrink-0 border border-slate-200"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div
+            style={{ display: company.logo ? 'none' : 'flex' }}
+            className="h-11 w-11 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
+          >
             <Building2 size={19} />
           </div>
+
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 font-heading text-[15px] leading-tight mb-1.5 line-clamp-2">
+            <h3 className="font-bold text-slate-900 font-heading text-[15px] leading-tight line-clamp-2">
               {company.name}
             </h3>
-            <div className="flex flex-wrap items-center gap-1.5">
+            {company.industry && (
+              <span className="text-[11px] text-slate-500 font-medium block mt-0.5">{company.industry}</span>
+            )}
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">
                 {company.code}
               </span>
               <StatusBadge status={company.status} />
             </div>
           </div>
-          {canEdit && (
-            <button
-              onClick={() => onEdit(company)}
-              className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
-              title="Edit Company"
-            >
-              <Edit2 size={15} strokeWidth={2.5} />
-            </button>
-          )}
+
+          {/* Actions */}
+          <div className="flex gap-1 shrink-0">
+            {canEdit && (
+              <>
+                <button
+                  onClick={() => onToggleStatus(company)}
+                  className={`h-8 w-8 flex items-center justify-center rounded-lg transition-all ${
+                    company.status === 'ACTIVE'
+                      ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
+                >
+                  <Power size={14} strokeWidth={2.5} />
+                </button>
+                <button
+                  onClick={() => onEdit(company)}
+                  className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                  title="Edit Company"
+                >
+                  <Edit2 size={14} strokeWidth={2.5} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Stats row */}
@@ -258,34 +286,53 @@ const CompanyTable = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-200/60">
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Logo</th>
                 <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Company Name</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Code</th>
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Company Code</th>
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Industry</th>
                 <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Status</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Branches</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Created At</th>
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Branch Count</th>
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">User Count</th>
+                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Created Date</th>
                 <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading && <DesktopSkeletons />}
 
-              {!isLoading && loadingState === 'error' && <ErrorState colSpan={6} />}
+              {!isLoading && loadingState === 'error' && <ErrorState colSpan={9} />}
 
-              {!isLoading && loadingState === 'empty' && <EmptyState colSpan={6} />}
+              {!isLoading && loadingState === 'empty' && <EmptyState colSpan={9} />}
 
               {!isLoading && loadingState === 'success' && companies.map((company) => (
                 <tr
                   key={company.id}
                   className="hover:bg-slate-50/60 transition-all duration-150 group"
                 >
+                  {/* Logo Column */}
+                  <td className="py-4 px-6">
+                    {company.logo ? (
+                      <img
+                        src={company.logo}
+                        alt={`${company.name} logo`}
+                        className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-200"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      style={{ display: company.logo ? 'none' : 'flex' }}
+                      className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
+                    >
+                      <Building2 size={18} />
+                    </div>
+                  </td>
+
                   {/* Company Name */}
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                        <Building2 size={19} />
-                      </div>
-                      <span className="font-bold text-slate-900 font-heading text-[15px]">{company.name}</span>
-                    </div>
+                    <span className="font-bold text-slate-900 font-heading text-[15px]">{company.name}</span>
                   </td>
 
                   {/* Code */}
@@ -293,6 +340,11 @@ const CompanyTable = ({
                     <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
                       {company.code}
                     </span>
+                  </td>
+
+                  {/* Industry */}
+                  <td className="py-4 px-6 text-sm text-slate-600 font-medium">
+                    {company.industry || <span className="text-slate-400 font-normal italic">None</span>}
                   </td>
 
                   {/* Status */}
@@ -316,6 +368,18 @@ const CompanyTable = ({
                     </button>
                   </td>
 
+                  {/* Users */}
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                        <Users size={14} />
+                      </div>
+                      <span className="font-bold text-sm">
+                        {company._count?.users ?? 0}
+                      </span>
+                    </div>
+                  </td>
+
                   {/* Created At */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2 text-slate-500 text-[13px] font-medium whitespace-nowrap">
@@ -328,19 +392,39 @@ const CompanyTable = ({
 
                   {/* Actions */}
                   <td className="py-4 px-6">
-                    {canEdit ? (
-                      <button
-                        onClick={() => onEdit(company)}
-                        className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
-                        title="Edit Company"
-                      >
-                        <Edit2 size={17} strokeWidth={2.5} />
-                      </button>
-                    ) : (
-                      <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                        <Edit2 size={17} strokeWidth={2} />
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {canEdit ? (
+                        <>
+                          <button
+                            onClick={() => onToggleStatus(company)}
+                            className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                              company.status === 'ACTIVE'
+                                ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                            }`}
+                            title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
+                          >
+                            <Power size={17} strokeWidth={2.5} />
+                          </button>
+                          <button
+                            onClick={() => onEdit(company)}
+                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
+                            title="Edit Company"
+                          >
+                            <Edit2 size={17} strokeWidth={2.5} />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="flex gap-1.5">
+                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                            <Power size={17} strokeWidth={2} />
+                          </span>
+                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                            <Edit2 size={17} strokeWidth={2} />
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

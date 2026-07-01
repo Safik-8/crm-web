@@ -1,6 +1,8 @@
+// src/features/company/components/CompanyForm.jsx
+
 import React from 'react';
-import { Save, Building } from 'lucide-react';
-import { companyApi } from '../api/companyApi';
+import { Save, Building, User, Briefcase } from 'lucide-react';
+import { useCreateCompany, useUpdateCompany } from '../hooks/useCompanies';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
@@ -10,55 +12,63 @@ import {
   FormControlLabel,
   Radio,
   Typography,
+  Box,
+  Button as MuiButton,
 } from '@mui/material';
 
 /**
  * CompanyForm Component
- * Slide-over drawer form to onboard/edit companies.
- * Powered by reusable DynamicFormSlideover and styled with Material UI.
+ * Slide-over drawer form to onboard/edit companies and automatically register a Company Admin.
  */
 const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
   const isEdit = !!company;
+  const createCompanyMutation = useCreateCompany();
+  const updateCompanyMutation = useUpdateCompany();
 
   const handleSubmit = async (values) => {
+    const loadingToastId = enhancedToast.saveProgress('Company');
     try {
-      let response;
-      const loadingToastId = enhancedToast.saveProgress('Company');
-      
       if (isEdit) {
-        response = await companyApi.updateCompany(company.id, {
-          name: values.name,
-          status: values.status
+        // Edit company details (code and admin details are locked)
+        await updateCompanyMutation.mutateAsync({
+          id: company.id,
+          data: {
+            name: values.name,
+            logo: values.logo,
+            industry: values.industry,
+            website: values.website,
+            address: values.address,
+            status: values.status
+          }
         });
       } else {
-        response = await companyApi.createCompany(values);
+        // Onboard new company along with its primary Admin
+        await createCompanyMutation.mutateAsync(values);
       }
 
       toast.dismiss(loadingToastId);
-
-      if (response && response.success) {
-        enhancedToast.operationSuccess(
-          isEdit ? 'Updated' : 'Created', 
-          'Company'
-        );
-        onSuccess?.();
-        onClose();
-      } else {
-        enhancedToast.operationError(
-          isEdit ? 'update' : 'create',
-          'company',
-          response?.message
-        );
-      }
+      enhancedToast.operationSuccess(
+        isEdit ? 'Updated' : 'Created', 
+        'Company'
+      );
+      onSuccess?.();
+      onClose();
     } catch (error) {
+      toast.dismiss(loadingToastId);
+      
+      // Centralized error toast formatting
       if (error && error.statusCode === 409) {
-        toast.error('Code Already Exists', {
-          description: 'The provided company code is already in use by another company.',
-        });
-        throw { code: 'This company code is already active in the system.' };
-      } else if (error && error.statusCode >= 500) {
-        enhancedToast.networkError();
-        throw error;
+        if (error.code === 'adminEmail') {
+          toast.error('Admin Email Already Registered', {
+            description: 'The email provided for the company admin is already in use.',
+          });
+          throw { adminEmail: 'A user with this email address already exists.' };
+        } else {
+          toast.error('Code Already Exists', {
+            description: 'The company code provided is already assigned to another tenant.',
+          });
+          throw { code: 'This company code is already active in the system.' };
+        }
       } else {
         enhancedToast.operationError(
           isEdit ? 'update' : 'create',
@@ -70,7 +80,33 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
     }
   };
 
+  // ── Construct Form Fields dynamically ────────────────────────────────────
   const fields = [
+    // ═════ SECTION 1: BASIC DETAILS ═════
+    {
+      key: 'basic_header',
+      render: () => (
+        <Box sx={{ mb: 2, mt: 1 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              color: '#475569',
+              textTransform: 'uppercase',
+              fontSize: '11px',
+              letterSpacing: '0.1em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              borderBottom: '1px solid #f1f5f9',
+              pb: 1
+            }}
+          >
+            <Building size={14} /> Basic Details
+          </Typography>
+        </Box>
+      )
+    },
     {
       key: 'name',
       label: 'Company Name',
@@ -102,6 +138,247 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
             }
           }}
         />
+      )
+    },
+    {
+      key: 'logo',
+      label: 'Logo Image',
+      render: (value, onChange, formValues, errorText) => {
+        const handleFileChange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          // Validate file type
+          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+          if (!allowedTypes.includes(file.type)) {
+            toast.error('Only JPG, JPEG, and PNG images are allowed.');
+            return;
+          }
+
+          // Validate file size (under 2MB to keep Base64 payload size optimized)
+          if (file.size > 2 * 1024 * 1024) {
+            toast.error('Image size must be under 2MB.');
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            onChange('logo', reader.result); // Base64 string representation
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const handleRemove = () => {
+          onChange('logo', '');
+        };
+
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                fontWeight: 600,
+                fontSize: '12px',
+                color: '#475569',
+                mb: 0.5,
+                ml: 0.5
+              }}
+            >
+              Company Logo
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {value ? (
+                <Box sx={{ position: 'relative', width: 56, height: 56 }}>
+                  <img
+                    src={value}
+                    alt="Logo preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px', border: '1px solid #cbd5e1' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      background: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 18,
+                      height: 18,
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title="Remove logo"
+                  >
+                    ✕
+                  </button>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '12px',
+                    border: '2px dashed #cbd5e1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#94a3b8',
+                    bgcolor: '#f8fafc'
+                  }}
+                >
+                  <Building size={20} />
+                </Box>
+              )}
+              <Box>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={handleFileChange}
+                  id="logo-file-input"
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="logo-file-input">
+                  <MuiButton
+                    variant="outlined"
+                    component="span"
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      borderColor: '#cbd5e1',
+                      color: '#475569',
+                      bgcolor: '#ffffff',
+                      py: 0.5,
+                      px: 1.5,
+                      '&:hover': {
+                        borderColor: '#94a3b8',
+                        bgcolor: '#f8fafc'
+                      }
+                    }}
+                  >
+                    {value ? 'Change Image' : 'Upload Image'}
+                  </MuiButton>
+                </label>
+                <Typography variant="caption" display="block" sx={{ mt: 0.5, color: '#94a3b8', fontSize: '10px' }}>
+                  Max size: 2MB. JPG, JPEG, PNG only.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        );
+      }
+    },
+
+    // ═════ SECTION 2: BUSINESS DETAILS ═════
+    {
+      key: 'business_header',
+      render: () => (
+        <Box sx={{ mb: 2, mt: 3 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              color: '#475569',
+              textTransform: 'uppercase',
+              fontSize: '11px',
+              letterSpacing: '0.1em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              borderBottom: '1px solid #f1f5f9',
+              pb: 1
+            }}
+          >
+            <Briefcase size={14} /> Business Details
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      key: 'industry',
+      label: 'Industry Sector',
+      type: 'text',
+      placeholder: 'e.g. Education, Tech, Finance...',
+      required: false
+    },
+    {
+      key: 'website',
+      label: 'Corporate Website',
+      type: 'text',
+      placeholder: 'e.g. https://stackdot.co',
+      required: false
+    },
+    {
+      key: 'address',
+      label: 'HQ Street Address',
+      type: 'text',
+      placeholder: 'Enter physical headquarters address...',
+      required: false
+    },
+
+    // ═════ SECTION 3: COMPANY ADMIN (ONLY SHOWN FOR CREATE) ═════
+    ...(!isEdit ? [
+      {
+        key: 'admin_header',
+        render: () => (
+          <Box sx={{ mb: 2, mt: 3 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 800,
+                color: '#475569',
+                textTransform: 'uppercase',
+                fontSize: '11px',
+                letterSpacing: '0.1em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                borderBottom: '1px solid #f1f5f9',
+                pb: 1
+              }}
+            >
+              <User size={14} /> Primary Company Admin
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        key: 'adminName',
+        label: 'Admin Full Name',
+        type: 'text',
+        placeholder: 'Enter admin first and last name...',
+        required: true
+      },
+      {
+        key: 'adminEmail',
+        label: 'Admin Email Address',
+        type: 'text',
+        placeholder: 'admin@company.com',
+        required: true
+      },
+      {
+        key: 'adminPassword',
+        label: 'Admin Password',
+        type: 'password',
+        placeholder: 'Minimum 6 characters...',
+        required: true
+      }
+    ] : []),
+
+    // ═════ SECTION 4: STATUS (RADIO TOGGLES) ═════
+    {
+      key: 'status_header',
+      render: () => (
+        <Box sx={{ mb: 1, mt: 3 }} />
       )
     },
     {
@@ -186,7 +463,14 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess }) => {
   const initialValues = {
     name: company?.name || '',
     code: company?.code || '',
-    status: company?.status || 'ACTIVE'
+    logo: company?.logo || '',
+    industry: company?.industry || '',
+    website: company?.website || '',
+    address: company?.address || '',
+    status: company?.status || 'ACTIVE',
+    adminName: '',
+    adminEmail: '',
+    adminPassword: ''
   };
 
   return (

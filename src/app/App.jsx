@@ -7,6 +7,17 @@ import { router } from './routes/index.jsx';
 import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
 import muiTheme from '../shared/theme/muiTheme.js';
 import '../shared/styles/index.css';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 function App() {
   return (
@@ -91,9 +102,11 @@ function App() {
       />
 
       <div className="antialiased text-zinc-900 bg-zinc-50 font-sans selection:bg-primary/20 selection:text-primary">
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </QueryClientProvider>
       </div>
     </LoaderProvider>
     </ThemeProvider>

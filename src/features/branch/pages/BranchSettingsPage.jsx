@@ -19,7 +19,7 @@ import GenericPage from '../../../shared/components/templates/GenericPage';
 const BranchSettingsPage = () => {
     const { companyId } = useParams();
     const navigate = useNavigate();
-    const { permissions } = useAuth();
+    const { permissions, user } = useAuth();
     const { forceHideLoader } = useLoader();
     const didHideInitialRouteLoaderRef = React.useRef(false);
 
@@ -59,6 +59,16 @@ const BranchSettingsPage = () => {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (user && user.primaryRole !== 'SUPER_ADMIN') {
+            const userCompanyId = user.company?.id || user.companyId;
+            if (Number(companyId) !== userCompanyId) {
+                // Instantly redirect to their own company's branches page
+                navigate(`/companies/${userCompanyId}/branches`, { replace: true });
+            }
+        }
+    }, [companyId, user, navigate]);
 
     useEffect(() => {
         if (companyId) {

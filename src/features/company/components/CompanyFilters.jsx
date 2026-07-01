@@ -48,7 +48,7 @@ const CompanyFilters = ({
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search companies…"
+            placeholder="Search by name, code, industry…"
             disabled={isLoading}
             className="w-full h-9 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 font-medium
                        focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-white

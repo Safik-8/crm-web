@@ -51,7 +51,7 @@ export const navItems = [
 export const getFilteredNavItems = (user, hasPermission) => {
   if (!user) return [];
 
-  const items = [...navItems];
+  let items = [...navItems];
 
   // Derive companyId from user profile
   const companyId = user?.company?.id || user?.companyId;
@@ -66,8 +66,13 @@ export const getFilteredNavItems = (user, hasPermission) => {
     if (companySetupIndex !== -1) {
       items.splice(companySetupIndex + 1, 0, branchItem);
     } else {
-      items.push(branchItem);
+      items.splice(1, 0, branchItem); // Insert right after Dashboard if Company Setup is hidden
     }
+  }
+
+  // Restrict 'Company Setup' exclusively to SUPER_ADMIN users
+  if (user.primaryRole !== 'SUPER_ADMIN') {
+    items = items.filter(item => item.path !== '/settings/company');
   }
 
   return items.filter(item => {
