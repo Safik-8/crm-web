@@ -14,22 +14,16 @@ import AssignUserModal from '../components/AssignUserModal';
 import BranchFilters from '../components/BranchFilters';
 import BranchPagination from '../components/BranchPagination';
 import GenericPage from '../../../shared/components/templates/GenericPage';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button as MuiButton
-} from '@mui/material';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 
 /**
  * BranchSettingsPage
  * Main listing page for branches, scoped to a company via route param.
  * Orchestrates table, drawer, and modal interactions with full RBAC & caching.
  */
-const BranchSettingsPage = () => {
-    const { companyId } = useParams();
+const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
+    const { companyId: routeCompanyId } = useParams();
+    const companyId = overrideCompanyId || routeCompanyId;
     const navigate = useNavigate();
     const { permissions, user } = useAuth();
     const { forceHideLoader } = useLoader();
@@ -143,19 +137,47 @@ const BranchSettingsPage = () => {
         refetch();
     };
 
-    return (
-        <GenericPage
-            title="Branch Registry"
-            description="Manage geographical and functional hubs for the selected company."
-            icon={GitBranch}
-        >
-            <div className="flex flex-col gap-3 sm:gap-4">
+    const renderContent = () => (
+        <div className="flex flex-col gap-3 sm:gap-4">
 
-                {/* ── Mobile section header ── */}
+            {/* ── Mini header for inline mode ── */}
+            {inlineMode && (
+                <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-slate-200/60 shadow-sm">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                            <GitBranch size={15} />
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 font-heading leading-tight">Hub Registry</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => refetch()}
+                            disabled={isLoading}
+                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                            title="Refresh"
+                        >
+                            <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
+                        {branchPerms.canCreate && (
+                            <Button
+                                onClick={handleAddBranch}
+                                variant="contained"
+                                size="small"
+                                startIcon={<Plus size={15} />}
+                            >
+                                Add Branch
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Mobile section header ── */}
+            {!inlineMode && (
                 <div className="flex items-center justify-between lg:hidden bg-white rounded-2xl px-4 py-3 border border-slate-200/60 shadow-sm">
                     <div className="flex items-center gap-2.5">
                         <button
-                            onClick={() => navigate('/settings/company')}
+                            onClick={() => navigate('/settings/organization')}
                             className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-all active:scale-95"
                             title="Back to Company Registry"
                         >
@@ -190,12 +212,14 @@ const BranchSettingsPage = () => {
                         )}
                     </div>
                 </div>
+            )}
 
-                {/* ── Desktop section header ── */}
+            {/* ── Desktop section header ── */}
+            {!inlineMode && (
                 <div className="hidden lg:flex lg:items-center lg:justify-between">
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => navigate('/settings/company')}
+                            onClick={() => navigate('/settings/organization')}
                             className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
                             title="Back to Company Registry"
                         >
@@ -223,6 +247,7 @@ const BranchSettingsPage = () => {
                         </Button>
                     )}
                 </div>
+            )}
 
                 {/* ── Filters bar ── */}
                 <BranchFilters
@@ -285,70 +310,41 @@ const BranchSettingsPage = () => {
                 />
 
                 {/* Status Change Confirmation Dialog */}
-                <Dialog
-                    open={isToggleOpen}
+                <ConfirmModal
+                    isOpen={isToggleOpen}
                     onClose={() => setIsToggleOpen(false)}
-                    aria-labelledby="branch-status-dialog-title"
-                    aria-describedby="branch-status-dialog-description"
-                    PaperProps={{
-                        sx: {
-                            borderRadius: '20px',
-                            padding: '8px',
-                            maxWidth: '440px'
-                        }
-                    }}
-                >
-                    <DialogTitle id="branch-status-dialog-title" sx={{ fontWeight: 800, fontSize: '18px', color: '#1e293b', fontHeading: true }}>
-                        Confirm Status Change
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="branch-status-dialog-description" sx={{ fontSize: '14px', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+                    title="Confirm Status Change"
+                    message={
+                        <span>
                             Are you sure you want to change the status of <strong>{branchToToggle?.name}</strong> to{' '}
-                            <strong className={branchToToggle?.status === 'ACTIVE' ? 'text-slate-500' : 'text-emerald-600'}>
+                            <strong className={branchToToggle?.status === 'ACTIVE' ? 'text-slate-500 font-extrabold' : 'text-emerald-600 font-extrabold'}>
                                 {branchToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
                             </strong>?
-                            {branchToToggle?.status === 'ACTIVE' && (
-                                <span className="block mt-2 text-xs text-red-500 font-semibold bg-red-50 p-2.5 rounded-xl border border-red-100">
-                                    Warning: Setting this branch to Inactive will block access for all associated employees.
-                                </span>
-                            )}
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions sx={{ p: 2.5, gap: 1 }}>
-                        <MuiButton
-                            onClick={() => setIsToggleOpen(false)}
-                            sx={{
-                                borderRadius: '12px',
-                                textTransform: 'none',
-                                fontWeight: 700,
-                                color: '#64748b',
-                                px: 3,
-                                py: 1,
-                                bgcolor: '#f1f5f9',
-                                '&:hover': { bgcolor: '#e2e8f0' }
-                            }}
-                        >
-                            Cancel
-                        </MuiButton>
-                        <MuiButton
-                            onClick={handleConfirmToggle}
-                            variant="contained"
-                            color={branchToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
-                            sx={{
-                                borderRadius: '12px',
-                                textTransform: 'none',
-                                fontWeight: 700,
-                                px: 3,
-                                py: 1,
-                                boxShadow: 'none',
-                                '&:hover': { boxShadow: 'none' }
-                            }}
-                        >
-                            Yes, Confirm
-                        </MuiButton>
-                    </DialogActions>
-                </Dialog>
-            </div>
+                        </span>
+                    }
+                    warningMessage={
+                        branchToToggle?.status === 'ACTIVE'
+                            ? 'Warning: Setting this branch to Inactive will block access for all associated employees.'
+                            : undefined
+                    }
+                    onConfirm={handleConfirmToggle}
+                    type={branchToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
+                    isLoading={toggleStatusMutation.isPending}
+                />
+        </div>
+    );
+
+    if (inlineMode) {
+        return renderContent();
+    }
+
+    return (
+        <GenericPage
+            title="Branch Registry"
+            description="Manage geographical and functional hubs for the selected company."
+            icon={GitBranch}
+        >
+            {renderContent()}
         </GenericPage>
     );
 };

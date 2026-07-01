@@ -14,7 +14,7 @@ const CompanyDetailsPage = () => {
     >
       <div className="space-y-6">
         <Link 
-          to="/settings/company" 
+          to="/settings/organization" 
           className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors"
         >
           <ChevronLeft size={16} />

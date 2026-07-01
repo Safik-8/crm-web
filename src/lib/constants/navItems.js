@@ -22,7 +22,7 @@ export const navItems = [
   { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD },
   
   // Settings
-  { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
+  { name: 'Organization', path: '/settings/organization', icon: Building2, permission: PERMISSIONS.VIEW_SETTINGS },
 
   // Customers & Deals
   { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
@@ -52,28 +52,6 @@ export const getFilteredNavItems = (user, hasPermission) => {
   if (!user) return [];
 
   let items = [...navItems];
-
-  // Derive companyId from user profile
-  const companyId = user?.company?.id || user?.companyId;
-  if (companyId) {
-    const companySetupIndex = items.findIndex(i => i.path === '/settings/company');
-    const branchItem = {
-      name: 'Branches',
-      path: `/companies/${companyId}/branches`,
-      icon: GitBranch,
-      permission: PERMISSIONS.VIEW_BRANCHES
-    };
-    if (companySetupIndex !== -1) {
-      items.splice(companySetupIndex + 1, 0, branchItem);
-    } else {
-      items.splice(1, 0, branchItem); // Insert right after Dashboard if Company Setup is hidden
-    }
-  }
-
-  // Restrict 'Company Setup' exclusively to SUPER_ADMIN users
-  if (user.primaryRole !== 'SUPER_ADMIN') {
-    items = items.filter(item => item.path !== '/settings/company');
-  }
 
   return items.filter(item => {
     // Check Permission constraint

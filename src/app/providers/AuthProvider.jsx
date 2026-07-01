@@ -83,6 +83,17 @@ export const AuthProvider = ({ children }) => {
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);
   }, [user]);
 
+  const refetchUser = useCallback(async () => {
+    try {
+      const response = await apiClient('/auth/me', { method: 'GET' });
+      if (response?.success && response?.data?.user) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('[Auth] Refetch user failed:', error);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const fetchCurrentUser = async () => {
@@ -167,7 +178,8 @@ export const AuthProvider = ({ children }) => {
       isLoggingOut,
       isAuthenticated: !!user,
       permissions: user?.permissions || {}, // Exposing raw backend permissions instead of array
-      hasPermission
+      hasPermission,
+      refetchUser
     }}>
       {children}
     </AuthContext.Provider>

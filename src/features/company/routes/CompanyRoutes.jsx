@@ -1,7 +1,6 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import CompanySettingsPage from '../pages/CompanySettingsPage';
-// import CompanyDetailsPage from '../pages/CompanyDetailsPage'; // Optional
+import OrganizationSettingsPage from '../pages/OrganizationSettingsPage';
 
 /**
  * Company Module Sub-routes
@@ -10,8 +9,7 @@ import CompanySettingsPage from '../pages/CompanySettingsPage';
 const CompanyRoutes = () => {
   return (
     <Routes>
-      <Route index element={<CompanySettingsPage />} />
-      {/* <Route path=":id" element={<CompanyDetailsPage />} /> */}
+      <Route index element={<OrganizationSettingsPage />} />
     </Routes>
   );
 };

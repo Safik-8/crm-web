@@ -178,9 +178,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings/company/*',
+        path: 'settings/organization/*',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_SETUP}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
             <CompanyRoutes />
           </ProtectedRoute>
         ),

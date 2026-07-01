@@ -6,13 +6,6 @@ import { useCreateBranch, useUpdateBranch } from '../hooks/useBranches';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
-import {
-  FormControl,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Typography,
-} from '@mui/material';
 
 /**
  * BranchForm Component
@@ -128,74 +121,36 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
       render: (value, onChange, formValues) => {
         const activeStatus = value || 'ACTIVE';
         return (
-          <FormControl component="fieldset" fullWidth>
-            <Typography
-              variant="caption"
-              sx={{
-                display: 'block',
-                fontWeight: 600,
-                fontSize: '12px',
-                color: '#475569',
-                mb: 1.5,
-                ml: 0.5
-              }}
-            >
+          <div className="flex flex-col gap-2 w-full mb-1">
+            <span className="block text-slate-500 font-bold text-xs ml-0.5">
               Operational Status
-            </Typography>
-            <RadioGroup
-              row
-              value={activeStatus}
-              onChange={(e) => onChange('status', e.target.value)}
-              sx={{ display: 'flex', gap: 3, width: '100%' }}
-            >
+            </span>
+            
+            <div className="flex gap-4 w-full">
               {['ACTIVE', 'INACTIVE'].map((statusOption) => {
                 const isSelected = activeStatus === statusOption;
                 return (
-                  <FormControlLabel
+                  <button
                     key={statusOption}
-                    value={statusOption}
-                    control={
-                      <Radio
-                        size="small"
-                        sx={{
-                          color: '#CBD5E1',
-                          '&.Mui-checked': {
-                            color: '#F86F03',
-                          },
-                          p: 1
-                        }}
-                      />
-                    }
-                    label={statusOption === 'ACTIVE' ? 'Active' : 'Inactive'}
-                    sx={{
-                      flex: 1,
-                      margin: 0,
-                      height: '42px',
-                      borderRadius: '10px',
-                      border: '1px solid',
-                      borderColor: isSelected ? '#F86F03' : '#CBD5E1',
-                      bgcolor: isSelected ? '#FFF5EB' : '#FFFFFF',
-                      transition: 'all 0.15s ease-in-out',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      px: 3,
-                      '&:hover': {
-                        borderColor: isSelected ? '#F86F03' : '#94A3B8',
-                        bgcolor: isSelected ? '#FFF5EB' : '#FAFAFA'
-                      },
-                      '& .MuiTypography-root': {
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: isSelected ? '#F86F03' : '#475569',
-                        ml: 1
-                      }
-                    }}
-                  />
+                    type="button"
+                    onClick={() => onChange('status', statusOption)}
+                    className={`flex-1 flex items-center justify-center gap-2.5 h-[42px] rounded-xl border font-bold text-xs select-none transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-primary bg-orange-50/40 text-primary'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all ${
+                      isSelected ? 'border-primary bg-primary' : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                    {statusOption === 'ACTIVE' ? 'Active' : 'Inactive'}
+                  </button>
                 );
               })}
-            </RadioGroup>
-          </FormControl>
+            </div>
+          </div>
         );
       }
     }

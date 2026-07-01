@@ -11,14 +11,7 @@ import CompanyFilters from '../components/CompanyFilters';
 import CompanyPagination from '../components/CompanyPagination';
 import CompanyForm from '../components/CompanyForm';
 import GenericPage from '../../../shared/components/templates/GenericPage';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogContentText, 
-  DialogActions,
-  Button as MuiButton 
-} from '@mui/material';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from 'sonner';
 
 /**
@@ -240,69 +233,27 @@ const CompanySettingsPage = () => {
         />
 
         {/* ── Status Change Confirmation Dialog ─────────────────────────── */}
-        <Dialog
-          open={isToggleOpen}
+        <ConfirmModal
+          isOpen={isToggleOpen}
           onClose={() => setIsToggleOpen(false)}
-          aria-labelledby="status-dialog-title"
-          aria-describedby="status-dialog-description"
-          PaperProps={{
-            sx: {
-              borderRadius: '20px',
-              padding: '8px',
-              maxWidth: '440px'
-            }
-          }}
-        >
-          <DialogTitle id="status-dialog-title" sx={{ fontWeight: 800, fontSize: '18px', color: '#1e293b', fontHeading: true }}>
-            Confirm Status Change
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="status-dialog-description" sx={{ fontSize: '14px', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+          title="Confirm Status Change"
+          message={
+            <span>
               Are you sure you want to change the status of <strong>{companyToToggle?.name}</strong> to{' '}
-              <strong className={companyToToggle?.status === 'ACTIVE' ? 'text-slate-500' : 'text-emerald-600'}>
+              <strong className={companyToToggle?.status === 'ACTIVE' ? 'text-slate-500 font-extrabold' : 'text-emerald-600 font-extrabold'}>
                 {companyToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
               </strong>?
-              {companyToToggle?.status === 'ACTIVE' && (
-                <span className="block mt-2 text-xs text-red-500 font-semibold bg-red-50 p-2.5 rounded-xl border border-red-100">
-                  Warning: Setting this company to Inactive will block access for all associated employees.
-                </span>
-              )}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions sx={{ p: 2.5, gap: 1 }}>
-            <MuiButton
-              onClick={() => setIsToggleOpen(false)}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 700,
-                color: '#64748b',
-                px: 3,
-                py: 1,
-                bgcolor: '#f1f5f9',
-                '&:hover': { bgcolor: '#e2e8f0' }
-              }}
-            >
-              Cancel
-            </MuiButton>
-            <MuiButton
-              onClick={handleConfirmToggle}
-              variant="contained"
-              color={companyToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 700,
-                px: 3,
-                py: 1,
-                boxShadow: 'none',
-                '&:hover': { boxShadow: 'none' }
-              }}
-            >
-              Yes, Confirm
-            </MuiButton>
-          </DialogActions>
-        </Dialog>
+            </span>
+          }
+          warningMessage={
+            companyToToggle?.status === 'ACTIVE'
+              ? 'Warning: Setting this company to Inactive will block access for all associated employees.'
+              : undefined
+          }
+          onConfirm={handleConfirmToggle}
+          type={companyToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
+          isLoading={toggleStatusMutation.isPending}
+        />
       </div>
     </GenericPage>
   );

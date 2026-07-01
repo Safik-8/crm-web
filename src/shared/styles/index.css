@@ -416,118 +416,25 @@
    animate out without blocking user interaction during the fade.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Base overlay shell ────────────────────────────────────────────────────── */
-.loader-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-
-  /* Transparent — content visible but blocked via pointer-events */
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-
-  /* Transition: opacity for fade, visibility for a11y */
-  transition:
-    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    visibility 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ── Content-area scoped variant ───────────────────────────────────────────── */
-/* Declared AFTER .loader-overlay so position:absolute overrides position:fixed */
-/* When rendered inside BaseLayout's content column (position:relative),        */
-/* the loader covers only the content area — sidebar stays fully visible.       */
-.loader-overlay--content {
+/* ── Top edge progress line ────────────────────────────────────────────────── */
+.top-progress-bar {
   position: absolute;
-  z-index: 80; /* above content, below modals/toasts */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #F86F03 0%, #FF9E53 50%, #F86F03 100%);
+  background-size: 200% auto;
+  animation: progress-shimmer 1.5s infinite linear;
+  z-index: 100;
 }
 
-/* ── Visible state ─────────────────────────────────────────────────────────── */
-.loader-overlay--visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: all;
-}
-
-/* ── Hidden state (fade-out complete) ─────────────────────────────────────── */
-.loader-overlay--hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* ── Orange radial glow — brand accent ────────────────────────────────────── */
-.loader-glow {
-  position: absolute;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(248, 111, 3, 0.18) 0%,
-    rgba(248, 111, 3, 0.08) 45%,
-    transparent 70%
-  );
-  pointer-events: none;
-  animation: loader-glow-pulse 2.4s ease-in-out infinite;
-}
-
-/* ── Animation wrapper ─────────────────────────────────────────────────────── */
-.loader-animation-wrapper {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 4px 24px rgba(248, 111, 3, 0.22));
-}
-
-/* ── Optional loading message ──────────────────────────────────────────────── */
-.loader-message {
-  position: relative;
-  z-index: 1;
-  font-family: "DM Sans", sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #B96A01;
-  letter-spacing: 0.02em;
-  text-align: center;
-  max-width: 240px;
-  animation: loader-message-fade 0.4s ease both;
-}
-
-/* ── Dark mode overrides ───────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  .loader-message {
-    color: #F8A55A;
+@keyframes progress-shimmer {
+  0% {
+    background-position: 200% 0;
   }
-}
-
-/* ── Keyframes ─────────────────────────────────────────────────────────────── */
-@keyframes loader-glow-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-}
-
-@keyframes loader-message-fade {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  100% {
+    background-position: -200% 0;
   }
 }
 
