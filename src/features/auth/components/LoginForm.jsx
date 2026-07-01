@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../../../shared/utils/toast';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 // Material-UI components
 import Box from '@mui/material/Box';
@@ -11,8 +12,6 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Button from '../../../shared/components/elements/Button';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
 
 // Material-UI icons
@@ -30,6 +29,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -234,18 +234,20 @@ const LoginForm = () => {
           }}
           error={!!fieldErrors.email}
           helperText={fieldErrors.email}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <MailOutlineIcon
-                  sx={{
-                    fontSize: 18,
-                    color: fieldErrors.email ? 'error.main' : 'text.secondary',
-                    transition: 'color 0.15s ease',
-                  }}
-                />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MailOutlineIcon
+                    sx={{
+                      fontSize: 18,
+                      color: fieldErrors.email ? 'error.main' : 'text.secondary',
+                      transition: 'color 0.15s ease',
+                    }}
+                  />
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
@@ -264,18 +266,19 @@ const LoginForm = () => {
           }}
           error={!!fieldErrors.password}
           helperText={fieldErrors.password}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon
-                  sx={{
-                    fontSize: 18,
-                    color: fieldErrors.password ? 'error.main' : 'text.secondary',
-                    transition: 'color 0.15s ease',
-                  }}
-                />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: fieldErrors.password ? 'error.main' : 'text.secondary',
+                      transition: 'color 0.15s ease',
+                    }}
+                  />
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
@@ -295,48 +298,25 @@ const LoginForm = () => {
                   </IconButton>
                 </InputAdornment>
               ),
+            },
           }}
         />
 
-        {/* Remember me + Forgot password */}
+        {/* Forgot password */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-end',
             mt: -0.5,
           }}
         >
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="remember-me"
-                size="small"
-                sx={{
-                  color: '#CBD5E1',
-                  '&.Mui-checked': {
-                    color: 'primary.main',
-                  },
-                }}
-              />
-            }
-            label={
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: 'text.secondary',
-                  userSelect: 'none',
-                }}
-              >
-                Remember me
-              </Typography>
-            }
-            sx={{ m: 0 }}
-          />
           <Link
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsForgotModalOpen(true);
+            }}
             sx={{
               fontSize: '12px',
               fontWeight: 600,
@@ -382,6 +362,12 @@ const LoginForm = () => {
           Sign in
         </Button>
       </Box>
+
+      {/* Forgot Password Flow Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+      />
     </Card>
   );
 };

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api/api';
 
 const AuthContext = createContext(undefined);
@@ -36,33 +37,65 @@ const RBAC_ADAPTER_MAP = {
   'action:read_only_reports': { module: 'REPORT', action: 'canView' },
 
   // Pipeline & Stage Permissions (Phase 1)
-  'view:pipelines':   { module: 'PIPELINE', action: 'canView' },
-  'create:pipeline':  { module: 'PIPELINE', action: 'canCreate' },
+  'view:pipelines': { module: 'PIPELINE', action: 'canView' },
+  'create:pipeline': { module: 'PIPELINE', action: 'canCreate' },
   'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
-  'delete:pipeline':  { module: 'PIPELINE', action: 'canDelete' },
-  'view:stages':      { module: 'STAGE',    action: 'canView' },
-  'manage:stages':    { module: 'STAGE',    action: 'canEdit' },
+  'delete:pipeline': { module: 'PIPELINE', action: 'canDelete' },
+  'view:stages': { module: 'STAGE', action: 'canView' },
+  'manage:stages': { module: 'STAGE', action: 'canEdit' },
 
   // Lead Permissions (Phase 1)
   'view:leads_kanban': { module: 'LEAD', action: 'canView' },
-  'create:lead':       { module: 'LEAD', action: 'canCreate' },
-  'edit:lead':         { module: 'LEAD', action: 'canEdit' },
+  'create:lead': { module: 'LEAD', action: 'canCreate' },
+  'edit:lead': { module: 'LEAD', action: 'canEdit' },
 
   // Activity / Comment Permissions (Phase 1)
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
-  'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
+  'create:activity': { module: 'ACTIVITY', action: 'canCreate' },
 
   // Daily Report (ISE)
   'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
-  'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' }, 
+  'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' },
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   // Prevent duplicate logout calls
   const logoutInFlightRef = useRef(false);
+
+  // Load current user session via TanStack Query
+  const { data: authData, isLoading: isAuthLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => apiClient('/auth/me', { method: 'GET' }),
+    retry: false,
+    staleTime: Infinity,
+  });
+
+  // Login Mutation
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }) => apiClient('/auth/login', {
+      method: 'POST',
+      body: { email, password }
+    }),
+    onSuccess: (response) => {
+      if (response && response.success && response.data?.user) {
+        queryClient.setQueryData(['currentUser'], response);
+      }
+    }
+  });
+
+  // Logout Mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => apiClient('/auth/logout', { method: 'POST', silent: true }),
+    onMutate: () => {
+      // Optimistically clear the currentUser session
+      queryClient.setQueryData(['currentUser'], null);
+    }
+  });
+
+  const user = authData?.success && authData?.data?.user ? authData.data.user : null;
+  const loading = isAuthLoading || loginMutation.isPending;
 
   // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object.
   // Supports both:
@@ -83,49 +116,16 @@ export const AuthProvider = ({ children }) => {
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);
   }, [user]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await apiClient('/auth/me', { method: 'GET' });
-        if (isMounted && response?.success && response?.data?.user) {
-          setUser(response.data.user);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        if (isMounted) setUser(null);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const login = async (email, password) => {
-    setLoading(true);
-
     try {
-      const response = await apiClient('/auth/login', {
-        method: 'POST',
-        body: { email, password }
-      });
+      const response = await loginMutation.mutateAsync({ email, password });
 
       if (response && response.success && response.data?.user) {
-        setUser(response.data.user);
-        setLoading(false);
         return { success: true };
       }
 
-      setLoading(false);
       return { success: false, message: response?.message || 'Login failed', rawData: response };
     } catch (error) {
-      setLoading(false);
       // Pass the fully parsed HTTP error block upstream for precise UI validation handling
       return { success: false, error };
     }
@@ -137,17 +137,8 @@ export const AuthProvider = ({ children }) => {
     logoutInFlightRef.current = true;
     setIsLoggingOut(true);
 
-    // ── Optimistic logout ────────────────────────────────────────────────────
-    // Clear auth state immediately so the UI reacts at once — no waiting for
-    // the network. The ProtectedRoute will redirect to /login as soon as
-    // `isAuthenticated` becomes false.
-    setUser(null);
-
-    // ── Background API call ──────────────────────────────────────────────────
-    // Fire-and-forget: the session cookie is invalidated server-side.
-    // We don't await this before navigating — the UX is already instant.
     try {
-      await apiClient('/auth/logout', { method: 'POST', silent: true });
+      await logoutMutation.mutateAsync();
     } catch (err) {
       // Swallow silently — user is already logged out locally.
       // The server-side session will expire naturally.

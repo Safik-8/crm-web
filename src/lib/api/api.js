@@ -1,20 +1,63 @@
+import axios from 'axios';
+
 /**
- * apiClient — Central fetch wrapper
+ * apiClient — Central Axios-based request wrapper
  *
  * Responsibilities:
- *  - Attach credentials (httpOnly cookie auth)
- *  - Serialize JSON bodies
+ *  - Attach credentials (withCredentials: true)
+ *  - Standardise request structures (body -> data, signals)
  *  - Optionally drive the global page loader via loaderBridge (opt-in)
  *  - Handle 401 → redirect to /login?session=expired
+ *  - Handle 403 → show permission denied toast
  *  - Surface parsed error objects to callers
- *
- * Loader integration uses a lightweight "bridge" pattern:
- * The React context cannot be imported directly into a plain JS module, so
- * we expose a `registerLoaderBridge` function that AuthProvider (or App) calls
- * once on mount to wire up showLoader / hideLoader callbacks.
  */
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+const apiInstance = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
+// Interceptor to handle automatic token refresh on 401 Unauthorized errors
+apiInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Check request conditions to avoid loops
+    const isLoginRequest = originalRequest?.url?.includes('/auth/login');
+    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh');
+    const isLoginPage = window.location.pathname === '/login';
+
+    if (
+      error.response?.status === 401 &&
+      !isLoginRequest &&
+      !isRefreshRequest &&
+      !isLoginPage &&
+      !originalRequest?._retry
+    ) {
+      originalRequest._retry = true;
+      try {
+        // Attempt to refresh token using standard axios post
+        await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        
+        // Retry the original request with the same Axios instance
+        return apiInstance(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, clear loader and redirect to login
+        loaderBridge.forceHide?.();
+        window.location.href = '/login?session=expired';
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ─── Loader bridge ────────────────────────────────────────────────────────────
 // Populated at runtime by `registerLoaderBridge` called from LoaderProvider.
@@ -41,54 +84,33 @@ export const registerLoaderBridge = (bridge) => {
 // ─── Request options ──────────────────────────────────────────────────────────
 
 /**
- * @typedef {RequestInit & {
+ * @typedef {import('axios').AxiosRequestConfig & {
  *   showLoader?: boolean,
  *   silent?: boolean,
  *   loaderMessage?: string,
- *   signal?: AbortSignal,
+ *   body?: any,
  * }} ApiClientOptions
  */
 
 // ─── Core client ─────────────────────────────────────────────────────────────
 
 /**
- * Custom fetch wrapper that automatically includes credentials (cookies)
- * and properly sets Content-Type for JSON payloads.
+ * Custom Axios wrapper that automatically includes credentials (cookies)
+ * and keeps the exact signature for backward compatibility.
  *
  * @param {string} endpoint  - Path relative to BASE_URL (e.g. '/auth/me')
  * @param {ApiClientOptions} options
  */
 export const apiClient = async (endpoint, options = {}) => {
   const {
-    // API calls are silent by default; global loader is route-driven.
     showLoader: shouldShowLoader = false,
     silent = false,
     loaderMessage = '',
     signal,
+    body,
     ...fetchOptions
   } = options;
   const shouldUseLoader = shouldShowLoader && !silent;
-
-  const url = `${BASE_URL}${endpoint}`;
-
-  const isFormData = fetchOptions.body instanceof FormData;
-
-  const headers = {
-    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
-    ...(fetchOptions.headers || {}),
-  };
-
-  const config = {
-    ...fetchOptions,
-    headers,
-    credentials: /** @type {RequestCredentials} */ ('include'),
-    ...(signal ? { signal } : {}),
-  };
-
-  if (config.body && typeof config.body !== 'string' && !isFormData) {
-    config.body = JSON.stringify(config.body);
-  }
-
 
   // Show loader before the request fires
   if (shouldUseLoader) {
@@ -96,32 +118,41 @@ export const apiClient = async (endpoint, options = {}) => {
   }
 
   try {
-    const response = await fetch(url, config);
+    // Map standard fetch-like options to Axios config
+    const config = {
+      url: endpoint,
+      method: fetchOptions.method || 'GET',
+      headers: fetchOptions.headers || {},
+      data: body !== undefined ? body : fetchOptions.body, // support both body and data
+      signal,
+      ...fetchOptions,
+    };
 
-    // ── Parse response body ──────────────────────────────────────────────────
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    const response = await apiInstance(config);
+    return response.data;
+  } catch (error) {
+    // Check if request was cancelled/aborted
+    if (axios.isCancel(error)) {
       return null;
     }
 
-    // ── Handle HTTP errors ───────────────────────────────────────────────────
-    if (!response.ok) {
+    const response = error.response;
+    if (response) {
+      const status = response.status;
+      const data = response.data;
+
       const isLoginRequest = endpoint.includes('/auth/login');
       const isLoginPage = window.location.pathname === '/login';
 
-      if (response.status === 401 && !isLoginRequest && !isLoginPage) {
+      // ── Handle HTTP errors ─────────────────────────────────────────────────
+      if (status === 401 && !isLoginRequest && !isLoginPage) {
         // Force-hide loader before redirecting so it doesn't persist on the
         // login page if the browser reuses the same JS context.
         loaderBridge.forceHide?.();
         window.location.href = '/login?session=expired';
       }
 
-      if (response.status === 403 && !silent) {
+      if (status === 403 && !silent) {
         try {
           const { enhancedToast } = await import('../../shared/utils/toast');
           enhancedToast.permissionDenied();
@@ -130,16 +161,10 @@ export const apiClient = async (endpoint, options = {}) => {
         }
       }
 
+      // Throw response body so that the UI can catch standard error shapes
       throw data;
     }
 
-    return data;
-  } catch (error) {
-    // ── Swallow AbortError silently (request cancellation) ───────────────────
-    if (error?.name === 'AbortError') {
-      // Do not re-throw; callers can check their own abort signal if needed.
-      return null;
-    }
     throw error;
   } finally {
     // Always decrement the loader counter, even on error or cancellation
