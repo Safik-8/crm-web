@@ -177,6 +177,20 @@ const RoleManagementPage = () => {
     }));
   };
 
+  // Select all or deselect all permissions for a module
+  const handleToggleRowPermissions = (module, selectAll) => {
+    setFormPermissions(prev => ({
+      ...prev,
+      [module]: {
+        canView: selectAll,
+        canCreate: selectAll,
+        canEdit: selectAll,
+        canDelete: selectAll,
+        canArchive: selectAll
+      }
+    }));
+  };
+
   const handleFormSubmit = async () => {
     if (!formName.trim()) {
       toast.error('Role name is required');
@@ -574,6 +588,7 @@ const RoleManagementPage = () => {
                         {ACTIONS.map(act => (
                           <th key={act.key} className="py-2.5 px-2 text-center">{act.label}</th>
                         ))}
+                        <th className="py-2.5 px-3 text-center">Toggle All</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -596,6 +611,28 @@ const RoleManagementPage = () => {
                               </td>
                             );
                           })}
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                            <div className="flex justify-center gap-2">
+                              <button
+                                type="button"
+                                disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                onClick={() => handleToggleRowPermissions(mod.value, true)}
+                                className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                                title="Select All"
+                              >
+                                <Check size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                onClick={() => handleToggleRowPermissions(mod.value, false)}
+                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                                title="Deselect All"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
