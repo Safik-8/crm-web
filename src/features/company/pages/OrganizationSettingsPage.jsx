@@ -18,7 +18,7 @@ import { Tabs, Tab } from '@mui/material';
  * - BRANCH_MANAGER / BDE / ISE: Scoped branch settings view
  */
 const OrganizationSettingsPage = () => {
-  const { user, refetchUser } = useAuth();
+  const { user, refetchUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
   const [activeTab, setActiveTab] = useState(0);
   const didHideInitialLoaderRef = useRef(false);
@@ -43,8 +43,8 @@ const OrganizationSettingsPage = () => {
     return <CompanySettingsPage />;
   }
 
-  // ── 2. COMPANY ADMIN: Tabbed Company Profile + Branch Registry View ──
-  if (primaryRole === 'COMPANY_ADMIN') {
+  // ── 2. COMPANY ADMIN or custom role with COMPANY permissions: Tabbed Company Profile + Branch Registry View ──
+  if (primaryRole === 'COMPANY_ADMIN' || hasPermission('COMPANY', 'canView')) {
     return (
       <GenericPage
         title="Organization Settings"

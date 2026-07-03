@@ -165,7 +165,7 @@ export const router = createBrowserRouter([
       {
         path: 'roles',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_USERS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ROLES}>
             <RoleManagementPage />
           </ProtectedRoute>
         ),
