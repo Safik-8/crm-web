@@ -13,6 +13,20 @@ const axiosClient = axios.create({
   },
 });
 
+let isRefreshingAxios = false;
+let failedQueueAxios = [];
+
+const processQueueAxios = (error, token = null) => {
+  failedQueueAxios.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueueAxios = [];
+};
+
 // Response interceptor for centralized error handling
 axiosClient.interceptors.response.use(
   (response) => {
@@ -28,12 +42,43 @@ axiosClient.interceptors.response.use(
       
       const isLoginRequest = originalRequest.url.includes('/auth/login');
       const isLoginPage = window.location.pathname === '/login';
+      const isRefreshRequest = originalRequest.url.includes('/auth/refresh');
 
       // ── 1. UN-AUTHENTICATED SESSION TIMEOUT (401) ──
-      if (status === 401 && !isLoginRequest && !isLoginPage) {
-        // Clear window context and redirect to login
-        window.location.href = '/login?session=expired';
-        return Promise.reject(data || new Error('Session expired'));
+      if (status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
+        if (originalRequest._retry) {
+          // Clear window context and redirect to login
+          window.location.href = '/login?session=expired';
+          return Promise.reject(data || new Error('Session expired'));
+        }
+
+        originalRequest._retry = true;
+
+        if (isRefreshingAxios) {
+          return new Promise((resolve, reject) => {
+            failedQueueAxios.push({ resolve, reject });
+          })
+            .then(() => {
+              return axiosClient(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        isRefreshingAxios = true;
+
+        try {
+          await axiosClient.post('/auth/refresh');
+          isRefreshingAxios = false;
+          processQueueAxios(null);
+          return axiosClient(originalRequest);
+        } catch (refreshError) {
+          isRefreshingAxios = false;
+          processQueueAxios(refreshError);
+          window.location.href = '/login?session=expired';
+          return Promise.reject(refreshError);
+        }
       }
 
       // ── 2. ACCESS FORBIDDEN (403) ──

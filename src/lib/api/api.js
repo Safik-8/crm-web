@@ -49,7 +49,19 @@ export const registerLoaderBridge = (bridge) => {
  * }} ApiClientOptions
  */
 
-// ─── Core client ─────────────────────────────────────────────────────────────
+let isRefreshingFetch = false;
+let failedQueueFetch = [];
+
+const processQueueFetch = (error) => {
+  failedQueueFetch.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueueFetch = [];
+};
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
@@ -113,12 +125,45 @@ export const apiClient = async (endpoint, options = {}) => {
     if (!response.ok) {
       const isLoginRequest = endpoint.includes('/auth/login');
       const isLoginPage = window.location.pathname === '/login';
+      const isRefreshRequest = endpoint.includes('/auth/refresh');
 
-      if (response.status === 401 && !isLoginRequest && !isLoginPage) {
-        // Force-hide loader before redirecting so it doesn't persist on the
-        // login page if the browser reuses the same JS context.
-        loaderBridge.forceHide?.();
-        window.location.href = '/login?session=expired';
+      if (response.status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
+        if (options._retry) {
+          // Force-hide loader before redirecting so it doesn't persist on the
+          // login page if the browser reuses the same JS context.
+          loaderBridge.forceHide?.();
+          window.location.href = '/login?session=expired';
+          throw data;
+        }
+
+        options._retry = true;
+
+        if (isRefreshingFetch) {
+          return new Promise((resolve, reject) => {
+            failedQueueFetch.push({ resolve, reject });
+          })
+            .then(() => {
+              return apiClient(endpoint, options);
+            })
+            .catch((err) => {
+              throw err;
+            });
+        }
+
+        isRefreshingFetch = true;
+
+        try {
+          await apiClient('/auth/refresh', { method: 'POST', silent: true });
+          isRefreshingFetch = false;
+          processQueueFetch(null);
+          return apiClient(endpoint, options);
+        } catch (refreshErr) {
+          isRefreshingFetch = false;
+          processQueueFetch(refreshErr);
+          loaderBridge.forceHide?.();
+          window.location.href = '/login?session=expired';
+          throw refreshErr;
+        }
       }
 
       if (response.status === 403 && !silent) {

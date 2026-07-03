@@ -1,17 +1,10 @@
-// src/features/branch/components/AssignUserModal.jsx
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { UserPlus, User, Mail, Lock, ShieldAlert } from 'lucide-react';
 import { toast } from '../../../shared/utils/toast';
 import { useAssignUserToBranch } from '../hooks/useBranches';
-import { ROLES } from '../../../lib/constants/roles';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { useRoles } from '../../roles/hooks/useRoles';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
-
-const ROLE_OPTIONS = [
-  { value: ROLES.BRANCH_MANAGER, label: 'Branch Manager' },
-  { value: ROLES.BDE, label: 'BDE' },
-  { value: ROLES.ISE, label: 'ISE' }
-];
 
 /**
  * AssignUserModal Component
@@ -20,6 +13,25 @@ const ROLE_OPTIONS = [
  */
 const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
   const assignUserMutation = useAssignUserToBranch();
+  const { user } = useAuth();
+  const { roles } = useRoles(branch?.companyId);
+
+  const userRank = user?.primaryRoleRank || 80;
+
+  // Filter roles dynamically: active status, rank lower than user's rank.
+  // Super Admin (rank 100) can assign Company Admin (rank 80) and below.
+  // Company Admin (rank 80) can assign Branch Manager (rank 60) and below.
+  const roleOptions = useMemo(() => {
+    const maxRank = userRank === 100 ? 90 : 80;
+    return roles
+      .filter(r => r.status === 'ACTIVE' && r.rank < maxRank)
+      .map(r => ({
+        value: r.name,
+        label: r.isSystem 
+          ? (r.name === 'SUPER_ADMIN' ? 'Super Admin' : r.name === 'COMPANY_ADMIN' ? 'Company Admin' : r.name === 'BRANCH_MANAGER' ? 'Branch Manager' : r.name)
+          : r.name
+      }));
+  }, [roles, userRank]);
 
   const validate = (values) => {
     const errs = {};
@@ -72,7 +84,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
       type: 'select',
       placeholder: 'Select a role',
       required: true,
-      options: ROLE_OPTIONS
+      options: roleOptions
     }
   ];
 
@@ -84,7 +96,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
       subtitle={branch ? `Registering to ${branch.name}` : ''}
       icon={UserPlus}
       fields={fields}
-      initialValues={{ name: '', email: '', password: '', roleName: 'BRANCH_MANAGER' }}
+      initialValues={{ name: '', email: '', password: '', roleName: roleOptions[0]?.value || '' }}
       onSubmit={handleSubmit}
       submitText="Create & Assign User"
       validate={validate}

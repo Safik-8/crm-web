@@ -50,7 +50,7 @@ export const DynamicFormModal = ({
       setErrors({});
       setBusy(false);
     }
-  }, [isOpen, initialValues]);
+  }, [isOpen]);
 
   const handleFieldChange = (key, val) => {
     setValues((prev) => ({ ...prev, [key]: val }));

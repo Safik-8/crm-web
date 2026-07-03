@@ -46,7 +46,7 @@ export const DynamicFormSlideover = ({
       setErrors({});
       setBusy(false);
     }
-  }, [isOpen, initialValues]);
+  }, [isOpen]);
 
   const handleFieldChange = (key, val) => {
     setValues((prev) => ({ ...prev, [key]: val }));
