@@ -43,6 +43,8 @@ const OrganizationSettingsPage = () => {
     return <CompanySettingsPage />;
   }
 
+  const canViewBranches = primaryRole === 'COMPANY_ADMIN' || hasPermission('BRANCH', 'canView');
+
   // ── 2. COMPANY ADMIN or custom role with COMPANY permissions: Tabbed Company Profile + Branch Registry View ──
   if (primaryRole === 'COMPANY_ADMIN' || hasPermission('COMPANY', 'canView')) {
     return (
@@ -94,7 +96,7 @@ const OrganizationSettingsPage = () => {
               }}
             >
               <Tab icon={<Building2 size={16} />} iconPosition="start" label="Company Profile" />
-              <Tab icon={<GitBranch size={16} />} iconPosition="start" label="Branches" />
+              {canViewBranches && <Tab icon={<GitBranch size={16} />} iconPosition="start" label="Branches" />}
             </Tabs>
           </div>
 
@@ -109,7 +111,7 @@ const OrganizationSettingsPage = () => {
             </div>
           )}
 
-          {activeTab === 1 && (
+          {activeTab === 1 && canViewBranches && (
             <div className="w-full">
               <BranchSettingsPage
                 overrideCompanyId={companyId}

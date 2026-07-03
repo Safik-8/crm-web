@@ -77,6 +77,11 @@ export const AuthProvider = ({ children }) => {
       return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);
     }
 
+    // Special logic for settings organization path: allowed if they can view COMPANY OR BRANCH
+    if (moduleOrPermissionStr === 'view:settings') {
+      return !!(user.permissions?.COMPANY?.canView || user.permissions?.BRANCH?.canView);
+    }
+
     // Mode B: Mapped check - hasPermission('permission_string')
     const mapping = RBAC_ADAPTER_MAP[moduleOrPermissionStr];
     if (!mapping) return false;
