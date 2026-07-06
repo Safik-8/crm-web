@@ -19,7 +19,7 @@ import Skeleton from '../../../shared/components/elements/Skeleton';
  */
 const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }) => {
   const isEdit = !!company;
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const createCompanyMutation = useCreateCompany();
   const updateCompanyMutation = useUpdateCompany();
 
@@ -485,14 +485,16 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
               </div>
             </div>
 
-            <button
-              onClick={handleEditClick}
-              type="button"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2.5 px-5 z-10 shadow-sm shadow-slate-100 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 hover:shadow-md hover:shadow-orange-100/30 shrink-0"
-            >
-              <Pencil size={14} className="stroke-[2.5]" />
-              Edit Profile
-            </button>
+            {hasPermission('COMPANY', 'canCreate') && (
+              <button
+                onClick={handleEditClick}
+                type="button"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2.5 px-5 z-10 shadow-sm shadow-slate-100 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 hover:shadow-md hover:shadow-orange-100/30 shrink-0"
+              >
+                <Pencil size={14} className="stroke-[2.5]" />
+                Edit Profile
+              </button>
+            )}
           </div>
 
           {/* Headquarters Address integrated directly below header to save vertical space */}

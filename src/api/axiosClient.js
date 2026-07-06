@@ -82,7 +82,7 @@ axiosClient.interceptors.response.use(
       }
 
       // ── 2. ACCESS FORBIDDEN (403) ──
-      if (status === 403) {
+      if (status === 403 && originalRequest.method && originalRequest.method.toUpperCase() !== 'GET') {
         try {
           const { enhancedToast } = await import('../shared/utils/toast');
           enhancedToast.permissionDenied();

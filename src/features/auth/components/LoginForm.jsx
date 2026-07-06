@@ -21,15 +21,13 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 
 // Material-UI icons
-import {
-  MailOutlined as MailOutlineIcon,
-  LockOutlined as LockOutlinedIcon,
-  Visibility,
-  VisibilityOff,
-  ArrowForward as ArrowForwardIcon,
-  Close as CloseIcon,
-  VpnKeyOutlined as VpnKeyIcon
-} from '@mui/icons-material';
+import MailOutlineIcon from '@mui/icons-material/MailOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CloseIcon from '@mui/icons-material/Close';
+import VpnKeyIcon from '@mui/icons-material/VpnKeyOutlined';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
