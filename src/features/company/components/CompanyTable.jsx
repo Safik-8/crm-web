@@ -8,6 +8,7 @@ import {
   Power
 } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import Table from '../../../shared/components/elements/Table';
 
 /**
  * CompanyTable
@@ -26,6 +27,145 @@ const CompanyTable = ({
 }) => {
   const navigate = useNavigate();
   const isLoading = loadingState === 'loading';
+
+  const columns = [
+    {
+      header: 'Logo',
+      cell: (company) => (
+        <div className="relative flex items-center">
+          {company.logo ? (
+            <img
+              src={company.logo}
+              alt={`${company.name} logo`}
+              className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-200"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div
+            style={{ display: company.logo ? 'none' : 'flex' }}
+            className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
+          >
+            <Building2 size={18} />
+          </div>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-10 w-10 rounded-xl" />,
+    },
+    {
+      header: 'Company Name',
+      headerClassName: 'whitespace-nowrap',
+      cell: (company) => (
+        <span className="font-bold text-slate-900 font-heading text-[15px]">{company.name}</span>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-40" />,
+    },
+    {
+      header: 'Company Code',
+      cell: (company) => (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
+          {company.code}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-6 w-16 rounded-lg" />,
+    },
+    {
+      header: 'Industry',
+      cell: (company) => company.industry || <span className="text-slate-400 font-normal italic">None</span>,
+      skeleton: () => <Skeleton className="h-5 w-24" />,
+    },
+    {
+      header: 'Status',
+      cell: (company) => <StatusBadge status={company.status} />,
+      skeleton: () => <Skeleton className="h-6 w-20 rounded-full" />,
+    },
+    {
+      header: 'Branch Count',
+      cell: (company) => (
+        <button
+          onClick={() => navigate(`/companies/${company.id}/branches`)}
+          className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch"
+          title="View Branches"
+        >
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all">
+            <GitBranch size={14} />
+          </div>
+          <span className="font-bold text-sm group-hover/branch:text-primary transition-colors">
+            {company._count?.branches ?? 0}
+          </span>
+        </button>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-10" />,
+    },
+    {
+      header: 'User Count',
+      cell: (company) => (
+        <div className="flex items-center gap-2 text-slate-600">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+            <Users size={14} />
+          </div>
+          <span className="font-bold text-sm">
+            {company._count?.users ?? 0}
+          </span>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-10" />,
+    },
+    {
+      header: 'Created Date',
+      headerClassName: 'whitespace-nowrap',
+      cell: (company) => (
+        <div className="flex items-center gap-2 text-slate-500 text-[13px] font-medium whitespace-nowrap">
+          <Calendar size={14} className="opacity-60 shrink-0" />
+          {new Date(company.createdAt).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric',
+          })}
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-32" />,
+    },
+    {
+      header: 'Actions',
+      cell: (company) => (
+        <div className="flex items-center gap-1.5">
+          {canEdit ? (
+            <>
+              <button
+                onClick={() => onToggleStatus(company)}
+                className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                  company.status === 'ACTIVE'
+                    ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
+              >
+                <Power size={17} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => onEdit(company)}
+                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
+                title="Edit Company"
+              >
+                <Edit2 size={17} strokeWidth={2.5} />
+              </button>
+            </>
+          ) : (
+            <div className="flex gap-1.5">
+              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                <Power size={17} strokeWidth={2} />
+              </span>
+              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                <Edit2 size={17} strokeWidth={2} />
+              </span>
+            </div>
+          )}
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-8 w-16 rounded-xl" />,
+    }
+  ];
 
   // ── Status badge ──────────────────────────────────────────────────────────
   const StatusBadge = ({ status }) => (
@@ -281,156 +421,20 @@ const CompanyTable = ({
       </div>
 
       {/* ── Desktop table layout ───────────────────────────────────────────── */}
-      <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-200/60">
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Logo</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Company Name</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Company Code</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Industry</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Status</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Branch Count</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">User Count</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Created Date</th>
-                <th className="py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading && <DesktopSkeletons />}
-
-              {!isLoading && loadingState === 'error' && <ErrorState colSpan={9} />}
-
-              {!isLoading && loadingState === 'empty' && <EmptyState colSpan={9} />}
-
-              {!isLoading && loadingState === 'success' && companies.map((company) => (
-                <tr
-                  key={company.id}
-                  className="hover:bg-slate-50/60 transition-all duration-150 group"
-                >
-                  {/* Logo Column */}
-                  <td className="py-4 px-6">
-                    {company.logo ? (
-                      <img
-                        src={company.logo}
-                        alt={`${company.name} logo`}
-                        className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-200"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      style={{ display: company.logo ? 'none' : 'flex' }}
-                      className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
-                    >
-                      <Building2 size={18} />
-                    </div>
-                  </td>
-
-                  {/* Company Name */}
-                  <td className="py-4 px-6">
-                    <span className="font-bold text-slate-900 font-heading text-[15px]">{company.name}</span>
-                  </td>
-
-                  {/* Code */}
-                  <td className="py-4 px-6">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
-                      {company.code}
-                    </span>
-                  </td>
-
-                  {/* Industry */}
-                  <td className="py-4 px-6 text-sm text-slate-600 font-medium">
-                    {company.industry || <span className="text-slate-400 font-normal italic">None</span>}
-                  </td>
-
-                  {/* Status */}
-                  <td className="py-4 px-6">
-                    <StatusBadge status={company.status} />
-                  </td>
-
-                  {/* Branches */}
-                  <td className="py-4 px-6">
-                    <button
-                      onClick={() => navigate(`/companies/${company.id}/branches`)}
-                      className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch"
-                      title="View Branches"
-                    >
-                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all">
-                        <GitBranch size={14} />
-                      </div>
-                      <span className="font-bold text-sm group-hover/branch:text-primary transition-colors">
-                        {company._count?.branches ?? 0}
-                      </span>
-                    </button>
-                  </td>
-
-                  {/* Users */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                        <Users size={14} />
-                      </div>
-                      <span className="font-bold text-sm">
-                        {company._count?.users ?? 0}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Created At */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-2 text-slate-500 text-[13px] font-medium whitespace-nowrap">
-                      <Calendar size={14} className="opacity-60 shrink-0" />
-                      {new Date(company.createdAt).toLocaleDateString(undefined, {
-                        year: 'numeric', month: 'short', day: 'numeric',
-                      })}
-                    </div>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-1.5">
-                      {canEdit ? (
-                        <>
-                          <button
-                            onClick={() => onToggleStatus(company)}
-                            className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                              company.status === 'ACTIVE'
-                                ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
-                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                            }`}
-                            title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
-                          >
-                            <Power size={17} strokeWidth={2.5} />
-                          </button>
-                          <button
-                            onClick={() => onEdit(company)}
-                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
-                            title="Edit Company"
-                          >
-                            <Edit2 size={17} strokeWidth={2.5} />
-                          </button>
-                        </>
-                      ) : (
-                        <div className="flex gap-1.5">
-                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                            <Power size={17} strokeWidth={2} />
-                          </span>
-                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                            <Edit2 size={17} strokeWidth={2} />
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="hidden lg:block">
+        <Table
+          columns={columns}
+          data={companies}
+          loadingState={loadingState}
+          errorMessage={errorMessage}
+          onRetry={onRetry}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={onClearFilters}
+          emptyTitle="No companies yet"
+          emptyDescription="Get started by adding your first company."
+          emptyIcon={Building2}
+          skeletonRows={5}
+        />
       </div>
     </>
   );

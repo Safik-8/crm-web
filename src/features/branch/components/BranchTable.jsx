@@ -3,6 +3,7 @@
 import React from 'react';
 import { Edit2, GitBranch, Users, Hash, UserPlus, Calendar, Power } from 'lucide-react';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import Table from '../../../shared/components/elements/Table';
 
 /**
  * BranchTable Component
@@ -10,6 +11,118 @@ import Skeleton from '../../../shared/components/elements/Skeleton';
  * Integrated with status toggling and Location details.
  */
 const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssignUser, canEdit }) => {
+  const columns = [
+    {
+      header: 'Branch Name',
+      cell: (branch) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+            <GitBranch size={20} />
+          </div>
+          <div>
+            <span className="font-bold text-slate-900 font-heading">{branch.name}</span>
+            {branch.company && (
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">{branch.company.name}</p>
+            )}
+          </div>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-44" />,
+    },
+    {
+      header: 'Branch Code',
+      cell: (branch) => (
+        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
+          <Hash size={10} className="opacity-50" />
+          {branch.code}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-20" />,
+    },
+    {
+      header: 'Location',
+      cell: (branch) => branch.location || <span className="text-slate-400 font-normal italic">None</span>,
+      skeleton: () => <Skeleton className="h-5 w-32" />,
+    },
+    {
+      header: 'Status',
+      cell: (branch) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
+          branch.status === 'ACTIVE'
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+            : 'bg-slate-50 text-slate-600 border-slate-100'
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
+            branch.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+          }`} />
+          {branch.status}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-6 w-16 rounded-full" />,
+    },
+    {
+      header: 'Users',
+      cell: (branch) => (
+        <div className="flex items-center gap-2 text-slate-600">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+            <Users size={14} />
+          </div>
+          <span className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</span>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-12" />,
+    },
+    {
+      header: 'Actions',
+      headerClassName: 'whitespace-nowrap',
+      cell: (branch) => (
+        <div className="flex items-center gap-1.5">
+          {canEdit ? (
+            <>
+              <button
+                onClick={() => onToggleStatus(branch)}
+                className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                  branch.status === 'ACTIVE'
+                    ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title={branch.status === 'ACTIVE' ? 'Deactivate Branch' : 'Activate Branch'}
+              >
+                <Power size={17} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => onEdit(branch)}
+                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
+                title="Edit Branch"
+              >
+                <Edit2 size={17} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => onAssignUser(branch)}
+                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-200"
+                title="Create & Assign User"
+              >
+                <UserPlus size={17} strokeWidth={2.5} />
+              </button>
+            </>
+          ) : (
+            <div className="flex gap-1.5">
+              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                <Power size={17} strokeWidth={2} />
+              </span>
+              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                <Edit2 size={17} strokeWidth={2} />
+              </span>
+              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
+                <UserPlus size={17} strokeWidth={2} />
+              </span>
+            </div>
+          )}
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-8 w-24 rounded-lg" />,
+    }
+  ];
 
   // Render loading skeletons for mobile cards
   const renderMobileSkeletons = () => (
@@ -189,130 +302,16 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
       </div>
 
       {/* Desktop Table Layout */}
-      <div className="hidden lg:block overflow-x-auto scrollbar-hide">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-200/60">
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider">Branch Name</th>
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider">Branch Code</th>
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider">Location</th>
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider">Status</th>
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider">Users</th>
-              <th className="py-4 px-6 text-[13px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {isLoading ? (
-              renderDesktopSkeletons()
-            ) : branches.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="py-16 text-center text-slate-500">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                      <GitBranch size={32} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-800">No branches found</p>
-                      <p className="text-sm text-slate-400 mt-1">There are no branch records registered for this company.</p>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              branches.map((branch) => (
-                <tr key={branch.id} className="hover:bg-slate-50/50 transition-all duration-200 group">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                        <GitBranch size={20} />
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-900 font-heading">{branch.name}</span>
-                        {branch.company && (
-                          <p className="text-[11px] text-slate-400 font-medium mt-0.5">{branch.company.name}</p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
-                      <Hash size={10} className="opacity-50" />
-                      {branch.code}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-sm text-slate-600 font-semibold">
-                    {branch.location || <span className="text-slate-400 font-normal italic">None</span>}
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
-                      branch.status === 'ACTIVE'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-slate-50 text-slate-600 border-slate-100'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                        branch.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                      }`} />
-                      {branch.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                        <Users size={14} />
-                      </div>
-                      <span className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      {canEdit ? (
-                        <>
-                          <button
-                            onClick={() => onToggleStatus(branch)}
-                            className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                              branch.status === 'ACTIVE'
-                                ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
-                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                            }`}
-                            title={branch.status === 'ACTIVE' ? 'Deactivate Branch' : 'Activate Branch'}
-                          >
-                            <Power size={17} strokeWidth={2.5} />
-                          </button>
-                          <button
-                            onClick={() => onEdit(branch)}
-                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
-                            title="Edit Branch"
-                          >
-                            <Edit2 size={17} strokeWidth={2.5} />
-                          </button>
-                          <button
-                            onClick={() => onAssignUser(branch)}
-                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-200"
-                            title="Create & Assign User"
-                          >
-                            <UserPlus size={17} strokeWidth={2.5} />
-                          </button>
-                        </>
-                      ) : (
-                        <div className="flex gap-1.5">
-                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                            <Power size={17} strokeWidth={2} />
-                          </span>
-                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                            <Edit2 size={17} strokeWidth={2} />
-                          </span>
-                          <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                            <UserPlus size={17} strokeWidth={2} />
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="hidden lg:block">
+        <Table
+          columns={columns}
+          data={branches}
+          loadingState={isLoading ? 'loading' : branches.length === 0 ? 'empty' : 'success'}
+          emptyTitle="No branches found"
+          emptyDescription="There are no branch records registered for this company."
+          emptyIcon={GitBranch}
+          skeletonRows={5}
+        />
       </div>
     </div>
   );

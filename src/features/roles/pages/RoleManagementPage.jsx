@@ -12,6 +12,8 @@ import TextField from '../../../shared/components/elements/TextField';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { companyApi } from '../../company/api/companyApi';
+import Table from '../../../shared/components/elements/Table';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -285,6 +287,112 @@ const RoleManagementPage = () => {
 
   const isSuperOrCompanyAdmin = user?.primaryRole === 'SUPER_ADMIN' || user?.primaryRole === 'COMPANY_ADMIN';
 
+  const columns = [
+    {
+      header: 'Role Name',
+      cell: (role) => (
+        <div className="flex items-center gap-2.5">
+          <div className={`p-2 rounded-xl ${role.isSystem ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
+            <Shield size={16} />
+          </div>
+          <div>
+            <p className="font-bold text-slate-800 text-[13px]">{role.name}</p>
+          </div>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-40" />,
+    },
+    {
+      header: 'Description',
+      cell: (role) => (
+        <div className="text-[13px] text-slate-500 font-medium max-w-xs truncate" title={role.description}>
+          {role.description || 'No description provided'}
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-48" />,
+    },
+    {
+      header: 'Rank',
+      align: 'center',
+      cell: (role) => (
+        <span className="font-bold text-[13px] text-slate-700">{role.rank}</span>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-10 mx-auto" />,
+    },
+    {
+      header: 'Type',
+      cell: (role) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
+          role.isSystem 
+            ? 'bg-slate-50 text-slate-600 border-slate-200/60' 
+            : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+        }`}>
+          {role.isSystem ? 'System' : 'Custom'}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-6 w-16 rounded-lg" />,
+    },
+    {
+      header: 'Status',
+      cell: (role) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+          role.status === 'ACTIVE'
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+            : 'bg-slate-50 text-slate-500 border-slate-100'
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${role.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+          {role.status}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-6 w-20 rounded-full" />,
+    },
+    {
+      header: 'Actions',
+      align: 'right',
+      cell: (role) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {isSuperOrCompanyAdmin && (
+            <>
+              <button
+                onClick={() => handleEditClick(role)}
+                disabled={role.rank >= user?.primaryRoleRank || (role.isSystem && user?.primaryRole !== 'SUPER_ADMIN')}
+                className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all disabled:opacity-40"
+                title="Edit Role"
+              >
+                <Edit2 size={15} />
+              </button>
+              
+              {!role.isSystem && (
+                <>
+                  <button
+                    onClick={() => handleToggleStatusClick(role)}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      role.status === 'ACTIVE' 
+                        ? 'text-slate-400 hover:text-red-500 hover:bg-red-50' 
+                        : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
+                    }`}
+                    title={role.status === 'ACTIVE' ? 'Deactivate Role' : 'Activate Role'}
+                  >
+                    <Power size={15} />
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteClick(role)}
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    title="Delete Role"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-8 w-24 rounded-lg ml-auto" />,
+    }
+  ];
+
   return (
     <GenericPage
       title="Role & Permission Settings"
@@ -408,120 +516,16 @@ const RoleManagementPage = () => {
         </div>
 
         {/* Desktop Table (hidden on mobile, visible on md+) */}
-        <div className="hidden md:block bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-500 font-heading">
-                  <th className="py-4 px-6">Role Name</th>
-                  <th className="py-4 px-6">Description</th>
-                  <th className="py-4 px-6 text-center">Rank</th>
-                  <th className="py-4 px-6">Type</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingState === 'loading' ? (
-                  <tr>
-                    <td colSpan="6" className="py-12 text-center text-slate-400 font-medium">
-                      Loading roles...
-                    </td>
-                  </tr>
-                ) : roles.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="py-12 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <AlertCircle className="text-slate-300" size={36} />
-                        <p className="font-bold text-slate-700">No Roles Found</p>
-                        <p className="text-xs text-slate-400">Add a custom role or refine your search filters.</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  roles.map((role) => (
-                    <tr key={role.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/30 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`p-2 rounded-xl ${role.isSystem ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
-                            <Shield size={16} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-800 text-[13px]">{role.name}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-[13px] text-slate-500 font-medium max-w-xs truncate">
-                        {role.description || 'No description provided'}
-                      </td>
-                      <td className="py-4 px-6 text-center font-bold text-[13px] text-slate-700">
-                        {role.rank}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
-                          role.isSystem 
-                            ? 'bg-slate-50 text-slate-600 border-slate-200/60' 
-                            : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                        }`}>
-                          {role.isSystem ? 'System' : 'Custom'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                          role.status === 'ACTIVE'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            : 'bg-slate-50 text-slate-500 border-slate-100'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${role.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                          {role.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {isSuperOrCompanyAdmin && (
-                            <>
-                              <button
-                                onClick={() => handleEditClick(role)}
-                                disabled={role.rank >= user?.primaryRoleRank || (role.isSystem && user?.primaryRole !== 'SUPER_ADMIN')}
-                                className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all disabled:opacity-40"
-                                title="Edit Role"
-                              >
-                                <Edit2 size={15} />
-                              </button>
-                              
-                              {!role.isSystem && (
-                                <>
-                                  <button
-                                    onClick={() => handleToggleStatusClick(role)}
-                                    className={`p-1.5 rounded-lg transition-all ${
-                                      role.status === 'ACTIVE' 
-                                        ? 'text-slate-400 hover:text-red-500 hover:bg-red-50' 
-                                        : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
-                                    }`}
-                                    title={role.status === 'ACTIVE' ? 'Deactivate Role' : 'Activate Role'}
-                                  >
-                                    <Power size={15} />
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleDeleteClick(role)}
-                                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                    title="Delete Role"
-                                  >
-                                    <Trash2 size={15} />
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="hidden md:block">
+          <Table
+            columns={columns}
+            data={roles}
+            loadingState={loadingState}
+            emptyTitle="No Roles Found"
+            emptyDescription="Add a custom role or refine your search filters."
+            emptyIcon={Shield}
+            skeletonRows={5}
+          />
         </div>
 
         {/* Create/Edit Slideover */}
