@@ -9,7 +9,8 @@ import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
-import { toast } from 'sonner';
+import SelectField from '../../../shared/components/elements/SelectField';
+import { toast } from '../../../shared/utils/toast';
 import { useQuery } from '@tanstack/react-query';
 import { companyApi } from '../../company/api/companyApi';
 import Table from '../../../shared/components/elements/Table';
@@ -320,6 +321,16 @@ const RoleManagementPage = () => {
       skeleton: () => <Skeleton className="h-5 w-10 mx-auto" />,
     },
     {
+      header: 'Users',
+      align: 'center',
+      cell: (role) => (
+        <span className="font-bold text-[13px] text-slate-700">
+          {role._count?.userRoles ?? 0}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-8 mx-auto" />,
+    },
+    {
       header: 'Type',
       cell: (role) => (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
@@ -471,6 +482,10 @@ const RoleManagementPage = () => {
                     <span className="text-xs font-bold text-slate-700">{role.rank}</span>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">Users:</span>
+                    <span className="text-xs font-bold text-slate-700">{role._count?.userRoles ?? 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <span className="text-[10px] font-semibold text-slate-400">Status:</span>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                       role.status === 'ACTIVE' 
@@ -539,44 +554,41 @@ const RoleManagementPage = () => {
           submitText={selectedRole ? "Save Changes" : "Create Role"}
         >
           <div className="flex flex-col gap-4 mt-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Role Name</label>
-              <input
-                type="text"
-                disabled={selectedRole?.isSystem}
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g. Sales Coordinator"
-                className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 disabled:bg-slate-50 disabled:text-slate-400"
-              />
-            </div>
+            <TextField
+              id="role-name"
+              label="Role Name"
+              disabled={selectedRole?.isSystem}
+              value={formName}
+              onChange={setFormName}
+              placeholder="e.g. Sales Coordinator"
+              required
+            />
             
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Description</label>
-              <textarea
-                value={formDescription}
-                disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
-                onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Describe role responsibilities..."
-                className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 min-h-[70px] resize-y disabled:bg-slate-50 disabled:text-slate-400"
-              />
-            </div>
+            <TextField
+              id="role-description"
+              label="Description"
+              multiline
+              rows={3}
+              disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+              value={formDescription}
+              onChange={setFormDescription}
+              placeholder="Describe role responsibilities..."
+            />
 
-            {user?.primaryRole === 'SUPER_ADMIN' && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Assign to Company</label>
-                <select
-                  disabled={selectedRole?.isSystem}
-                  value={formCompanyId}
-                  onChange={(e) => setFormCompanyId(e.target.value)}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 bg-white disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  <option value="">Global / System Role</option>
-                  {companiesList.map(comp => (
-                    <option key={comp.id} value={comp.id}>{comp.name} ({comp.code})</option>
-                  ))}
-                </select>
-              </div>
+            {user?.primaryRole === 'SUPER_ADMIN' && !selectedRole && (
+              <SelectField
+                id="assign-company"
+                label="Assign to Company"
+                disabled={selectedRole?.isSystem}
+                value={formCompanyId}
+                onChange={(val) => setFormCompanyId(val)}
+                placeholder="Global / System Role"
+                allowEmptyOption={true}
+                options={companiesList.map(comp => ({
+                  value: comp.id,
+                  label: `${comp.name} (${comp.code})`
+                }))}
+              />
             )}
 
             {/* Permission Matrix Grid */}

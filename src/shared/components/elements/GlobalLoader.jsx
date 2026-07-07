@@ -10,18 +10,7 @@ import { useLoader } from '../../context/LoaderContext';
  * Avoids blocking user interactions and replaces the fullscreen Lottie screen overlay.
  */
 const GlobalLoader = () => {
-  const { isLoading } = useLoader();
-
-  if (!isLoading) return null;
-
-  return (
-    <div
-      className="top-progress-bar"
-      role="progressbar"
-      aria-label="Loading progress"
-      aria-busy={isLoading}
-    />
-  );
+  return null;
 };
 
 export default GlobalLoader;

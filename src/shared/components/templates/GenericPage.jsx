@@ -35,22 +35,24 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
       )}
       
       <div className="grid gap-4 sm:gap-6">
-        {children || (
-          <div className="bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="h-16 w-16 sm:h-20 sm:w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
-               <Icon size={32} className="sm:w-10 sm:h-10" />
+        <div className="min-w-0 w-full flex flex-col">
+          {children || (
+            <div className="bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                 <Icon size={32} className="sm:w-10 sm:h-10" />
+              </div>
+              <div className="max-w-md">
+                <h3 className="text-lg font-semibold text-slate-800">Welcome to {title}</h3>
+                <p className="text-slate-500 text-sm mt-1">
+                  This module is currently being finalized. You have permission to view this page based on your role.
+                </p>
+              </div>
+              <button className="px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">
+                Refresh Module
+              </button>
             </div>
-            <div className="max-w-md">
-              <h3 className="text-lg font-semibold text-slate-800">Welcome to {title}</h3>
-              <p className="text-slate-500 text-sm mt-1">
-                This module is currently being finalized. You have permission to view this page based on your role.
-              </p>
-            </div>
-            <button className="px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">
-              Refresh Module
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

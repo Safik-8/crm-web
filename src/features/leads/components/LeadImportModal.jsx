@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from '../../../shared/utils/toast';
 import { getPipelines } from '../../pipelines/services/pipelineService';
+import SelectField from '../../../shared/components/elements/SelectField';
 import { importLeads } from '../services/leadService';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -272,25 +273,19 @@ const LeadImportModal = ({ onClose, onImported, initialPipelineId }) => {
           <label className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
             Select Pipeline
           </label>
-          <div className="relative">
-            <select
-              value={pipelineId}
-              onChange={(e) => setPipelineId(e.target.value)}
-              disabled={loadingPipelines || loading}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-4 py-3 sm:py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 appearance-none transition-all disabled:opacity-50"
-            >
-              {loadingPipelines ? (
-                <option>Loading pipelines...</option>
-              ) : (
-                pipelines.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))
-              )}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-              <ChevronDown size={16} />
-            </div>
-          </div>
+          <SelectField
+            id="import-pipeline-select"
+            value={pipelineId}
+            onChange={setPipelineId}
+            disabled={loadingPipelines || loading}
+            placeholder={loadingPipelines ? "Loading pipelines..." : "Select Pipeline"}
+            options={pipelines.map(p => ({ value: p.id, label: p.name }))}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '16px',
+              }
+            }}
+          />
         </div>
 
         {/* Upload Area */}

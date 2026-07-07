@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Phone, Calendar, BookOpen, UserCheck, Plus } from 'lucide-react';
 import { createLead, getBranchUsers } from '../services/leadService';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
 /**

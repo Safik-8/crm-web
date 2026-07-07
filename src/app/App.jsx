@@ -48,8 +48,8 @@ function App() {
        * re-mounted during auth state changes.
        */}
       <Toaster
-        position="bottom-right"
-        mobilePosition="bottom-center"
+        position="top-right"
+        mobilePosition="top-center"
         closeButton
         duration={5000}
         gap={8}

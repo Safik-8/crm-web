@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import SelectField from '../../../shared/components/elements/SelectField';
 
 /**
  * CompanyFilters
@@ -66,67 +67,60 @@ const CompanyFilters = ({
         </div>
 
         {/* ── Right controls ─────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0">
 
           {/* Status filter */}
-          <div className="relative">
-            <select
+          <div className="w-full sm:w-auto">
+            <SelectField
+              id="company-status-filter"
               value={status}
-              onChange={(e) => onStatusChange(e.target.value)}
+              onChange={onStatusChange}
               disabled={isLoading}
-              className="h-9 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700
-                         focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-white
-                         disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer transition-all"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <SlidersHorizontal
-              size={13}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              placeholder="All Statuses"
+              allowEmptyOption={true}
+              options={STATUS_OPTIONS.filter(opt => opt.value !== '')}
+              selectSx={{
+                py: '8px !important',
+                fontSize: '13px',
+              }}
+              sx={{
+                width: '100%',
+                minWidth: { sm: '140px' },
+                '& .MuiOutlinedInput-root': {
+                  height: '36px',
+                  borderRadius: '12px',
+                }
+              }}
             />
           </div>
 
           {/* Sort */}
-          <div className="relative">
-            <select
+          <div className="w-full sm:w-auto">
+            <SelectField
+              id="company-sort"
               value={currentSort}
-              onChange={(e) => onSortChange(e.target.value)}
+              onChange={onSortChange}
               disabled={isLoading}
-              className="h-9 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700
-                         focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-white
-                         disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer transition-all
-                         hidden sm:block"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            {/* Mobile: icon-only sort button that cycles through options */}
-            <select
-              value={currentSort}
-              onChange={(e) => onSortChange(e.target.value)}
-              disabled={isLoading}
-              aria-label="Sort companies"
-              className="h-9 w-9 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700
-                         focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40
-                         disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer transition-all
-                         sm:hidden opacity-0 absolute inset-0"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            {/* Mobile visible icon */}
-            <div className="sm:hidden h-9 w-9 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl text-slate-500 pointer-events-none">
-              <SlidersHorizontal size={15} />
-            </div>
+              placeholder="Sort By"
+              options={SORT_OPTIONS}
+              selectSx={{
+                py: '8px !important',
+                fontSize: '13px',
+              }}
+              sx={{
+                width: '100%',
+                minWidth: { sm: '150px' },
+                '& .MuiOutlinedInput-root': {
+                  height: '36px',
+                  borderRadius: '12px',
+                }
+              }}
+            />
           </div>
 
           {/* Active filter indicator dot */}
           {hasActiveFilters && (
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" title="Filters active" />
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0 hidden sm:block" title="Filters active" />
           )}
         </div>
       </div>

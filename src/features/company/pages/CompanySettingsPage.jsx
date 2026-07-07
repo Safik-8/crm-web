@@ -12,7 +12,7 @@ import CompanyPagination from '../components/CompanyPagination';
 import CompanyForm from '../components/CompanyForm';
 import GenericPage from '../../../shared/components/templates/GenericPage';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/utils/toast';
 
 /**
  * CompanySettingsPage

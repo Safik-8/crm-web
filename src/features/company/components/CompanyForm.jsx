@@ -347,7 +347,13 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         label: 'Admin Password',
         type: 'password',
         placeholder: 'Minimum 6 characters...',
-        required: true
+        required: true,
+        validate: (val) => {
+          if (val && val.trim().length < 6) {
+            return 'Admin password must be at least 6 characters.';
+          }
+          return null;
+        }
       }
     ] : [])
   ];
@@ -485,7 +491,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
               </div>
             </div>
 
-            {hasPermission('COMPANY', 'canCreate') && (
+            {(user?.primaryRole === 'SUPER_ADMIN' || hasPermission('COMPANY', 'canEdit')) && (
               <button
                 onClick={handleEditClick}
                 type="button"

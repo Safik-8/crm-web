@@ -58,7 +58,12 @@ const CompanyTable = ({
       header: 'Company Name',
       headerClassName: 'whitespace-nowrap',
       cell: (company) => (
-        <span className="font-bold text-slate-900 font-heading text-[15px]">{company.name}</span>
+        <button
+          onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
+          className="font-bold text-slate-900 font-heading text-[15px] hover:text-primary hover:underline transition-colors text-left focus:outline-none"
+        >
+          {company.name}
+        </button>
       ),
       skeleton: () => <Skeleton className="h-5 w-40" />,
     },
@@ -314,9 +319,12 @@ const CompanyTable = ({
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 font-heading text-[15px] leading-tight line-clamp-2">
+            <button
+              onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
+              className="font-bold text-slate-900 font-heading text-[15px] leading-tight line-clamp-2 hover:text-primary hover:underline text-left focus:outline-none w-full"
+            >
               {company.name}
-            </h3>
+            </button>
             {company.industry && (
               <span className="text-[11px] text-slate-500 font-medium block mt-0.5">{company.industry}</span>
             )}

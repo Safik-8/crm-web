@@ -7,6 +7,7 @@ import {
   Typography,
   InputAdornment
 } from '@mui/material';
+import { SearchableSelect } from './SearchableSelect';
 
 /**
  * Reusable SelectField Component
@@ -22,6 +23,7 @@ const SelectField = ({
   errorText,
   disabled = false,
   required = false,
+  allowEmptyOption = false,
   startIcon: StartIcon,
   sx = {},
   selectSx = {},
@@ -89,12 +91,23 @@ const SelectField = ({
           {label} {required && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
         </Typography>
       )}
-      <Select
-        id={id}
-        value={value}
-        displayEmpty
-        onChange={(e) => onChange?.(e.target.value)}
-        error={hasError}
+      {options.length >= 10 ? (
+        <SearchableSelect
+          options={options.map(opt => ({ id: opt.value, name: opt.label }))}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder || (label ? `Select ${label}` : 'Select...')}
+          disabled={disabled}
+          hasError={hasError}
+          allowEmptyOption={allowEmptyOption}
+        />
+      ) : (
+        <Select
+          id={id}
+          value={value}
+          displayEmpty
+          onChange={(e) => onChange?.(e.target.value)}
+          error={hasError}
         MenuProps={{
           PaperProps: {
             sx: {
@@ -136,7 +149,7 @@ const SelectField = ({
       >
         <MenuItem 
           value="" 
-          disabled 
+          disabled={!allowEmptyOption} 
           sx={{ 
             color: '#64748B !important', 
             fontWeight: 500,
@@ -155,6 +168,7 @@ const SelectField = ({
           </MenuItem>
         ))}
       </Select>
+      )}
       {hasError && <FormHelperText>{errorText}</FormHelperText>}
     </FormControl>
   );
