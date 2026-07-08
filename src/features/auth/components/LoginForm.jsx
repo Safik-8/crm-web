@@ -388,18 +388,20 @@ const LoginForm = () => {
           }}
           error={!!fieldErrors.email}
           helperText={fieldErrors.email}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <MailOutlineIcon
-                  sx={{
-                    fontSize: 18,
-                    color: fieldErrors.email ? 'error.main' : 'text.secondary',
-                    transition: 'color 0.15s ease',
-                  }}
-                />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MailOutlineIcon
+                    sx={{
+                      fontSize: 18,
+                      color: fieldErrors.email ? 'error.main' : 'text.secondary',
+                      transition: 'color 0.15s ease',
+                    }}
+                  />
+                </InputAdornment>
+              ),
+            }
           }}
         />
 
@@ -418,18 +420,19 @@ const LoginForm = () => {
           }}
           error={!!fieldErrors.password}
           helperText={fieldErrors.password}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon
-                  sx={{
-                    fontSize: 18,
-                    color: fieldErrors.password ? 'error.main' : 'text.secondary',
-                    transition: 'color 0.15s ease',
-                  }}
-                />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: fieldErrors.password ? 'error.main' : 'text.secondary',
+                      transition: 'color 0.15s ease',
+                    }}
+                  />
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
@@ -449,6 +452,7 @@ const LoginForm = () => {
                   </IconButton>
                 </InputAdornment>
               ),
+            }
           }}
         />
 
@@ -685,7 +689,7 @@ const LoginForm = () => {
                       edge="end"
                       sx={{ color: 'text.secondary', p: 1 }}
                     >
-                      {showForgotNewPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                      {showForgotNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -720,7 +724,7 @@ const LoginForm = () => {
                       edge="end"
                       sx={{ color: 'text.secondary', p: 1 }}
                     >
-                      {showForgotConfirmPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                      {showForgotConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </IconButton>
                   </InputAdornment>
                 ),
