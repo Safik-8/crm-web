@@ -1,36 +1,25 @@
+// src/features/company/hooks/useCompanies.js
+
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { companyApi } from '../api/companyApi';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { companyService } from '../services/companyService';
 
 const DEFAULT_LIMIT = 10;
 
 /**
  * useCompanies
- * Centralises all state for the paginated companies listing:
- *   - data fetching (loading / success / error / empty)
- *   - pagination  (page, pages, total, hasNext, hasPrev)
- *   - search      (debounced, 400 ms)
- *   - status filter
- *   - sort
- *
- * Returns everything the page + sub-components need.
+ * Orchestrates the React state for searching, sorting, and pagination
+ * while using TanStack Query for caching and server-state management.
  */
-const useCompanies = () => {
-  // ── Filter / sort state ──────────────────────────────────────────────────
+export const useCompanies = () => {
+  // ── Filter / Sort / Page React States ────────────────────────────────────
   const [search, setSearch]         = useState('');
   const [status, setStatus]         = useState('');
   const [sortBy, setSortBy]         = useState('createdAt');
   const [sortOrder, setSortOrder]   = useState('desc');
   const [page, setPage]             = useState(1);
 
-  // ── Data state ───────────────────────────────────────────────────────────
-  const [companies, setCompanies]   = useState([]);
-  const [pagination, setPagination] = useState({
-    page: 1, pages: 1, total: 0, hasNext: false, hasPrev: false,
-  });
-  const [loadingState, setLoadingState] = useState('loading'); // 'loading' | 'success' | 'error' | 'empty'
-  const [errorMessage, setErrorMessage] = useState('');
-
-  // ── Debounce search ──────────────────────────────────────────────────────
+  // ── Debounce Search Logic ────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceTimer = useRef(null);
 
@@ -39,73 +28,74 @@ const useCompanies = () => {
     clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(value);
-      setPage(1); // reset to page 1 on new search
+      setPage(1); // Reset page to 1 on new search query
     }, 400);
   }, []);
 
-  // ── Reset page when filters change ──────────────────────────────────────
   const handleStatusChange = useCallback((value) => {
     setStatus(value);
     setPage(1);
   }, []);
 
   const handleSortChange = useCallback((value) => {
-    // value format: 'createdAt_desc' | 'createdAt_asc' | 'name_asc' | 'name_desc'
     const [field, order] = value.split('_');
     setSortBy(field);
     setSortOrder(order);
     setPage(1);
   }, []);
 
-  // ── Fetch ────────────────────────────────────────────────────────────────
-  const fetchCompanies = useCallback(async () => {
-    setLoadingState('loading');
-    setErrorMessage('');
-    try {
-      const res = await companyApi.getPaginatedCompanies({
-        page,
-        limit: DEFAULT_LIMIT,
-        search: debouncedSearch,
-        status,
-        sortBy,
-        sortOrder,
-      });
+  // ── Query Parameters Payload ─────────────────────────────────────────────
+  const params = {
+    page,
+    limit: DEFAULT_LIMIT,
+    search: debouncedSearch,
+    status,
+    sortBy,
+    sortOrder
+  };
 
-      if (res && res.success) {
-        const list = Array.isArray(res.data?.companies) ? res.data.companies : [];
-        setCompanies(list);
-        setPagination({
-          page:    res.data?.pagination?.page    ?? 1,
-          pages:   res.data?.pagination?.pages   ?? 1,
-          total:   res.data?.pagination?.total   ?? 0,
-          hasNext: res.data?.pagination?.hasNext ?? false,
-          hasPrev: res.data?.pagination?.hasPrev ?? false,
-        });
-        setLoadingState(list.length === 0 ? 'empty' : 'success');
-      } else {
-        setErrorMessage(res?.message || 'Failed to load companies.');
-        setLoadingState('error');
-      }
-    } catch (err) {
-      console.error('useCompanies fetch error:', err);
-      setErrorMessage(err?.message || 'An unexpected error occurred.');
-      setLoadingState('error');
-    }
-  }, [page, debouncedSearch, status, sortBy, sortOrder]);
+  // ── TanStack Query Hook ──
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['companies', params],
+    queryFn: () => companyService.getCompanies(params),
+    staleTime: 5 * 60 * 1000, // Keep stale data cached for 5 minutes
+  });
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+  // Extract companies list and pagination details safely
+  const companiesList = Array.isArray(data?.data?.companies) ? data.data.companies : [];
+  const paginationInfo = data?.data?.pagination || {
+    page: 1,
+    pages: 1,
+    total: 0,
+    hasNext: false,
+    hasPrev: false
+  };
 
-  // ── Cleanup debounce on unmount ──────────────────────────────────────────
+  // Derive loadingState string expected by existing UI components
+  let loadingState = 'success';
+  if (isLoading) {
+    loadingState = 'loading';
+  } else if (isError) {
+    loadingState = 'error';
+  } else if (companiesList.length === 0) {
+    loadingState = 'empty';
+  }
+
+  // Cleanup timers
   useEffect(() => () => clearTimeout(debounceTimer.current), []);
 
   return {
-    // data
-    companies,
-    pagination,
+    // query results
+    companies: companiesList,
+    pagination: paginationInfo,
     loadingState,
-    errorMessage,
+    errorMessage: error?.message || '',
     // filters
     search,
     status,
@@ -116,8 +106,61 @@ const useCompanies = () => {
     handleStatusChange,
     handleSortChange,
     setPage,
-    refetch: fetchCompanies,
+    refetch
   };
 };
 
-export default useCompanies;
+/**
+ * useCompany - Fetch single company by ID
+ */
+export const useCompany = (id) => {
+  return useQuery({
+    queryKey: ['company', id],
+    queryFn: () => companyService.getCompanyById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+/**
+ * useCreateCompany - Onboards a new company and registers its Company Admin user.
+ */
+export const useCreateCompany = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (companyData) => companyService.createCompany(companyData),
+    onSuccess: () => {
+      // Invalidate list queries to trigger refreshing of data in background
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+    }
+  });
+};
+
+/**
+ * useUpdateCompany - Updates company master parameters
+ */
+export const useUpdateCompany = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => companyService.updateCompany(id, data),
+    onSuccess: (res, variables) => {
+      // Refresh single company detail caches and company lists
+      queryClient.invalidateQueries({ queryKey: ['company', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+    }
+  });
+};
+
+/**
+ * useToggleCompanyStatus - Toggles company ACTIVE/INACTIVE state
+ */
+export const useToggleCompanyStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, currentStatus }) => companyService.toggleCompanyStatus(id, currentStatus),
+    onSuccess: () => {
+      // Invalidate list queries to update company state immediately
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+    }
+  });
+};

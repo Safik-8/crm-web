@@ -46,7 +46,7 @@ export const DynamicFormSlideover = ({
       setErrors({});
       setBusy(false);
     }
-  }, [isOpen, initialValues]);
+  }, [isOpen]);
 
   const handleFieldChange = (key, val) => {
     setValues((prev) => ({ ...prev, [key]: val }));
@@ -107,6 +107,16 @@ export const DynamicFormSlideover = ({
       anchor="right"
       open={isOpen}
       onClose={() => !busy && onClose()}
+      ModalProps={{
+        slotProps: {
+          backdrop: {
+            sx: {
+              backdropFilter: 'blur(4px)',
+              backgroundColor: 'rgba(15, 23, 42, 0.18)',
+            }
+          }
+        }
+      }}
       sx={{
         zIndex: 1300,
         '& .MuiDrawer-paper': {
@@ -114,7 +124,9 @@ export const DynamicFormSlideover = ({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          borderRadius: '0px !important'
+          borderRadius: '0px !important',
+          boxShadow: '-8px 0 24px rgba(15, 23, 42, 0.06)',
+          borderLeft: '1px solid #E2E8F0'
         }
       }}
     >
@@ -186,6 +198,7 @@ export const DynamicFormSlideover = ({
 
         {/* Scrollable Content Body */}
         <Box
+          className="custom-scrollbar"
           sx={{
             flex: 1,
             overflowY: 'auto',

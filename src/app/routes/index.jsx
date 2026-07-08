@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import RootRedirect from './RootRedirect';
 import LoginPage from '../../features/auth/pages/LoginPage';
+import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
 import BaseLayout from '../../shared/layouts/BaseLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import BranchDashboardPage from '../../features/dashboard/pages/BranchDashboardPage';
@@ -17,6 +18,7 @@ import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 
 import UsersPage from '../../features/users/pages/UsersPage';
+import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
 import TargetsPage from '../../features/targets/pages/TargetsPage';
@@ -30,6 +32,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/unauthorized',
+    element: <UnauthorizedPage />,
   },
   {
     path: '/',
@@ -157,6 +163,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'roles',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ROLES}>
+            <RoleManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'settings/*',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
@@ -173,9 +187,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings/company/*',
+        path: 'settings/organization/*',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_SETUP}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
             <CompanyRoutes />
           </ProtectedRoute>
         ),

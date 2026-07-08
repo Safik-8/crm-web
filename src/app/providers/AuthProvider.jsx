@@ -8,30 +8,30 @@ const AuthContext = createContext(undefined);
 // Backend module keys: COMPANY, BRANCH, USER, PROSPECT, ACTIVITY, TASK, PIPELINE, SESSION, REPORT, AUDIT, TARGET, NOTIFICATION
 const RBAC_ADAPTER_MAP = {
   // Navigation / View Permissions
-  // Dashboard has no dedicated backend module — grant to all authenticated users by using null module
-  'view:dashboard': { module: null, action: null },          // Always true if authenticated
-  'view:branch_dashboard': { module: null, action: null },
+  'view:dashboard': { module: 'DASHBOARD', action: 'canView' },
+  'view:branch_dashboard': { module: 'DASHBOARD', action: 'canView' },
   'view:company_dashboard': { module: 'COMPANY', action: 'canView' },
-  'view:prospects': { module: 'PROSPECT', action: 'canView' },
+  'view:prospects': { module: 'LEAD', action: 'canView' }, // Fixed from PROSPECT
   'view:activities': { module: 'ACTIVITY', action: 'canView' },
-  'view:sessions': { module: 'SESSION', action: 'canView' },
+  'view:sessions': { module: 'ACTIVITY', action: 'canView' }, // Fallback to ACTIVITY
   'view:tasks': { module: 'TASK', action: 'canView' },
   'view:reports': { module: 'REPORT', action: 'canView' },
   'view:team_reports': { module: 'REPORT', action: 'canView' },
   'view:settings': { module: 'BRANCH', action: 'canView' },
   'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
-  'view:company_setup': { module: 'COMPANY', action: 'canEdit' },
+  'view:company_setup': { module: 'COMPANY', action: 'canCreate' },
   'view:users': { module: 'USER', action: 'canView' },
+  'view:roles': { module: 'ROLE_PERMISSION', action: 'canView' },
   'view:leads': { module: 'PIPELINE', action: 'canView' },
-  'view:customers': { module: 'PIPELINE', action: 'canView' },
+  'view:customers': { module: 'CUSTOMER', action: 'canView' }, // Fixed from PIPELINE
   'view:deals': { module: 'PIPELINE', action: 'canView' },
   'view:audit': { module: 'AUDIT', action: 'canView' },
   'view:targets': { module: 'TARGET', action: 'canView' },
   'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
 
   // Action Permissions
-  'action:approve_transfers': { module: 'BRANCH', action: 'canEdit' },
+  'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH
   'action:manage_users': { module: 'USER', action: 'canEdit' },
   'action:manage_all_users': { module: 'USER', action: 'canEdit' },
   'action:read_only_reports': { module: 'REPORT', action: 'canView' },
@@ -53,9 +53,9 @@ const RBAC_ADAPTER_MAP = {
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 
-  // Daily Report (ISE) — Publicly accessible to ISE role specifically
-  'view:daily_report': { module: null, action: null },
-  'create:daily_report': { module: null, action: null },
+  // Daily Report (ISE)
+  'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
+  'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' }, 
 };
 
 export const AuthProvider = ({ children }) => {
@@ -65,35 +65,40 @@ export const AuthProvider = ({ children }) => {
   // Prevent duplicate logout calls
   const logoutInFlightRef = useRef(false);
 
-  // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object
-  const hasPermission = useCallback((permissionStr) => {
+  // Derive permissions dynamically using the RBAC adapter map against the real backend permissions object.
+  // Supports both:
+  //   1. hasPermission('create:pipeline') -> looks up via RBAC_ADAPTER_MAP
+  //   2. hasPermission('PIPELINE', 'canCreate') -> directly evaluates backend permissions (fully dynamic/extendable)
+  const hasPermission = useCallback((moduleOrPermissionStr, action = null) => {
     if (!user) return false;
 
-    const mapping = RBAC_ADAPTER_MAP[permissionStr];
-    if (!mapping) return false;
-
-    // null module means "grant to all authenticated users"
-    if (mapping.module === null) {
-      // Restrict Branch Dashboard to the four roles that the backend supports.
-      // The dashboard UI itself handles view scoping via data.viewMode — all
-      // four roles land on the same page; the backend returns the correct data.
-      if (permissionStr === 'view:branch_dashboard') {
-        const role = user.primaryRole;
-        return (
-          role === 'BRANCH_ADMIN' ||
-          role === 'MANAGER'      ||
-          role === 'ISE'          ||
-          role === 'SALES_TEAM'   ||
-          role === 'Admin'        ||
-          role === 'Super Admin'
-        );
-      }
-      return true;
+    // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
+    if (action) {
+      return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);
     }
 
-    // Safely evaluate `user.permissions.<UPPERCASE_MODULE>.<canAction>`
+    // Special logic for settings organization path: allowed if they can view COMPANY OR BRANCH
+    if (moduleOrPermissionStr === 'view:settings') {
+      return !!(user.permissions?.COMPANY?.canView || user.permissions?.BRANCH?.canView);
+    }
+
+    // Mode B: Mapped check - hasPermission('permission_string')
+    const mapping = RBAC_ADAPTER_MAP[moduleOrPermissionStr];
+    if (!mapping) return false;
+
     return !!(user.permissions?.[mapping.module]?.[mapping.action]);
   }, [user]);
+
+  const refetchUser = useCallback(async () => {
+    try {
+      const response = await apiClient('/auth/me', { method: 'GET' });
+      if (response?.success && response?.data?.user) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('[Auth] Refetch user failed:', error);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -179,7 +184,8 @@ export const AuthProvider = ({ children }) => {
       isLoggingOut,
       isAuthenticated: !!user,
       permissions: user?.permissions || {}, // Exposing raw backend permissions instead of array
-      hasPermission
+      hasPermission,
+      refetchUser
     }}>
       {children}
     </AuthContext.Provider>

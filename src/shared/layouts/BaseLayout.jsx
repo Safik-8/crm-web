@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/modules/Sidebar';
 import Topbar from '../components/modules/Topbar';
@@ -8,14 +8,18 @@ import useRouteLoader from '../hooks/useRouteLoader';
 const BaseLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const mainRef = useRef(null);
 
   // Drives the global loader on every route transition
   useRouteLoader();
 
-  // Close the mobile sidebar on every navigation
+  // Close the mobile sidebar and scroll main container to top on every navigation
   useEffect(() => {
     setSidebarOpen(false);
-  }, [location.pathname]);
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [location.pathname, location.search]);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -57,8 +61,9 @@ const BaseLayout = () => {
         <div className="relative flex-1 min-h-0 flex flex-col">
           <GlobalLoader contentScoped />
 
-          {/* Main content */}
+           {/* Main content */}
           <main
+            ref={mainRef}
             className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-50 ${
               isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-6 lg:p-8'
             }`}

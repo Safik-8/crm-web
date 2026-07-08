@@ -24,8 +24,8 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
   }
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
-    // If user doesn't have required permission, redirect to dashboard
-    return <Navigate to="/dashboard" replace />;
+    // If user doesn't have required permission, redirect to unauthorized page
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

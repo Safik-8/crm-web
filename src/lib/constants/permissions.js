@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   VIEW_BRANCHES: 'view:branches',
   VIEW_COMPANY_SETUP: 'view:company_setup',
   VIEW_USERS: 'view:users',
+  VIEW_ROLES: 'view:roles',
   VIEW_LEADS: 'view:leads',
   VIEW_CUSTOMERS: 'view:customers',
   VIEW_DEALS: 'view:deals',

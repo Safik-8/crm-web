@@ -7,9 +7,8 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { companyApi } from '../../company/api/companyApi';
-import { branchApi } from '../../branch/api/branchApi';
+import { branchService } from '../../branch/services/branchService';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
-import { FormControl, FormHelperText, Typography } from '@mui/material';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
 // ----- Create / Edit Modal -----
@@ -36,7 +35,7 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
   // Fetch branches once we have a companyId to fetch for
   useEffect(() => {
     if (!initial && !inherentBranchId && selectedCompanyId) {
-      branchApi.getBranches(selectedCompanyId).then(res => {
+      branchService.getBranchesRaw(selectedCompanyId).then(res => {
         const data = res?.data?.branches || res?.data || [];
         setBranches(Array.isArray(data) ? data : []);
       }).catch(console.error);
@@ -67,10 +66,10 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
       label: 'Target Company',
       required: true,
       render: (value, onChange, formValues, errorText) => (
-        <FormControl fullWidth error={!!errorText} size="small" variant="outlined" sx={{ mt: 1 }}>
-          <Typography variant="caption" sx={{ mb: 1, fontWeight: 700, display: 'block', color: 'text.secondary', textTransform: 'uppercase' }}>
-            Target Company *
-          </Typography>
+        <div className="w-full mt-1">
+          <span className={`block font-semibold text-[12px] mb-1.5 ml-0.5 ${errorText ? 'text-red-500' : 'text-slate-600'}`}>
+            Target Company <span className="text-orange-500 font-bold ml-0.5">*</span>
+          </span>
           <SearchableSelect
             options={companies}
             value={value}
@@ -80,9 +79,10 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
               setSelectedCompanyId(id);
             }}
             placeholder="Select Company..."
+            hasError={!!errorText}
           />
-          {errorText && <FormHelperText>{errorText}</FormHelperText>}
-        </FormControl>
+          {errorText && <p className="text-red-500 text-[11px] font-medium mx-1 mt-1.5">{errorText}</p>}
+        </div>
       )
     });
   }
@@ -93,19 +93,20 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
       label: 'Target Branch',
       required: true,
       render: (value, onChange, formValues, errorText) => (
-        <FormControl fullWidth error={!!errorText} size="small" variant="outlined" sx={{ mt: 1 }}>
-          <Typography variant="caption" sx={{ mb: 1, fontWeight: 700, display: 'block', color: 'text.secondary', textTransform: 'uppercase' }}>
-            Target Branch *
-          </Typography>
+        <div className="w-full mt-1">
+          <span className={`block font-semibold text-[12px] mb-1.5 ml-0.5 ${errorText ? 'text-red-500' : 'text-slate-600'}`}>
+            Target Branch <span className="text-orange-500 font-bold ml-0.5">*</span>
+          </span>
           <SearchableSelect
             options={branches}
             value={value}
             onChange={(id) => onChange('branchId', id)}
             placeholder="Select Branch..."
             disabled={!formValues.companyId}
+            hasError={!!errorText}
           />
-          {errorText && <FormHelperText>{errorText}</FormHelperText>}
-        </FormControl>
+          {errorText && <p className="text-red-500 text-[11px] font-medium mx-1 mt-1.5">{errorText}</p>}
+        </div>
       )
     });
   }

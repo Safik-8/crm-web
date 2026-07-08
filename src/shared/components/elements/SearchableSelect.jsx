@@ -7,7 +7,9 @@ export const SearchableSelect = ({
   onChange,         // function(id)
   placeholder = "Select...",
   disabled = false,
-  className = ""
+  className = "",
+  hasError = false,
+  allowEmptyOption = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,9 +47,13 @@ export const SearchableSelect = ({
             setSearchTerm('');
           }
         }}
-        className={`w-full flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-left outline-none transition-all ${
-          disabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'hover:border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-white cursor-pointer text-slate-900'
-        } ${isOpen && !disabled ? 'border-primary ring-4 ring-primary/10 bg-white' : ''}`}
+        className={`w-full flex items-center justify-between rounded-[10px] border bg-[#F8FAFC] px-3.5 py-[10px] text-[13px] font-medium text-left outline-none transition-all ${
+          hasError
+            ? 'border-red-500 focus:border-red-500 focus:ring-3 focus:ring-red-500/14'
+            : 'border-[#E2E8F0] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14'
+        } ${
+          disabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-900'
+        } ${isOpen && !disabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
       >
         <span className={selectedOption ? 'text-slate-900' : 'text-slate-500 font-medium'}>
           {selectedOption ? selectedOption.name : placeholder}
@@ -66,7 +72,7 @@ export const SearchableSelect = ({
               <input
                 type="text"
                 autoFocus
-                className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-400 placeholder:font-normal"
+                className="w-full bg-white border border-[#E2E8F0] rounded-[10px] pl-9 pr-3 py-2 text-[13px] text-slate-900 outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 transition-all font-medium placeholder:text-slate-400 placeholder:font-normal"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -76,8 +82,20 @@ export const SearchableSelect = ({
 
           {/* Options list */}
           <ul className="max-h-60 overflow-y-auto p-1">
+            {allowEmptyOption && (
+              <li
+                onClick={() => {
+                  onChange('');
+                  setIsOpen(false);
+                  setSearchTerm('');
+                }}
+                className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium italic rounded-lg cursor-pointer text-slate-500 hover:bg-slate-100`}
+              >
+                <span>{placeholder}</span>
+              </li>
+            )}
             {filteredOptions.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-slate-500 text-center font-medium">
+              <li className="px-4 py-3 text-[13px] text-slate-500 text-center font-medium">
                 No results found.
               </li>
             ) : (
@@ -91,7 +109,7 @@ export const SearchableSelect = ({
                       setIsOpen(false);
                       setSearchTerm('');
                     }}
-                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-sm font-bold rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium rounded-lg cursor-pointer transition-colors ${
                       isSelected 
                         ? 'bg-primary/10 text-primary' 
                         : 'text-slate-700 hover:bg-slate-100'

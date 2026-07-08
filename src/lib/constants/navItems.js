@@ -14,15 +14,16 @@ import {
   ClipboardList,
   GitBranch,
   Kanban,
+  Shield,
 } from 'lucide-react';
-import { PERMISSIONS } from '../constants/permissions';
-import { ROLES } from '../constants/roles';
+import {
+  PERMISSIONS } from '../constants/permissions';
 
 export const navItems = [
-  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD, role: [ROLES.BRANCH_ADMIN, ROLES.MANAGER, ROLES.ISE, ROLES.SALES_TEAM] },
+  { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD },
   
   // Settings
-  { name: 'Company Setup', path: '/settings/company', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
+  { name: 'Organization', path: '/settings/organization', icon: Building2, permission: PERMISSIONS.VIEW_SETTINGS },
 
   // Customers & Deals
   { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
@@ -39,44 +40,23 @@ export const navItems = [
   { name: 'Targets', path: '/targets', icon: Target, permission: PERMISSIONS.VIEW_TARGETS },
 
   // Reports
-  { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT, role: [ROLES.ISE, ROLES.SALES_TEAM] },
+  { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT },
   { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
 
   // System Tools
   { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
   { name: 'Transfer Approvals', path: '/approvals', icon: ClipboardCheck, permission: PERMISSIONS.APPROVE_TRANSFERS },
   { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
+  { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
 ];
 
 export const getFilteredNavItems = (user, hasPermission) => {
   if (!user) return [];
 
-  const items = [...navItems];
-
-  // Derive companyId from user profile
-  const companyId = user?.company?.id || user?.companyId;
-  if (companyId) {
-    const companySetupIndex = items.findIndex(i => i.path === '/settings/company');
-    const branchItem = {
-      name: 'Branches',
-      path: `/companies/${companyId}/branches`,
-      icon: GitBranch,
-      permission: PERMISSIONS.VIEW_BRANCHES
-    };
-    if (companySetupIndex !== -1) {
-      items.splice(companySetupIndex + 1, 0, branchItem);
-    } else {
-      items.push(branchItem);
-    }
-  }
+  let items = [...navItems];
 
   return items.filter(item => {
-    if (item.role) {
-      const allowedRoles = Array.isArray(item.role) ? item.role : [item.role];
-      if (!allowedRoles.includes(user?.primaryRole)) return false;
-    }
-    
-    // 2. Check Permission constraint
+    // Check Permission constraint
     return !item.permission || hasPermission(item.permission);
   });
 };

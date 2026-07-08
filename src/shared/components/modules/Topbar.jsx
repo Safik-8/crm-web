@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { Search, Bell, Menu, User, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider.jsx';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';
 
 const Topbar = ({ toggleSidebar, pageTitle }) => {
