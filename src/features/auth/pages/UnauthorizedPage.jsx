@@ -1,109 +1,40 @@
 import React from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
 import { ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Button from '../../../shared/components/elements/Button';
 
+/**
+ * UnauthorizedPage Component
+ * Renders an access denied layout for unauthorized users.
+ * Refactored to use Tailwind CSS for all containers, card structures, and text styling,
+ * importing the shared reusable Button component.
+ */
 const UnauthorizedPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        minHeight: '100vh',
-        width: '100vw',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'background.default',
-        position: 'relative',
-        overflow: 'hidden',
-        p: 3,
-      }}
-    >
+    <div className="relative flex min-h-screen w-screen items-center justify-center bg-gray-50 overflow-hidden p-6">
       {/* Background Decorative Blur */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-        }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '10%',
-            left: '20%',
-            width: 320,
-            height: 320,
-            backgroundColor: 'rgba(248, 111, 3, 0.05)',
-            borderRadius: '50%',
-            filter: 'blur(80px)',
-          }}
-        />
-      </Box>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[20%] w-80 h-80 bg-orange-500/5 rounded-full blur-[80px]" />
+      </div>
 
-      <Paper
-        elevation={0}
-        sx={{
-          zIndex: 10,
-          p: { xs: 4, sm: 6 },
-          maxWidth: 480,
-          width: '100%',
-          textAlign: 'center',
-          borderRadius: 3,
-          border: '1px solid rgba(0, 0, 0, 0.06)',
-          boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.03)',
-          backgroundColor: 'background.paper',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(248, 111, 3, 0.06)',
-            color: 'primary.main',
-            mb: 4,
-          }}
-        >
+      <div className="z-10 p-8 sm:p-12 max-w-[480px] w-full text-center rounded-2xl border border-gray-100 shadow-[0px_8px_30px_rgba(0,0,0,0.03)] bg-white">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-orange-500/6 text-orange-600 mb-8">
           <ShieldAlert size={44} />
-        </Box>
+        </div>
 
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: 700,
-            mb: 2,
-            color: 'text.primary',
-            letterSpacing: '-0.5px',
-          }}
-        >
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 tracking-tight font-sora">
           Access Denied
-        </Typography>
+        </h1>
 
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'text.secondary',
-            mb: 5,
-            lineHeight: 1.6,
-            fontSize: '15px',
-          }}
-        >
+        <p className="text-gray-500 mb-10 leading-relaxed text-[15px]">
           You do not have the required permissions to access this module. If you believe this is an error, please reach out to your system administrator.
-        </Typography>
+        </p>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div className="flex flex-col gap-4">
           <Button
             variant="contained"
-            color="primary"
             size="large"
             onClick={() => navigate('/')}
             sx={{
@@ -134,9 +65,9 @@ const UnauthorizedPage = () => {
           >
             Go Back
           </Button>
-        </Box>
-      </Paper>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 
