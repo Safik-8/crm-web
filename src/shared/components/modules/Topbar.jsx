@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { Search, Bell, Menu, User, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';
 
@@ -88,19 +88,30 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
 
           {/* Profile */}
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex flex-col items-end">
-              <p className="text-[13px] font-semibold text-zinc-800 leading-tight truncate max-w-[110px] lg:max-w-[140px]">
-                {user?.name || 'Guest'}
-              </p>
-              <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider leading-tight">
-                {user?.primaryRole || user?.designation || 'Member'}
-              </span>
-            </div>
+            <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group">
+              <div className="hidden sm:flex flex-col items-end">
+                <p className="text-[13px] font-semibold text-zinc-800 leading-tight truncate max-w-[110px] lg:max-w-[140px] group-hover:text-orange-600 transition-colors">
+                  {user?.name || 'Guest'}
+                </p>
+                <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider leading-tight">
+                  {user?.primaryRole || user?.designation || 'Member'}
+                </span>
+              </div>
 
-            {/* Avatar */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-white text-[13px] font-bold shadow-sm ring-2 ring-white cursor-pointer hover:bg-zinc-700 transition-colors">
-              {user?.name?.charAt(0)?.toUpperCase() || <User size={15} />}
-            </div>
+              {/* Avatar */}
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-white text-[13px] font-bold shadow-sm ring-2 ring-white overflow-hidden">
+                {user?.profilePhoto ? (
+                  <img
+                    src={user.profilePhoto}
+                    alt="User"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user?.name?.charAt(0)?.toUpperCase() || <User size={15} />
+                )}
+              </div>
+            </Link>
+
 
             {/* Logout */}
             <button
