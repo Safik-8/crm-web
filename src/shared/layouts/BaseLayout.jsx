@@ -4,6 +4,7 @@ import Sidebar from '../components/modules/Sidebar';
 import Topbar from '../components/modules/Topbar';
 import GlobalLoader from '../components/elements/GlobalLoader';
 import useRouteLoader from '../hooks/useRouteLoader';
+import ForcedChangePasswordModal from '../../features/auth/components/ForcedChangePasswordModal';
 
 const BaseLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +41,9 @@ const BaseLayout = () => {
 
   return (
     <div className="flex bg-zinc-50 h-screen overflow-hidden">
+      {/* Forced Password Reset Enforcer */}
+      <ForcedChangePasswordModal />
+
       {/* Sidebar — fixed on mobile, static on desktop */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
