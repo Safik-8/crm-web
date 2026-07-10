@@ -1,9 +1,106 @@
-// src/features/users/components/UserListTable.jsx
-
 import React from 'react';
-import { Edit2, Key, Power, Eye } from 'lucide-react';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { Edit2, Key, Power, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
+
+const RowActionsMenu = ({
+  row,
+  canEdit,
+  onViewDetails,
+  onEdit,
+  onResetPassword,
+  onToggleStatus
+}) => {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAction = (callback) => {
+    handleClose();
+    callback(row);
+  };
+
+  const isActive = row.status === 'ACTIVE';
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+        title="Actions"
+      >
+        <MoreVertical size={16} />
+      </button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        elevation={0}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+        }}
+      >
+        <MenuItem
+          onClick={() => handleAction(onViewDetails)}
+          className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+        >
+          <Eye size={14} className="text-slate-400" />
+          <span>View Details</span>
+        </MenuItem>
+
+        {canEdit && (
+          <>
+            <MenuItem
+              onClick={() => handleAction(onEdit)}
+              className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+            >
+              <Edit2 size={13} className="text-slate-400" />
+              <span>Edit User</span>
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => handleAction(onResetPassword)}
+              className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+            >
+              <Key size={13} className="text-slate-400" />
+              <span>Reset Password</span>
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => handleAction(onToggleStatus)}
+              className={`flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors border-t border-slate-100/50 ${
+                isActive
+                  ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50/30'
+                  : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/30'
+              }`}
+            >
+              <Power size={13} className={isActive ? 'text-rose-400' : 'text-emerald-400'} />
+              <span>{isActive ? 'Deactivate User' : 'Activate User'}</span>
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+    </>
+  );
+};
 
 const UserListTable = ({
   users = [],
@@ -23,15 +120,17 @@ const UserListTable = ({
     {
       header: 'Employee ID',
       accessorKey: 'employeeId',
+      align: 'center',
       className: 'font-semibold text-slate-700 text-[13px] whitespace-nowrap',
       cell: (row) => row.employeeId || 'N/A'
     },
     {
       header: 'Name',
+      align: 'center',
       className: 'min-w-[200px]',
       cell: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase">
+        <div className="flex items-center justify-center gap-3 text-left">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
             {row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'}
           </div>
           <div className="min-w-0">
@@ -47,6 +146,7 @@ const UserListTable = ({
     },
     {
       header: 'Role',
+      align: 'center',
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => {
         const primaryRole = row.userRoles?.find(ur => ur.isPrimary) || row.userRoles?.[0];
@@ -55,11 +155,13 @@ const UserListTable = ({
     },
     {
       header: 'Branch',
+      align: 'center',
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => row.branch?.name || 'Global / Company Wide'
     },
     {
       header: 'Reporting Manager',
+      align: 'center',
       className: 'text-[13px] text-slate-600 font-medium',
       cell: (row) => row.reportingManager?.name || (
         <span className="text-slate-300 font-semibold">—</span>
@@ -87,54 +189,17 @@ const UserListTable = ({
     },
     {
       header: 'Actions',
-      align: 'right',
-      className: 'w-[140px]',
+      align: 'center',
+      className: 'w-[80px]',
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={() => onViewDetails(row)}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
-            title="View Details"
-          >
-            <Eye size={15} />
-          </button>
-          
-          {canEdit && (
-            <>
-              <button
-                type="button"
-                onClick={() => onEdit(row)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
-                title="Edit User"
-              >
-                <Edit2 size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onResetPassword(row)}
-                className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"
-                title="Reset Password"
-              >
-                <Key size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onToggleStatus(row)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  row.status === 'ACTIVE'
-                    ? 'text-slate-400 hover:text-rose-500 hover:bg-rose-50'
-                    : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
-                }`}
-                title={row.status === 'ACTIVE' ? 'Deactivate User' : 'Activate User'}
-              >
-                <Power size={15} />
-              </button>
-            </>
-          )}
-        </div>
+        <RowActionsMenu
+          row={row}
+          canEdit={canEdit}
+          onViewDetails={onViewDetails}
+          onEdit={onEdit}
+          onResetPassword={onResetPassword}
+          onToggleStatus={onToggleStatus}
+        />
       )
     }
   ];

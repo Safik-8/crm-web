@@ -38,8 +38,10 @@ export const useCreateUserMutation = () => {
       toast.success('User onboarded successfully');
     },
     onError: (error) => {
-      const msg = error?.message || 'Failed to onboard user';
-      toast.error(msg);
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to onboard user';
+        toast.error(msg);
+      }
     }
   });
 };
@@ -54,8 +56,10 @@ export const useUpdateUserMutation = () => {
       toast.success('User details updated successfully');
     },
     onError: (error) => {
-      const msg = error?.message || 'Failed to update user details';
-      toast.error(msg);
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to update user details';
+        toast.error(msg);
+      }
     }
   });
 };
@@ -70,8 +74,10 @@ export const useToggleUserStatusMutation = () => {
       toast.success(`User successfully ${variables.nextStatus === 'ACTIVE' ? 'activated' : 'deactivated'}`);
     },
     onError: (error) => {
-      const msg = error?.message || 'Failed to toggle status';
-      toast.error(msg);
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to toggle status';
+        toast.error(msg);
+      }
     }
   });
 };
@@ -83,8 +89,10 @@ export const useResetPasswordMutation = () => {
       toast.success('Temporary password generated successfully');
     },
     onError: (error) => {
-      const msg = error?.message || 'Failed to reset password';
-      toast.error(msg);
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to reset password';
+        toast.error(msg);
+      }
     }
   });
 };

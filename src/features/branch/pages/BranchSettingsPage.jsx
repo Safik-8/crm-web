@@ -10,7 +10,7 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import { useBranches, useToggleBranchStatus } from '../hooks/useBranches';
 import BranchTable from '../components/BranchTable';
 import BranchForm from '../components/BranchForm';
-import AssignUserModal from '../components/AssignUserModal';
+import UserFormModal from '../../users/components/UserFormModal';
 import BranchFilters from '../components/BranchFilters';
 import BranchPagination from '../components/BranchPagination';
 import GenericPage from '../../../shared/components/templates/GenericPage';
@@ -302,11 +302,13 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
                 />
 
                 {/* Assign User Modal */}
-                <AssignUserModal
+                <UserFormModal
                     isOpen={isAssignModalOpen}
                     onClose={() => setIsAssignModalOpen(false)}
-                    branch={assignBranch}
+                    initialValues={assignBranch ? { companyId: assignBranch.companyId, branchId: assignBranch.id } : null}
                     onSuccess={handleAssignSuccess}
+                    currentUser={user}
+                    isBranchScoped={true}
                 />
 
                 {/* Status Change Confirmation Dialog */}

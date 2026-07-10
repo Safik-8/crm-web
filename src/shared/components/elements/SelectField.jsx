@@ -132,6 +132,14 @@ const SelectField = ({
           ) : null
         }
         sx={{
+          '&.Mui-disabled': {
+            bgcolor: '#F1F5F9 !important',
+            opacity: '0.5 !important',
+            cursor: 'not-allowed !important',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#E2E8F0 !important'
+            }
+          },
           '& .MuiSelect-select': {
             py: '10px !important',
             pl: StartIcon ? 1 : 3.5,

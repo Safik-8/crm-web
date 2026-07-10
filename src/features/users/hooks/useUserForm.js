@@ -30,7 +30,7 @@ export const useUserForm = (onSuccess, initialValues = null) => {
   const createUserMutation = useCreateUserMutation();
   const updateUserMutation = useUpdateUserMutation();
 
-  const isEditMode = !!initialValues;
+  const isEditMode = !!initialValues && !!initialValues.id;
   const isLoading = createUserMutation.isPending || updateUserMutation.isPending;
 
   // Initialize form values if editing

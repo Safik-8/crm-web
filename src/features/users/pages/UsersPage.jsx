@@ -79,29 +79,38 @@ const UsersPage = () => {
   const canCreate = hasPermission('USER', 'canCreate');
 
   // ── DROPDOWNS DATA FETCHING (TENANT AWARE) ──────────────────
-  
-  // 1. Fetch Companies list (Super Admin only)
+
+  // ── Rank-based access flags — role-name agnostic, works for any custom role
+  // System ranks: Super Admin=100, Company Admin=80, Branch Manager=60
+  // Custom roles: company-scoped max rank=79, global max rank=99 (by design)
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const canFilterByCompany = actorRank >= 100; // No company scope (Super Admin level)
+  const canFilterByBranch  = actorRank >= 80;  // Company-wide visibility (Company Admin+)
+
+  // 1. Fetch Companies list — only for actors with no company scope (rank >= 100)
   const { data: companiesRes } = useQuery({
     queryKey: ['companies-all-options'],
     queryFn: () => companyApi.getCompanies(),
-    enabled: currentUser?.primaryRole === 'SUPER_ADMIN'
+    enabled: canFilterByCompany
   });
   const companies = Array.isArray(companiesRes?.data) ? companiesRes.data : (companiesRes?.data?.companies || []);
 
-  // 2. Fetch Branches list (scoped by company)
-  const targetCompanyId = currentUser?.primaryRole === 'SUPER_ADMIN' ? companyId : currentUser?.companyId;
+  // 2. Fetch Branches list — only for company-wide visibility roles (rank >= 80)
+  const targetCompanyId = canFilterByCompany ? companyId : currentUser?.companyId;
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-all-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
-    enabled: !!targetCompanyId
+    enabled: !!targetCompanyId && canFilterByBranch
   });
   const branches = Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || []);
 
-  // 3. Fetch Roles list (scoped by company)
+  // 3. Fetch Roles list — only if the user has ROLE_PERMISSION:canView.
+  // Branch-scoped roles (rank < 80) do NOT have this permission; prevents 403 toast on mount.
+  const canViewRoles = hasPermission('ROLE_PERMISSION', 'canView');
   const { data: rolesRes } = useQuery({
     queryKey: ['roles-all-options', targetCompanyId],
     queryFn: () => roleApi.getRoles({ companyId: targetCompanyId, limit: 100 }),
-    enabled: !!targetCompanyId
+    enabled: !!targetCompanyId && canViewRoles
   });
   const roles = Array.isArray(rolesRes?.data?.roles) ? rolesRes.data.roles : (Array.isArray(rolesRes?.data) ? rolesRes.data : []);
 
@@ -157,122 +166,129 @@ const UsersPage = () => {
       title="User Management"
       description="Create, edit, reset passwords, and control access lifecycles of CRM employees."
       icon={Users2}
+      hideHeader={true}
     >
       <div className="space-y-4">
         
-        {/* ── SEARCH AND FILTER BAR ── */}
-        <div className="p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl flex flex-col gap-3">
-          
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <Filter size={15} className="text-orange-500" />
-              <span>Search & Filters</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => refetch()}
-                className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                title="Refresh List"
-              >
-                <RefreshCw size={14} />
-                <span>Refresh</span>
-              </Button>
-
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                >
-                  <Plus size={14} />
-                  <span>Onboard User</span>
-                </Button>
-              )}
-            </div>
+        {/* ── PAGE HEADER ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-100/80">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">User Directory</h1>
+            <p className="text-slate-400 text-xs font-semibold mt-0.5">Control employee authorization, branch routing, and access scopes.</p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => refetch()}
+              className="flex items-center gap-1.5 h-9 px-3 text-xs"
+              title="Refresh List"
+            >
+              <RefreshCw size={13} />
+              <span>Refresh</span>
+            </Button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {canCreate && (
+              <Button
+                onClick={handleOpenCreateForm}
+                className="flex items-center gap-1.5 h-9 px-3 text-xs"
+              >
+                <Plus size={14} />
+                <span>Onboard User</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* ── SEARCH AND FILTER BAR ── */}
+        <div className="p-3 bg-white border border-slate-200/60 shadow-sm rounded-2xl">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
             
             {/* Search Input */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-[240px]">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
                 <Search size={15} />
               </span>
               <input
                 type="text"
-                placeholder="Search name, email, code..."
+                placeholder="Search name, email, employee ID..."
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
+                className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
                            focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
               />
             </div>
 
-            {/* Company Filter (Super Admin only) */}
-            {currentUser?.primaryRole === 'SUPER_ADMIN' && (
-              <SelectField
-                id="companyFilter"
-                value={companyId}
-                onChange={(val) => handleFilterChange('companyId', val)}
-                options={companies.map(c => ({ value: c.id, label: c.name }))}
-                placeholder="All Companies"
-                allowEmptyOption={true}
-              />
-            )}
+            {/* Select Dropdowns Group */}
+            <div className="flex flex-wrap items-center gap-2">
+              
+              {canFilterByCompany && (
+                <div className="w-[160px]">
+                  <SelectField
+                    id="companyFilter"
+                    value={companyId}
+                    onChange={(val) => handleFilterChange('companyId', val)}
+                    options={companies.map(c => ({ value: c.id, label: c.name }))}
+                    placeholder="All Companies"
+                    allowEmptyOption={true}
+                  />
+                </div>
+              )}
 
-            {/* Branch Filter (Locked for Branch Manager) */}
-            {currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-              <SelectField
-                id="branchFilter"
-                value={branchId}
-                onChange={(val) => handleFilterChange('branchId', val)}
-                options={branches.map(b => ({ value: b.id, label: b.name }))}
-                placeholder="All Branches"
-                allowEmptyOption={true}
-                disabled={!targetCompanyId}
-              />
-            )}
+              {canFilterByBranch && (
+                <div className="w-[160px]">
+                  <SelectField
+                    id="branchFilter"
+                    value={branchId}
+                    onChange={(val) => handleFilterChange('branchId', val)}
+                    options={branches.map(b => ({ value: b.id, label: b.name }))}
+                    placeholder="All Branches"
+                    allowEmptyOption={true}
+                    disabled={!targetCompanyId}
+                  />
+                </div>
+              )}
 
-            {/* Role Filter */}
-            <SelectField
-              id="roleFilter"
-              value={roleId}
-              onChange={(val) => handleFilterChange('roleId', val)}
-              options={roles.map(r => ({ value: r.id, label: r.name }))}
-              placeholder="All Roles"
-              allowEmptyOption={true}
-              disabled={!targetCompanyId}
-            />
+              {canViewRoles && (
+                <div className="w-[160px]">
+                  <SelectField
+                    id="roleFilter"
+                    value={roleId}
+                    onChange={(val) => handleFilterChange('roleId', val)}
+                    options={roles.map(r => ({ value: r.id, label: r.name }))}
+                    placeholder="All Roles"
+                    allowEmptyOption={true}
+                    disabled={!targetCompanyId}
+                  />
+                </div>
+              )}
 
-            {/* Status Filter */}
-            <SelectField
-              id="statusFilter"
-              value={status}
-              onChange={(val) => handleFilterChange('status', val)}
-              options={[
-                { value: 'ACTIVE', label: 'Active' },
-                { value: 'INACTIVE', label: 'Inactive' }
-              ]}
-              placeholder="All Statuses"
-              allowEmptyOption={true}
-            />
+              <div className="w-[140px]">
+                <SelectField
+                  id="statusFilter"
+                  value={status}
+                  onChange={(val) => handleFilterChange('status', val)}
+                  options={[
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'INACTIVE', label: 'Inactive' }
+                  ]}
+                  placeholder="All Statuses"
+                  allowEmptyOption={true}
+                />
+              </div>
+
+              {/* Inline Clear Button */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
 
           </div>
-
-          {/* Active filters clear button */}
-          {hasActiveFilters && (
-            <div className="flex justify-end pt-1">
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-[12px] font-bold text-orange-600 hover:text-orange-700 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
-          )}
-
         </div>
 
         {/* ── USERS DATA TABLE ── */}
