@@ -210,7 +210,7 @@ const UserListTable = ({
       className: 'w-[60px]',
       cell: (row) => (
         <div className="flex justify-end">
-          <ActionMenu
+          <RowActionsMenu
             row={row}
             onViewDetails={onViewDetails}
             onEdit={onEdit}
