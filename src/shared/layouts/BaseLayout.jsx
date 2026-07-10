@@ -31,6 +31,7 @@ const BaseLayout = () => {
       'daily': 'Daily Report',
       'kanban': 'Leads Kanban',
       'branch': 'Branch Performance',
+      'users': 'User Management',
     };
     if (customMappings[lastSegment]) return customMappings[lastSegment];
     return lastSegment.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());

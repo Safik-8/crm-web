@@ -4,7 +4,6 @@ import { toast } from '../../../shared/utils/toast';
 import { useAssignUserToBranch } from '../hooks/useBranches';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useRoles } from '../../roles/hooks/useRoles';
-import { useUsers } from '../../users/hooks/useUsers';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 import { Checkbox } from '@mui/material';
 
@@ -17,7 +16,6 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
   const assignUserMutation = useAssignUserToBranch();
   const { user } = useAuth();
   const { roles } = useRoles(branch?.companyId);
-  const { users } = useUsers(branch?.companyId);
 
   const userRank = user?.primaryRoleRank || 80;
 
