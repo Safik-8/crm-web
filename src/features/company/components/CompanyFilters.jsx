@@ -1,12 +1,7 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import SelectField from '../../../shared/components/elements/SelectField';
 
-/**
- * CompanyFilters
- * Search input + Status filter + Sort selector.
- * Fully controlled — all state lives in the parent (useCompanies hook).
- */
 const SORT_OPTIONS = [
   { value: 'createdAt_desc', label: 'Newest First' },
   { value: 'createdAt_asc',  label: 'Oldest First' },
@@ -36,41 +31,43 @@ const CompanyFilters = ({
   const handleClearSearch = () => onSearchChange('');
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-3 sm:px-4 py-3">
-      <div className="flex flex-col sm:flex-row gap-2.5">
-
-        {/* ── Search ─────────────────────────────────────────────────────── */}
-        <div className="relative flex-1 min-w-0">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-          />
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-4">
+      <div className="flex flex-col xl:flex-row gap-3 xl:gap-4 items-center">
+        
+        {/* ── Search Bar (Glassmorphic) ─────────────────────────────────── */}
+        <div className="relative flex-1 w-full min-w-0">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center bg-white shadow-sm h-7 w-7 rounded-lg">
+            <Search size={14} className="text-primary" />
+          </div>
           <input
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, code, industry…"
+            placeholder="Search by company name, code, or industry..."
             disabled={isLoading}
-            className="w-full h-9 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 font-medium
-                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-white
+            className="w-full h-12 pl-14 pr-10 bg-white/50 border-0 shadow-inner rounded-xl text-sm text-slate-800 placeholder-slate-400 font-bold
+                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white
                        disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           />
           {search && (
             <button
               onClick={handleClearSearch}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors shadow-sm"
               title="Clear search"
             >
-              <X size={14} />
+              <X size={14} strokeWidth={2.5} />
             </button>
           )}
         </div>
 
-        {/* ── Right controls ─────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0">
-
-          {/* Status filter */}
-          <div className="w-full sm:w-auto">
+        {/* ── Filter Controls ─────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto shrink-0">
+          <div className="flex items-center gap-2 px-3 py-1 bg-slate-100/50 rounded-xl border border-slate-200/50 hidden md:flex">
+            <SlidersHorizontal size={16} className="text-slate-400" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filters</span>
+          </div>
+          
+          <div className="flex-1 sm:flex-none w-full sm:w-auto relative">
             <SelectField
               id="company-status-filter"
               value={status}
@@ -80,22 +77,38 @@ const CompanyFilters = ({
               allowEmptyOption={true}
               options={STATUS_OPTIONS.filter(opt => opt.value !== '')}
               selectSx={{
-                py: '8px !important',
+                py: '12px !important',
                 fontSize: '13px',
+                fontWeight: '700',
+                color: '#1e293b'
               }}
               sx={{
                 width: '100%',
-                minWidth: { sm: '140px' },
+                minWidth: { sm: '160px' },
                 '& .MuiOutlinedInput-root': {
-                  height: '36px',
+                  height: '48px',
                   borderRadius: '12px',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  '& fieldset': {
+                    borderColor: 'transparent',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#F86F03',
+                    borderWidth: '2px',
+                  }
                 }
               }}
             />
+            {status && (
+               <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm z-10" />
+            )}
           </div>
 
-          {/* Sort */}
-          <div className="w-full sm:w-auto">
+          <div className="flex-1 sm:flex-none w-full sm:w-auto">
             <SelectField
               id="company-sort"
               value={currentSort}
@@ -104,24 +117,33 @@ const CompanyFilters = ({
               placeholder="Sort By"
               options={SORT_OPTIONS}
               selectSx={{
-                py: '8px !important',
+                py: '12px !important',
                 fontSize: '13px',
+                fontWeight: '700',
+                color: '#1e293b'
               }}
               sx={{
                 width: '100%',
-                minWidth: { sm: '150px' },
+                minWidth: { sm: '160px' },
                 '& .MuiOutlinedInput-root': {
-                  height: '36px',
+                  height: '48px',
                   borderRadius: '12px',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  '& fieldset': {
+                    borderColor: 'transparent',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#F86F03',
+                    borderWidth: '2px',
+                  }
                 }
               }}
             />
           </div>
-
-          {/* Active filter indicator dot */}
-          {hasActiveFilters && (
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0 hidden sm:block" title="Filters active" />
-          )}
         </div>
       </div>
     </div>

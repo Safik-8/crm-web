@@ -1,14 +1,93 @@
 // src/features/company/components/CompanyTable.jsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Edit2, Building2, Users, Calendar, GitBranch,
   ChevronRight, AlertCircle, RefreshCcw, SearchX,
-  Power
+  Power, MoreVertical
 } from 'lucide-react';
+import { Menu, MenuItem, IconButton } from '@mui/material';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import Table from '../../../shared/components/elements/Table';
+
+const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  
+  const handleClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleClose = (event) => {
+    if(event) event.stopPropagation();
+    setAnchorEl(null);
+  };
+
+  if (!canEdit) {
+    return (
+      <IconButton disabled size="small" className="text-slate-300">
+        <MoreVertical size={18} />
+      </IconButton>
+    );
+  }
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <IconButton 
+        onClick={handleClick}
+        size="small"
+        className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
+      >
+        <MoreVertical size={18} />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.08))',
+            mt: 0.5,
+            borderRadius: '12px',
+            minWidth: 160,
+            border: '1px solid #f1f5f9',
+            '& .MuiMenuItem-root': {
+              px: 2,
+              py: 1.5,
+              fontSize: '13px',
+              fontFamily: '"DM Sans", sans-serif',
+              fontWeight: 600,
+              color: '#475569',
+              gap: 1.5,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: '#f8fafc',
+              }
+            }
+          }
+        }}
+      >
+        <MenuItem onClick={(e) => { handleClose(e); onEdit(company); }}>
+          <Edit2 size={16} className="text-slate-400" />
+          Edit Details
+        </MenuItem>
+        <MenuItem 
+          onClick={(e) => { handleClose(e); onToggleStatus(company); }}
+          sx={{ color: company.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
+        >
+          <Power size={16} className={company.status === 'ACTIVE' ? 'text-red-400' : 'text-emerald-400'} />
+          {company.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+        </MenuItem>
+      </Menu>
+    </div>
+  );
+};
 
 /**
  * CompanyTable
@@ -37,7 +116,7 @@ const CompanyTable = ({
             <img
               src={company.logo}
               alt={`${company.name} logo`}
-              className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-200"
+              className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-200 shadow-sm"
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
@@ -46,7 +125,7 @@ const CompanyTable = ({
           ) : null}
           <div
             style={{ display: company.logo ? 'none' : 'flex' }}
-            className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
+            className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:from-primary group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shadow-sm"
           >
             <Building2 size={18} />
           </div>
@@ -60,7 +139,7 @@ const CompanyTable = ({
       cell: (company) => (
         <button
           onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
-          className="font-bold text-slate-900 font-heading text-[15px] hover:text-primary hover:underline transition-colors text-left focus:outline-none"
+          className="font-bold text-slate-800 font-heading text-[15px] hover:text-primary transition-colors text-left focus:outline-none"
         >
           {company.name}
         </button>
@@ -70,7 +149,7 @@ const CompanyTable = ({
     {
       header: 'Company Code',
       cell: (company) => (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-tighter">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-50 text-slate-600 border border-slate-200 uppercase tracking-tighter shadow-sm">
           {company.code}
         </span>
       ),
@@ -91,10 +170,10 @@ const CompanyTable = ({
       cell: (company) => (
         <button
           onClick={() => navigate(`/companies/${company.id}/branches`)}
-          className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch"
+          className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/branch focus:outline-none"
           title="View Branches"
         >
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:bg-primary/10 group-hover/branch:text-primary transition-all border border-slate-100 group-hover/branch:border-primary/20 shadow-sm">
             <GitBranch size={14} />
           </div>
           <span className="font-bold text-sm group-hover/branch:text-primary transition-colors">
@@ -108,7 +187,7 @@ const CompanyTable = ({
       header: 'User Count',
       cell: (company) => (
         <div className="flex items-center gap-2 text-slate-600">
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
             <Users size={14} />
           </div>
           <span className="font-bold text-sm">
@@ -133,81 +212,38 @@ const CompanyTable = ({
     },
     {
       header: 'Actions',
+      align: 'right',
       cell: (company) => (
-        <div className="flex items-center gap-1.5">
-          {canEdit ? (
-            <>
-              <button
-                onClick={() => onToggleStatus(company)}
-                className={`h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                  company.status === 'ACTIVE'
-                    ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                }`}
-                title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
-              >
-                <Power size={17} strokeWidth={2.5} />
-              </button>
-              <button
-                onClick={() => onEdit(company)}
-                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200"
-                title="Edit Company"
-              >
-                <Edit2 size={17} strokeWidth={2.5} />
-              </button>
-            </>
-          ) : (
-            <div className="flex gap-1.5">
-              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                <Power size={17} strokeWidth={2} />
-              </span>
-              <span className="h-9 w-9 flex items-center justify-center text-slate-200 cursor-not-allowed">
-                <Edit2 size={17} strokeWidth={2} />
-              </span>
-            </div>
-          )}
+        <div className="flex items-center justify-end">
+          <ActionMenu 
+            company={company} 
+            canEdit={canEdit} 
+            onEdit={onEdit} 
+            onToggleStatus={onToggleStatus} 
+          />
         </div>
       ),
-      skeleton: () => <Skeleton className="h-8 w-16 rounded-xl" />,
+      skeleton: () => <Skeleton className="h-8 w-8 rounded-full ml-auto" />,
     }
   ];
 
   // ── Status badge ──────────────────────────────────────────────────────────
   const StatusBadge = ({ status }) => (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
       status === 'ACTIVE'
-        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-        : 'bg-slate-50 text-slate-500 border-slate-100'
+        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
+        : 'bg-slate-500/10 text-slate-500 border-slate-500/20 shadow-sm'
     }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${
-        status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+        status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
       }`} />
       {status}
-    </span>
-  );
-
-  // ── Skeleton rows (desktop) ───────────────────────────────────────────────
-  const DesktopSkeletons = () => (
-    <>
-      {[...Array(5)].map((_, i) => (
-        <tr key={i} className="border-b border-slate-100 last:border-0">
-          <td className="py-4 px-6"><Skeleton className="h-10 w-10 rounded-xl" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-5 w-40" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-6 w-16 rounded-lg" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-5 w-24" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-6 w-20 rounded-full" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-5 w-10" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-5 w-10" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-5 w-32" /></td>
-          <td className="py-4 px-6"><Skeleton className="h-8 w-16 rounded-xl" /></td>
-        </tr>
-      ))}
-    </>
+    </div>
   );
 
   // ── Skeleton cards (mobile) ───────────────────────────────────────────────
   const MobileSkeletons = () => (
-    <div className="space-y-3">
+    <div className="space-y-3 mt-2">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm">
           <div className="flex items-start gap-3 mb-4">
@@ -219,7 +255,7 @@ const CompanyTable = ({
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
             </div>
-            <Skeleton className="h-8 w-16 rounded-lg shrink-0" />
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <Skeleton className="h-14 rounded-xl" />
@@ -256,21 +292,21 @@ const CompanyTable = ({
     );
     return colSpan
       ? <tr><td colSpan={colSpan}>{inner}</td></tr>
-      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm">{inner}</div>;
+      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm mt-2">{inner}</div>;
   };
 
   // ── Empty state ───────────────────────────────────────────────────────────
   const EmptyState = ({ colSpan }) => {
     const inner = (
       <div className="flex flex-col items-center gap-4 py-14 px-6 text-center">
-        <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 shadow-sm">
+        <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm">
           {hasActiveFilters ? <SearchX size={30} strokeWidth={1.5} /> : <Building2 size={30} strokeWidth={1.5} />}
         </div>
         <div>
           <p className="font-bold text-slate-800 text-base">
             {hasActiveFilters ? 'No results found' : 'No companies yet'}
           </p>
-          <p className="text-sm text-slate-500 mt-1 max-w-xs">
+          <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">
             {hasActiveFilters
               ? 'Try adjusting your search or filters to find what you\'re looking for.'
               : 'Get started by adding your first company.'}
@@ -280,7 +316,7 @@ const CompanyTable = ({
           <button
             onClick={onClearFilters}
             className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold
-                       hover:bg-slate-200 transition-all active:scale-95"
+                       hover:bg-slate-200 transition-all active:scale-95 shadow-sm mt-2"
           >
             <SearchX size={15} />
             Clear Filters
@@ -290,120 +326,101 @@ const CompanyTable = ({
     );
     return colSpan
       ? <tr><td colSpan={colSpan}>{inner}</td></tr>
-      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm">{inner}</div>;
+      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm mt-2">{inner}</div>;
   };
 
   // ── Mobile card ───────────────────────────────────────────────────────────
   const MobileCard = ({ company }) => (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+    <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 overflow-hidden group relative border border-slate-100">
       <div className="p-4">
         {/* Top row */}
-        <div className="flex items-start gap-3 mb-3">
-          {/* Logo with Image fallbacks */}
-          {company.logo ? (
-            <img
-              src={company.logo}
-              alt={`${company.name} logo`}
-              className="h-11 w-11 rounded-xl object-cover shrink-0 border border-slate-200"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <div
-            style={{ display: company.logo ? 'none' : 'flex' }}
-            className="h-11 w-11 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300"
-          >
-            <Building2 size={19} />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <button
-              onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
-              className="font-bold text-slate-900 font-heading text-[15px] leading-tight line-clamp-2 hover:text-primary hover:underline text-left focus:outline-none w-full"
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3 min-w-0">
+            {/* Logo */}
+            {company.logo ? (
+              <img
+                src={company.logo}
+                alt={`${company.name} logo`}
+                className="h-11 w-11 rounded-xl object-cover shrink-0 border border-slate-200 shadow-sm"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              style={{ display: company.logo ? 'none' : 'flex' }}
+              className="h-11 w-11 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:from-primary group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shadow-sm"
             >
-              {company.name}
-            </button>
-            {company.industry && (
-              <span className="text-[11px] text-slate-500 font-medium block mt-0.5">{company.industry}</span>
-            )}
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">
-                {company.code}
-              </span>
-              <StatusBadge status={company.status} />
+              <Building2 size={19} />
+            </div>
+  
+            <div className="flex-1 min-w-0">
+              <button
+                onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
+                className="font-black text-slate-900 font-heading text-[16px] leading-tight line-clamp-2 hover:text-primary transition-colors text-left focus:outline-none w-full"
+              >
+                {company.name}
+              </button>
+              {company.industry && (
+                <span className="text-[11px] text-slate-500 font-medium block mt-0.5">{company.industry}</span>
+              )}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-widest shadow-inner">
+                  {company.code}
+                </span>
+                <StatusBadge status={company.status} />
+              </div>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex gap-1 shrink-0">
-            {canEdit && (
-              <>
-                <button
-                  onClick={() => onToggleStatus(company)}
-                  className={`h-8 w-8 flex items-center justify-center rounded-lg transition-all ${
-                    company.status === 'ACTIVE'
-                      ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
-                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                  }`}
-                  title={company.status === 'ACTIVE' ? 'Deactivate Company' : 'Activate Company'}
-                >
-                  <Power size={14} strokeWidth={2.5} />
-                </button>
-                <button
-                  onClick={() => onEdit(company)}
-                  className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                  title="Edit Company"
-                >
-                  <Edit2 size={14} strokeWidth={2.5} />
-                </button>
-              </>
-            )}
+          
+          {/* Actions - using Three Dot Menu */}
+          <div className="shrink-0 ml-2">
+            <ActionMenu 
+              company={company} 
+              canEdit={canEdit} 
+              onEdit={onEdit} 
+              onToggleStatus={onToggleStatus} 
+            />
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-1.5 pt-3 border-t border-slate-100">
+        {/* Stats row - Modernized for professional look */}
+        <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
           {/* Branches */}
           <button
             onClick={() => navigate(`/companies/${company.id}/branches`)}
-            className="flex items-center gap-1.5 flex-1 min-w-0 px-2.5 py-2 bg-slate-50 hover:bg-primary/5 rounded-xl transition-all group/branch border border-transparent hover:border-primary/20"
+            className="flex flex-col items-center justify-center py-2 bg-slate-50 hover:bg-primary/5 rounded-xl transition-all group/branch border border-transparent hover:border-primary/20 focus:outline-none"
             title="View Branches"
           >
-            <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center text-slate-400 group-hover/branch:text-primary transition-colors shadow-sm shrink-0">
-              <GitBranch size={13} />
+            <div className="font-black text-sm text-slate-800 group-hover/branch:text-primary transition-colors leading-none mb-1">
+              {company._count?.branches ?? 0}
             </div>
-            <div className="text-left min-w-0">
-              <div className="font-black text-sm text-slate-900 group-hover/branch:text-primary transition-colors leading-none">
-                {company._count?.branches ?? 0}
-              </div>
-              <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">Branches</div>
+            <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
+              <GitBranch size={10} className="group-hover/branch:text-primary" />
+              Branches
             </div>
-            <ChevronRight size={12} className="text-slate-300 group-hover/branch:text-primary transition-colors ml-auto shrink-0" />
           </button>
 
           {/* Users */}
-          <div className="flex items-center gap-1.5 flex-1 min-w-0 px-2.5 py-2 bg-slate-50 rounded-xl border border-transparent">
-            <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm shrink-0">
-              <Users size={13} />
+          <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">
+            <div className="font-black text-sm text-slate-800 leading-none mb-1">
+              {company._count?.users ?? 0}
             </div>
-            <div className="text-left min-w-0">
-              <div className="font-black text-sm text-slate-900 leading-none">
-                {company._count?.users ?? 0}
-              </div>
-              <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">Users</div>
+            <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
+              <Users size={10} />
+              Users
             </div>
           </div>
 
           {/* Created date */}
-          <div className="flex items-center gap-1.5 px-2 py-2 shrink-0">
-            <Calendar size={12} className="text-slate-400 shrink-0" />
-            <div>
-              <div className="text-[11px] font-bold text-slate-700 leading-none whitespace-nowrap">
-                {new Date(company.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-              </div>
-              <div className="text-[9px] text-slate-400 font-medium uppercase tracking-wide mt-0.5">Created</div>
+          <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">
+            <div className="font-bold text-[11px] text-slate-700 leading-none mb-1 whitespace-nowrap">
+              {new Date(company.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </div>
+            <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase tracking-wide">
+              <Calendar size={10} />
+              Created
             </div>
           </div>
         </div>
@@ -420,7 +437,7 @@ const CompanyTable = ({
         {!isLoading && loadingState === 'error' && <ErrorState />}
         {!isLoading && loadingState === 'empty' && <EmptyState />}
         {!isLoading && loadingState === 'success' && (
-          <div className="space-y-2.5">
+          <div className="space-y-3 mt-2">
             {companies.map((company) => (
               <MobileCard key={company.id} company={company} />
             ))}
@@ -429,7 +446,7 @@ const CompanyTable = ({
       </div>
 
       {/* ── Desktop table layout ───────────────────────────────────────────── */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block mt-4">
         <Table
           columns={columns}
           data={companies}

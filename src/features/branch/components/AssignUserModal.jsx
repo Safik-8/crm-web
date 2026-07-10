@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { UserPlus, User, Mail, Lock, ShieldAlert } from 'lucide-react';
+import { UserPlus, User, Mail, Lock, ShieldAlert, Network } from 'lucide-react';
 import { toast } from '../../../shared/utils/toast';
 import { useAssignUserToBranch } from '../hooks/useBranches';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -156,7 +156,7 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
       subtitle={branch ? `Registering to ${branch.name}` : ''}
       icon={UserPlus}
       fields={fields}
-      initialValues={{ name: '', email: '', password: '', primaryRole: roleOptions[0]?.value || '', secondaryRoles: [] }}
+      initialValues={{ name: '', email: '', password: '', primaryRole: roleOptions[0]?.value || '', reportingManagerId: '', secondaryRoles: [] }}
       onSubmit={handleSubmit}
       submitText="Create & Assign User"
       validate={validate}

@@ -1,4 +1,6 @@
-import React from 'react';
+// src/features/users/components/UserListTable.jsx
+
+import React, { useState, useRef, useEffect } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Edit2, Key, Power, Eye, MoreVertical } from 'lucide-react';
@@ -150,7 +152,22 @@ const UserListTable = ({
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => {
         const primaryRole = row.userRoles?.find(ur => ur.isPrimary) || row.userRoles?.[0];
-        return primaryRole?.role?.name || 'Member';
+        const roleName = primaryRole?.role?.name || 'MEMBER';
+        
+        let badgeColor = 'bg-slate-50 text-slate-600 border-slate-200/50';
+        if (roleName === 'SUPER_ADMIN') badgeColor = 'bg-purple-50 text-purple-600 border-purple-200/50';
+        else if (roleName === 'COMPANY_ADMIN') badgeColor = 'bg-blue-50 text-blue-600 border-blue-200/50';
+        else if (roleName === 'BRANCH_MANAGER') badgeColor = 'bg-indigo-50 text-indigo-600 border-indigo-200/50';
+        else if (roleName === 'BDE') badgeColor = 'bg-sky-50 text-sky-600 border-sky-200/50';
+        else if (roleName === 'ISE') badgeColor = 'bg-amber-50 text-amber-600 border-amber-200/50';
+
+        return (
+          <div className="flex justify-center">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${badgeColor}`}>
+              {roleName.replace('_', ' ')}
+            </span>
+          </div>
+        );
       }
     },
     {
@@ -189,17 +206,19 @@ const UserListTable = ({
     },
     {
       header: 'Actions',
-      align: 'center',
-      className: 'w-[80px]',
+      align: 'right',
+      className: 'w-[60px]',
       cell: (row) => (
-        <RowActionsMenu
-          row={row}
-          canEdit={canEdit}
-          onViewDetails={onViewDetails}
-          onEdit={onEdit}
-          onResetPassword={onResetPassword}
-          onToggleStatus={onToggleStatus}
-        />
+        <div className="flex justify-end">
+          <ActionMenu
+            row={row}
+            onViewDetails={onViewDetails}
+            onEdit={onEdit}
+            onResetPassword={onResetPassword}
+            onToggleStatus={onToggleStatus}
+            canEdit={canEdit}
+          />
+        </div>
       )
     }
   ];
