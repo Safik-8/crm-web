@@ -106,7 +106,7 @@ const RoleManagementPage = () => {
         setFormName(selectedRole.name);
         setFormDescription(selectedRole.description || '');
         setFormCompanyId(selectedRole.companyId || '');
-        
+
         // Map permissions list to object map
         const permMap = {};
         selectedRole.rolePermissions?.forEach(p => {
@@ -141,7 +141,7 @@ const RoleManagementPage = () => {
   const handleDeleteClick = async (role) => {
     setRoleToDelete(role);
     const userCount = role._count?.userRoles ?? 0;
-    
+
     if (userCount > 0) {
       const toastId = toast.loading('Retrieving associated users...');
       try {
@@ -333,11 +333,10 @@ const RoleManagementPage = () => {
     {
       header: 'Type',
       cell: (role) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
-          role.isSystem 
-            ? 'bg-slate-50 text-slate-600 border-slate-200/60' 
-            : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-        }`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${role.isSystem
+          ? 'bg-slate-50 text-slate-600 border-slate-200/60'
+          : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+          }`}>
           {role.isSystem ? 'System' : 'Custom'}
         </span>
       ),
@@ -346,11 +345,10 @@ const RoleManagementPage = () => {
     {
       header: 'Status',
       cell: (role) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-          role.status === 'ACTIVE'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-            : 'bg-slate-50 text-slate-500 border-slate-100'
-        }`}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${role.status === 'ACTIVE'
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+          : 'bg-slate-50 text-slate-500 border-slate-100'
+          }`}>
           <span className={`w-1.5 h-1.5 rounded-full ${role.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
           {role.status}
         </span>
@@ -372,16 +370,15 @@ const RoleManagementPage = () => {
               >
                 <Edit2 size={15} />
               </button>
-              
+
               {!role.isSystem && (
                 <>
                   <button
                     onClick={() => handleToggleStatusClick(role)}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      role.status === 'ACTIVE' 
-                        ? 'text-slate-400 hover:text-red-500 hover:bg-red-50' 
-                        : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
-                    }`}
+                    className={`p-1.5 rounded-lg transition-all ${role.status === 'ACTIVE'
+                      ? 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                      : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
+                      }`}
                     title={role.status === 'ACTIVE' ? 'Deactivate Role' : 'Activate Role'}
                   >
                     <Power size={15} />
@@ -463,11 +460,10 @@ const RoleManagementPage = () => {
                     </div>
                     <span className="font-bold text-slate-800 text-sm">{role.name}</span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${
-                    role.isSystem 
-                      ? 'bg-slate-50 text-slate-600 border-slate-200/60' 
-                      : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${role.isSystem
+                    ? 'bg-slate-50 text-slate-600 border-slate-200/60'
+                    : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                    }`}>
                     {role.isSystem ? 'System' : 'Custom'}
                   </span>
                 </div>
@@ -487,11 +483,10 @@ const RoleManagementPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-semibold text-slate-400">Status:</span>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                      role.status === 'ACTIVE' 
-                        ? 'bg-green-50 text-green-700 border border-green-100' 
-                        : 'bg-slate-50 text-slate-500 border border-slate-200'
-                    }`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${role.status === 'ACTIVE'
+                      ? 'bg-green-50 text-green-700 border border-green-100'
+                      : 'bg-slate-50 text-slate-500 border border-slate-200'
+                      }`}>
                       {role.status}
                     </span>
                   </div>
@@ -563,7 +558,7 @@ const RoleManagementPage = () => {
               placeholder="e.g. Sales Coordinator"
               required
             />
-            
+
             <TextField
               id="role-description"
               label="Description"
@@ -594,7 +589,7 @@ const RoleManagementPage = () => {
             {/* Permission Matrix Grid */}
             <div className="border-t border-slate-100 pt-4 mt-2">
               <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3">Module Permissions Matrix</h3>
-              
+
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">

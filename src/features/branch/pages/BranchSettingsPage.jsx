@@ -142,12 +142,12 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
 
             {/* ── Mini header for inline mode ── */}
             {inlineMode && (
-                <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-slate-200/60 shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                            <GitBranch size={15} />
+                <div className="flex items-center justify-between bg-white rounded-2xl px-5 py-3.5 border border-slate-100 shadow-sm mb-2">
+                    <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm">
+                            <GitBranch size={16} strokeWidth={2.5} />
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 font-heading leading-tight">Hub Registry</h3>
+                        <h3 className="text-[15px] font-black text-slate-800 font-heading leading-tight">Hub Registry</h3>
                     </div>
                     <div className="flex items-center gap-2">
                         <button

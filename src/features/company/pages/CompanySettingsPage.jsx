@@ -14,18 +14,12 @@ import GenericPage from '../../../shared/components/templates/GenericPage';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
 
-/**
- * CompanySettingsPage
- * Paginated companies listing with search, filter, sort, and full RBAC.
- * Integrated with Axios and TanStack Query.
- */
 const CompanySettingsPage = () => {
   const { permissions } = useAuth();
   const { forceHideLoader } = useLoader();
   const didHideInitialRouteLoaderRef = useRef(false);
   const companyPerms = permissions?.COMPANY || {};
 
-  // ── Paginated TanStack data + filter states ──────────────────────────────
   const {
     companies,
     pagination,
@@ -42,14 +36,11 @@ const CompanySettingsPage = () => {
     refetch,
   } = useCompanies();
 
-  // ── Mutation hook for status toggles ──────────────────────────────────────
   const toggleStatusMutation = useToggleCompanyStatus();
 
-  // ── Form slide-over state ────────────────────────────────────────────────
   const [isFormOpen, setIsFormOpen]           = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
 
-  // ── Status toggle modal confirmation state ─────────────────────────────────
   const [isToggleOpen, setIsToggleOpen]       = useState(false);
   const [companyToToggle, setCompanyToToggle] = useState(null);
 
@@ -73,13 +64,11 @@ const CompanySettingsPage = () => {
     handleStatusChange('');
   };
 
-  // Triggered when clicking the power icon in the company table
   const handleToggleStatusClick = (company) => {
     setCompanyToToggle(company);
     setIsToggleOpen(true);
   };
 
-  // Triggered when confirming in the dialog modal
   const handleConfirmToggle = async () => {
     if (!companyToToggle) return;
     
@@ -121,6 +110,7 @@ const CompanySettingsPage = () => {
       title="Company Setup"
       description="Manage your organization's global identity, branding, and legal entity details."
       icon={Building2}
+      hideHeader={true}
     >
       <div className="flex flex-col gap-3 sm:gap-4">
 
@@ -160,20 +150,25 @@ const CompanySettingsPage = () => {
         </div>
 
         {/* ── Desktop section header ─────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={refetch}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
-              title="Refresh Data"
-            >
-              <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-            </button>
+        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white rounded-2xl px-5 py-4 border border-slate-200/60 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0 shadow-sm">
+              <Building2 size={20} />
+            </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 font-heading leading-tight">Entity Registry</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Entity Registry</h2>
+                <button
+                  onClick={refetch}
+                  disabled={isLoading}
+                  className="text-slate-400 hover:text-primary transition-colors disabled:opacity-50 focus:outline-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} />
+                </button>
+              </div>
               {!isLoading && pagination.total > 0 && (
-                <p className="text-[13px] text-slate-500 font-medium">
+                <p className="text-[13px] text-slate-500 font-medium mt-0.5">
                   {pagination.total} {pagination.total === 1 ? 'company' : 'companies'} total
                 </p>
               )}
@@ -185,7 +180,7 @@ const CompanySettingsPage = () => {
               variant="contained"
               size="medium"
               startIcon={<Plus size={18} />}
-              className="group"
+              className="group shadow-sm hover:shadow-md transition-all"
             >
               Add Company
             </Button>
@@ -205,24 +200,28 @@ const CompanySettingsPage = () => {
         />
 
         {/* ── Table ─────────────────────────────────────────────────────── */}
-        <CompanyTable
-          companies={companies}
-          loadingState={loadingState}
-          errorMessage={errorMessage}
-          onEdit={handleEditCompany}
-          onToggleStatus={handleToggleStatusClick}
-          canEdit={companyPerms.canEdit}
-          onRetry={refetch}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearFilters}
-        />
+        <div className="w-full relative z-10 bg-white sm:bg-slate-50/50 rounded-3xl sm:p-2 sm:border border-slate-200/50">
+          <CompanyTable
+            companies={companies}
+            loadingState={loadingState}
+            errorMessage={errorMessage}
+            onEdit={handleEditCompany}
+            onToggleStatus={handleToggleStatusClick}
+            canEdit={companyPerms.canEdit}
+            onRetry={refetch}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
 
         {/* ── Pagination ────────────────────────────────────────────────── */}
-        <CompanyPagination
-          pagination={pagination}
-          onPageChange={setPage}
-          isLoading={isLoading}
-        />
+        <div className="flex justify-center mt-2 pb-6">
+          <CompanyPagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={isLoading}
+          />
+        </div>
 
         {/* ── Add / Edit drawer ─────────────────────────────────────────── */}
         <CompanyForm

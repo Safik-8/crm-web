@@ -1,12 +1,12 @@
 // src/features/users/pages/UsersPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { Users2, Plus, RefreshCw, Filter, Search } from 'lucide-react';
+import { Users2, Plus, RefreshCw, Filter, Search, List, Network } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery } from '@tanstack/react-query';
 
-import GenericPage from '../../../shared/components/templates/GenericPage';
+// Import removed
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import SelectField from '../../../shared/components/elements/SelectField';
@@ -17,6 +17,7 @@ import { roleApi } from '../../roles/api/roleApi';
 import { userService } from '../services/userService';
 
 import { useUserList } from '../hooks/useUserList';
+import { useUsersQuery } from '../hooks/useUsers';
 import { useResetPasswordMutation } from '../hooks/useUsers';
 
 import UserListTable from '../components/UserListTable';
@@ -24,10 +25,14 @@ import UserFormModal from '../components/UserFormModal';
 import UserDetailModal from '../components/UserDetailModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 import UserPagination from '../components/UserPagination';
+import OrgChart from '../components/OrgChart';
 
 const UsersPage = () => {
   const { user: currentUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'orgchart'
+  const { data: usersData } = useUsersQuery({ companyId: currentUser?.companyId, limit: 1000 });
+  const allUsers = Array.isArray(usersData?.data?.users) ? usersData.data.users : (Array.isArray(usersData?.data) ? usersData.data : []);
 
   // Modal Open/Close states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -153,13 +158,33 @@ const UsersPage = () => {
   };
 
   return (
-    <GenericPage
-      title="User Management"
-      description="Create, edit, reset passwords, and control access lifecycles of CRM employees."
-      icon={Users2}
-    >
-      <div className="space-y-4">
+    <>
+      <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
         
+        {/* ── TABS FOR VIEW MODE ── */}
+        <div className="bg-white rounded-t-2xl border-b border-slate-200/60 shadow-sm flex items-center px-6 pt-4">
+          <div className="flex space-x-6 relative top-[1px]">
+             <button 
+               onClick={() => setViewMode('list')}
+               className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'list' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
+             >
+               <List size={16} /> List View
+             </button>
+             <button 
+               onClick={() => setViewMode('orgchart')}
+               className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'orgchart' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
+             >
+               <Network size={16} /> Org Chart
+             </button>
+          </div>
+        </div>
+
+        {viewMode === 'orgchart' ? (
+           <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
+             <OrgChart users={allUsers || []} />
+           </div>
+        ) : (
+          <>
         {/* ── SEARCH AND FILTER BAR ── */}
         <div className="p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl flex flex-col gap-3">
           
@@ -347,9 +372,11 @@ const UsersPage = () => {
           confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
           isLoading={isTogglingStatus}
         />
+          </>
+        )}
 
       </div>
-    </GenericPage>
+    </>
   );
 };
 
