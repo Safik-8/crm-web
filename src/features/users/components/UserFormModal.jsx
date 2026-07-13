@@ -11,6 +11,7 @@ import { useUserForm } from '../hooks/useUserForm';
 import { branchService } from '../../branch/services/branchService';
 import { roleApi } from '../../roles/api/roleApi';
 import { userService } from '../services/userService';
+import { companyService } from '../../company/services/companyService';
 import { toast } from '../../../shared/utils/toast';
 
 const UserFormModal = ({
@@ -18,7 +19,8 @@ const UserFormModal = ({
   onClose,
   initialValues = null,
   companies = [],
-  currentUser = null
+  currentUser = null,
+  isBranchScoped = false
 }) => {
   const handleFormSuccess = () => {
     onClose();
@@ -35,20 +37,33 @@ const UserFormModal = ({
 
   // Automatically bind companyId for Company Admin / Branch Manager (non-SuperAdmins)
   useEffect(() => {
-    if (!isEditMode && isOpen && currentUser?.companyId) {
+    if (!isEditMode && isOpen && currentUser?.companyId && values.companyId !== currentUser.companyId) {
       handleChange('companyId', currentUser.companyId);
     }
-  }, [currentUser, isEditMode, isOpen, handleChange]);
+  }, [currentUser, isEditMode, isOpen, handleChange, values.companyId]);
 
   // Automatically lock Branch Manager to their branch
   useEffect(() => {
-    if (!isEditMode && isOpen && currentUser?.primaryRole === 'BRANCH_MANAGER' && currentUser?.branchId) {
+    if (!isEditMode && isOpen && currentUser?.primaryRole === 'BRANCH_MANAGER' && currentUser?.branchId && values.branchId !== currentUser.branchId) {
       handleChange('branchId', currentUser.branchId);
     }
-  }, [currentUser, isEditMode, isOpen, handleChange]);
+  }, [currentUser, isEditMode, isOpen, handleChange, values.branchId]);
+
+  // Fetch Companies (for Super Admin)
+  const { data: companiesRes } = useQuery({
+    queryKey: ['companies-all-options'],
+    queryFn: () => companyService.getCompaniesRaw(),
+    enabled: (currentUser?.primaryRoleRank ?? 0) >= 100 && isOpen
+  });
+  const formCompanies = companies.length > 0
+    ? companies
+    : (Array.isArray(companiesRes?.data) ? companiesRes.data : []);
 
   // 1. Fetch Branches for selected company
-  const targetCompanyId = currentUser?.primaryRole === 'SUPER_ADMIN' ? values.companyId : currentUser?.companyId;
+  const formActorRank = currentUser?.primaryRoleRank ?? 0;
+  const formCanSelectCompany = formActorRank >= 100; // rank-based, works for any custom role
+  const formCanViewRoles     = formActorRank >= 80;  // rank-based: Company Admin+ can use roleApi
+  const targetCompanyId = formCanSelectCompany ? values.companyId : currentUser?.companyId;
 
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
@@ -58,12 +73,23 @@ const UserFormModal = ({
   const filteredBranches = Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || []);
 
   // 2. Fetch Roles for selected company
-  const { data: rolesRes } = useQuery({
+  // rank >= 80 (Company Admin+): use roleApi (full list, scoped by company)
+  // rank < 80 (Branch Manager, BDE, ISE): use getAssignableRoles (no ROLE_PERMISSION required)
+  const { data: rolesAdminRes } = useQuery({
     queryKey: ['roles-form-options', targetCompanyId],
     queryFn: () => roleApi.getRoles({ companyId: targetCompanyId, limit: 100 }),
-    enabled: !!targetCompanyId && isOpen
+    enabled: !!targetCompanyId && isOpen && formCanViewRoles
   });
-  const filteredRoles = Array.isArray(rolesRes?.data?.roles) ? rolesRes.data.roles : (Array.isArray(rolesRes?.data) ? rolesRes.data : []);
+
+  const { data: rolesAssignableRes } = useQuery({
+    queryKey: ['assignable-roles-form-options'],
+    queryFn: () => userService.getAssignableRoles(),
+    enabled: isOpen && !formCanViewRoles
+  });
+
+  const filteredRoles = formCanViewRoles
+    ? (Array.isArray(rolesAdminRes?.data?.roles) ? rolesAdminRes.data.roles : (Array.isArray(rolesAdminRes?.data) ? rolesAdminRes.data : []))
+    : (Array.isArray(rolesAssignableRes?.data?.roles) ? rolesAssignableRes.data.roles : []);
 
   // 3. Fetch Managers for selected company
   const { data: managersRes } = useQuery({
@@ -251,7 +277,6 @@ const UserFormModal = ({
                   onChange={(val) => handleChange('joiningDate', val)}
                   errorText={errors.joiningDate}
                   required
-                  InputLabelProps={{ shrink: true }}
                 />
               </div>
             )}
@@ -268,8 +293,8 @@ const UserFormModal = ({
                   handleChange('reportingManagerId', ''); // reset manager
                 }}
                 errorText={errors.companyId}
-                options={companies.map(c => ({ value: c.id, label: c.name }))}
-                disabled={isEditMode}
+                options={formCompanies.map(c => ({ value: c.id, label: c.name }))}
+                disabled={isEditMode || isBranchScoped}
                 required
               />
             ) : null}
@@ -284,7 +309,8 @@ const UserFormModal = ({
                 errorText={errors.branchId}
                 options={filteredBranches.map(b => ({ value: b.id, label: b.name }))}
                 required
-                disabled={!values.companyId}
+                disabled={!values.companyId || isBranchScoped || (currentUser?.primaryRoleRank ?? 0) < 80}
+                searchable={true}
               />
             )}
 

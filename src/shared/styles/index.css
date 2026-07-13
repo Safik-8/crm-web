@@ -31,7 +31,7 @@
   --color-blue-600: var(--color-primary);
 }
 
-/* Base Body Styles */
+/* Base Body Styles & Custom Scrollbars */
 @layer base {
   body {
     @apply font-sans bg-zinc-50 text-slate-900 antialiased;
@@ -43,6 +43,30 @@
 
   main {
     background-color: transparent;
+  }
+
+  /* Thin Neutral Gray Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #CBD5E1; /* Neutral Slate-300 */
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8; /* Neutral Slate-400 */
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
   }
 }
 

@@ -184,10 +184,11 @@ export const enhancedToast = {
 
   /**
    * Permission Denied Toast
+   * @param {string} customReason - Optional custom reason text to display
    */
-  permissionDenied: () => {
+  permissionDenied: (customReason) => {
     return toast.warning('Access Denied', {
-      description: 'You do not have permission to perform this action.',
+      description: customReason || 'You do not have permission to perform this action.',
     });
   },
 

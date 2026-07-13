@@ -7,8 +7,7 @@ import CompanySettingsPage from './CompanySettingsPage';
 import CompanyForm from '../components/CompanyForm';
 import BranchSettingsPage from '../../branch/pages/BranchSettingsPage';
 import GenericPage from '../../../shared/components/templates/GenericPage';
-import { Building2, GitBranch, ChevronLeft } from 'lucide-react';
-import { Tabs, Tab } from '@mui/material';
+import { Building2, GitBranch, ChevronLeft, Building } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useCompany } from '../hooks/useCompanies';
 
@@ -29,7 +28,7 @@ const OrganizationSettingsPage = () => {
   const queryCompanyId = searchParams.get('companyId');
   const { data: queriedCompany, isLoading: isQueryingCompany } = useCompany(queryCompanyId);
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (newValue) => {
     setActiveTab(newValue);
   };
 
@@ -84,49 +83,34 @@ const OrganizationSettingsPage = () => {
         hideHeader={true}
       >
         <div className="w-full mt-1">
-          {/* Top navigation tabs spanning full width matching reference image */}
-          <div className="border-b border-[#E2E8F0] mb-8">
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              aria-label="organization settings tabs"
-              sx={{
-                '& .MuiTabs-scroller': {
-                  overflow: 'visible !important',
-                },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: '14.5px',
-                  fontFamily: '"DM Sans", sans-serif',
-                  minWidth: 'auto',
-                  px: 1,
-                  mr: 4,
-                  pb: 1.5,
-                  pt: 1,
-                  color: '#64748b', // Slate-500
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'color 0.2s ease',
-                  minHeight: 'auto',
-                  '&:hover': {
-                    color: '#0F172A', // Slate-900
-                  },
-                  '&.Mui-selected': {
-                    color: '#F86F03', // Accent Orange
-                  }
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#F86F03',
-                  height: 3,
-                  borderRadius: '3px 3px 0 0'
-                }
-              }}
-            >
-              <Tab icon={<Building2 size={16} />} iconPosition="start" label="Company Profile" />
-              {canViewBranches && <Tab icon={<GitBranch size={16} />} iconPosition="start" label="Branches" />}
-            </Tabs>
+          {/* Top navigation tabs with segmented control styling */}
+          <div className="mb-8 flex">
+            <div className="inline-flex items-center p-1 bg-slate-100/70 border border-slate-200/60 rounded-xl shadow-inner">
+              <button
+                onClick={() => handleTabChange(0)}
+                className={`flex items-center gap-2 px-6 py-2.5 text-[14px] font-bold font-heading rounded-lg transition-all focus:outline-none ${
+                  activeTab === 0
+                    ? 'bg-white text-slate-900 shadow-[0_2px_10px_rgb(0,0,0,0.06)] border border-slate-200/50'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 border border-transparent'
+                }`}
+              >
+                <Building2 size={16} className={activeTab === 0 ? 'text-primary' : 'text-slate-400'} />
+                Company Profile
+              </button>
+              {canViewBranches && (
+                <button
+                  onClick={() => handleTabChange(1)}
+                  className={`flex items-center gap-2 px-6 py-2.5 text-[14px] font-bold font-heading rounded-lg transition-all focus:outline-none ${
+                    activeTab === 1
+                      ? 'bg-white text-slate-900 shadow-[0_2px_10px_rgb(0,0,0,0.06)] border border-slate-200/50'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 border border-transparent'
+                  }`}
+                >
+                  <GitBranch size={16} className={activeTab === 1 ? 'text-primary' : 'text-slate-400'} />
+                  Branches
+                </button>
+              )}
+            </div>
           </div>
 
           {queryCompanyId && (

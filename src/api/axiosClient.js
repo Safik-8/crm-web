@@ -1,6 +1,7 @@
 // src/api/axiosClient.js
 
 import axios from 'axios';
+import { enhancedToast } from '../shared/utils/toast';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -83,12 +84,7 @@ axiosClient.interceptors.response.use(
 
       // ── 2. ACCESS FORBIDDEN (403) ──
       if (status === 403 && originalRequest.method && originalRequest.method.toUpperCase() !== 'GET') {
-        try {
-          const { enhancedToast } = await import('../shared/utils/toast');
-          enhancedToast.permissionDenied();
-        } catch (e) {
-          console.error('[API] Failed to trigger permission alert:', e);
-        }
+        enhancedToast.permissionDenied(data?.message);
       }
 
       // Reject with backend error object if formatted

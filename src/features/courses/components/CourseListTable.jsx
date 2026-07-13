@@ -1,19 +1,23 @@
-// src/features/users/components/UserListTable.jsx
+// src/features/courses/components/CourseListTable.jsx
 
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Edit2, Key, Power, Eye, MoreVertical } from 'lucide-react';
+import { Edit2, Power, Trash2, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
-import Button from '../../../shared/components/elements/Button';
 
+/**
+ * Renders actions dropdown menu for a specific row in the course table.
+ * Enforces action accessibility checks based on user permissions.
+ */
 const RowActionsMenu = ({
   row,
   canEdit,
+  canDelete,
   onViewDetails,
   onEdit,
-  onResetPassword,
-  onToggleStatus
+  onToggleStatus,
+  onDelete
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -75,15 +79,7 @@ const RowActionsMenu = ({
               className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
             >
               <Edit2 size={13} className="text-slate-400" />
-              <span>Edit User</span>
-            </MenuItem>
-
-            <MenuItem
-              onClick={() => handleAction(onResetPassword)}
-              className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
-            >
-              <Key size={13} className="text-slate-400" />
-              <span>Reset Password</span>
+              <span>Edit Course</span>
             </MenuItem>
 
             <MenuItem
@@ -95,94 +91,116 @@ const RowActionsMenu = ({
               }`}
             >
               <Power size={13} className={isActive ? 'text-rose-400' : 'text-emerald-400'} />
-              <span>{isActive ? 'Deactivate User' : 'Activate User'}</span>
+              <span>{isActive ? 'Deactivate' : 'Activate'}</span>
             </MenuItem>
           </>
+        )}
+
+        {canDelete && (
+          <MenuItem
+            onClick={() => handleAction(onDelete)}
+            className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-rose-600 hover:text-rose-700 hover:bg-rose-50/30 border-t border-slate-100/50"
+          >
+            <Trash2 size={13} className="text-rose-400" />
+            <span>Delete Course</span>
+          </MenuItem>
         )}
       </Menu>
     </>
   );
 };
 
-const UserListTable = ({
-  users = [],
+/**
+ * Reusable table component for Courses master records.
+ * Uses shared `<Table>` element and provides full responsive column layouts.
+ */
+const CourseListTable = ({
+  courses = [],
   loadingState = 'success',
   errorMessage = '',
   onRetry,
   onViewDetails,
   onEdit,
-  onResetPassword,
   onToggleStatus,
+  onDelete,
   hasActiveFilters,
   onClearFilters,
-  canEdit = false
+  canEdit = false,
+  canDelete = false
 }) => {
+
+  const formatCurrency = (value) => {
+    const num = Number(value);
+    if (isNaN(num)) return '₹0.00';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(num);
+  };
 
   const columns = [
     {
-      header: 'Employee ID',
-      accessorKey: 'employeeId',
+      header: 'Code',
+      accessorKey: 'code',
       align: 'left',
       className: 'font-semibold text-slate-700 text-[13px] whitespace-nowrap',
-      cell: (row) => row.employeeId || 'N/A'
+      cell: (row) => (
+        <div className="flex justify-start">
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[11px] font-bold border border-slate-200 uppercase tracking-wider">
+            {row.code}
+          </span>
+        </div>
+      )
     },
     {
-      header: 'Name',
+      header: 'Course Name',
       align: 'left',
-      className: 'min-w-[240px]',
+      className: 'min-w-[260px]',
       cell: (row) => (
         <div className="flex items-center gap-3 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
-            {row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'}
+            {row.name?.charAt(0) || 'C'}
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-800 text-[13px] leading-tight truncate">
-              {row.name || `${row.firstName} ${row.lastName}`}
+              {row.name}
             </p>
-            <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
-              {row.email}
+            <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5 max-w-[250px]" title={row.description}>
+              {row.description || 'No description provided'}
             </p>
           </div>
         </div>
       )
     },
     {
-      header: 'Role',
+      header: 'Category',
       align: 'left',
       className: 'text-[13px] font-semibold text-slate-600',
-      cell: (row) => {
-        const primaryRole = row.userRoles?.find(ur => ur.isPrimary) || row.userRoles?.[0];
-        const roleName = primaryRole?.role?.name || 'MEMBER';
-        
-        let badgeColor = 'bg-slate-50 text-slate-600 border-slate-200/50';
-        if (roleName === 'SUPER_ADMIN') badgeColor = 'bg-purple-50 text-purple-600 border-purple-200/50';
-        else if (roleName === 'COMPANY_ADMIN') badgeColor = 'bg-blue-50 text-blue-600 border-blue-200/50';
-        else if (roleName === 'BRANCH_MANAGER') badgeColor = 'bg-indigo-50 text-indigo-600 border-indigo-200/50';
-        else if (roleName === 'BDE') badgeColor = 'bg-sky-50 text-sky-600 border-sky-200/50';
-        else if (roleName === 'ISE') badgeColor = 'bg-amber-50 text-amber-600 border-amber-200/50';
-
-        return (
-          <div className="flex justify-start">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap ${badgeColor}`}>
-              {roleName.replace('_', ' ')}
-            </span>
-          </div>
-        );
-      }
+      cell: (row) => (
+        <div className="text-left">
+          <p className="font-semibold text-slate-700">{row.category}</p>
+          {row.parentCategory && (
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.parentCategory}</p>
+          )}
+        </div>
+      )
     },
     {
-      header: 'Branch',
+      header: 'Price',
       align: 'left',
-      className: 'text-[13px] font-semibold text-slate-600',
-      cell: (row) => row.branch?.name || 'Global / Company Wide'
+      className: 'text-[13px] font-bold text-slate-800',
+      cell: (row) => formatCurrency(row.price)
     },
     {
-      header: 'Reporting Manager',
+      header: 'Duration',
       align: 'left',
       className: 'text-[13px] text-slate-600 font-medium',
-      cell: (row) => row.reportingManager?.name || (
-        <span className="text-slate-300 font-semibold">—</span>
-      )
+      cell: (row) => {
+        if (!row.duration) return 'N/A';
+        const match = row.duration.match(/\d+/);
+        return match ? `${match[0]} months` : row.duration;
+      }
     },
     {
       header: 'Status',
@@ -214,9 +232,10 @@ const UserListTable = ({
             row={row}
             onViewDetails={onViewDetails}
             onEdit={onEdit}
-            onResetPassword={onResetPassword}
             onToggleStatus={onToggleStatus}
+            onDelete={onDelete}
             canEdit={canEdit}
+            canDelete={canDelete}
           />
         </div>
       )
@@ -226,16 +245,16 @@ const UserListTable = ({
   return (
     <Table
       columns={columns}
-      data={users}
+      data={courses}
       loadingState={loadingState}
       errorMessage={errorMessage}
       onRetry={onRetry}
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
-      emptyTitle="No users found"
-      emptyDescription="Could not find any user accounts matching the filters or query."
+      emptyTitle="No courses found"
+      emptyDescription="Could not find any course records matching the search term or status."
     />
   );
 };
 
-export default UserListTable;
+export default CourseListTable;

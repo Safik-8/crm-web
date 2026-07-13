@@ -15,6 +15,7 @@ import {
   GitBranch,
   Kanban,
   Shield,
+  BookOpen,
 } from 'lucide-react';
 import {
   PERMISSIONS } from '../constants/permissions';
@@ -47,6 +48,7 @@ export const navItems = [
   { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
   { name: 'Transfer Approvals', path: '/approvals', icon: ClipboardCheck, permission: PERMISSIONS.APPROVE_TRANSFERS },
   { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
+  { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
   { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
 ];
 

@@ -57,4 +57,12 @@ export const userService = {
     return axiosClient.post(`${BASE_PATH}/${id}/reset-password`);
   },
 
+  /**
+   * Fetches roles this actor is allowed to assign when creating a new user.
+   * Requires USER:canCreate — accessible to Branch Managers without ROLE_PERMISSION.
+   */
+  getAssignableRoles: () => {
+    return axiosClient.get(`${BASE_PATH}/assignable-roles`);
+  },
+
 };
