@@ -1,6 +1,6 @@
 // src/features/users/hooks/useUserForm.js
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCreateUserMutation, useUpdateUserMutation } from './useUsers';
 
 const initialFormState = {
@@ -69,12 +69,15 @@ export const useUserForm = (onSuccess, initialValues = null) => {
     setErrors({});
   }, [initialValues]);
 
-  const handleChange = (field, value) => {
+  const handleChange = useCallback((field, value) => {
     setValues(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
+    setErrors(prev => {
+      if (prev[field]) {
+        return { ...prev, [field]: null };
+      }
+      return prev;
+    });
+  }, []);
 
   const validate = () => {
     const tempErrors = {};

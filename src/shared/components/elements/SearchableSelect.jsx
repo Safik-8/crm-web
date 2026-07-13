@@ -9,7 +9,8 @@ export const SearchableSelect = ({
   disabled = false,
   className = "",
   hasError = false,
-  allowEmptyOption = false
+  allowEmptyOption = false,
+  searchable = true // whether to render search input inside dropdown
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,12 +29,14 @@ export const SearchableSelect = ({
     };
   }, [wrapperRef]);
 
-  // Filter options based on search term
-  const filteredOptions = options.filter(opt => 
-    opt.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter options based on search term (only if searchable is true)
+  const filteredOptions = searchable
+    ? options.filter(opt => 
+        opt.name?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : options;
 
-  const selectedOption = options.find(opt => opt.id === value?.toString() || opt.id === value);
+  const selectedOption = options.find(opt => opt.id?.toString() === value?.toString() || opt.id === value);
 
   return (
     <div ref={wrapperRef} className={`relative w-full ${className}`}>
@@ -66,19 +69,21 @@ export const SearchableSelect = ({
         <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           
           {/* Search bar inside dropdown */}
-          <div className="p-2 border-b border-slate-100 bg-slate-50/50">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                autoFocus
-                className="w-full bg-white border border-[#E2E8F0] rounded-[10px] pl-9 pr-3 py-2 text-[13px] text-slate-900 outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 transition-all font-medium placeholder:text-slate-400 placeholder:font-normal"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {searchable && (
+            <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  className="w-full bg-white border border-[#E2E8F0] rounded-[10px] pl-9 pr-3 py-2 text-[13px] text-slate-900 outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 transition-all font-medium placeholder:text-slate-400 placeholder:font-normal"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Options list */}
           <ul className="max-h-60 overflow-y-auto p-1">

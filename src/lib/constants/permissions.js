@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   VIEW_AUDIT: 'view:audit',
   VIEW_TARGETS: 'view:targets',
   VIEW_NOTIFICATIONS: 'view:notifications',
+  VIEW_COURSES: 'view:courses',
 
   // Pipeline & Stage Permissions (Phase 1)
   VIEW_PIPELINES: 'view:pipelines',

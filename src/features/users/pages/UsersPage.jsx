@@ -90,7 +90,7 @@ const UsersPage = () => {
   // Custom roles: company-scoped max rank=79, global max rank=99 (by design)
   const actorRank = currentUser?.primaryRoleRank ?? 0;
   const canFilterByCompany = actorRank >= 100; // No company scope (Super Admin level)
-  const canFilterByBranch  = actorRank >= 80;  // Company-wide visibility (Company Admin+)
+  const canFilterByBranch = actorRank >= 80;  // Company-wide visibility (Company Admin+)
 
   // 1. Fetch Companies list — only for actors with no company scope (rank >= 100)
   const { data: companiesRes } = useQuery({
@@ -169,249 +169,224 @@ const UsersPage = () => {
   return (
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-        
+
         {/* ── TABS FOR VIEW MODE ── */}
-        <div className="bg-white rounded-t-2xl border-b border-slate-200/60 shadow-sm flex items-center px-6 pt-4">
+        <div className="bg-white rounded-t-2xl border border-slate-200/60  flex items-center px-6 pt-4">
           <div className="flex space-x-6 relative top-[1px]">
-             <button 
-               onClick={() => setViewMode('list')}
-               className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'list' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
-             >
-               <List size={16} /> List View
-             </button>
-             <button 
-               onClick={() => setViewMode('orgchart')}
-               className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'orgchart' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
-             >
-               <Network size={16} /> Org Chart
-             </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'list' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
+            >
+              <List size={16} /> List View
+            </button>
+            <button
+              onClick={() => setViewMode('orgchart')}
+              className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'orgchart' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
+            >
+              <Network size={16} /> Org Chart
+            </button>
           </div>
         </div>
 
         {viewMode === 'orgchart' ? (
-           <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
-             <OrgChart users={allUsers || []} />
-           </div>
+          <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
+            <OrgChart users={allUsers || []} />
+          </div>
         ) : (
           <>
-        {/* ── SEARCH AND FILTER BAR ── */}
-        <div className="p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl flex flex-col gap-3">
-          
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <Filter size={15} className="text-orange-500" />
-              <span>Search & Filters</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => refetch()}
-                className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                title="Refresh List"
-              >
-                <RefreshCw size={14} />
-                <span>Refresh</span>
-              </Button>
 
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                >
-                  <Plus size={14} />
-                  <span>Onboard User</span>
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => refetch()}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs"
-              title="Refresh List"
-            >
-              <RefreshCw size={13} />
-              <span>Refresh</span>
-            </Button>
 
-            {canCreate && (
-              <Button
-                onClick={handleOpenCreateForm}
-                className="flex items-center gap-1.5 h-9 px-3 text-xs"
-              >
-                <Plus size={14} />
-                <span>Onboard User</span>
-              </Button>
-            )}
-          </div>
-        </div>
 
-        {/* ── SEARCH AND FILTER BAR ── */}
-        <div className="p-3 bg-white border border-slate-200/60 shadow-sm rounded-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-            
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[240px]">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                <Search size={15} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search name, email, employee ID..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
+
+            <div className='bg-white border border-slate-200/60 p-4'>
+              {/* ── SEARCH AND FILTER BAR ── */}
+              <div className="p-3 bg-white border border-slate-200/60  mb-4">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+
+                  {/* Search Input */}
+                  <div className="relative flex-1 min-w-[240px]">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                      <Search size={15} />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search name, email, employee ID..."
+                      value={search}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
                            focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
-              />
-            </div>
+                    />
+                  </div>
 
-            {/* Select Dropdowns Group */}
-            <div className="flex flex-wrap items-center gap-2">
-              
-              {canFilterByCompany && (
-                <div className="w-[160px]">
-                  <SelectField
-                    id="companyFilter"
-                    value={companyId}
-                    onChange={(val) => handleFilterChange('companyId', val)}
-                    options={companies.map(c => ({ value: c.id, label: c.name }))}
-                    placeholder="All Companies"
-                    allowEmptyOption={true}
-                  />
+                  {/* Select Dropdowns Group */}
+                  <div className="flex flex-wrap items-center gap-2">
+
+                    {canFilterByCompany && (
+                      <div className="w-[160px]">
+                        <SelectField
+                          id="companyFilter"
+                          value={companyId}
+                          onChange={(val) => handleFilterChange('companyId', val)}
+                          options={companies.map(c => ({ value: c.id, label: c.name }))}
+                          placeholder="All Companies"
+                          allowEmptyOption={true}
+                        />
+                      </div>
+                    )}
+
+                    {canFilterByBranch && (
+                      <div className="w-[160px]">
+                        <SelectField
+                          id="branchFilter"
+                          value={branchId}
+                          onChange={(val) => handleFilterChange('branchId', val)}
+                          options={branches.map(b => ({ value: b.id, label: b.name }))}
+                          placeholder="All Branches"
+                          allowEmptyOption={true}
+                          disabled={!targetCompanyId}
+                          searchable={true}
+                        />
+                      </div>
+                    )}
+
+                    {canViewRoles && (
+                      <div className="w-[160px]">
+                        <SelectField
+                          id="roleFilter"
+                          value={roleId}
+                          onChange={(val) => handleFilterChange('roleId', val)}
+                          options={roles.map(r => ({ value: r.id, label: r.name }))}
+                          placeholder="All Roles"
+                          allowEmptyOption={true}
+                          disabled={!targetCompanyId}
+                        />
+                      </div>
+                    )}
+
+                    <div className="w-[140px]">
+                      <SelectField
+                        id="statusFilter"
+                        value={status}
+                        onChange={(val) => handleFilterChange('status', val)}
+                        options={[
+                          { value: 'ACTIVE', label: 'Active' },
+                          { value: 'INACTIVE', label: 'Inactive' }
+                        ]}
+                        placeholder="All Statuses"
+                        allowEmptyOption={true}
+                      />
+                    </div>
+
+                    {/* Inline Clear Button */}
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* <Button
+                    variant="secondary"
+                    onClick={() => refetch()}
+                    className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                    title="Refresh List"
+                  >
+                    <RefreshCw size={14} />
+                    <span>Refresh</span>
+                  </Button> */}
+
+                    {canCreate && (
+                      <Button
+                        onClick={handleOpenCreateForm}
+                        className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                      >
+                        <Plus size={14} />
+                        <span>Onboard User</span>
+                      </Button>
+                    )}
+                  </div>
+
                 </div>
-              )}
-
-              {canFilterByBranch && (
-                <div className="w-[160px]">
-                  <SelectField
-                    id="branchFilter"
-                    value={branchId}
-                    onChange={(val) => handleFilterChange('branchId', val)}
-                    options={branches.map(b => ({ value: b.id, label: b.name }))}
-                    placeholder="All Branches"
-                    allowEmptyOption={true}
-                    disabled={!targetCompanyId}
-                  />
-                </div>
-              )}
-
-              {canViewRoles && (
-                <div className="w-[160px]">
-                  <SelectField
-                    id="roleFilter"
-                    value={roleId}
-                    onChange={(val) => handleFilterChange('roleId', val)}
-                    options={roles.map(r => ({ value: r.id, label: r.name }))}
-                    placeholder="All Roles"
-                    allowEmptyOption={true}
-                    disabled={!targetCompanyId}
-                  />
-                </div>
-              )}
-
-              <div className="w-[140px]">
-                <SelectField
-                  id="statusFilter"
-                  value={status}
-                  onChange={(val) => handleFilterChange('status', val)}
-                  options={[
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' }
-                  ]}
-                  placeholder="All Statuses"
-                  allowEmptyOption={true}
-                />
               </div>
+              {/* ── USERS DATA TABLE ── */}
+              <UserListTable
+                users={users}
+                loadingState={loadingState}
+                errorMessage={errorMessage}
+                onRetry={() => refetch()}
+                onViewDetails={handleOpenDetails}
+                onEdit={handleOpenEditForm}
+                onResetPassword={handleOpenResetPassword}
+                onToggleStatus={handleOpenToggleStatus}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearFilters}
+                canEdit={canEdit}
+              />
 
-              {/* Inline Clear Button */}
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
-                >
-                  Clear Filters
-                </button>
-              )}
+              {/* ── PAGINATION CONTROLS ── */}
+              <UserPagination
+                pagination={pagination}
+                onPageChange={setPage}
+                isLoading={loadingState === 'loading'}
+              />
+
             </div>
 
-          </div>
-        </div>
+            {/* ── MODALS & DRAWER PORTALS ── */}
 
-        {/* ── USERS DATA TABLE ── */}
-        <UserListTable
-          users={users}
-          loadingState={loadingState}
-          errorMessage={errorMessage}
-          onRetry={() => refetch()}
-          onViewDetails={handleOpenDetails}
-          onEdit={handleOpenEditForm}
-          onResetPassword={handleOpenResetPassword}
-          onToggleStatus={handleOpenToggleStatus}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-          canEdit={canEdit}
-        />
+            {/* Form Modal (Create / Edit Slide-over) */}
+            <UserFormModal
+              isOpen={isFormOpen}
+              onClose={() => setIsFormOpen(false)}
+              initialValues={selectedUserForEdit}
+              companies={companies}
+              branches={branches}
+              roles={roles}
+              managers={managers}
+              currentUser={currentUser}
+            />
 
-        {/* ── PAGINATION CONTROLS ── */}
-        <UserPagination
-          pagination={pagination}
-          onPageChange={setPage}
-          isLoading={loadingState === 'loading'}
-        />
+            {/* User Details Sliding Panel */}
+            <UserDetailModal
+              isOpen={isDetailsOpen}
+              onClose={() => setIsDetailsOpen(false)}
+              user={selectedUserForDetails}
+            />
 
-        {/* ── MODALS & DRAWER PORTALS ── */}
+            {/* Reset Password Confirmation Dialog */}
+            <ResetPasswordModal
+              isOpen={isResetOpen}
+              onClose={() => setIsResetOpen(false)}
+              user={selectedUserForReset}
+              onConfirm={handleConfirmReset}
+              isLoading={resetPasswordMutation.isPending}
+            />
 
-        {/* Form Modal (Create / Edit Slide-over) */}
-        <UserFormModal
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          initialValues={selectedUserForEdit}
-          companies={companies}
-          branches={branches}
-          roles={roles}
-          managers={managers}
-          currentUser={currentUser}
-        />
-
-        {/* User Details Sliding Panel */}
-        <UserDetailModal
-          isOpen={isDetailsOpen}
-          onClose={() => setIsDetailsOpen(false)}
-          user={selectedUserForDetails}
-        />
-
-        {/* Reset Password Confirmation Dialog */}
-        <ResetPasswordModal
-          isOpen={isResetOpen}
-          onClose={() => setIsResetOpen(false)}
-          user={selectedUserForReset}
-          onConfirm={handleConfirmReset}
-          isLoading={resetPasswordMutation.isPending}
-        />
-
-        {/* Status Toggle (Deactivation/Activation) Confirmation Modal */}
-        <ConfirmModal
-          isOpen={isConfirmStatusOpen}
-          onClose={() => setIsConfirmStatusOpen(false)}
-          title={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate Employee Account?' : 'Activate Employee Account?'}
-          message={
-            selectedUserForStatus?.status === 'ACTIVE'
-              ? `Are you sure you want to deactivate ${selectedUserForStatus?.name}? This will instantly revoke all their active sessions and prevent them from logging into the system.`
-              : `Are you sure you want to activate ${selectedUserForStatus?.name}? This will restore their system permissions and login access.`
-          }
-          warningMessage={
-            selectedUserForStatus?.status === 'ACTIVE'
-              ? 'Active leads, logs, and historical data assigned to this employee will remain unchanged, but they can no longer access the CRM.'
-              : null
-          }
-          type={selectedUserForStatus?.status === 'ACTIVE' ? 'error' : 'success'}
-          onConfirm={handleConfirmToggleStatus}
-          confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-          isLoading={isTogglingStatus}
-        />
+            {/* Status Toggle (Deactivation/Activation) Confirmation Modal */}
+            <ConfirmModal
+              isOpen={isConfirmStatusOpen}
+              onClose={() => setIsConfirmStatusOpen(false)}
+              title={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate Employee Account?' : 'Activate Employee Account?'}
+              message={
+                selectedUserForStatus?.status === 'ACTIVE'
+                  ? `Are you sure you want to deactivate ${selectedUserForStatus?.name}? This will instantly revoke all their active sessions and prevent them from logging into the system.`
+                  : `Are you sure you want to activate ${selectedUserForStatus?.name}? This will restore their system permissions and login access.`
+              }
+              warningMessage={
+                selectedUserForStatus?.status === 'ACTIVE'
+                  ? 'Active leads, logs, and historical data assigned to this employee will remain unchanged, but they can no longer access the CRM.'
+                  : null
+              }
+              type={selectedUserForStatus?.status === 'ACTIVE' ? 'error' : 'success'}
+              onConfirm={handleConfirmToggleStatus}
+              confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+              isLoading={isTogglingStatus}
+            />
           </>
         )}
 

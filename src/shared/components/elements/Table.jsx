@@ -126,7 +126,7 @@ const Table = ({
   };
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden ${className}`}>
+    <div className={`bg-white  border border-slate-200/60 overflow-hidden ${className}`}>
       <div className="overflow-x-auto scrollbar-hide">
         <table className="w-full text-left border-collapse">
           <thead>

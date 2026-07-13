@@ -18,6 +18,7 @@ import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 
 import UsersPage from '../../features/users/pages/UsersPage';
+import CoursesPage from '../../features/courses/pages/CoursesPage';
 import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
@@ -159,6 +160,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_USERS}>
             <UsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'courses',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COURSES}>
+            <CoursesPage />
           </ProtectedRoute>
         ),
       },

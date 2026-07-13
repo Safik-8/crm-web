@@ -37,17 +37,17 @@ const UserFormModal = ({
 
   // Automatically bind companyId for Company Admin / Branch Manager (non-SuperAdmins)
   useEffect(() => {
-    if (!isEditMode && isOpen && currentUser?.companyId) {
+    if (!isEditMode && isOpen && currentUser?.companyId && values.companyId !== currentUser.companyId) {
       handleChange('companyId', currentUser.companyId);
     }
-  }, [currentUser, isEditMode, isOpen, handleChange]);
+  }, [currentUser, isEditMode, isOpen, handleChange, values.companyId]);
 
   // Automatically lock Branch Manager to their branch
   useEffect(() => {
-    if (!isEditMode && isOpen && currentUser?.primaryRole === 'BRANCH_MANAGER' && currentUser?.branchId) {
+    if (!isEditMode && isOpen && currentUser?.primaryRole === 'BRANCH_MANAGER' && currentUser?.branchId && values.branchId !== currentUser.branchId) {
       handleChange('branchId', currentUser.branchId);
     }
-  }, [currentUser, isEditMode, isOpen, handleChange]);
+  }, [currentUser, isEditMode, isOpen, handleChange, values.branchId]);
 
   // Fetch Companies (for Super Admin)
   const { data: companiesRes } = useQuery({
@@ -277,7 +277,6 @@ const UserFormModal = ({
                   onChange={(val) => handleChange('joiningDate', val)}
                   errorText={errors.joiningDate}
                   required
-                  InputLabelProps={{ shrink: true }}
                 />
               </div>
             )}
@@ -311,6 +310,7 @@ const UserFormModal = ({
                 options={filteredBranches.map(b => ({ value: b.id, label: b.name }))}
                 required
                 disabled={!values.companyId || isBranchScoped || (currentUser?.primaryRoleRank ?? 0) < 80}
+                searchable={true}
               />
             )}
 
