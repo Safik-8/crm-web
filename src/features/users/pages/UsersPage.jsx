@@ -189,9 +189,9 @@ const UsersPage = () => {
         </div>
 
         {viewMode === 'orgchart' ? (
-          <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
-            <OrgChart users={allUsers || []} />
-          </div>
+           <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
+             <OrgChart users={allUsers || []} currentUser={currentUser} />
+           </div>
         ) : (
           <>
 
