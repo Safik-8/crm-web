@@ -66,6 +66,12 @@ const TextField = ({
           WebkitBoxShadow: '0 0 0 100px #FFFFFF inset !important',
           WebkitTextFillColor: '#1E293B !important',
           caretColor: '#1E293B'
+        },
+        '&::-ms-reveal': {
+          display: 'none'
+        },
+        '&::-ms-clear': {
+          display: 'none'
         }
       }
     },

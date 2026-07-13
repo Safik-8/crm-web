@@ -26,7 +26,9 @@ import NotificationsPage from '../../features/notifications/pages/NotificationsP
 import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
 import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
 import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
+import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
+
 
 export const router = createBrowserRouter([
   {
@@ -244,6 +246,15 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <UserProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+
     ],
   },
   {

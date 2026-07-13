@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import logoOfficial from '../../../assets/logos/logo-official.png';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -100,21 +100,34 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         {/* ── Footer ── */}
         <div className="shrink-0 px-3 py-3 border-t border-zinc-100">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 shrink-0">
-              <span className="text-orange-600 text-[10px] font-black">
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-              </span>
+          <Link
+            to="/profile"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-100 hover:bg-zinc-100 transition-colors cursor-pointer group/footer block"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 shrink-0 group-hover/footer:bg-orange-200 transition-colors">
+                {user?.profilePhoto ? (
+                  <img
+                    src={user.profilePhoto}
+                    alt="User"
+                    className="w-7 h-7 rounded-lg object-cover"
+                  />
+                ) : (
+                  <span className="text-orange-600 text-[10px] font-black">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold text-zinc-800 truncate leading-tight group-hover/footer:text-orange-600 transition-colors">
+                  {user?.name || 'User'}
+                </p>
+                <p className="text-[10px] font-semibold text-orange-500 truncate leading-tight mt-0.5">
+                  {user?.primaryRole || user?.designation || 'Member'}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold text-zinc-800 truncate leading-tight">
-                {user?.name || 'User'}
-              </p>
-              <p className="text-[10px] font-semibold text-orange-500 truncate leading-tight mt-0.5">
-                {user?.primaryRole || user?.designation || 'Member'}
-              </p>
-            </div>
-          </div>
+          </Link>
         </div>
       </aside>
     </>
