@@ -143,10 +143,10 @@ const CourseListTable = ({
     {
       header: 'Code',
       accessorKey: 'code',
-      align: 'center',
+      align: 'left',
       className: 'font-semibold text-slate-700 text-[13px] whitespace-nowrap',
       cell: (row) => (
-        <div className="flex justify-center">
+        <div className="flex justify-start">
           <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[11px] font-bold border border-slate-200 uppercase tracking-wider">
             {row.code}
           </span>
@@ -175,10 +175,10 @@ const CourseListTable = ({
     },
     {
       header: 'Category',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => (
-        <div>
+        <div className="text-left">
           <p className="font-semibold text-slate-700">{row.category}</p>
           {row.parentCategory && (
             <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.parentCategory}</p>
@@ -188,13 +188,13 @@ const CourseListTable = ({
     },
     {
       header: 'Price',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] font-bold text-slate-800',
       cell: (row) => formatCurrency(row.price)
     },
     {
       header: 'Duration',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] text-slate-600 font-medium',
       cell: (row) => {
         if (!row.duration) return 'N/A';
@@ -204,7 +204,7 @@ const CourseListTable = ({
     },
     {
       header: 'Status',
-      align: 'center',
+      align: 'left',
       className: 'whitespace-nowrap',
       cell: (row) => {
         const isActive = row.status === 'ACTIVE';

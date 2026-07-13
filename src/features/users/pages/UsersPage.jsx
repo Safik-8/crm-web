@@ -177,7 +177,7 @@ const UsersPage = () => {
               onClick={() => setViewMode('list')}
               className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'list' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
             >
-              <List size={16} /> List View
+              <List size={16} /> User Manager
             </button>
             <button
               onClick={() => setViewMode('orgchart')}

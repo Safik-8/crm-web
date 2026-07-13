@@ -122,16 +122,16 @@ const UserListTable = ({
     {
       header: 'Employee ID',
       accessorKey: 'employeeId',
-      align: 'center',
+      align: 'left',
       className: 'font-semibold text-slate-700 text-[13px] whitespace-nowrap',
       cell: (row) => row.employeeId || 'N/A'
     },
     {
       header: 'Name',
-      align: 'center',
-      className: 'min-w-[200px]',
+      align: 'left',
+      className: 'min-w-[240px]',
       cell: (row) => (
-        <div className="flex items-center justify-center gap-3 text-left">
+        <div className="flex items-center gap-3 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
             {row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'}
           </div>
@@ -148,7 +148,7 @@ const UserListTable = ({
     },
     {
       header: 'Role',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => {
         const primaryRole = row.userRoles?.find(ur => ur.isPrimary) || row.userRoles?.[0];
@@ -162,8 +162,8 @@ const UserListTable = ({
         else if (roleName === 'ISE') badgeColor = 'bg-amber-50 text-amber-600 border-amber-200/50';
 
         return (
-          <div className="flex justify-center">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${badgeColor}`}>
+          <div className="flex justify-start">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap ${badgeColor}`}>
               {roleName.replace('_', ' ')}
             </span>
           </div>
@@ -172,13 +172,13 @@ const UserListTable = ({
     },
     {
       header: 'Branch',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => row.branch?.name || 'Global / Company Wide'
     },
     {
       header: 'Reporting Manager',
-      align: 'center',
+      align: 'left',
       className: 'text-[13px] text-slate-600 font-medium',
       cell: (row) => row.reportingManager?.name || (
         <span className="text-slate-300 font-semibold">—</span>
@@ -186,7 +186,7 @@ const UserListTable = ({
     },
     {
       header: 'Status',
-      align: 'center',
+      align: 'left',
       className: 'whitespace-nowrap',
       cell: (row) => {
         const isActive = row.status === 'ACTIVE';

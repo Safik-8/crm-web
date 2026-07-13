@@ -314,21 +314,21 @@ const RoleManagementPage = () => {
     },
     {
       header: 'Rank',
-      align: 'center',
+      align: 'left',
       cell: (role) => (
         <span className="font-bold text-[13px] text-slate-700">{role.rank}</span>
       ),
-      skeleton: () => <Skeleton className="h-5 w-10 mx-auto" />,
+      skeleton: () => <Skeleton className="h-5 w-10" />,
     },
     {
       header: 'Users',
-      align: 'center',
+      align: 'left',
       cell: (role) => (
         <span className="font-bold text-[13px] text-slate-700">
           {role._count?.userRoles ?? 0}
         </span>
       ),
-      skeleton: () => <Skeleton className="h-5 w-8 mx-auto" />,
+      skeleton: () => <Skeleton className="h-5 w-8" />,
     },
     {
       header: 'Type',
