@@ -58,7 +58,7 @@ export const SearchableSelect = ({
           disabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-900'
         } ${isOpen && !disabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
       >
-        <span className={selectedOption ? 'text-slate-900' : 'text-slate-500 font-medium'}>
+        <span className={`truncate flex-1 pr-2 ${selectedOption ? 'text-slate-900' : 'text-slate-500 font-medium'}`}>
           {selectedOption ? selectedOption.name : placeholder}
         </span>
         <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />

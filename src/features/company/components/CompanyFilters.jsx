@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import SelectField from '../../../shared/components/elements/SelectField';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 
 const SORT_OPTIONS = [
   { value: 'createdAt_desc', label: 'Newest First' },
@@ -31,41 +32,36 @@ const CompanyFilters = ({
   const handleClearSearch = () => onSearchChange('');
 
   return (
-    <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-4">
+    <div className="relative z-20 bg-white border border-slate-200/60 shadow-sm p-3 sm:p-4 rounded-2xl">
       <div className="flex flex-col xl:flex-row gap-3 xl:gap-4 items-center">
         
-        {/* ── Search Bar (Glassmorphic) ─────────────────────────────────── */}
-        <div className="relative flex-1 w-full min-w-0">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center bg-white shadow-sm h-7 w-7 rounded-lg">
-            <Search size={14} className="text-primary" />
-          </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by company name, code, or industry..."
-            disabled={isLoading}
-            className="w-full h-12 pl-14 pr-10 bg-white/50 border-0 shadow-inner rounded-xl text-sm text-slate-800 placeholder-slate-400 font-bold
-                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          />
-          {search && (
-            <button
-              onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors shadow-sm"
-              title="Clear search"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
+        {/* ── Search Bar (Unified Component) ─────────────────────────────────── */}
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search by company name, code, or industry..."
+          isLoading={isLoading}
+        />
 
         {/* ── Filter Controls ─────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1 bg-slate-100/50 rounded-xl border border-slate-200/50 hidden md:flex">
-            <SlidersHorizontal size={16} className="text-slate-400" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filters</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onSearchChange('');
+              onStatusChange('');
+            }}
+            disabled={!hasActiveFilters || isLoading}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all hidden md:flex ${
+              hasActiveFilters && !isLoading
+                ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 hover:text-orange-700 cursor-pointer'
+                : 'bg-slate-100/50 text-slate-400 border-slate-200/50 cursor-default'
+            }`}
+            title={hasActiveFilters ? "Clear all active filters" : "No active filters"}
+          >
+            <SlidersHorizontal size={14} className={hasActiveFilters ? 'text-orange-500' : 'text-slate-400'} />
+            <span>{hasActiveFilters ? 'Clear Filters' : 'Filters'}</span>
+          </button>
           
           <div className="flex-1 sm:flex-none w-full sm:w-auto relative">
             <SelectField
@@ -76,29 +72,21 @@ const CompanyFilters = ({
               placeholder="All Statuses"
               allowEmptyOption={true}
               options={STATUS_OPTIONS.filter(opt => opt.value !== '')}
-              selectSx={{
-                py: '12px !important',
-                fontSize: '13px',
-                fontWeight: '700',
-                color: '#1e293b'
-              }}
               sx={{
                 width: '100%',
                 minWidth: { sm: '160px' },
                 '& .MuiOutlinedInput-root': {
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  height: '44px',
+                  borderRadius: '10px',
+                  backgroundColor: '#F8FAFC',
                   '& fieldset': {
-                    borderColor: 'transparent',
+                    borderColor: '#E2E8F0',
                   },
                   '&:hover fieldset': {
-                    borderColor: '#e2e8f0',
+                    borderColor: '#CBD5E1',
                   },
                   '&.Mui-focused fieldset': {
                     borderColor: '#F86F03',
-                    borderWidth: '2px',
                   }
                 }
               }}
@@ -116,29 +104,21 @@ const CompanyFilters = ({
               disabled={isLoading}
               placeholder="Sort By"
               options={SORT_OPTIONS}
-              selectSx={{
-                py: '12px !important',
-                fontSize: '13px',
-                fontWeight: '700',
-                color: '#1e293b'
-              }}
               sx={{
                 width: '100%',
                 minWidth: { sm: '160px' },
                 '& .MuiOutlinedInput-root': {
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  height: '44px',
+                  borderRadius: '10px',
+                  backgroundColor: '#F8FAFC',
                   '& fieldset': {
-                    borderColor: 'transparent',
+                    borderColor: '#E2E8F0',
                   },
                   '&:hover fieldset': {
-                    borderColor: '#e2e8f0',
+                    borderColor: '#CBD5E1',
                   },
                   '&.Mui-focused fieldset': {
                     borderColor: '#F86F03',
-                    borderWidth: '2px',
                   }
                 }
               }}

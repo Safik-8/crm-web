@@ -21,6 +21,8 @@ export const courseService = {
     if (params.companyId) queryParams.set('companyId', params.companyId);
     if (params.minPrice) queryParams.set('minPrice', params.minPrice);
     if (params.maxPrice) queryParams.set('maxPrice', params.maxPrice);
+    if (params.sortBy) queryParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) queryParams.set('sortOrder', params.sortOrder);
 
     return axiosClient.get(`${BASE_PATH}?${queryParams.toString()}`);
   },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, RefreshCcw, SearchX, Inbox } from 'lucide-react';
 import Skeleton from './Skeleton';
+import SortableHeader from './SortableHeader';
 
 /**
  * Reusable premium Table component.
@@ -19,6 +20,9 @@ const Table = ({
   skeletonRows = 5,
   className = '',
   rowClassName = '',
+  sortBy,
+  sortOrder,
+  onSort,
 }) => {
   const isLoading = loadingState === 'loading';
   const isError = loadingState === 'error';
@@ -144,7 +148,18 @@ const Table = ({
                     key={index}
                     className={`py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap ${alignmentClass} ${col.headerClassName || ''}`}
                   >
-                    {col.header}
+                    {col.sortable && onSort ? (
+                      <SortableHeader
+                        label={col.header}
+                        field={col.accessorKey}
+                        activeSort={sortBy}
+                        activeOrder={sortOrder}
+                        onToggle={onSort}
+                        align={col.align}
+                      />
+                    ) : (
+                      col.header
+                    )}
                   </th>
                 );
               })}

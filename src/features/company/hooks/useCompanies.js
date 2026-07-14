@@ -58,6 +58,7 @@ export const useCompanies = () => {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch
@@ -79,7 +80,7 @@ export const useCompanies = () => {
 
   // Derive loadingState string expected by existing UI components
   let loadingState = 'success';
-  if (isLoading) {
+  if (isLoading || isFetching) {
     loadingState = 'loading';
   } else if (isError) {
     loadingState = 'error';

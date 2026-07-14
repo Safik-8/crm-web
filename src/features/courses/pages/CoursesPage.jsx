@@ -17,13 +17,19 @@ import { useDeleteCourseMutation, useCourseCategoriesQuery } from '../hooks/useC
 import CourseListTable from '../components/CourseListTable';
 import CourseFormModal from '../components/CourseFormModal';
 import CourseDetailModal from '../components/CourseDetailModal';
-import CoursePagination from '../components/CoursePagination';
+import SearchInput from '../../../shared/components/elements/SearchInput';
+import Pagination from '../../../shared/components/elements/Pagination';
+import ExportMenu from '../../../shared/components/elements/ExportMenu';
 
-/**
- * CoursesPage Component
- * Main page for the Course / Product Master Module.
- * Displays Course Catalog data with searching, filtering, and CRUD management.
- */
+const exportColumns = [
+  { header: 'Code', accessorKey: 'code' },
+  { header: 'Course Name', accessorKey: 'name' },
+  { header: 'Category', accessorKey: 'category' },
+  { header: 'Price', accessorKey: 'price' },
+  { header: 'Duration', accessorKey: 'duration' },
+  { header: 'Status', accessorKey: 'status' }
+];
+
 const CoursesPage = () => {
   const { user: currentUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
@@ -59,7 +65,10 @@ const CoursesPage = () => {
     clearFilters,
     refetch,
     handleToggleStatus,
-    isTogglingStatus
+    isTogglingStatus,
+    sortBy,
+    sortOrder,
+    toggleSort
   } = useCourseList(currentUser);
 
   const deleteMutation = useDeleteCourseMutation();
@@ -159,15 +168,20 @@ const CoursesPage = () => {
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pb-8">
         
-        {/* Header Actions Panel */}
-        <div className="p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <Filter size={15} className="text-orange-500" />
-              <span>Course Catalog Search & Filters</span>
-            </div>
+        {/* ── SEARCH AND FILTER BAR ── */}
+        <div className="relative z-20 p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl mb-4 space-y-4">
+          
+          {/* Row 1: Search & Main Actions */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+            <SearchInput
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search course name or code..."
+              isLoading={loadingState === 'loading'}
+              className="w-full lg:max-w-md"
+            />
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
               <Button
                 variant="secondary"
                 onClick={() => refetch()}
@@ -177,6 +191,12 @@ const CoursesPage = () => {
                 <RefreshCw size={14} />
                 <span>Refresh</span>
               </Button>
+
+              <ExportMenu
+                data={courses}
+                columns={exportColumns}
+                fileName="courses"
+              />
 
               {canCreate && (
                 <Button
@@ -189,32 +209,22 @@ const CoursesPage = () => {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Search & Filter Controls */}
-        <div className="p-3 bg-white border border-slate-200/60 shadow-sm rounded-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-            
-            {/* Search input field */}
-            <div className="relative flex-1 min-w-[240px]">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                <Search size={15} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search course name or code..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
-                           focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
-              />
-            </div>
+          {/* Divider Line */}
+          <div className="border-t border-slate-100/80" />
 
-            {/* Select dropdowns */}
-            <div className="flex flex-wrap items-center gap-2">
+          {/* Row 2: Select Filters group */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3 flex-1">
               
+              {/* Visual Label */}
+              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100/60 rounded-lg border border-slate-200/40 text-slate-500 font-bold text-[11px] uppercase tracking-wider">
+                <Filter size={12} className="text-primary" />
+                <span>Filters</span>
+              </div>
+
               {isSuperAdmin && (
-                <div className="w-[160px]">
+                <div className="w-full sm:w-[160px]">
                   <SelectField
                     id="companyFilter"
                     value={companyId}
@@ -227,7 +237,7 @@ const CoursesPage = () => {
                 </div>
               )}
 
-              <div className="w-[160px]">
+              <div className="w-full sm:w-[160px]">
                 <SelectField
                   id="categoryFilter"
                   value={category}
@@ -239,7 +249,7 @@ const CoursesPage = () => {
                 />
               </div>
 
-              <div className="w-[140px]">
+              <div className="w-full sm:w-[140px]">
                 <SelectField
                   id="statusFilter"
                   value={status}
@@ -253,19 +263,20 @@ const CoursesPage = () => {
                 />
               </div>
 
-              {/* Reset trigger */}
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
-                >
-                  Clear Filters
-                </button>
-              )}
             </div>
 
+            {/* Reset trigger */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all self-end lg:self-auto"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
+
         </div>
 
         {/* Data Table */}
@@ -282,13 +293,17 @@ const CoursesPage = () => {
           onClearFilters={clearFilters}
           canEdit={canEdit}
           canDelete={canDelete}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
         />
 
         {/* Pagination Bar */}
-        <CoursePagination
+        <Pagination
           pagination={pagination}
           onPageChange={setPage}
           isLoading={loadingState === 'loading'}
+          entityName="courses"
         />
 
         {/* Modals & Slide-overs */}

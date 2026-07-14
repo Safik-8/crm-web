@@ -18,6 +18,8 @@ export const userService = {
     if (params.companyId) queryParams.set('companyId', params.companyId);
     if (params.branchId) queryParams.set('branchId', params.branchId);
     if (params.roleId) queryParams.set('roleId', params.roleId);
+    if (params.sortBy) queryParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) queryParams.set('sortOrder', params.sortOrder);
 
     return axiosClient.get(`${BASE_PATH}?${queryParams.toString()}`);
   },

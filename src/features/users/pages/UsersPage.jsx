@@ -24,8 +24,17 @@ import UserListTable from '../components/UserListTable';
 import UserFormModal from '../components/UserFormModal';
 import UserDetailModal from '../components/UserDetailModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
-import UserPagination from '../components/UserPagination';
 import OrgChart from '../components/OrgChart';
+import SearchInput from '../../../shared/components/elements/SearchInput';
+import Pagination from '../../../shared/components/elements/Pagination';
+import ExportMenu from '../../../shared/components/elements/ExportMenu';
+
+const exportColumns = [
+  { header: 'Employee ID', accessorKey: 'employeeId' },
+  { header: 'Name', accessorKey: 'name' },
+  { header: 'Email', accessorKey: 'email' },
+  { header: 'Status', accessorKey: 'status' }
+];
 
 const UsersPage = () => {
   const { user: currentUser, hasPermission } = useAuth();
@@ -66,7 +75,10 @@ const UsersPage = () => {
     clearFilters,
     refetch,
     handleToggleStatus,
-    isTogglingStatus
+    isTogglingStatus,
+    sortBy,
+    sortOrder,
+    toggleSort
   } = useUserList(currentUser);
 
   const resetPasswordMutation = useResetPasswordMutation();
@@ -198,31 +210,64 @@ const UsersPage = () => {
 
 
 
-            <div className='bg-white border border-slate-200/60 p-4'>
+            <div className='bg-white border border-slate-200/60 p-4 rounded-2xl'>
               {/* ── SEARCH AND FILTER BAR ── */}
-              <div className="p-3 bg-white border border-slate-200/60  mb-4">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+              <div className="relative z-20 p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl mb-4 space-y-4">
+                
+                {/* Row 1: Search & Main Actions */}
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+                  <SearchInput
+                    value={search}
+                    onChange={handleSearchChange}
+                    placeholder="Search name, email, employee ID..."
+                    isLoading={loadingState === 'loading'}
+                    className="w-full lg:max-w-md"
+                  />
+                  
+                  <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={() => refetch()}
+                      className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                      title="Refresh List"
+                    >
+                      <RefreshCw size={14} />
+                      <span>Refresh</span>
+                    </Button>
 
-                  {/* Search Input */}
-                  <div className="relative flex-1 min-w-[240px]">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Search size={15} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Search name, email, employee ID..."
-                      value={search}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
-                           focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                    <ExportMenu
+                      data={users}
+                      columns={exportColumns}
+                      fileName="users"
                     />
-                  </div>
 
-                  {/* Select Dropdowns Group */}
-                  <div className="flex flex-wrap items-center gap-2">
+                    {canCreate && (
+                      <Button
+                        onClick={handleOpenCreateForm}
+                        className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                      >
+                        <Plus size={14} />
+                        <span>Onboard User</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Divider Line */}
+                <div className="border-t border-slate-100/80" />
+
+                {/* Row 2: Select Filters group */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3 flex-1">
+                    
+                    {/* Visual Label */}
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100/60 rounded-lg border border-slate-200/40 text-slate-500 font-bold text-[11px] uppercase tracking-wider">
+                      <Filter size={12} className="text-primary" />
+                      <span>Filters</span>
+                    </div>
 
                     {canFilterByCompany && (
-                      <div className="w-[160px]">
+                      <div className="w-full sm:w-[160px]">
                         <SelectField
                           id="companyFilter"
                           value={companyId}
@@ -235,7 +280,7 @@ const UsersPage = () => {
                     )}
 
                     {canFilterByBranch && (
-                      <div className="w-[160px]">
+                      <div className="w-full sm:w-[160px]">
                         <SelectField
                           id="branchFilter"
                           value={branchId}
@@ -250,7 +295,7 @@ const UsersPage = () => {
                     )}
 
                     {canViewRoles && (
-                      <div className="w-[160px]">
+                      <div className="w-full sm:w-[160px]">
                         <SelectField
                           id="roleFilter"
                           value={roleId}
@@ -263,7 +308,7 @@ const UsersPage = () => {
                       </div>
                     )}
 
-                    <div className="w-[140px]">
+                    <div className="w-full sm:w-[140px]">
                       <SelectField
                         id="statusFilter"
                         value={status}
@@ -277,40 +322,18 @@ const UsersPage = () => {
                       />
                     </div>
 
-                    {/* Inline Clear Button */}
-                    {hasActiveFilters && (
-                      <button
-                        type="button"
-                        onClick={clearFilters}
-                        className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
-                      >
-                        Clear Filters
-                      </button>
-                    )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* <Button
-                    variant="secondary"
-                    onClick={() => refetch()}
-                    className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                    title="Refresh List"
-                  >
-                    <RefreshCw size={14} />
-                    <span>Refresh</span>
-                  </Button> */}
-
-                    {canCreate && (
-                      <Button
-                        onClick={handleOpenCreateForm}
-                        className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                      >
-                        <Plus size={14} />
-                        <span>Onboard User</span>
-                      </Button>
-                    )}
-                  </div>
-
+                  {/* Reset trigger */}
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all self-end lg:self-auto"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
                 </div>
               </div>
               {/* ── USERS DATA TABLE ── */}
@@ -326,13 +349,17 @@ const UsersPage = () => {
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={clearFilters}
                 canEdit={canEdit}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={toggleSort}
               />
 
               {/* ── PAGINATION CONTROLS ── */}
-              <UserPagination
+              <Pagination
                 pagination={pagination}
                 onPageChange={setPage}
                 isLoading={loadingState === 'loading'}
+                entityName="users"
               />
 
             </div>
