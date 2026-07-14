@@ -23,6 +23,14 @@ export const companyService = {
   },
 
   /**
+   * Fetches raw list of companies (useful for dropdown menus).
+   * GET /api/companies
+   */
+  getCompaniesRaw: () => {
+    return axiosClient.get(BASE_PATH);
+  },
+
+  /**
    * Fetches a single company by database ID.
    * GET /api/companies/:id
    */
