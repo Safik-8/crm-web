@@ -64,7 +64,7 @@ const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
               fontFamily: '"DM Sans", sans-serif',
               fontWeight: 600,
               color: '#475569',
-              gap: 1.5,
+              gap: '10px',
               transition: 'all 0.2s ease',
               '&:hover': {
                 backgroundColor: '#f8fafc',
@@ -73,13 +73,13 @@ const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
           }
         }}
       >
-        <MenuItem onClick={(e) => { handleClose(e); onEdit(company); }}>
+        <MenuItem onClick={(e) => { handleClose(e); onEdit(company); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Edit2 size={16} className="text-slate-400" />
           Edit Details
         </MenuItem>
         <MenuItem 
           onClick={(e) => { handleClose(e); onToggleStatus(company); }}
-          sx={{ color: company.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
+          sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: company.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
         >
           <Power size={16} className={company.status === 'ACTIVE' ? 'text-red-400' : 'text-emerald-400'} />
           {company.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}

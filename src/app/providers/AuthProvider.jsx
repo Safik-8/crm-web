@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../../lib/api/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AuthContext = createContext(undefined);
 
@@ -60,6 +61,7 @@ const RBAC_ADAPTER_MAP = {
 };
 
 export const AuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -160,6 +162,7 @@ export const AuthProvider = ({ children }) => {
     // the network. The ProtectedRoute will redirect to /login as soon as
     // `isAuthenticated` becomes false.
     setUser(null);
+    queryClient.clear();
 
     // ── Background API call ──────────────────────────────────────────────────
     // Fire-and-forget: the session cookie is invalidated server-side.

@@ -1,12 +1,14 @@
 // src/features/branch/components/BranchTable.jsx
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Edit2, GitBranch, Users, Hash, UserPlus, Calendar, Power, MoreVertical } from 'lucide-react';
 import { Menu, MenuItem, IconButton } from '@mui/material';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import Table from '../../../shared/components/elements/Table';
 
 const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   
@@ -59,7 +61,7 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
               fontFamily: '"DM Sans", sans-serif',
               fontWeight: 600,
               color: '#475569',
-              gap: 1.5,
+              gap: '10px',
               transition: 'all 0.2s ease',
               '&:hover': {
                 backgroundColor: '#f8fafc',
@@ -68,17 +70,21 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
           }
         }}
       >
-        <MenuItem onClick={(e) => { handleClose(e); onEdit(branch); }}>
+        <MenuItem onClick={(e) => { handleClose(e); onEdit(branch); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Edit2 size={16} className="text-slate-400" />
           Edit Details
         </MenuItem>
-        <MenuItem onClick={(e) => { handleClose(e); onAssignUser(branch); }}>
+        <MenuItem onClick={(e) => { handleClose(e); onAssignUser(branch); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <UserPlus size={16} className="text-slate-400" />
           Assign User
         </MenuItem>
+        <MenuItem onClick={(e) => { handleClose(e); navigate(`/teams`, { state: { openCreate: true, branchId: branch.id, companyId: branch.companyId } }); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <GitBranch size={16} className="text-slate-400" />
+          Create Team
+        </MenuItem>
         <MenuItem 
           onClick={(e) => { handleClose(e); onToggleStatus(branch); }}
-          sx={{ color: branch.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
+          sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: branch.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
         >
           <Power size={16} className={branch.status === 'ACTIVE' ? 'text-red-400' : 'text-emerald-400'} />
           {branch.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
@@ -107,6 +113,7 @@ const StatusBadge = ({ status }) => (
  * Integrated with professional UI styling and ActionMenu.
  */
 const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssignUser, canEdit }) => {
+  const navigate = useNavigate();
   const columns = [
     {
       header: 'Branch Name',
@@ -152,6 +159,24 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
             <Users size={14} />
           </div>
           <span className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</span>
+        </div>
+      ),
+      skeleton: () => <Skeleton className="h-5 w-12" />,
+    },
+    {
+      header: 'Team Count',
+      cell: (branch) => (
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/teams`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } });
+          }}
+          className="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-primary transition-colors group"
+        >
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+            <GitBranch size={14} />
+          </div>
+          <span className="font-bold text-sm tracking-tight">{branch._count?.teams || 0}</span>
         </div>
       ),
       skeleton: () => <Skeleton className="h-5 w-12" />,
@@ -261,7 +286,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
                 <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">
                   <div className="font-black text-sm text-slate-800 leading-none mb-1">
                     {branch._count?.users ?? 0}
@@ -269,6 +294,19 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
                   <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
                     <Users size={10} />
                     Users
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => navigate(`/teams`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } })}
+                  className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
+                >
+                  <div className="font-black text-sm text-slate-800 leading-none mb-1">
+                    {branch._count?.teams ?? 0}
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
+                    <GitBranch size={10} />
+                    Teams
                   </div>
                 </div>
 

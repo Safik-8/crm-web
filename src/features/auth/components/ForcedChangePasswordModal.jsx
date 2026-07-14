@@ -1,7 +1,8 @@
 // src/features/auth/components/ForcedChangePasswordModal.jsx
 
 import React, { useState } from 'react';
-import { Lock, LogOut } from 'lucide-react';
+import { Lock, LogOut, Eye, EyeOff } from 'lucide-react';
+import { InputAdornment, IconButton } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { apiClient } from '../../../lib/api/api';
 import TextField from '../../../shared/components/elements/TextField';
@@ -14,6 +15,10 @@ const ForcedChangePasswordModal = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -99,7 +104,7 @@ const ForcedChangePasswordModal = () => {
           <TextField
             id="currentPassword"
             label="Current Temporary Password"
-            type="password"
+            type={showCurrentPassword ? 'text' : 'password'}
             placeholder="Enter temporary password..."
             value={currentPassword}
             onChange={(val) => {
@@ -108,12 +113,31 @@ const ForcedChangePasswordModal = () => {
             }}
             errorText={errors.currentPassword}
             required
+            endIcon={
+              <InputAdornment position="end" sx={{ pr: 0.5 }}>
+                <IconButton
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  edge="end"
+                  aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  sx={{
+                    color: 'text.secondary',
+                    p: 1.5,
+                    '&:hover': {
+                      backgroundColor: 'rgba(248, 111, 3, 0.08)',
+                    },
+                  }}
+                >
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </IconButton>
+              </InputAdornment>
+            }
           />
 
           <TextField
             id="newPassword"
             label="New Secure Password"
-            type="password"
+            type={showNewPassword ? 'text' : 'password'}
             placeholder="Min 6 characters..."
             value={newPassword}
             onChange={(val) => {
@@ -122,12 +146,31 @@ const ForcedChangePasswordModal = () => {
             }}
             errorText={errors.newPassword}
             required
+            endIcon={
+              <InputAdornment position="end" sx={{ pr: 0.5 }}>
+                <IconButton
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  edge="end"
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  sx={{
+                    color: 'text.secondary',
+                    p: 1.5,
+                    '&:hover': {
+                      backgroundColor: 'rgba(248, 111, 3, 0.08)',
+                    },
+                  }}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </IconButton>
+              </InputAdornment>
+            }
           />
 
           <TextField
             id="confirmPassword"
             label="Confirm New Password"
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Re-enter new password..."
             value={confirmPassword}
             onChange={(val) => {
@@ -136,6 +179,25 @@ const ForcedChangePasswordModal = () => {
             }}
             errorText={errors.confirmPassword}
             required
+            endIcon={
+              <InputAdornment position="end" sx={{ pr: 0.5 }}>
+                <IconButton
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  edge="end"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  sx={{
+                    color: 'text.secondary',
+                    p: 1.5,
+                    '&:hover': {
+                      backgroundColor: 'rgba(248, 111, 3, 0.08)',
+                    },
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </IconButton>
+              </InputAdornment>
+            }
           />
 
           {/* Action Buttons */}
