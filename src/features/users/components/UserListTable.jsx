@@ -62,37 +62,41 @@ const RowActionsMenu = ({
       >
         <MenuItem
           onClick={() => handleAction(onViewDetails)}
-          className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+          className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+          sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
         >
           <Eye size={14} className="text-slate-400" />
           <span>View Details</span>
         </MenuItem>
-
+ 
         {canEdit && (
           <>
             <MenuItem
               onClick={() => handleAction(onEdit)}
-              className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+              className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
               <Edit2 size={13} className="text-slate-400" />
               <span>Edit User</span>
             </MenuItem>
-
+ 
             <MenuItem
               onClick={() => handleAction(onResetPassword)}
-              className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+              className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
               <Key size={13} className="text-slate-400" />
               <span>Reset Password</span>
             </MenuItem>
-
+ 
             <MenuItem
               onClick={() => handleAction(onToggleStatus)}
-              className={`flex items-center gap-2 px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors border-t border-slate-100/50 ${
+              className={`px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors border-t border-slate-100/50 ${
                 isActive
                   ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50/30'
                   : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/30'
               }`}
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
               <Power size={13} className={isActive ? 'text-rose-400' : 'text-emerald-400'} />
               <span>{isActive ? 'Deactivate User' : 'Activate User'}</span>

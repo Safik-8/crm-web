@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { Search, Bell, Menu, User, LogOut, Loader2 } from 'lucide-react';
+import { Menu as MuiMenu, MenuItem } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider.jsx';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from '../../utils/toast';
@@ -22,6 +23,17 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
     await logout();
     toast.success('Signed out successfully', { id: 'logout' });
     navigate('/login', { replace: true });
+  };
+
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const isProfileMenuOpen = Boolean(profileAnchorEl);
+  
+  const handleProfileClick = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+  
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
   };
 
   return (
@@ -86,9 +98,12 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
           {/* Divider */}
           <div className="h-5 w-px bg-zinc-200 hidden sm:block mx-1" />
 
-          {/* Profile */}
+          {/* Profile Dropdown */}
           <div className="flex items-center gap-2">
-            <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group">
+            <div 
+              onClick={handleProfileClick}
+              className="flex items-center gap-2 hover:bg-zinc-50 px-2 py-1 rounded-xl transition-colors cursor-pointer group select-none"
+            >
               <div className="hidden sm:flex flex-col items-end">
                 <p className="text-[13px] font-semibold text-zinc-800 leading-tight truncate max-w-[110px] lg:max-w-[140px] group-hover:text-orange-600 transition-colors">
                   {user?.name || 'Guest'}
@@ -110,25 +125,56 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
                   user?.name?.charAt(0)?.toUpperCase() || <User size={15} />
                 )}
               </div>
-            </Link>
+            </div>
 
-
-            {/* Logout */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="flex items-center justify-center w-8 h-8 rounded-xl text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400"
-              title={isLoggingOut ? 'Signing out…' : 'Log out'}
-              aria-label={isLoggingOut ? 'Signing out, please wait' : 'Log out'}
-              aria-busy={isLoggingOut}
+            <MuiMenu
+              anchorEl={profileAnchorEl}
+              open={isProfileMenuOpen}
+              onClose={handleProfileClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              PaperProps={{
+                elevation: 0,
+                sx: {
+                  overflow: 'visible',
+                  filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.08))',
+                  mt: 1,
+                  borderRadius: '12px',
+                  minWidth: 160,
+                  border: '1px solid #f1f5f9',
+                  '& .MuiMenuItem-root': {
+                    px: 2,
+                    py: 1.5,
+                    fontSize: '13px',
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontWeight: 600,
+                    color: '#475569',
+                    gap: '10px',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: '#f8fafc',
+                    }
+                  }
+                }
+              }}
             >
-              {isLoggingOut ? (
-                <Loader2 size={16} className="animate-spin text-primary" aria-hidden="true" />
-              ) : (
-                <LogOut size={16} aria-hidden="true" />
-              )}
-            </button>
+              <MenuItem onClick={() => { handleProfileClose(); navigate('/profile'); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <User size={16} className="text-zinc-400" />
+                My Profile
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { handleProfileClose(); handleLogout(); }}
+                disabled={isLoggingOut}
+                sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444 !important' }}
+              >
+                {isLoggingOut ? (
+                  <Loader2 size={16} className="animate-spin text-primary" />
+                ) : (
+                  <LogOut size={16} className="text-red-400" />
+                )}
+                Logout
+              </MenuItem>
+            </MuiMenu>
           </div>
         </div>
       </header>

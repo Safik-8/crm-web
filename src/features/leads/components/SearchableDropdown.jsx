@@ -179,7 +179,7 @@ export const SearchableDropdown = ({
         }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all outline-none ${
+        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all outline-none ${
           block ? 'w-full h-8' : ''
         } ${
           disabled
