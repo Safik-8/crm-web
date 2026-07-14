@@ -275,10 +275,15 @@ const UserProfilePage = () => {
       }
     }
 
-    if (editFields.firstName && editFields.firstName.length > 100) {
+    if (!editFields.firstName || editFields.firstName.trim() === '') {
+      errors.firstName = 'First name is required';
+    } else if (editFields.firstName.length > 100) {
       errors.firstName = 'First name must be under 100 characters';
     }
-    if (editFields.lastName && editFields.lastName.length > 100) {
+
+    if (!editFields.lastName || editFields.lastName.trim() === '') {
+      errors.lastName = 'Last name is required';
+    } else if (editFields.lastName.length > 100) {
       errors.lastName = 'Last name must be under 100 characters';
     }
     if (editFields.address && editFields.address.length > 500) {
@@ -1047,6 +1052,7 @@ const UserProfilePage = () => {
                         onChange={(val) => handleEditFieldChange('firstName', val)}
                         placeholder="Enter first name" 
                         errorText={editErrors.firstName}
+                        required
                       />
                       <TextField 
                         id="edit-lastName" 
@@ -1055,6 +1061,7 @@ const UserProfilePage = () => {
                         onChange={(val) => handleEditFieldChange('lastName', val)}
                         placeholder="Enter last name" 
                         errorText={editErrors.lastName}
+                        required
                       />
                       <TextField 
                         id="edit-mobileNumber" 
