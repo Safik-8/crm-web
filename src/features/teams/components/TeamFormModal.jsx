@@ -149,7 +149,7 @@ const TeamFormModal = ({
     if (!isEditMode && canSelectCompany && !companyId) tempErrors.companyId = 'Company selection is required';
     if (!isEditMode && !branchId) tempErrors.branchId = 'Branch selection is required';
     if (!bdeId) {
-      tempErrors.bdeId = 'Team Owner (BDE) is required';
+      tempErrors.bdeId = 'At least 1 BDE is must';
     } else if (iseIds.includes(Number(bdeId)) || iseIds.includes(String(bdeId))) {
       tempErrors.bdeId = 'The Team Owner (BDE) cannot also be assigned as an ISE member';
     }
@@ -280,7 +280,7 @@ const TeamFormModal = ({
             placeholder="e.g. TGR-01"
             value={code}
             onChange={(val) => {
-              setCode(val);
+              setCode(val.toUpperCase());
               if (errors.code) setErrors(prev => ({ ...prev, code: null }));
             }}
             disabled={isEditMode}
@@ -327,6 +327,7 @@ const TeamFormModal = ({
                 }}
                 options={branchOptions}
                 errorText={errors.branchId}
+                searchable={true}
                 required
               />
             )}
@@ -339,7 +340,7 @@ const TeamFormModal = ({
             Team Leadership
           </h3>
 
-          <SearchableSelect
+          <SelectField
             id="bdeId"
             label="Team Owner (BDE)"
             placeholder={branchId ? "Select a BDE..." : "Please select a branch first"}
@@ -351,6 +352,7 @@ const TeamFormModal = ({
             options={bdeOptions}
             disabled={!branchId || isLoadingBdes}
             errorText={errors.bdeId}
+            searchable={true}
             required
           />
         </div>
