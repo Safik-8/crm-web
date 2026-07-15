@@ -158,141 +158,154 @@ const CoursesPage = () => {
   return (
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pb-8">
-        
-        {/* Header Actions Panel */}
-        <div className="p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <Filter size={15} className="text-orange-500" />
-              <span>Course Catalog Search & Filters</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => refetch()}
-                className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                title="Refresh course list"
-              >
-                <RefreshCw size={14} />
-                <span>Refresh</span>
-              </Button>
 
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="flex items-center gap-1.5 h-9 px-3 text-xs"
+        {/* ── Desktop section header ─────────────────────────────────────── */}
+        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60 mb-4">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
+              <BookOpen size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Course Catalog</h2>
+                <button
+                  onClick={() => refetch()}
+                  disabled={loadingState === 'loading'}
+                  className="text-slate-400 hover:text-primary transition-colors disabled:opacity-50 focus:outline-none"
+                  title="Refresh Data"
                 >
-                  <Plus size={14} />
-                  <span>Add Course</span>
-                </Button>
+                  <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              {loadingState !== 'loading' && (
+                <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+                  {courses.length} {courses.length === 1 ? 'course' : 'courses'} total
+                </p>
               )}
             </div>
           </div>
+          {canCreate && (
+            <Button
+              onClick={handleOpenCreateForm}
+              variant="contained"
+              size="medium"
+              startIcon={<Plus size={18} />}
+              className="group shadow-sm hover:shadow-md transition-all"
+            >
+              Add Course
+            </Button>
+          )}
         </div>
 
-        {/* Search & Filter Controls */}
-        <div className="p-3 bg-white border border-slate-200/60 shadow-sm rounded-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-            
-            {/* Search input field */}
-            <div className="relative flex-1 min-w-[240px]">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                <Search size={15} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search course name or code..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
-                           focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
-              />
-            </div>
+        <div className="bg-white border border-slate-200/60 p-4">
+          {/* Search & Filter Controls */}
+          <div className="p-3 bg-white border border-slate-200/60 mb-4">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
 
-            {/* Select dropdowns */}
-            <div className="flex flex-wrap items-center gap-2">
-              
-              {isSuperAdmin && (
+              {/* Search input field */}
+              <div className="relative flex-1 min-w-[240px]">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                  <Search size={15} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search course name or code..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
+                           focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                />
+              </div>
+
+              {/* Select dropdowns */}
+              <div className="flex flex-wrap items-center gap-2">
+
+                {isSuperAdmin && (
+                  <div className="w-[160px]">
+                    <SelectField
+                      id="companyFilter"
+                      value={companyId}
+                      onChange={(val) => handleFilterChange('companyId', val)}
+                      options={companies.map(c => ({ value: c.id, label: c.name }))}
+                      placeholder="All Companies"
+                      allowEmptyOption={true}
+                      searchable={true}
+                    />
+                  </div>
+                )}
+
                 <div className="w-[160px]">
                   <SelectField
-                    id="companyFilter"
-                    value={companyId}
-                    onChange={(val) => handleFilterChange('companyId', val)}
-                    options={companies.map(c => ({ value: c.id, label: c.name }))}
-                    placeholder="All Companies"
+                    id="categoryFilter"
+                    value={category}
+                    onChange={(val) => handleFilterChange('category', val)}
+                    options={categoryOptions}
+                    placeholder="All Categories"
                     allowEmptyOption={true}
                     searchable={true}
                   />
                 </div>
-              )}
 
-              <div className="w-[160px]">
-                <SelectField
-                  id="categoryFilter"
-                  value={category}
-                  onChange={(val) => handleFilterChange('category', val)}
-                  options={categoryOptions}
-                  placeholder="All Categories"
-                  allowEmptyOption={true}
-                  searchable={true}
-                />
+                <div className="w-[140px]">
+                  <SelectField
+                    id="statusFilter"
+                    value={status}
+                    onChange={(val) => handleFilterChange('status', val)}
+                    options={[
+                      { value: 'ACTIVE', label: 'Active' },
+                      { value: 'INACTIVE', label: 'Inactive' }
+                    ]}
+                    placeholder="All Statuses"
+                    allowEmptyOption={true}
+                  />
+                </div>
+
+                {/* Reset trigger */}
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
 
-              <div className="w-[140px]">
-                <SelectField
-                  id="statusFilter"
-                  value={status}
-                  onChange={(val) => handleFilterChange('status', val)}
-                  options={[
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' }
-                  ]}
-                  placeholder="All Statuses"
-                  allowEmptyOption={true}
-                />
-              </div>
-
-              {/* Reset trigger */}
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all"
-                >
-                  Clear Filters
-                </button>
-              )}
             </div>
+          </div>
 
+          {/* Data Table */}
+          <div className="w-full relative z-10 bg-white">
+            <CourseListTable
+              courses={courses}
+              loadingState={loadingState}
+              errorMessage={errorMessage}
+              onRetry={() => refetch()}
+              onViewDetails={handleOpenDetails}
+              onEdit={handleOpenEditForm}
+              onToggleStatus={handleOpenToggleStatus}
+              onDelete={handleOpenDelete}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearFilters}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+
+          </div>
+
+          {/* Pagination Bar */}
+          <div className="w-full mt-4">
+            <CoursePagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={loadingState === 'loading'}
+            />
           </div>
         </div>
 
-        {/* Data Table */}
-        <CourseListTable
-          courses={courses}
-          loadingState={loadingState}
-          errorMessage={errorMessage}
-          onRetry={() => refetch()}
-          onViewDetails={handleOpenDetails}
-          onEdit={handleOpenEditForm}
-          onToggleStatus={handleOpenToggleStatus}
-          onDelete={handleOpenDelete}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
-
-        {/* Pagination Bar */}
-        <CoursePagination
-          pagination={pagination}
-          onPageChange={setPage}
-          isLoading={loadingState === 'loading'}
-        />
-
         {/* Modals & Slide-overs */}
-        
+
         {/* Form Modal (Create / Edit Slide-over) */}
         <CourseFormModal
           isOpen={isFormOpen}

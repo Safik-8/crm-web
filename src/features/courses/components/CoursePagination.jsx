@@ -47,7 +47,7 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
   const pageRange = buildPageRange(page, totalPages);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-3 sm:px-5 py-3 mt-4">
+    <div className="w-full bg-white border border-slate-200/60 px-3 sm:px-5 py-3 mt-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         
         {/* Summary text */}

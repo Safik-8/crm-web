@@ -171,7 +171,7 @@ const UsersPage = () => {
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
 
         {/* ── TABS FOR VIEW MODE ── */}
-        <div className="bg-white rounded-t-2xl border border-slate-200/60  flex items-center px-6 pt-4">
+        <div className="bg-white border border-slate-200/60 flex items-center px-6 pt-4">
           <div className="flex space-x-6 relative top-[1px]">
             <button
               onClick={() => setViewMode('list')}
@@ -189,7 +189,7 @@ const UsersPage = () => {
         </div>
 
         {viewMode === 'orgchart' ? (
-           <div className="bg-white rounded-b-2xl border border-slate-200/60 shadow-sm p-4">
+           <div className="bg-white border border-slate-200/60 p-4">
              <OrgChart users={allUsers || []} currentUser={currentUser} />
            </div>
         ) : (

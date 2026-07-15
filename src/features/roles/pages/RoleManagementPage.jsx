@@ -406,10 +406,37 @@ const RoleManagementPage = () => {
       title="Role & Permission Settings"
       description="Manage role-based security configurations, custom roles, and functional permission matrices."
       icon={Shield}
+      hideHeader={true}
     >
       <div className="flex flex-col gap-4">
+        {/* ── Desktop section header ─────────────────────────────────────── */}
+        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
+              <Shield size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Role & Permission Settings</h2>
+                <button
+                  onClick={refetch}
+                  className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+                Manage role-based security configurations
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200/60 p-4">
+
         {/* Top filter and action bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full bg-white border border-slate-200/60 p-3 mb-4">
           <div className="w-full sm:w-72">
             <input
               type="text"
@@ -419,23 +446,19 @@ const RoleManagementPage = () => {
               className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
             />
           </div>
-          <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
-            <button
-              onClick={refetch}
-              className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-50 rounded-xl transition-all border border-slate-200"
-            >
-              <RefreshCcw size={18} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-            </button>
-            {isSuperOrCompanyAdmin && (
+          {isSuperOrCompanyAdmin && (
+            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
               <Button
                 onClick={handleCreateClick}
                 variant="contained"
+                size="medium"
                 startIcon={<Plus size={18} />}
+                className="group shadow-sm hover:shadow-md transition-all"
               >
                 Add Role
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile Cards (visible on smaller screens, hidden on md+) */}
@@ -445,14 +468,14 @@ const RoleManagementPage = () => {
               Loading roles...
             </div>
           ) : roles.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200/60 p-8 text-center">
+            <div className="bg-white border border-slate-200/60 p-8 text-center">
               <AlertCircle className="text-slate-300 mx-auto mb-2" size={32} />
               <p className="font-bold text-slate-700">No Roles Found</p>
               <p className="text-xs text-slate-400">Add a custom role or refine your search.</p>
             </div>
           ) : (
             roles.map((role) => (
-              <div key={role.id} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 space-y-3">
+              <div key={role.id} className="bg-white border border-slate-200/60 p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
                     <div className={`p-1.5 rounded-lg ${role.isSystem ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
@@ -526,7 +549,7 @@ const RoleManagementPage = () => {
         </div>
 
         {/* Desktop Table (hidden on mobile, visible on md+) */}
-        <div className="hidden md:block">
+        <div className="hidden md:block w-full relative z-10 bg-white">
           <Table
             columns={columns}
             data={roles}
@@ -590,7 +613,7 @@ const RoleManagementPage = () => {
             <div className="border-t border-slate-100 pt-4 mt-2">
               <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3">Module Permissions Matrix</h3>
 
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -764,6 +787,7 @@ const RoleManagementPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+      </div>
       </div>
     </GenericPage>
   );

@@ -31,7 +31,7 @@ const CompanyFilters = ({
   const handleClearSearch = () => onSearchChange('');
 
   return (
-    <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-4">
+    <div className="p-3 bg-white border border-slate-200/60 mb-4">
       <div className="flex flex-col xl:flex-row gap-3 xl:gap-4 items-center">
         
         {/* ── Search Bar (Glassmorphic) ─────────────────────────────────── */}
