@@ -24,7 +24,7 @@ const RBAC_ADAPTER_MAP = {
   'view:company_setup': { module: 'COMPANY', action: 'canCreate' },
   'view:users': { module: 'USER', action: 'canView' },
   'view:roles': { module: 'ROLE_PERMISSION', action: 'canView' },
-  'view:leads': { module: 'PIPELINE', action: 'canView' },
+  'view:leads': { module: 'LEAD', action: 'canView' },
   'view:customers': { module: 'CUSTOMER', action: 'canView' }, // Fixed from PIPELINE
   'view:deals': { module: 'PIPELINE', action: 'canView' },
   'view:audit': { module: 'AUDIT', action: 'canView' },

@@ -5,6 +5,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Edit2, Power, Trash2, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 
 /**
  * Renders actions dropdown menu for a specific row in the course table.
@@ -130,7 +131,10 @@ const CourseListTable = ({
   hasActiveFilters,
   onClearFilters,
   canEdit = false,
-  canDelete = false
+  canDelete = false,
+  sortBy,
+  sortOrder,
+  onSort
 }) => {
 
   const formatCurrency = (value) => {
@@ -148,6 +152,7 @@ const CourseListTable = ({
       header: 'Code',
       accessorKey: 'code',
       align: 'left',
+      sortable: true,
       className: 'font-semibold text-slate-700 text-[13px] whitespace-nowrap',
       cell: (row) => (
         <div className="flex justify-start">
@@ -155,11 +160,18 @@ const CourseListTable = ({
             {row.code}
           </span>
         </div>
+      ),
+      skeleton: () => (
+        <div className="flex justify-start">
+          <Skeleton className="h-5 w-16 rounded-md" />
+        </div>
       )
     },
     {
       header: 'Course Name',
+      accessorKey: 'name',
       align: 'left',
+      sortable: true,
       className: 'min-w-[260px]',
       cell: (row) => (
         <div className="flex items-center gap-3 text-left">
@@ -175,11 +187,22 @@ const CourseListTable = ({
             </p>
           </div>
         </div>
+      ),
+      skeleton: () => (
+        <div className="flex items-center gap-3 text-left">
+          <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <Skeleton className="h-4 w-40 rounded-md" />
+            <Skeleton className="h-3 w-48 rounded-md" />
+          </div>
+        </div>
       )
     },
     {
       header: 'Category',
+      accessorKey: 'category',
       align: 'left',
+      sortable: true,
       className: 'text-[13px] font-semibold text-slate-600',
       cell: (row) => (
         <div className="text-left">
@@ -188,27 +211,40 @@ const CourseListTable = ({
             <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.parentCategory}</p>
           )}
         </div>
+      ),
+      skeleton: () => (
+        <div className="text-left space-y-1.5">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-3 w-16 rounded-md" />
+        </div>
       )
     },
     {
       header: 'Price',
+      accessorKey: 'price',
       align: 'left',
+      sortable: true,
       className: 'text-[13px] font-bold text-slate-800',
-      cell: (row) => formatCurrency(row.price)
+      cell: (row) => formatCurrency(row.price),
+      skeleton: () => <Skeleton className="h-4 w-16 rounded-md" />
     },
     {
       header: 'Duration',
+      accessorKey: 'duration',
       align: 'left',
       className: 'text-[13px] text-slate-600 font-medium',
       cell: (row) => {
         if (!row.duration) return 'N/A';
         const match = row.duration.match(/\d+/);
         return match ? `${match[0]} months` : row.duration;
-      }
+      },
+      skeleton: () => <Skeleton className="h-4 w-20 rounded-md" />
     },
     {
       header: 'Status',
+      accessorKey: 'status',
       align: 'left',
+      sortable: true,
       className: 'whitespace-nowrap',
       cell: (row) => {
         const isActive = row.status === 'ACTIVE';
@@ -224,7 +260,12 @@ const CourseListTable = ({
             {row.status}
           </span>
         );
-      }
+      },
+      skeleton: () => (
+        <div className="flex justify-start">
+          <Skeleton className="h-6 w-16 rounded-lg" />
+        </div>
+      )
     },
     {
       header: 'Actions',
@@ -242,6 +283,11 @@ const CourseListTable = ({
             canDelete={canDelete}
           />
         </div>
+      ),
+      skeleton: () => (
+        <div className="flex justify-end">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+        </div>
       )
     }
   ];
@@ -257,6 +303,9 @@ const CourseListTable = ({
       onClearFilters={onClearFilters}
       emptyTitle="No courses found"
       emptyDescription="Could not find any course records matching the search term or status."
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      onSort={onSort}
     />
   );
 };

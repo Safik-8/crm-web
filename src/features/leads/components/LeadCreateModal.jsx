@@ -6,9 +6,9 @@ import {
   Box,
   CircularProgress
 } from '@mui/material';
-import { X, Pencil, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge } from 'lucide-react';
+import { X, Plus, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge, ListFilter } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useUpdateLeadMutation, useLeadFormDataQuery } from '../hooks/useLeads';
+import { useCreateLeadMutation, useLeadFormDataQuery } from '../hooks/useLeads';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
@@ -17,9 +17,9 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 
-export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }) => {
+export const LeadCreateModal = ({ isOpen, onClose, onCreated }) => {
   const { user: currentUser } = useAuth();
-  const updateLeadMutation = useUpdateLeadMutation();
+  const createLeadMutation = useCreateLeadMutation();
 
   const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
   const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (currentUser?.primaryRoleRank >= 80 && !currentUser?.branchId);
@@ -50,39 +50,38 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
 
   const [errors, setErrors] = useState({});
 
-  // Sync values on open/lead change
+  // Sync fixed values on open
   useEffect(() => {
-    if (lead) {
-      const companyVal = lead.company?.id || lead.companyId || '';
-      const branchVal = lead.branch?.id || lead.branchId || '';
-      const pipelineVal = lead.pipeline?.id || lead.pipelineId || '';
-
-      setSelectedCompanyId(companyVal ? String(companyVal) : '');
-      setSelectedBranchId(branchVal ? String(branchVal) : '');
-      setSelectedPipelineId(pipelineVal ? String(pipelineVal) : '');
+    if (isOpen) {
+      const initialCompany = currentUser?.companyId ? String(currentUser.companyId) : '';
+      const initialBranch = currentUser?.branchId ? String(currentUser.branchId) : '';
+      
+      setSelectedCompanyId(initialCompany);
+      setSelectedBranchId(initialBranch);
+      setSelectedPipelineId('');
 
       setValues({
-        name: lead.name || '',
-        mobile: lead.mobile || '',
-        email: lead.email || '',
-        alternateMobile: lead.alternateMobile || '',
-        sourceId: lead.source?.id || lead.sourceId || '',
-        courseId: lead.course?.id || lead.courseId || '',
-        statusId: lead.status?.id || lead.statusId || '',
-        priority: lead.priority || 'MEDIUM',
-        budget: lead.budget !== null && lead.budget !== undefined ? String(lead.budget) : '',
-        city: lead.city || '',
-        state: lead.state || '',
-        country: lead.country || '',
-        notes: lead.notes || '',
-        assignedToId: lead.assignedTo?.id || lead.assignedToId || '',
-        companyId: companyVal ? String(companyVal) : '',
-        branchId: branchVal ? String(branchVal) : '',
-        pipelineId: pipelineVal ? String(pipelineVal) : ''
+        name: '',
+        mobile: '',
+        email: '',
+        alternateMobile: '',
+        sourceId: '',
+        courseId: '',
+        statusId: '',
+        priority: 'MEDIUM',
+        budget: '',
+        city: '',
+        state: '',
+        country: '',
+        notes: '',
+        assignedToId: '',
+        companyId: initialCompany,
+        branchId: initialBranch,
+        pipelineId: ''
       });
       setErrors({});
     }
-  }, [lead]);
+  }, [isOpen, currentUser]);
 
   const targetCompanyId = isSuperAdmin ? selectedCompanyId : currentUser?.companyId;
   const targetBranchId = (isSuperAdmin || isCompanyAdmin) ? selectedBranchId : currentUser?.branchId;
@@ -91,7 +90,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   const { data: companiesRes, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies-all-options'],
     queryFn: () => companyService.getCompaniesRaw(),
-    enabled: isSuperAdmin && !!lead
+    enabled: isSuperAdmin && isOpen
   });
   const companiesOptions = (
     Array.isArray(companiesRes)
@@ -105,7 +104,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   const { data: branchesRes, isLoading: isLoadingBranches } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
-    enabled: !!targetCompanyId && (isSuperAdmin || isCompanyAdmin) && !!lead
+    enabled: !!targetCompanyId && (isSuperAdmin || isCompanyAdmin) && isOpen
   });
   const branchesOptions = (
     Array.isArray(branchesRes)
@@ -121,7 +120,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   const { data: pipelinesRes, isLoading: isLoadingPipelines } = useQuery({
     queryKey: ['pipelines-form-options', targetCompanyId, targetBranchId],
     queryFn: () => getPipelines({ companyId: targetCompanyId, branchId: targetBranchId }),
-    enabled: !!targetCompanyId && !!lead
+    enabled: !!targetCompanyId && isOpen
   });
   const pipelinesOptions = (
     Array.isArray(pipelinesRes)
@@ -135,7 +134,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       : []
   ).map((p) => ({ id: p.id, name: p.name }));
 
-  // 4. Fetch dropdown options (Sources, Courses, Statuses, Users)
+  // 4. Fetch dropdown options (Sources, Courses, Statuses, Users) for selected Company/Branch
   const { data: formDataRes, isLoading: isLoadingFormData, isError } = useLeadFormDataQuery({
     companyId: targetCompanyId,
     branchId: targetBranchId
@@ -237,25 +236,19 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       pipelineId: values.pipelineId ? Number(values.pipelineId) : null
     };
 
-    updateLeadMutation.mutate(
-      { id: lead.id, data: payload },
-      {
-        onSuccess: (res) => {
-          if (onUpdated) onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
-          onClose();
-        }
+    createLeadMutation.mutate(payload, {
+      onSuccess: (res) => {
+        if (onCreated) onCreated(res?.data?.lead || res?.lead);
+        onClose();
       }
-    );
+    });
   };
 
   const formData = formDataRes?.data || formDataRes || {};
   const sourcesOptions = (formData.sources || []).map((s) => ({ id: s.id, name: s.name }));
   const coursesOptions = (formData.courses || []).map((c) => ({ id: c.id, name: c.name }));
   const statusesOptions = (formData.statuses || []).map((s) => ({ id: s.id, name: s.name }));
-
-  const usersOptions = assignableUsers.length > 0
-    ? assignableUsers.map((u) => ({ id: u.id, name: `${u.name}${u.role ? ` (${u.role})` : ''}` }))
-    : (formData.users || []).map((u) => ({ id: u.id, name: `${u.name} (${u.role || 'User'})` }));
+  const usersOptions = (formData.users || []).map((u) => ({ id: u.id, name: `${u.name} (${u.role || 'User'})` }));
 
   const priorityOptions = [
     { id: 'HIGH', name: 'High' },
@@ -266,8 +259,8 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   return (
     <Drawer
       anchor="right"
-      open={true}
-      onClose={() => !updateLeadMutation.isPending && onClose()}
+      open={isOpen}
+      onClose={() => !createLeadMutation.isPending && onClose()}
       ModalProps={{
         slotProps: {
           backdrop: {
@@ -315,15 +308,15 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
                 fontFamily: '"Outfit", "Inter", sans-serif'
               }}
             >
-              Edit Lead Details
+              Create New Lead
             </Typography>
             <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mt: 0.5, fontWeight: 500 }}>
-              Modify details and assignees for {lead.name}
+              Add a new prospect to your sales registry.
             </Typography>
           </Box>
           <IconButton
             onClick={onClose}
-            disabled={updateLeadMutation.isPending}
+            disabled={createLeadMutation.isPending}
             sx={{
               color: '#64748B',
               bgcolor: 'transparent',
@@ -601,7 +594,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
             <TextField
               id="lead-notes"
               label="Notes"
-              placeholder="Enter notes or updates summary..."
+              placeholder="Enter initial lead notes or summary..."
               multiline
               rows={4}
               value={values.notes}
@@ -627,7 +620,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
           <Button
             variant="text"
             onClick={onClose}
-            disabled={updateLeadMutation.isPending}
+            disabled={createLeadMutation.isPending}
             sx={{
               color: '#475569',
               fontWeight: 600,
@@ -641,11 +634,11 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
             type="submit"
             variant="contained"
             color="primary"
-            startIcon={<Pencil size={15} />}
-            isLoading={updateLeadMutation.isPending}
+            startIcon={<Plus size={15} />}
+            isLoading={createLeadMutation.isPending}
             disabled={isError}
           >
-            Save Changes
+            Create Lead
           </Button>
         </Box>
       </Box>
@@ -653,4 +646,4 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   );
 };
 
-export default LeadEditModal;
+export default LeadCreateModal;

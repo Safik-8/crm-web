@@ -1,79 +1,70 @@
 // src/features/users/hooks/useUserList.js
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import useListManager from '../../../shared/hooks/useListManager';
 import { useUsersQuery, useToggleUserStatusMutation } from './useUsers';
 
+/**
+ * Custom hook to manage the state and logic for User searching, filtering, sorting, and paging.
+ * Restructured to consume the shared useListManager framework hook.
+ *
+ * @param {object} currentUser - Logged in user context
+ * @returns {object} Filter states, loaders, pagination controls, status actions, and sort triggers
+ */
 export const useUserList = (currentUser = null) => {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const initialFilters = useMemo(() => {
+    const defaults = { status: '', roleId: '', companyId: '', branchId: '' };
+    if (currentUser) {
+      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+        defaults.companyId = currentUser.companyId || '';
+      }
+      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+        defaults.branchId = currentUser.branchId || '';
+      }
+    }
+    return defaults;
+  }, [currentUser]);
 
-  // Filters state
-  const [status, setStatus] = useState('');
-  const [roleId, setRoleId] = useState('');
-  const [companyId, setCompanyId] = useState('');
-  const [branchId, setBranchId] = useState('');
-
-  const debounceTimer = useRef(null);
+  const {
+    search,
+    handleSearchChange,
+    page,
+    setPage,
+    filters,
+    handleFilterChange,
+    clearFilters: listClearFilters,
+    sortBy,
+    sortOrder,
+    toggleSort,
+    hasActiveFilters,
+    queryParams,
+    getLoadingState
+  } = useListManager({
+    defaultSort: { field: 'createdAt', order: 'desc' },
+    defaultLimit: 10,
+    initialFilters
+  });
 
   // Sync multitenancy scopes based on logged-in user role
   useEffect(() => {
     if (currentUser) {
       if (currentUser.primaryRole !== 'SUPER_ADMIN') {
-        setCompanyId(currentUser.companyId || '');
+        handleFilterChange('companyId', currentUser.companyId || '');
       }
       if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
-        setBranchId(currentUser.branchId || '');
+        handleFilterChange('branchId', currentUser.branchId || '');
       }
     }
-  }, [currentUser]);
+  }, [currentUser, handleFilterChange]);
 
-  const handleSearchChange = useCallback((value) => {
-    setSearch(value);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1);
-    }, 400);
-  }, []);
-
-  const handleFilterChange = useCallback((field, value) => {
-    setPage(1);
-    if (field === 'status') setStatus(value);
-    if (field === 'roleId') setRoleId(value);
-    if (field === 'companyId') {
-      setCompanyId(value);
-      setBranchId(''); // Reset branch on company change
-    }
-    if (field === 'branchId') setBranchId(value);
-  }, []);
-
-  const clearFilters = useCallback(() => {
-    setSearch('');
-    setDebouncedSearch('');
-    setPage(1);
-    setStatus('');
-    setRoleId('');
-    if (currentUser?.primaryRole === 'SUPER_ADMIN') {
-      setCompanyId('');
-      setBranchId('');
-    } else if (currentUser?.primaryRole === 'COMPANY_ADMIN') {
-      setBranchId('');
-    }
-  }, [currentUser]);
-
-  const params = {
-    page,
-    limit,
-    search: debouncedSearch,
-    status,
-    roleId,
-    companyId: companyId ? Number(companyId) : undefined,
-    branchId: branchId ? Number(branchId) : undefined
+  // Request parameters structure formatted for axios query params
+  const apiParams = {
+    ...queryParams,
+    companyId: queryParams.companyId ? Number(queryParams.companyId) : undefined,
+    branchId: queryParams.branchId ? Number(queryParams.branchId) : undefined
   };
 
-  const { data, isLoading, isError, error, refetch } = useUsersQuery(params);
+  const { data, isLoading, isFetching, isError, error, refetch } = useUsersQuery(apiParams);
   const toggleStatusMutation = useToggleUserStatusMutation();
 
   const users = Array.isArray(data?.data?.users) ? data.data.users : [];
@@ -89,31 +80,33 @@ export const useUserList = (currentUser = null) => {
     toggleStatusMutation.mutate({ id, nextStatus });
   };
 
-  let loadingState = 'success';
-  if (isLoading) {
-    loadingState = 'loading';
-  } else if (isError) {
-    loadingState = 'error';
-  } else if (users.length === 0) {
-    loadingState = 'empty';
-  }
+  // Derive page loading states
+  const loadingState = getLoadingState(isLoading || isFetching, isError, users.length);
 
-  const hasActiveFilters = !!(
-    debouncedSearch ||
-    status ||
-    roleId ||
-    (currentUser?.primaryRole === 'SUPER_ADMIN' && (companyId || branchId)) ||
-    (currentUser?.primaryRole === 'COMPANY_ADMIN' && branchId)
-  );
+  /**
+   * Clears all filters and resets search inputs with respects to user rank isolation rules
+   */
+  const customClearFilters = () => {
+    const defaults = { status: '', roleId: '', companyId: '', branchId: '' };
+    if (currentUser) {
+      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+        defaults.companyId = currentUser.companyId || '';
+      }
+      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+        defaults.branchId = currentUser.branchId || '';
+      }
+    }
+    listClearFilters(defaults);
+  };
 
   return {
     users,
     pagination,
     search,
-    status,
-    roleId,
-    companyId,
-    branchId,
+    status: filters.status,
+    roleId: filters.roleId,
+    companyId: filters.companyId,
+    branchId: filters.branchId,
     loadingState,
     errorMessage: error?.message || 'Something went wrong.',
     hasActiveFilters,
@@ -121,9 +114,12 @@ export const useUserList = (currentUser = null) => {
     setPage,
     handleSearchChange,
     handleFilterChange,
-    clearFilters,
+    clearFilters: customClearFilters,
     refetch,
     handleToggleStatus,
-    isTogglingStatus: toggleStatusMutation.isPending
+    isTogglingStatus: toggleStatusMutation.isPending,
+    sortBy,
+    sortOrder,
+    toggleSort
   };
 };
