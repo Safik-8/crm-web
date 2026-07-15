@@ -7,6 +7,7 @@ import DynamicFormSlideover from '../../../shared/components/elements/DynamicFor
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
+import Button from '../../../shared/components/elements/Button';
 import { useCreateTeamMutation, useUpdateTeamMutation } from '../hooks/useTeams';
 import { teamService } from '../services/teamService';
 import { userService } from '../../users/services/userService';
@@ -219,26 +220,32 @@ const TeamFormModal = ({
 
   const customFooter = (
     <div className="flex items-center gap-3">
-      <button
+      <Button
         type="button"
         disabled={isLoading}
         onClick={onClose}
-        className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none disabled:opacity-50"
+        variant="outlined"
+        sx={{
+          borderColor: '#E2E8F0',
+          color: '#475569',
+          '&:hover': {
+            borderColor: '#CBD5E1',
+            backgroundColor: '#F8FAFC',
+          }
+        }}
       >
         Cancel
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
         onClick={handleFormSubmit}
         disabled={isLoading}
-        className="px-5 py-2.5 rounded-xl bg-primary hover:bg-[#E06202] text-xs font-bold text-white shadow-md shadow-orange-100 transition-colors focus:outline-none disabled:opacity-50"
+        variant="contained"
+        color="primary"
+        isLoading={isLoading}
       >
-        {isLoading
-          ? 'Saving...'
-          : isEditMode
-          ? 'Update Team'
-          : 'Create Team'}
-      </button>
+        {isEditMode ? 'Update Team' : 'Create Team'}
+      </Button>
     </div>
   );
 
@@ -252,8 +259,9 @@ const TeamFormModal = ({
       isLoading={isLoading}
       showFooter={true}
       customFooter={customFooter}
+      onSubmit={() => handleFormSubmit({ preventDefault: () => {} })}
     >
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <div className="space-y-6">
         
         {/* Section 1: Basic Info */}
         <div className="space-y-4">
@@ -417,7 +425,7 @@ const TeamFormModal = ({
           </div>
         )}
 
-      </form>
+      </div>
     </DynamicFormSlideover>
   );
 };

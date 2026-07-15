@@ -11,6 +11,7 @@ import DynamicFormSlideover from '../../../shared/components/elements/DynamicFor
 import Spinner from '../../../shared/components/elements/Spinner';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
+import Button from '../../../shared/components/elements/Button';
 
 const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
   const { data: team, isLoading, error } = useTeamQuery(teamId);
@@ -250,15 +251,17 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
                     )}
                   </div>
                   <div className="flex items-center gap-2 pt-1.5">
-                    <button
+                    <Button
                       type="button"
                       disabled={replaceOwnerMutation.isPending}
                       onClick={handleReplaceOwnerSubmit}
-                      className="inline-flex items-center justify-center rounded-xl bg-primary hover:bg-[#E06202] text-xs font-bold text-white px-4 py-2 shadow-sm transition-colors cursor-pointer select-none disabled:opacity-50"
+                      variant="contained"
+                      color="primary"
+                      isLoading={replaceOwnerMutation.isPending}
                     >
-                      {replaceOwnerMutation.isPending ? 'Saving...' : 'Confirm Reassignment'}
-                    </button>
-                    <button
+                      Confirm Reassignment
+                    </Button>
+                    <Button
                       type="button"
                       disabled={replaceOwnerMutation.isPending}
                       onClick={() => {
@@ -266,10 +269,18 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
                         setNewBdeId('');
                         setReplaceError('');
                       }}
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 bg-white font-bold text-xs px-4 py-2 hover:bg-slate-50 transition-colors cursor-pointer select-none"
+                      variant="outlined"
+                      sx={{
+                        borderColor: '#E2E8F0',
+                        color: '#475569',
+                        '&:hover': {
+                          borderColor: '#CBD5E1',
+                          backgroundColor: '#F8FAFC',
+                        }
+                      }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

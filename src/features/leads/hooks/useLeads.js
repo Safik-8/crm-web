@@ -5,7 +5,9 @@ import {
   getLeadFormData,
   createLead,
   updateLead,
-  deleteLead
+  deleteLead,
+  importLeadsPreview,
+  importLeadsCommit
 } from '../services/leadService';
 import { toast } from '../../../shared/utils/toast';
 
@@ -123,3 +125,38 @@ export const useDeleteLeadMutation = () => {
     },
   });
 };
+
+/**
+ * Hook to handle bulk import preview mutation.
+ */
+export const useImportPreviewMutation = () => {
+  return useMutation({
+    mutationFn: importLeadsPreview,
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to generate import preview';
+        toast.error(msg);
+      }
+    }
+  });
+};
+
+/**
+ * Hook to handle bulk import commit mutation.
+ */
+export const useImportCommitMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importLeadsCommit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.lists() });
+    },
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to commit bulk import';
+        toast.error(msg);
+      }
+    }
+  });
+};
+

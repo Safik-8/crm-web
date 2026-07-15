@@ -13,7 +13,9 @@ import {
   Compass,
   Award,
   Activity,
-  Calendar
+  Calendar,
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
@@ -36,6 +38,7 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import LeadCreateModal from '../components/LeadCreateModal';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDetailDrawer from '../components/LeadDetailDrawer';
+import LeadImportModal from '../components/LeadImportModal';
 
 export const LeadsPage = () => {
   const navigate = useNavigate();
@@ -44,6 +47,7 @@ export const LeadsPage = () => {
 
   // Overlay states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedLeadForEdit, setSelectedLeadForEdit] = useState(null);
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
@@ -302,14 +306,46 @@ export const LeadsPage = () => {
           </Button>
 
           {hasPermission('LEAD', 'canCreate') && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setIsCreateOpen(true)}
-              startIcon={<Plus size={16} />}
-            >
-              Add Lead
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outlined"
+                onClick={() => downloadLeadsTemplate(currentUser?.primaryRole)}
+                startIcon={<Download size={16} />}
+                sx={{
+                  borderColor: '#E2E8F0',
+                  color: '#475569',
+                  '&:hover': {
+                    borderColor: '#CBD5E1',
+                    bgcolor: '#F8FAFC'
+                  }
+                }}
+              >
+                Download Template
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIsImportOpen(true)}
+                startIcon={<FileSpreadsheet size={16} />}
+                sx={{
+                  borderColor: '#E2E8F0',
+                  color: '#475569',
+                  '&:hover': {
+                    borderColor: '#CBD5E1',
+                    bgcolor: '#F8FAFC'
+                  }
+                }}
+              >
+                Import Leads
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsCreateOpen(true)}
+                startIcon={<Plus size={16} />}
+              >
+                Add Lead
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -458,6 +494,12 @@ export const LeadsPage = () => {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onCreated={() => refetch()}
+      />
+
+      <LeadImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onImported={() => refetch()}
       />
 
       {selectedLeadForEdit && (

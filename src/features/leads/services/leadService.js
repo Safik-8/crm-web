@@ -111,13 +111,26 @@ export const addLeadComment = (leadId, comment) =>
   apiClient(`/leads/${leadId}/comments`, { method: 'POST', body: { comment } });
 
 /**
- * Bulk import leads from an uploaded Excel file.
+ * Bulk import leads from an uploaded Excel/CSV file (Preview mode).
  * 
  * @param {FormData} formData
  * @returns {Promise<object>}
  */
-export const importLeads = (formData) =>
-  apiClient('/leads/import-excel', {
+export const importLeadsPreview = (formData) =>
+  apiClient('/leads/import-excel?preview=true', {
     method: 'POST',
     body: formData,
   });
+
+/**
+ * Bulk import leads from an uploaded Excel/CSV file (Commit mode).
+ * 
+ * @param {FormData} formData
+ * @returns {Promise<object>}
+ */
+export const importLeadsCommit = (formData) =>
+  apiClient('/leads/import-excel?preview=false', {
+    method: 'POST',
+    body: formData,
+  });
+

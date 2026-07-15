@@ -15,7 +15,7 @@ import { useTeamsQuery, useToggleTeamStatusMutation, useDeleteTeamMutation } fro
 import TeamListTable from '../components/TeamListTable';
 import TeamFormModal from '../components/TeamFormModal';
 import TeamDetailModal from '../components/TeamDetailModal';
-import TeamPagination from '../components/TeamPagination';
+import Pagination from '../../../shared/components/elements/Pagination';
 
 const TeamsPage = () => {
   const { user: currentUser, hasPermission } = useAuth();
@@ -378,12 +378,12 @@ const TeamsPage = () => {
         />
 
         {/* Pagination */}
-        <TeamPagination
+        <Pagination
           pagination={pagination}
           onPageChange={setPage}
           isLoading={isLoading}
+          entityName="teams"
         />
-
       </div>
 
       {/* ── MODAL AND SLIDE-OVER PORTALS ── */}

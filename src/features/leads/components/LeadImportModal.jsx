@@ -1,376 +1,525 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, 
-  Upload, 
-  FileText, 
-  Download, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle, 
-  ChevronDown, 
-  Trash2, 
-  AlertTriangle 
+import React, { useState } from 'react';
+import {
+  Drawer,
+  IconButton,
+  Typography,
+  Box,
+  CircularProgress
+} from '@mui/material';
+import {
+  X,
+  FileSpreadsheet,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+  AlertTriangle,
+  Play,
+  FileText
 } from 'lucide-react';
+import {
+  useImportPreviewMutation,
+  useImportCommitMutation
+} from '../hooks/useLeads';
+import UploadArea from '../../../shared/components/elements/UploadArea';
+import Button from '../../../shared/components/elements/Button';
 import { toast } from '../../../shared/utils/toast';
-import { getPipelines } from '../../pipelines/services/pipelineService';
+import { apiClient } from '../../../lib/api/api';
+import { downloadLeadsTemplate } from '../utils/templateDownloader';
+import { useQuery } from '@tanstack/react-query';
+import { companyService } from '../../company/services/companyService';
+import { branchService } from '../../branch/services/branchService';
 import SelectField from '../../../shared/components/elements/SelectField';
-import { importLeads } from '../services/leadService';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
-import Alert from '../../../shared/components/elements/Alert';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
-
-/**
- * LeadImportModal — Bulk import leads from Excel.
- * Rendered popup modal powered by reusable DynamicFormModal.
- */
-const LeadImportModal = ({ onClose, onImported, initialPipelineId }) => {
-  const [pipelines, setPipelines] = useState([]);
-  const [pipelineId, setPipelineId] = useState(initialPipelineId || '');
+export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId }) => {
+  const [step, setStep] = useState('upload'); // 'upload' | 'preview' | 'importing' | 'result'
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingPipelines, setLoadingPipelines] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [importResult, setImportResult] = useState(null);
 
-  useEffect(() => {
-    const fetchPipelines = async () => {
-      setLoadingPipelines(true);
-      try {
-        const res = await getPipelines();
-        if (res?.success) {
-          const list = res.data.pipelines || [];
-          setPipelines(list);
-          if (!pipelineId && list.length > 0) {
-            setPipelineId(list[0].id);
-          }
-        }
-      } catch {
-        toast.error('Failed to load pipelines');
-      } finally {
-        setLoadingPipelines(false);
-      }
-    };
-    fetchPipelines();
-  }, []);
+  const { user } = useAuth();
+  const role = user?.primaryRole;
+  const canSelectCompany = role === 'SUPER_ADMIN';
+  const canSelectBranch = role === 'SUPER_ADMIN' || role === 'COMPANY_ADMIN';
 
-  // ── Drag & Drop ────────────────────────────────────────────────────────────
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
-    else if (e.type === 'dragleave') setDragActive(false);
-  };
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState('');
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
-  };
+  // Fetch Companies (for Super Admin)
+  const { data: companiesRes } = useQuery({
+    queryKey: ['companies-import-options'],
+    queryFn: () => companyService.getCompaniesRaw(),
+    enabled: canSelectCompany && isOpen
+  });
+  const companyOptions = (companiesRes?.data || []).map(c => ({
+    value: c.id,
+    label: `${c.name} (${c.code})`
+  }));
 
-  const handleFileChange = (e) => {
-    if (e.target.files?.[0]) handleFile(e.target.files[0]);
-  };
+  // Target company ID for branch query
+  const targetCompanyId = canSelectCompany ? selectedCompanyId : user?.companyId;
 
-  const handleFile = (selectedFile) => {
-    const ext = selectedFile.name.split('.').pop().toLowerCase();
-    if (ext !== 'xlsx' && ext !== 'xls') {
-      toast.error('Only .xlsx or .xls files are allowed');
-      return;
-    }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      toast.error('File size must be under 5 MB');
-      return;
-    }
-    setFile(selectedFile);
-    setError(null);
-  };
+  // Fetch Branches
+  const { data: branchesRes } = useQuery({
+    queryKey: ['branches-import-options', targetCompanyId],
+    queryFn: () => branchService.getBranchesRaw(targetCompanyId),
+    enabled: !!targetCompanyId && canSelectBranch && isOpen
+  });
+  const branchOptions = (Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || [])).map(b => ({
+    value: b.id,
+    label: `${b.name} (${b.code})`
+  }));
 
-  const handleImport = async () => {
-    if (!file) { setError('Please select an Excel file'); return; }
-    if (!pipelineId) { setError('Please select a pipeline'); return; }
-
-    setLoading(true);
-    setError(null);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('pipelineId', String(pipelineId));
-
-    try {
-      const res = await importLeads(formData);
-      if (res?.success) {
-        setResult(res.data);
-        toast.success(res.message || 'Import completed successfully!');
-        onImported?.();
-      }
-    } catch (err) {
-      if (err?.data?.failed) {
-        setResult(err.data);
-        setError(err.message || 'Validation failed. No leads were imported.');
-      } else {
-        const msg = err?.message || 'Import failed. Please check your file format.';
-        setError(msg);
-        toast.error(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const previewMutation = useImportPreviewMutation();
+  const commitMutation = useImportCommitMutation();
 
   const handleDownloadTemplate = () => {
-    toast.info('Starting template download...');
-    const link = document.createElement('a');
-    link.href = '/templates/leads_import_template.xlsx';
-    link.download = 'leads_import_template.xlsx';
-    // link.click();
+    downloadLeadsTemplate(role);
   };
 
-  // ── Results View ───────────────────────────────────────────────────────────
-  if (result) {
-    return (
-      <DynamicFormModal
-        isOpen={true}
-        onClose={onClose}
-        title={result.created > 0 ? 'Import Result' : 'Import Failed'}
-        icon={result.created > 0 ? CheckCircle2 : AlertCircle}
-        danger={result.created === 0}
-        onSubmit={onClose}
-        submitText="Close"
-        cancelText="Cancel"
-        size="md"
-      >
-        <div className="space-y-6">
-          {/* All-or-none failure alert */}
-          {result.created === 0 && (
-            <Alert severity="error" title="Transaction Cancelled">
-              The import was halted because some rows failed validation. No data has been saved. Please fix all issues below and re-upload.
-            </Alert>
-          )}
+  const handleFileSelect = (selectedFile) => {
+    setFile(selectedFile);
+    if (selectedFile) {
+      handleUploadPreview(selectedFile);
+    }
+  };
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center">
-              <CheckCircle2 size={18} className="text-emerald-600 mb-1 sm:mb-2 sm:hidden" />
-              <CheckCircle2 size={24} className="text-emerald-600 mb-2 hidden sm:block" />
-              <span className="text-xl sm:text-2xl font-black text-emerald-700">{result.created}</span>
-              <span className="text-[9px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Imported</span>
-            </div>
-            <div className="bg-orange-50 border border-orange-100 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center">
-              <AlertTriangle size={18} className="text-orange-600 mb-1 sm:mb-2 sm:hidden" />
-              <AlertTriangle size={24} className="text-orange-600 mb-2 hidden sm:block" />
-              <span className="text-xl sm:text-2xl font-black text-orange-700">{result.skipped}</span>
-              <span className="text-[9px] sm:text-xs font-bold text-orange-600 uppercase tracking-wider">Skipped</span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center">
-              <FileText size={18} className="text-slate-600 mb-1 sm:mb-2 sm:hidden" />
-              <FileText size={24} className="text-slate-600 mb-2 hidden sm:block" />
-              <span className="text-xl sm:text-2xl font-black text-slate-700">{result.total}</span>
-              <span className="text-[9px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">Total</span>
-            </div>
-          </div>
+  const handleUploadPreview = (selectedFile) => {
+    // Validate that required selections are present before uploading
+    if (canSelectCompany && !selectedCompanyId) {
+      toast.error("Please select a target Company first.");
+      setFile(null);
+      return;
+    }
+    if (canSelectBranch && !selectedBranchId) {
+      toast.error("Please select a target Branch first.");
+      setFile(null);
+      return;
+    }
 
-          {/* Failed rows */}
-          {result.failed?.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <AlertCircle size={16} className="text-red-500" />
-                  Failed Rows
-                </h3>
-                <span className="text-[10px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                  {result.failed.length} Errors
-                </span>
-              </div>
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    if (initialPipelineId) {
+      formData.append('pipelineId', initialPipelineId);
+    }
+    if (selectedCompanyId) {
+      formData.append('companyId', selectedCompanyId);
+    } else if (user?.companyId) {
+      formData.append('companyId', user.companyId);
+    }
+    if (selectedBranchId) {
+      formData.append('branchId', selectedBranchId);
+    } else if (user?.branchId) {
+      formData.append('branchId', user.branchId);
+    }
 
-              {/* Mobile list */}
-              <div className="sm:hidden space-y-2">
-                {result.failed.map((f, idx) => (
-                  <div key={idx} className="border border-red-100 bg-red-50/40 rounded-xl p-3 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-black text-slate-400">Row #{f.row}</span>
-                      <span className="text-[11px] font-bold text-slate-700">{f.data?.name || <span className="italic text-slate-300">No name</span>}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500">{f.data?.mobile || f.data?.['Phone Number'] || '—'}</p>
-                    <div className="space-y-0.5">
-                      {f.errors.map((e, i) => (
-                        <div key={i} className="text-[11px] font-bold text-red-500 flex items-center gap-1.5">
-                          <span className="h-1 w-1 rounded-full bg-red-500 shrink-0" />
-                          {e}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+    previewMutation.mutate(formData, {
+      onSuccess: (res) => {
+        setPreviewData(res.data);
+        setStep('preview');
+      },
+      onError: (err) => {
+        toast.error(err?.message || "Failed to parse file. Make sure columns match required schema.");
+        setFile(null);
+      }
+    });
+  };
 
-              {/* Desktop table */}
-              <div className="hidden sm:block border border-slate-200 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">Row</th>
-                        <th className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">Name</th>
-                        <th className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">Mobile</th>
-                        <th className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {result.failed.map((f, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-3 text-sm font-bold text-slate-400">#{f.row}</td>
-                          <td className="px-4 py-3 text-sm font-semibold text-slate-900">{f.data?.name || <span className="text-slate-300 italic">Empty</span>}</td>
-                          <td className="px-4 py-3 text-sm font-semibold text-slate-900">{f.data?.mobile || f.data?.['Phone Number'] || <span className="text-slate-300 italic">Empty</span>}</td>
-                          <td className="px-4 py-3">
-                            <div className="space-y-1">
-                              {f.errors.map((e, i) => (
-                                <div key={i} className="text-[11px] font-bold text-red-500 flex items-center gap-1.5">
-                                  <span className="h-1 w-1 rounded-full bg-red-500" />
-                                  {e}
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium italic">
-                * Only valid leads were created. Fix the above rows and re-upload.
-              </p>
-            </div>
-          )}
-        </div>
-      </DynamicFormModal>
-    );
-  }
+  const handleConfirmImport = () => {
+    if (!file) return;
+    setStep('importing');
 
-  // ── Upload View ────────────────────────────────────────────────────────────
+    const formData = new FormData();
+    formData.append('file', file);
+    if (initialPipelineId) {
+      formData.append('pipelineId', initialPipelineId);
+    }
+    if (selectedCompanyId) {
+      formData.append('companyId', selectedCompanyId);
+    } else if (user?.companyId) {
+      formData.append('companyId', user.companyId);
+    }
+    if (selectedBranchId) {
+      formData.append('branchId', selectedBranchId);
+    } else if (user?.branchId) {
+      formData.append('branchId', user.branchId);
+    }
+
+    commitMutation.mutate(formData, {
+      onSuccess: (res) => {
+        setImportResult(res.data);
+        setStep('result');
+        toast.success(res.message || "Leads imported successfully.");
+        if (onImported) onImported();
+      },
+      onError: (err) => {
+        setStep('preview');
+        toast.error(err?.message || "Import failed during processing.");
+      }
+    });
+  };
+
+  const handleDownloadErrorReport = async () => {
+    if (!importResult?.id) return;
+    try {
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+      // Fetch error CSV using our credentials
+      const res = await fetch(`${BASE_URL}/leads/import-logs/${importResult.id}/errors`, {
+        headers: {
+          'Accept': 'text/csv'
+        }
+      });
+      if (!res.ok) throw new Error("Failed to download file");
+      const csvText = await res.text();
+
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvText], {
+        type: 'text/csv;charset=utf-8;'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `import_errors_log_${importResult.id}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download error report.");
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setPreviewData(null);
+    setImportResult(null);
+    setStep('upload');
+    setSelectedCompanyId('');
+    setSelectedBranchId('');
+  };
+
+  const handleClose = () => {
+    handleReset();
+    onClose();
+  };
+
   return (
-    <DynamicFormModal
-      isOpen={true}
-      onClose={onClose}
-      title="Import Leads"
-      subtitle="Bulk Creation from Excel"
-      icon={Upload}
-      onSubmit={handleImport}
-      submitText="Start Import"
-      submitIcon={Upload}
-      isLoading={loading || loadingPipelines}
+    <Drawer
+      anchor="right"
+      open={isOpen}
+      onClose={handleClose}
+      ModalProps={{
+        slotProps: {
+          backdrop: {
+            sx: {
+              backdropFilter: 'blur(4px)',
+              backgroundColor: 'rgba(15, 23, 42, 0.18)',
+            }
+          }
+        }
+      }}
+      sx={{
+        zIndex: 1300,
+        '& .MuiDrawer-paper': {
+          width: { xs: '100%', sm: 540, md: 620 },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          borderRadius: '0px !important',
+          boxShadow: '-8px 0 24px rgba(15, 23, 42, 0.06)',
+          borderLeft: '1px solid #E2E8F0'
+        }
+      }}
     >
-      <div className="space-y-5">
-        {/* Pipeline Selector */}
-        <div className="space-y-1.5">
-          <label className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
-            Select Pipeline
-          </label>
-          <SelectField
-            id="import-pipeline-select"
-            value={pipelineId}
-            onChange={setPipelineId}
-            disabled={loadingPipelines || loading}
-            placeholder={loadingPipelines ? "Loading pipelines..." : "Select Pipeline"}
-            options={pipelines.map(p => ({ value: p.id, label: p.name }))}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '16px',
-              }
-            }}
-          />
-        </div>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
+        {/* Header */}
+        <Box sx={{ p: 3, borderBottom: '1px solid #F1F5F9', display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FileSpreadsheet className="text-orange-500 w-5 h-5" />
+              <span>Bulk Import Leads</span>
+            </Typography>
+            <Typography variant="caption" className="text-slate-400 font-medium">
+              Upload spreadsheets to populate contacts dynamically.
+            </Typography>
+          </div>
+          <IconButton onClick={handleClose} size="small" className="text-slate-400 hover:text-slate-600">
+            <X size={20} />
+          </IconButton>
+        </Box>
 
-        {/* Upload Area */}
-        <div className="space-y-1.5">
-          <label className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
-            Upload File
-          </label>
-          {!file ? (
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                'border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300',
-                dragActive
-                  ? 'border-primary bg-primary/5 scale-[0.99]'
-                  : 'border-slate-200 bg-slate-50 hover:border-primary/50 hover:bg-slate-100/50'
+        {/* Content */}
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+          {step === 'upload' && (
+            <div className="space-y-6">
+              {/* Scope Selection */}
+              {(canSelectCompany || canSelectBranch) && (
+                <div className="space-y-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Select Target Scope
+                  </h3>
+                  
+                  {canSelectCompany && (
+                    <SelectField
+                      id="importCompanySelect"
+                      label="Company"
+                      value={selectedCompanyId}
+                      onChange={(val) => {
+                        setSelectedCompanyId(val);
+                        setSelectedBranchId('');
+                      }}
+                      options={companyOptions}
+                      placeholder="Select Company..."
+                      required
+                    />
+                  )}
+
+                  {canSelectBranch && (
+                    <SelectField
+                      id="importBranchSelect"
+                      label="Branch"
+                      value={selectedBranchId}
+                      onChange={(val) => setSelectedBranchId(val)}
+                      options={branchOptions}
+                      placeholder="Select Branch..."
+                      disabled={canSelectCompany && !selectedCompanyId}
+                      required
+                    />
+                  )}
+                </div>
               )}
-            >
-              <div className={cn(
-                'h-12 w-12 sm:h-16 sm:w-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 transition-all duration-300',
-                dragActive ? 'bg-primary text-white' : 'bg-white text-slate-400 shadow-sm'
-              )}>
-                <Upload size={22} className={cn('sm:hidden', dragActive ? 'animate-bounce' : '')} />
-                <Upload size={28} className={cn('hidden sm:block', dragActive ? 'animate-bounce' : '')} />
-              </div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                {dragActive ? 'Drop it here!' : 'Tap to select or drag file'}
-              </h3>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-400 mt-1">
-                Accepts .xlsx, .xls · Max 5 MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <div className="bg-slate-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex items-center justify-between group">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 sm:h-10 sm:w-10 bg-white/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                  <FileText size={18} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-white truncate max-w-[160px] sm:max-w-[220px]">{file.name}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
+
+              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3">
+                <Download className="text-orange-500 w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700">Need the template format?</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Download our standardized spreadsheet template to ensure field mappings match correctly.
                   </p>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="mt-2 text-xs font-extrabold text-orange-500 hover:text-orange-600 flex items-center gap-1 focus:outline-none cursor-pointer"
+                  >
+                    Download Template (.xlsx)
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setFile(null)}
-                disabled={loading}
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors shrink-0"
-              >
-                <Trash2 size={16} />
-              </button>
+
+              <div>
+                <h3 className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Upload Document</h3>
+                {((canSelectCompany && !selectedCompanyId) || (canSelectBranch && !selectedBranchId)) ? (
+                  <div className="p-6 border border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50">
+                    <p className="text-sm font-semibold text-slate-400">
+                      Please select the target {canSelectCompany ? "Company & Branch" : "Branch"} scope above to enable lead spreadsheet upload.
+                    </p>
+                  </div>
+                ) : (
+                  <UploadArea
+                    onFileSelect={handleFileSelect}
+                    isLoading={previewMutation.isPending}
+                    maxSizeMB={10}
+                  />
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <h4 className="text-xs font-bold text-slate-700">Column Headers Requirements:</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Required</span>
+                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Lead Name, Mobile Number, Lead Source, Interested Course/Product</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
+                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Email, Alternate Contact, Budget, City, State, Country, Notes</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Template download */}
-        <button
-          onClick={handleDownloadTemplate}
-          type="button"
-          className="flex items-center gap-2 text-xs font-bold text-primary hover:text-primary/80 transition-colors mx-auto"
-        >
-          <Download size={13} />
-          Download Sample Template
-        </button>
+          {step === 'preview' && previewData && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Stats Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
+                  <span className="text-lg font-extrabold text-emerald-600 block">{previewData.successCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Valid Rows</span>
+                </div>
+                <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-2xl text-center">
+                  <span className="text-lg font-extrabold text-yellow-600 block">{previewData.duplicateCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Duplicates</span>
+                </div>
+                <div className="p-3 bg-red-50 border border-red-100 rounded-2xl text-center">
+                  <span className="text-lg font-extrabold text-red-600 block">{previewData.failureCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Errors</span>
+                </div>
+              </div>
 
-        {/* Error */}
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-      </div>
-    </DynamicFormModal>
+              {/* Rows Preview */}
+              <div>
+                <h3 className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">First 10 Rows Sample Preview</h3>
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-200">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Row</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Name</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Mobile</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Source</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-slate-100">
+                        {previewData.previewRows.map((r, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/50">
+                            <td className="px-3 py-2 text-xs text-slate-500 font-semibold">{r.rowNum}</td>
+                            <td className="px-3 py-2 text-xs font-semibold text-slate-700 truncate max-w-[120px]">{r.name || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-600 font-medium">{r.mobile || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.source || '-'}</td>
+                            <td className="px-3 py-2 text-xs">
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'VALID' ? 'bg-emerald-50 text-emerald-700' :
+                                  r.status === 'DUPLICATE' ? 'bg-yellow-50 text-yellow-700' :
+                                    'bg-red-50 text-red-700'
+                                }`}>
+                                {r.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Validation Warnings list */}
+              {previewData.errorReport && previewData.errorReport.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <AlertTriangle className="text-yellow-500 w-4 h-4" />
+                    <span>Parsed Error Log Samples ({previewData.errorReport.length})</span>
+                  </h3>
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 max-h-[160px] overflow-y-auto space-y-2.5">
+                    {previewData.errorReport.map((err, idx) => (
+                      <div key={idx} className="text-xs flex items-start gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
+                        <span className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-600 font-bold">R{err.row}</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-700">{err.name || 'Unknown'} ({err.mobile || 'No Mobile'})</p>
+                          <p className="text-red-500 font-medium mt-0.5">{err.reason}</p>
+                          {err.suggestions && (
+                            <p className="text-slate-500 mt-0.5">
+                              Suggestion: {Object.entries(err.suggestions).map(([k, v]) => `${k} -> "${v}"`).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 'importing' && (
+            <div className="flex flex-col items-center justify-center space-y-4 py-12 animate-fadeIn">
+              <CircularProgress size={48} className="text-orange-500" />
+              <div className="text-center">
+                <h3 className="text-sm font-bold text-slate-700">Writing contacts database...</h3>
+                <p className="text-xs text-slate-500 mt-1">This may take a moment depending on the file size.</p>
+              </div>
+            </div>
+          )}
+
+          {step === 'result' && importResult && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex flex-col items-center justify-center text-center space-y-2 py-4">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                <h3 className="text-base font-extrabold text-slate-800">Bulk Import Execution Log</h3>
+                <p className="text-xs text-slate-500 max-w-[320px]">{importResult.message}</p>
+              </div>
+
+              {/* Stats Block */}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="p-3 bg-slate-50 rounded-xl text-center">
+                  <span className="text-lg font-extrabold text-slate-700 block">{importResult.totalRows}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Rows</span>
+                </div>
+                <div className="p-3 bg-emerald-50 rounded-xl text-center">
+                  <span className="text-lg font-extrabold text-emerald-600 block">{importResult.successCount}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Created</span>
+                </div>
+                <div className="p-3 bg-yellow-50 rounded-xl text-center">
+                  <span className="text-lg font-extrabold text-yellow-600 block">{importResult.duplicateCount}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Duplicates</span>
+                </div>
+                <div className="p-3 bg-red-50 rounded-xl text-center">
+                  <span className="text-lg font-extrabold text-red-600 block">{importResult.failureCount}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Errors</span>
+                </div>
+              </div>
+
+              {/* Error Actions */}
+              {(importResult.failureCount > 0 || importResult.duplicateCount > 0) && (
+                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col items-center text-center space-y-3">
+                  <div className="text-red-600 p-2 bg-red-100 rounded-xl">
+                    <AlertCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700">Detailed error logs are available</h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-[340px]">
+                      Download the error report to view the exact original row numbers, validation failures, duplicate fields, and corrections.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleDownloadErrorReport}
+                    startIcon={<FileText size={14} />}
+                    sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+                  >
+                    Download Error CSV Report
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </Box>
+
+        {/* Footer */}
+        <Box sx={{ p: 3, borderTop: '1px solid #F1F5F9', display: 'flex', justifyItems: 'center', justifyContent: 'flex-end', gap: 2, bgcolor: '#F8FAFC' }}>
+          {step === 'upload' && (
+            <Button variant="outlined" onClick={handleClose} sx={{ color: '#475569', borderColor: '#E2E8F0' }}>
+              Cancel
+            </Button>
+          )}
+
+          {step === 'preview' && (
+            <>
+              <Button variant="outlined" onClick={handleReset} sx={{ color: '#475569', borderColor: '#E2E8F0' }}>
+                Reset File
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleConfirmImport}
+                disabled={previewData?.successCount === 0 || previewData?.failureCount > 0 || previewData?.duplicateCount > 0}
+                startIcon={<Play size={14} />}
+              >
+                Confirm Import
+              </Button>
+            </>
+          )}
+
+          {step === 'result' && (
+            <Button variant="contained" onClick={handleClose}>
+              Done
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </Drawer>
   );
 };
 

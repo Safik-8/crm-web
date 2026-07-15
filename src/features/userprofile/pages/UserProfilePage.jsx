@@ -13,6 +13,7 @@ import ProfileSection from '../components/ProfileSection';
 import Alert from '../../../shared/components/elements/Alert';
 import TextField from '../../../shared/components/elements/TextField';
 import Button from '../../../shared/components/elements/Button';
+import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
 
@@ -963,214 +964,179 @@ const UserProfilePage = () => {
       )}
 
       {/* ── EDIT PROFILE DRAWER (SLIDE-OVER UI ONLY) ── */}
-      {isEditOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 overflow-hidden">
-            {/* Backdrop */}
-            <div 
-              className="absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity cursor-pointer" 
+      <DynamicFormSlideover
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditErrors({});
+        }}
+        title="Edit Profile Information"
+        subtitle="Update your basic and location details"
+        showFooter={false}
+        onSubmit={() => handleEditSubmit({ preventDefault: () => {} })}
+      >
+        <div className="space-y-6">
+          {/* Global error alert */}
+          {editErrors.global && (
+            <Alert severity="error" title="Error">
+              {editErrors.global}
+            </Alert>
+          )}
+
+          {/* Avatar Upload Widget */}
+          <div className="flex items-center gap-4 bg-zinc-50 p-4 rounded-xl border border-zinc-100 mb-2">
+            <div className="relative shrink-0 w-16 h-16 bg-orange-100 flex items-center justify-center rounded-2xl text-orange-600 font-black text-xl">
+              {previewPhoto ? (
+                <img src={previewPhoto} alt="Upload Preview" className="w-full h-full object-cover rounded-2xl animate-fadeIn" />
+              ) : (
+                fullName.charAt(0).toUpperCase()
+              )}
+              <label htmlFor="drawer-photo" className="absolute -bottom-1.5 -right-1.5 p-1 bg-white border border-zinc-200 text-zinc-500 rounded-lg hover:text-orange-500 transition-colors shadow-sm cursor-pointer">
+                <Camera size={14} />
+              </label>
+              <input 
+                id="drawer-photo" 
+                type="file" 
+                accept="image/jpeg, image/png, image/webp" 
+                className="hidden" 
+                onChange={handlePhotoChange}
+              />
+            </div>
+            <div className="flex-1 space-y-0.5">
+              <h4 className="text-xs font-bold text-zinc-800">Profile Photo</h4>
+              <p className="text-[9px] text-zinc-400 font-medium leading-tight">Supports JPG, PNG, or WEBP. Max 2MB. Min dimensions: 150px.</p>
+              {previewPhoto && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewPhoto(null)}
+                  className="text-[10px] text-red-500 font-bold hover:underline block pt-0.5"
+                >
+                  Remove Photo
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Inputs with proper spacing wraps */}
+          <div className="space-y-4">
+            <TextField 
+              id="edit-firstName" 
+              label="First Name" 
+              value={editFields.firstName} 
+              onChange={(val) => handleEditFieldChange('firstName', val)}
+              placeholder="Enter first name" 
+              errorText={editErrors.firstName}
+              required
+            />
+            <TextField 
+              id="edit-lastName" 
+              label="Last Name" 
+              value={editFields.lastName} 
+              onChange={(val) => handleEditFieldChange('lastName', val)}
+              placeholder="Enter last name" 
+              errorText={editErrors.lastName}
+              required
+            />
+            <TextField 
+              id="edit-mobileNumber" 
+              label="Mobile Number" 
+              value={editFields.mobileNumber} 
+              onChange={(val) => handleEditFieldChange('mobileNumber', val)}
+              placeholder="Enter mobile number" 
+              errorText={editErrors.mobileNumber}
+            />
+            <TextField 
+              id="edit-emergencyContact" 
+              label="Emergency Contact" 
+              value={editFields.emergencyContact} 
+              onChange={(val) => handleEditFieldChange('emergencyContact', val)}
+              placeholder="Emergency Contact Name/Phone" 
+              errorText={editErrors.emergencyContact}
+            />
+            
+            <div className="w-full border-t border-zinc-100 my-4" />
+            
+            <TextField 
+              id="edit-address" 
+              label="Street Address" 
+              value={editFields.address} 
+              onChange={(val) => handleEditFieldChange('address', val)}
+              placeholder="Street Address" 
+              errorText={editErrors.address}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <TextField 
+                id="edit-city" 
+                label="City" 
+                value={editFields.city} 
+                onChange={(val) => handleEditFieldChange('city', val)}
+                placeholder="City" 
+                errorText={editErrors.city}
+              />
+              <TextField 
+                id="edit-state" 
+                label="State" 
+                value={editFields.state} 
+                onChange={(val) => handleEditFieldChange('state', val)}
+                placeholder="State" 
+                errorText={editErrors.state}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <TextField 
+                id="edit-pincode" 
+                label="Pincode" 
+                value={editFields.pincode} 
+                onChange={(val) => handleEditFieldChange('pincode', val)}
+                placeholder="Pincode" 
+                errorText={editErrors.pincode}
+              />
+              <TextField 
+                id="edit-country" 
+                label="Country" 
+                value={editFields.country} 
+                onChange={(val) => handleEditFieldChange('country', val)}
+                placeholder="Country" 
+                errorText={editErrors.country}
+              />
+            </div>
+          </div>
+
+          {/* Drawer Footer Actions */}
+          <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3 shrink-0">
+            <Button 
+              type="button"
+              variant="outlined" 
               onClick={() => {
                 setIsEditOpen(false);
                 setEditErrors({});
               }}
-            />
-
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <div className="pointer-events-auto w-screen max-w-md transform transition-all duration-300 ease-in-out">
-                
-                {/* Drawer Card */}
-                <form onSubmit={handleEditSubmit} className="flex h-full flex-col bg-white shadow-2xl border-l border-zinc-200/80 p-6 space-y-6">
-                  
-                  {/* Drawer Header */}
-                  <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-                    <div>
-                      <h2 className="text-base font-bold text-zinc-900" id="slide-over-title">Edit Profile Information</h2>
-                      <p className="text-[11px] text-zinc-400 font-medium">Update your basic and location details</p>
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setIsEditOpen(false);
-                        setEditErrors({});
-                      }}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-all"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-
-                  {/* Drawer Scrollable Content */}
-                  <div className="flex-1 overflow-y-auto pr-1 space-y-5">
-                    
-                    {/* Global error alert */}
-                    {editErrors.global && (
-                      <Alert severity="error" title="Error">
-                        {editErrors.global}
-                      </Alert>
-                    )}
-
-                    {/* Avatar Upload Widget */}
-                    <div className="flex items-center gap-4 bg-zinc-50 p-4 rounded-xl border border-zinc-100 mb-2">
-                      <div className="relative shrink-0 w-16 h-16 bg-orange-100 flex items-center justify-center rounded-2xl text-orange-600 font-black text-xl">
-                        {previewPhoto ? (
-                          <img src={previewPhoto} alt="Upload Preview" className="w-full h-full object-cover rounded-2xl" />
-                        ) : (
-                          fullName.charAt(0).toUpperCase()
-                        )}
-                        <label htmlFor="drawer-photo" className="absolute -bottom-1.5 -right-1.5 p-1 bg-white border border-zinc-200 text-zinc-500 rounded-lg hover:text-orange-500 transition-colors shadow-sm cursor-pointer">
-                          <Camera size={14} />
-                        </label>
-                        <input 
-                          id="drawer-photo" 
-                          type="file" 
-                          accept="image/jpeg, image/png, image/webp" 
-                          className="hidden" 
-                          onChange={handlePhotoChange}
-                        />
-                      </div>
-                      <div className="flex-1 space-y-0.5">
-                        <h4 className="text-xs font-bold text-zinc-800">Profile Photo</h4>
-                        <p className="text-[9px] text-zinc-400 font-medium leading-tight">Supports JPG, PNG, or WEBP. Max 2MB. Min dimensions: 150px.</p>
-                        {previewPhoto && (
-                          <button
-                            type="button"
-                            onClick={() => setPreviewPhoto(null)}
-                            className="text-[10px] text-red-500 font-bold hover:underline block pt-0.5"
-                          >
-                            Remove Photo
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Inputs with proper spacing wraps */}
-                    <div className="space-y-4">
-                      <TextField 
-                        id="edit-firstName" 
-                        label="First Name" 
-                        value={editFields.firstName} 
-                        onChange={(val) => handleEditFieldChange('firstName', val)}
-                        placeholder="Enter first name" 
-                        errorText={editErrors.firstName}
-                        required
-                      />
-                      <TextField 
-                        id="edit-lastName" 
-                        label="Last Name" 
-                        value={editFields.lastName} 
-                        onChange={(val) => handleEditFieldChange('lastName', val)}
-                        placeholder="Enter last name" 
-                        errorText={editErrors.lastName}
-                        required
-                      />
-                      <TextField 
-                        id="edit-mobileNumber" 
-                        label="Mobile Number" 
-                        value={editFields.mobileNumber} 
-                        onChange={(val) => handleEditFieldChange('mobileNumber', val)}
-                        placeholder="Enter mobile number" 
-                        errorText={editErrors.mobileNumber}
-                      />
-                      <TextField 
-                        id="edit-emergencyContact" 
-                        label="Emergency Contact" 
-                        value={editFields.emergencyContact} 
-                        onChange={(val) => handleEditFieldChange('emergencyContact', val)}
-                        placeholder="Emergency Contact Name/Phone" 
-                        errorText={editErrors.emergencyContact}
-                      />
-                      
-                      <div className="w-full border-t border-zinc-100 my-4" />
-                      
-                      <TextField 
-                        id="edit-address" 
-                        label="Street Address" 
-                        value={editFields.address} 
-                        onChange={(val) => handleEditFieldChange('address', val)}
-                        placeholder="Street Address" 
-                        errorText={editErrors.address}
-                      />
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextField 
-                          id="edit-city" 
-                          label="City" 
-                          value={editFields.city} 
-                          onChange={(val) => handleEditFieldChange('city', val)}
-                          placeholder="City" 
-                          errorText={editErrors.city}
-                        />
-                        <TextField 
-                          id="edit-state" 
-                          label="State" 
-                          value={editFields.state} 
-                          onChange={(val) => handleEditFieldChange('state', val)}
-                          placeholder="State" 
-                          errorText={editErrors.state}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextField 
-                          id="edit-pincode" 
-                          label="Pincode" 
-                          value={editFields.pincode} 
-                          onChange={(val) => handleEditFieldChange('pincode', val)}
-                          placeholder="Pincode" 
-                          errorText={editErrors.pincode}
-                        />
-                        <TextField 
-                          id="edit-country" 
-                          label="Country" 
-                          value={editFields.country} 
-                          onChange={(val) => handleEditFieldChange('country', val)}
-                          placeholder="Country" 
-                          errorText={editErrors.country}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Drawer Footer Actions */}
-                  <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3 shrink-0">
-                    <Button 
-                      type="button"
-                      variant="outlined" 
-                      onClick={() => {
-                        setIsEditOpen(false);
-                        setEditErrors({});
-                      }}
-                      sx={{
-                        borderColor: '#E2E8F0',
-                        color: '#475569',
-                        '&:hover': {
-                          borderColor: '#CBD5E1',
-                          backgroundColor: '#F8FAFC',
-                        }
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit"
-                      variant="contained" 
-                      color="primary"
-                      isLoading={isSavingProfile}
-                      startIcon={<Check size={16} />}
-                    >
-                      {isSavingProfile ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-
-                </form>
-
-              </div>
-            </div>
-
+              sx={{
+                borderColor: '#E2E8F0',
+                color: '#475569',
+                '&:hover': {
+                  borderColor: '#CBD5E1',
+                  backgroundColor: '#F8FAFC',
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              variant="contained" 
+              color="primary"
+              isLoading={isSavingProfile}
+              startIcon={<Check size={16} />}
+              onClick={() => handleEditSubmit({ preventDefault: () => {} })}
+            >
+              {isSavingProfile ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
         </div>
-      )}
-
+      </DynamicFormSlideover>
     </div>
   );
 };
