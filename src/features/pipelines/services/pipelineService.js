@@ -1,7 +1,15 @@
 import { apiClient } from '../../../lib/api/api';
 
-export const getPipelines = () =>
-  apiClient('/pipelines', { method: 'GET' });
+export const getPipelines = (params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== null && val !== '') {
+      qs.set(key, val);
+    }
+  });
+  const queryString = qs.toString();
+  return apiClient(`/pipelines${queryString ? `?${queryString}` : ''}`, { method: 'GET' });
+};
 
 export const getPipelineById = (id, params = {}, options = {}) => {
   const qs = new URLSearchParams();

@@ -28,6 +28,7 @@ const SelectField = ({
   sx = {},
   selectSx = {},
   searchable = null,
+  isLoading = false,
   ...props
 }) => {
   const hasError = !!errorText;
@@ -47,7 +48,7 @@ const SelectField = ({
   };
 
   return (
-    <FormControl fullWidth error={hasError} disabled={disabled} sx={inputStyles}>
+    <FormControl fullWidth error={hasError} disabled={disabled || isLoading} sx={inputStyles}>
       {label && (
         <Typography
           variant="caption"
@@ -68,10 +69,11 @@ const SelectField = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder || (label ? `Select ${label}` : 'Select...')}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         hasError={hasError}
         allowEmptyOption={allowEmptyOption}
         searchable={searchable !== null ? searchable : options.length >= 10}
+        isLoading={isLoading}
       />
       {hasError && <FormHelperText>{errorText}</FormHelperText>}
     </FormControl>

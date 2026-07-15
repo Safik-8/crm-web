@@ -1,8 +1,8 @@
 // src/features/branch/components/BranchFilters.jsx
 
 import React from 'react';
-import { Search, X } from 'lucide-react';
 import SelectField from '../../../shared/components/elements/SelectField';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 
 const STATUS_OPTIONS = [
   { value: '',         label: 'All Statuses' },
@@ -21,37 +21,18 @@ const BranchFilters = ({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-3 sm:px-4 py-3">
-      <div className="flex flex-col sm:flex-row gap-2.5">
+      <div className="flex flex-col sm:flex-row gap-2.5 items-center">
 
-        {/* ── Search ── */}
-        <div className="relative flex-1 min-w-0">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search branches by name, code, location..."
-            disabled={isLoading}
-            className="w-full h-9 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 font-medium
-                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-white
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-              title="Clear search"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        {/* ── Search Bar (Unified Component) ── */}
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search branches by name, code, location..."
+          isLoading={isLoading}
+        />
 
         {/* ── Status filter ── */}
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto relative">
           <SelectField
             id="branch-status-filter"
             value={status}
@@ -60,25 +41,34 @@ const BranchFilters = ({
             placeholder="All Statuses"
             allowEmptyOption={true}
             options={STATUS_OPTIONS.filter(opt => opt.value !== '')}
-            selectSx={{
-              py: '8px !important',
-              fontSize: '13px',
-            }}
             sx={{
               width: '100%',
               minWidth: { sm: '140px' },
               '& .MuiOutlinedInput-root': {
-                height: '36px',
-                borderRadius: '12px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: '#F8FAFC',
+                '& fieldset': {
+                  borderColor: '#E2E8F0',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#CBD5E1',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#F86F03',
+                }
               }
             }}
           />
+          {status && (
+             <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm z-10" />
+          )}
         </div>
 
-          {/* Active filter indicator dot */}
-          {hasActiveFilters && (
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" title="Filters active" />
-          )}
+        {/* Active filter indicator dot */}
+        {hasActiveFilters && !status && (
+          <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" title="Filters active" />
+        )}
       </div>
     </div>
   );

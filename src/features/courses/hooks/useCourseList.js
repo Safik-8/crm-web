@@ -1,85 +1,60 @@
 // src/features/courses/hooks/useCourseList.js
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import useListManager from '../../../shared/hooks/useListManager';
 import { useCoursesQuery, useToggleCourseStatusMutation } from './useCourses';
 
 /**
- * Custom hook to manage the state and logic for Course searching, filtering, and paging.
- * Ensures isolation checks and debounced search triggers.
+ * Custom hook to manage the state and logic for Course searching, filtering, sorting, and paging.
+ * Restructured to consume the shared useListManager framework hook.
  *
  * @param {object} currentUser - Logged in user context
- * @returns {object} Filter states, loaders, pagination controls, and status actions
+ * @returns {object} Filter states, loaders, pagination controls, status actions, and sort triggers
  */
 export const useCourseList = (currentUser = null) => {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-
-  // Filter states
-  const [status, setStatus] = useState('');
-  const [category, setCategory] = useState('');
-  const [companyId, setCompanyId] = useState('');
-
-  const debounceTimer = useRef(null);
-
-  // Sync tenant/company isolation rules
-  useEffect(() => {
-    if (currentUser) {
-      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
-        // Locked to own company
-        setCompanyId(currentUser.companyId || '');
-      }
+  // Memoize starting filters for multitenancy rules
+  const initialFilters = useMemo(() => {
+    const defaults = { status: '', category: '', companyId: '' };
+    if (currentUser && currentUser.primaryRole !== 'SUPER_ADMIN') {
+      defaults.companyId = currentUser.companyId || '';
     }
+    return defaults;
   }, [currentUser]);
 
-  /**
-   * Search input handler with 400ms debounce
-   */
-  const handleSearchChange = useCallback((value) => {
-    setSearch(value);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1);
-    }, 400);
-  }, []);
-
-  /**
-   * Filter change handler
-   */
-  const handleFilterChange = useCallback((field, value) => {
-    setPage(1);
-    if (field === 'status') setStatus(value);
-    if (field === 'category') setCategory(value);
-    if (field === 'companyId') setCompanyId(value);
-  }, []);
-
-  /**
-   * Clears all filters and resets search inputs
-   */
-  const clearFilters = useCallback(() => {
-    setSearch('');
-    setDebouncedSearch('');
-    setPage(1);
-    setStatus('');
-    setCategory('');
-    if (currentUser?.primaryRole === 'SUPER_ADMIN') {
-      setCompanyId('');
-    }
-  }, [currentUser]);
-
-  // Request parameters structure
-  const params = {
+  const {
+    search,
+    handleSearchChange,
     page,
-    limit,
-    search: debouncedSearch,
-    status,
-    category,
-    companyId: companyId ? Number(companyId) : undefined
+    setPage,
+    filters,
+    handleFilterChange,
+    clearFilters: listClearFilters,
+    sortBy,
+    sortOrder,
+    toggleSort,
+    hasActiveFilters,
+    queryParams,
+    getLoadingState
+  } = useListManager({
+    defaultSort: { field: 'createdAt', order: 'desc' },
+    defaultLimit: 10,
+    initialFilters
+  });
+
+  // Sync tenant/company isolation rules when user context changes
+  useEffect(() => {
+    if (currentUser && currentUser.primaryRole !== 'SUPER_ADMIN') {
+      handleFilterChange('companyId', currentUser.companyId || '');
+    }
+  }, [currentUser, handleFilterChange]);
+
+  // Request parameters structure formatted for axios query params
+  const apiParams = {
+    ...queryParams,
+    companyId: queryParams.companyId ? Number(queryParams.companyId) : undefined
   };
 
-  const { data, isLoading, isError, error, refetch } = useCoursesQuery(params);
+  const { data, isLoading, isFetching, isError, error, refetch } = useCoursesQuery(apiParams);
   const toggleStatusMutation = useToggleCourseStatusMutation();
 
   const courses = Array.isArray(data?.courses) ? data.courses : [];
@@ -99,29 +74,26 @@ export const useCourseList = (currentUser = null) => {
   };
 
   // Derive page loading states
-  let loadingState = 'success';
-  if (isLoading) {
-    loadingState = 'loading';
-  } else if (isError) {
-    loadingState = 'error';
-  } else if (courses.length === 0) {
-    loadingState = 'empty';
-  }
+  const loadingState = getLoadingState(isLoading || isFetching, isError, courses.length);
 
-  const hasActiveFilters = !!(
-    debouncedSearch ||
-    status ||
-    category ||
-    (currentUser?.primaryRole === 'SUPER_ADMIN' && companyId)
-  );
+  /**
+   * Clears all filters and resets search inputs with respects to user rank isolation rules
+   */
+  const customClearFilters = () => {
+    const defaults = { status: '', category: '', companyId: '' };
+    if (currentUser && currentUser.primaryRole !== 'SUPER_ADMIN') {
+      defaults.companyId = currentUser.companyId || '';
+    }
+    listClearFilters(defaults);
+  };
 
   return {
     courses,
     pagination,
     search,
-    status,
-    category,
-    companyId,
+    status: filters.status,
+    category: filters.category,
+    companyId: filters.companyId,
     loadingState,
     errorMessage: error?.message || 'Something went wrong.',
     hasActiveFilters,
@@ -129,9 +101,12 @@ export const useCourseList = (currentUser = null) => {
     setPage,
     handleSearchChange,
     handleFilterChange,
-    clearFilters,
+    clearFilters: customClearFilters,
     refetch,
     handleToggleStatus,
-    isTogglingStatus: toggleStatusMutation.isPending
+    isTogglingStatus: toggleStatusMutation.isPending,
+    sortBy,
+    sortOrder,
+    toggleSort
   };
 };
