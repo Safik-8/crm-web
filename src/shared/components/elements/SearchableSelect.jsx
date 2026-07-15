@@ -10,7 +10,8 @@ export const SearchableSelect = ({
   className = "",
   hasError = false,
   allowEmptyOption = false,
-  searchable = true // whether to render search input inside dropdown
+  searchable = true, // whether to render search input inside dropdown
+  isLoading = false  // loading state
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,14 +39,16 @@ export const SearchableSelect = ({
 
   const selectedOption = options.find(opt => opt.id?.toString() === value?.toString() || opt.id === value);
 
+  const isBtnDisabled = disabled || isLoading;
+
   return (
     <div ref={wrapperRef} className={`relative w-full ${className}`}>
       {/* Target button simulating standard select input */}
       <button
         type="button"
-        disabled={disabled}
+        disabled={isBtnDisabled}
         onClick={() => {
-          if (!disabled) {
+          if (!isBtnDisabled) {
             setIsOpen(!isOpen);
             setSearchTerm('');
           }
@@ -55,11 +58,23 @@ export const SearchableSelect = ({
             ? 'border-red-500 focus:border-red-500 focus:ring-3 focus:ring-red-500/14'
             : 'border-[#E2E8F0] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14'
         } ${
-          disabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-900'
-        } ${isOpen && !disabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
+          isBtnDisabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-900'
+        } ${isOpen && !isBtnDisabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
       >
-        <span className={`truncate flex-1 pr-2 ${selectedOption ? 'text-slate-900' : 'text-slate-500 font-medium'}`}>
-          {selectedOption ? selectedOption.name : placeholder}
+        <span className={`truncate flex-1 pr-2 ${selectedOption && !isLoading ? 'text-slate-900' : 'text-slate-500 font-medium'}`}>
+          {isLoading ? (
+            <span className="flex items-center gap-2 text-slate-400 font-normal">
+              <svg className="animate-spin h-3.5 w-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading...
+            </span>
+          ) : selectedOption ? (
+            selectedOption.name
+          ) : (
+            placeholder
+          )}
         </span>
         <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
