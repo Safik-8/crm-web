@@ -42,9 +42,9 @@ export const ExportMenu = ({
         type="button"
         onClick={handleOpen}
         disabled={disabled || isExporting || data.length === 0}
-        className="flex items-center gap-1.5 h-9 px-3 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 h-[42px] px-5 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-[10px] text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <Download size={14} className={isExporting ? 'animate-bounce' : ''} />
+        <Download size={16} className={isExporting ? 'animate-bounce' : ''} />
         <span>Export Data</span>
       </button>
 

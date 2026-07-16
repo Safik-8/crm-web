@@ -32,7 +32,7 @@ const CompanyFilters = ({
   const handleClearSearch = () => onSearchChange('');
 
   return (
-    <div className="relative z-20 bg-white border border-slate-200/60 shadow-sm p-3 sm:p-4 rounded-2xl">
+    <div className="relative z-20 bg-white border border-slate-200/60 p-3 sm:p-4">
       <div className="flex flex-col xl:flex-row gap-3 xl:gap-4 items-center">
         
         {/* ── Search Bar (Unified Component) ─────────────────────────────────── */}
@@ -52,14 +52,14 @@ const CompanyFilters = ({
               onStatusChange('');
             }}
             disabled={!hasActiveFilters || isLoading}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all hidden md:flex ${
+            className={`flex items-center gap-2 h-11 px-5 rounded-[10px] border text-[13px] font-semibold uppercase tracking-wider transition-all hidden md:flex ${
               hasActiveFilters && !isLoading
                 ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 hover:text-orange-700 cursor-pointer'
-                : 'bg-slate-100/50 text-slate-400 border-slate-200/50 cursor-default'
+                : 'bg-[#F8FAFC] text-slate-500 border-[#E2E8F0] cursor-default'
             }`}
             title={hasActiveFilters ? "Clear all active filters" : "No active filters"}
           >
-            <SlidersHorizontal size={14} className={hasActiveFilters ? 'text-orange-500' : 'text-slate-400'} />
+            <SlidersHorizontal size={16} className={hasActiveFilters ? 'text-orange-500' : 'text-slate-400'} />
             <span>{hasActiveFilters ? 'Clear Filters' : 'Filters'}</span>
           </button>
           
