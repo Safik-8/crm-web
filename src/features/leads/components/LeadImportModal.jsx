@@ -4,7 +4,8 @@ import {
   IconButton,
   Typography,
   Box,
-  CircularProgress
+  CircularProgress,
+  Dialog
 } from '@mui/material';
 import {
   X,
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Play,
-  FileText
+  FileText,
+  Maximize2
 } from 'lucide-react';
 import {
   useImportPreviewMutation,
@@ -36,6 +38,7 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [importResult, setImportResult] = useState(null);
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false);
 
   const { user } = useAuth();
   const role = user?.primaryRole;
@@ -204,8 +207,9 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
   };
 
   return (
-    <Drawer
-      anchor="right"
+    <>
+      <Drawer
+        anchor="right"
       open={isOpen}
       onClose={handleClose}
       ModalProps={{
@@ -359,7 +363,17 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
 
               {/* Rows Preview */}
               <div>
-                <h3 className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">First 10 Rows Sample Preview</h3>
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">First 10 Rows Sample Preview</h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsFullScreenOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold rounded-lg border border-orange-200/50 shadow-sm transition-all duration-150 cursor-pointer focus:outline-none"
+                  >
+                    <Maximize2 size={13} className="text-orange-500" />
+                    <span>Maximize Preview</span>
+                  </button>
+                </div>
                 <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                   <div className="overflow-x-auto max-h-[200px] overflow-y-auto">
                     <table className="min-w-full divide-y divide-slate-200">
@@ -538,6 +552,128 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
         </Box>
       </Box>
     </Drawer>
+
+    <Dialog
+      open={isFullScreenOpen}
+      onClose={() => setIsFullScreenOpen(false)}
+      maxWidth="xl"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '24px',
+          bgcolor: '#F8FAFC',
+          maxHeight: '85vh',
+          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+        }
+      }}
+      sx={{
+        zIndex: 1400,
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Dialog Header */}
+        <Box sx={{ p: 3, borderBottom: '1px solid #E2E8F0', display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#FFFFFF' }}>
+          <div>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FileSpreadsheet className="text-orange-500 w-5 h-5" />
+              <span>Spreadsheet Preview: {file?.name || 'leads_import.xlsx'}</span>
+            </Typography>
+            <Typography variant="caption" className="text-slate-400 font-medium">
+              Showing rows preview of parsed spreadsheet data
+            </Typography>
+          </div>
+          <IconButton onClick={() => setIsFullScreenOpen(false)} size="small" className="text-slate-400 hover:text-slate-600">
+            <X size={20} />
+          </IconButton>
+        </Box>
+
+        {/* Dialog Content */}
+        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          <div className="space-y-4 max-w-7xl mx-auto">
+            {/* Stats Block */}
+            {previewData && (
+              <div className="grid grid-cols-3 gap-4 max-w-md">
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-center shadow-sm">
+                  <span className="text-lg font-extrabold text-emerald-600 block">{previewData.successCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Valid Rows</span>
+                </div>
+                <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-2xl text-center shadow-sm">
+                  <span className="text-lg font-extrabold text-yellow-600 block">{previewData.duplicateCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Duplicates</span>
+                </div>
+                <div className="p-3 bg-red-50 border border-red-100 rounded-2xl text-center shadow-sm">
+                  <span className="text-lg font-extrabold text-red-600 block">{previewData.failureCount}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">Errors</span>
+                </div>
+              </div>
+            )}
+
+            {/* Table Container */}
+            {previewData && (
+              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-md bg-white">
+                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
+                  <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Row</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Name</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Mobile</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Source</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Course</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Email</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Alt Contact</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Budget</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">City</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">State</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Country</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Notes</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Assignee</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-50">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {previewData.previewRows.map((r, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{r.rowNum}</td>
+                          <td className="px-4 py-3 text-xs font-semibold text-slate-700">{r.name || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-600 font-medium">{r.mobile || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.source || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.course || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.email || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.alternateMobile || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.budget || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.city || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.state || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.country || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">{r.notes || '-'}</td>
+                          <td className="px-4 py-3 text-xs text-slate-500">{r.assignedTo || '-'}</td>
+                          <td className="px-4 py-3 text-xs">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'VALID' ? 'bg-emerald-50 text-emerald-700' :
+                                r.status === 'DUPLICATE' ? 'bg-yellow-50 text-yellow-700' :
+                                  'bg-red-50 text-red-700'
+                              }`}>
+                              {r.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </Box>
+
+        {/* Dialog Footer */}
+        <Box sx={{ p: 3, borderTop: '1px solid #E2E8F0', display: 'flex', justifyItems: 'center', justifyContent: 'flex-end', bgcolor: '#FFFFFF' }}>
+          <Button variant="outlined" onClick={() => setIsFullScreenOpen(false)} sx={{ color: '#475569', borderColor: '#E2E8F0' }}>
+            Close Preview
+          </Button>
+        </Box>
+      </Box>
+    </Dialog>
+    </>
   );
 };
 

@@ -320,21 +320,6 @@ export const LeadsPage = () => {
             <div className="flex gap-2">
               <Button
                 variant="outlined"
-                onClick={() => downloadLeadsTemplate(currentUser?.primaryRole)}
-                startIcon={<Download size={16} />}
-                sx={{
-                  borderColor: '#E2E8F0',
-                  color: '#475569',
-                  '&:hover': {
-                    borderColor: '#CBD5E1',
-                    bgcolor: '#F8FAFC'
-                  }
-                }}
-              >
-                Download Template
-              </Button>
-              <Button
-                variant="outlined"
                 onClick={() => setIsImportOpen(true)}
                 startIcon={<FileSpreadsheet size={16} />}
                 sx={{
