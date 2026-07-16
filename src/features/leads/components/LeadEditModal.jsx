@@ -49,6 +49,8 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
   });
 
   const [errors, setErrors] = useState({});
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   // Sync values on open/lead change
   useEffect(() => {
@@ -175,6 +177,10 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       errs.sourceId = 'Lead source is required';
     }
 
+    if (!values.courseId) {
+      errs.courseId = 'Interested course is required';
+    }
+
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errs.email = 'Must be a valid email address';
     }
@@ -213,8 +219,8 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, override = false) => {
+    if (e) e.preventDefault();
     if (!validate()) return;
 
     const payload = {
@@ -234,7 +240,8 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       assignedToId: values.assignedToId ? Number(values.assignedToId) : null,
       companyId: targetCompanyId ? Number(targetCompanyId) : null,
       branchId: targetBranchId ? Number(targetBranchId) : null,
-      pipelineId: values.pipelineId ? Number(values.pipelineId) : null
+      pipelineId: values.pipelineId ? Number(values.pipelineId) : null,
+      overrideDuplicate: override
     };
 
     updateLeadMutation.mutate(
@@ -242,7 +249,15 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       {
         onSuccess: (res) => {
           if (onUpdated) onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
+          setShowDuplicateDialog(false);
+          setDuplicateWarning(null);
           onClose();
+        },
+        onError: (err) => {
+          if (err?.code === 'DUPLICATE_LEAD_WARNING') {
+            setDuplicateWarning(err.details);
+            setShowDuplicateDialog(true);
+          }
         }
       }
     );
@@ -478,7 +493,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
               id="lead-course"
               label="Interested Course/Product"
               placeholder="Select Course..."
-              allowEmptyOption
+              required
               value={values.courseId}
               onChange={(val) => handleFieldChange('courseId', val)}
               options={coursesOptions}
@@ -649,6 +664,58 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
           </Button>
         </Box>
       </Box>
+
+      {/* Duplicate Alert Overlay Dialog */}
+      {showDuplicateDialog && duplicateWarning && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300">
+            <div className="p-6">
+              <div className="flex items-center gap-3 text-amber-600 mb-4">
+                <Compass className="w-6 h-6 stroke-[2]" />
+                <h3 className="font-bold text-lg text-slate-900 font-display">Duplicate Record Found</h3>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed mb-5">
+                A lead with this contact information already exists in your company registry:
+              </p>
+              
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs space-y-2 mb-6">
+                <div className="flex justify-between"><span className="text-slate-400 font-medium">Lead Name:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.name}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400 font-medium">Current Owner:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.owner}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400 font-medium">Lead Status:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.status}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400 font-medium">Duplicate Field:</span><span className="text-amber-700 font-semibold uppercase tracking-wider text-[10px]">{duplicateWarning.duplicateField}</span></div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDuplicateDialog(false);
+                    setDuplicateWarning(null);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+
+                {currentUser?.primaryRoleRank >= 60 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit(null, true)}
+                    disabled={updateLeadMutation.isPending}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    {updateLeadMutation.isPending ? 'Saving...' : 'Override & Save'}
+                  </button>
+                ) : (
+                  <div className="text-[11px] text-red-500 font-medium bg-red-50 p-2.5 rounded-lg border border-red-100/50">
+                    You do not have permission to override duplicates. Please contact your manager.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Drawer>
   );
 };
