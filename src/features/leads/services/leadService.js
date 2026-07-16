@@ -121,3 +121,62 @@ export const importLeads = (formData) =>
     method: 'POST',
     body: formData,
   });
+
+/**
+ * Restore a soft-deleted lead.
+ * 
+ * @param {number|string} leadId
+ * @returns {Promise<object>}
+ */
+export const restoreLead = (leadId) =>
+  apiClient(`/leads/${leadId}/restore`, { method: 'PATCH' });
+
+/**
+ * Fetch lead activity timeline.
+ * 
+ * @param {number|string} leadId
+ * @returns {Promise<object>}
+ */
+export const getLeadTimeline = (leadId) =>
+  apiClient(`/leads/${leadId}/timeline`, { method: 'GET' });
+
+/**
+ * Fetch notes list for a specific lead.
+ * 
+ * @param {number|string} leadId
+ * @returns {Promise<object>}
+ */
+export const getLeadNotes = (leadId) =>
+  apiClient(`/leads/${leadId}/notes`, { method: 'GET' });
+
+/**
+ * Create a new note on a lead.
+ * 
+ * @param {number|string} leadId
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export const createLeadNote = (leadId, data) =>
+  apiClient(`/leads/${leadId}/notes`, { method: 'POST', body: data });
+
+/**
+ * Update an existing note on a lead.
+ * 
+ * @param {number|string} leadId
+ * @param {number|string} noteId
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export const updateLeadNote = (leadId, noteId, data) =>
+  apiClient(`/leads/${leadId}/notes/${noteId}`, { method: 'PUT', body: data });
+
+/**
+ * Delete a note on a lead.
+ * 
+ * @param {number|string} leadId
+ * @param {number|string} noteId
+ * @returns {Promise<object>}
+ */
+export const deleteLeadNote = (leadId, noteId) =>
+  apiClient(`/leads/${leadId}/notes/${noteId}`, { method: 'DELETE' });
+
