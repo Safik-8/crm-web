@@ -23,10 +23,6 @@ const CommentThread = ({ leadId }) => {
       .finally(() => setLoading(false));
   }, [leadId]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [comments]);
-
   const handleSend = async () => {
     const msg = text.trim();
     if (!msg) return;
@@ -36,6 +32,10 @@ const CommentThread = ({ leadId }) => {
       const newComment = res?.data?.comment || { id: Date.now(), comment: msg, createdAt: new Date(), user: { name: user?.name || 'You' } };
       setComments(prev => [...prev, newComment]);
       setText('');
+      // Scroll to bottom only when sending a new comment
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
     } catch (err) {
       toast.error(err?.message || 'Failed to post comment');
     } finally {
@@ -50,8 +50,8 @@ const CommentThread = ({ leadId }) => {
   };
 
   return (
-<div className="flex flex-col h-full min-h-0">    
-    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+    <div className="flex flex-col h-full min-h-0">    
+      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
         <MessageSquare size={14} className="text-primary" /> Activity & Comments
       </h3>
 
@@ -69,7 +69,7 @@ const CommentThread = ({ leadId }) => {
           ))
         ) : comments.length === 0 ? (
           <div className="text-center py-10 text-sm text-slate-400">
-            No comments yet. Be the first to add a note!
+            No comments yet. Be the first to add a comment!
           </div>
         ) : (
           comments.map((c, i) => (
