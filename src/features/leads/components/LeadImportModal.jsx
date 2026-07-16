@@ -206,8 +206,9 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
   };
 
   return (
-    <Drawer
-      anchor="right"
+    <>
+      <Drawer
+        anchor="right"
       open={isOpen}
       onClose={handleClose}
       ModalProps={{
@@ -664,6 +665,7 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
         </Box>
       </Box>
     </Dialog>
+    </>
   );
 };
 
