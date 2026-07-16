@@ -29,6 +29,7 @@ import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
 import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
 import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
 import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
+import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 
@@ -179,6 +180,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COURSES}>
             <CoursesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/lead-sources',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_SOURCES}>
+            <LeadSourcePage />
           </ProtectedRoute>
         ),
       },

@@ -31,6 +31,7 @@ const RBAC_ADAPTER_MAP = {
   'view:targets': { module: 'TARGET', action: 'canView' },
   'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
   'view:courses': { module: 'COURSE', action: 'canView' },
+  'view:lead_sources': { module: 'LEAD_SOURCE', action: 'canView' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH
