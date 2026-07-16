@@ -23,7 +23,8 @@ import useListManager from '../../../shared/hooks/useListManager';
 import {
   useLeadsQuery,
   useLeadFormDataQuery,
-  useDeleteLeadMutation
+  useDeleteLeadMutation,
+  useDeleteAllLeadsMutation
 } from '../hooks/useLeads';
 
 // Shared UI elements
@@ -51,6 +52,7 @@ export const LeadsPage = () => {
   const [selectedLeadForEdit, setSelectedLeadForEdit] = useState(null);
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
 
   // List filter manager hook
   const {
@@ -83,6 +85,7 @@ export const LeadsPage = () => {
   const { data: leadsData, isLoading, isFetching, isError, error, refetch } = useLeadsQuery(queryParams);
   const { data: formDataRes, isLoading: isLoadingFormData } = useLeadFormDataQuery();
   const deleteLeadMutation = useDeleteLeadMutation();
+  const deleteAllLeadsMutation = useDeleteAllLeadsMutation();
 
   const leads = leadsData?.data?.leads || [];
   const paginationRaw = leadsData?.data?.pagination || {};
@@ -106,6 +109,14 @@ export const LeadsPage = () => {
     deleteLeadMutation.mutate(selectedLeadForDelete.id, {
       onSuccess: () => {
         setSelectedLeadForDelete(null);
+      }
+    });
+  };
+
+  const handleDeleteAllConfirm = () => {
+    deleteAllLeadsMutation.mutate(null, {
+      onSuccess: () => {
+        setIsDeleteAllOpen(false);
       }
     });
   };
@@ -338,6 +349,22 @@ export const LeadsPage = () => {
                 Import Leads
               </Button>
               <Button
+                variant="outlined"
+                color="error"
+                onClick={() => setIsDeleteAllOpen(true)}
+                startIcon={<Trash2 size={16} />}
+                sx={{
+                  borderColor: '#FCA5A5',
+                  color: '#EF4444',
+                  '&:hover': {
+                    borderColor: '#F87171',
+                    bgcolor: '#FEF2F2'
+                  }
+                }}
+              >
+                Delete All
+              </Button>
+              <Button
                 variant="contained"
                 color="primary"
                 onClick={() => setIsCreateOpen(true)}
@@ -527,6 +554,18 @@ export const LeadsPage = () => {
         cancelText="Cancel"
         danger
         isLoading={deleteLeadMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteAllOpen}
+        onClose={() => setIsDeleteAllOpen(false)}
+        onConfirm={handleDeleteAllConfirm}
+        title="Delete All Leads"
+        message="Are you sure you want to delete ALL leads? This action will archive all active leads in the current scope. This cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        danger
+        isLoading={deleteAllLeadsMutation.isPending}
       />
     </div>
   );

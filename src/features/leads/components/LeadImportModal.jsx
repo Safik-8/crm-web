@@ -361,7 +361,7 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
               <div>
                 <h3 className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">First 10 Rows Sample Preview</h3>
                 <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-[200px] overflow-y-auto">
                     <table className="min-w-full divide-y divide-slate-200">
                       <thead className="bg-slate-50">
                         <tr>
@@ -369,6 +369,15 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
                           <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Name</th>
                           <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Mobile</th>
                           <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Source</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Course</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Email</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Alt Contact</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Budget</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">City</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">State</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Country</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Notes</th>
+                          <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Assignee</th>
                           <th className="px-3 py-2 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
                         </tr>
                       </thead>
@@ -379,6 +388,15 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
                             <td className="px-3 py-2 text-xs font-semibold text-slate-700 truncate max-w-[120px]">{r.name || '-'}</td>
                             <td className="px-3 py-2 text-xs text-slate-600 font-medium">{r.mobile || '-'}</td>
                             <td className="px-3 py-2 text-xs text-slate-500">{r.source || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.course || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.email || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.alternateMobile || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.budget || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.city || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.state || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.country || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500 truncate max-w-[120px]">{r.notes || '-'}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{r.assignedTo || '-'}</td>
                             <td className="px-3 py-2 text-xs">
                               <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'VALID' ? 'bg-emerald-50 text-emerald-700' :
                                   r.status === 'DUPLICATE' ? 'bg-yellow-50 text-yellow-700' :
@@ -402,7 +420,7 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
                     <AlertTriangle className="text-yellow-500 w-4 h-4" />
                     <span>Parsed Error Log Samples ({previewData.errorReport.length})</span>
                   </h3>
-                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 max-h-[160px] overflow-y-auto space-y-2.5">
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 max-h-[200px] overflow-y-auto space-y-2.5">
                     {previewData.errorReport.map((err, idx) => (
                       <div key={idx} className="text-xs flex items-start gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
                         <span className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-600 font-bold">R{err.row}</span>
