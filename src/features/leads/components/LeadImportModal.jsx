@@ -552,14 +552,20 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
     </Drawer>
 
     <Dialog
-      fullScreen
       open={isFullScreenOpen}
       onClose={() => setIsFullScreenOpen(false)}
+      maxWidth="xl"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '24px',
+          bgcolor: '#F8FAFC',
+          maxHeight: '85vh',
+          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+        }
+      }}
       sx={{
         zIndex: 1400,
-        '& .MuiDialog-paper': {
-          bgcolor: '#F8FAFC',
-        }
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
