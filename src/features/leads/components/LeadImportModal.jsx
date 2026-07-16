@@ -328,11 +328,11 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Required</span>
-                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Lead Name, Mobile Number, Lead Source</span>
+                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Lead Name, Mobile Number, Lead Source, Interested Course/Product</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
-                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Interested Course/Product, Email, Alternate Contact, Budget, City, State, Country, Notes</span>
+                    <span className="text-xs font-semibold text-slate-600 mt-1 block">Email, Alternate Contact, Budget, City, State, Country, Notes</span>
                   </div>
                 </div>
               </div>
