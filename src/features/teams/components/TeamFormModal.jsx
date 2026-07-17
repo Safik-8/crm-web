@@ -84,7 +84,7 @@ const TeamFormModal = ({
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
-    enabled: !!targetCompanyId && isOpen && currentUser?.primaryRole !== 'BRANCH_MANAGER'
+    enabled: !!targetCompanyId && isOpen
   });
   const branchOptions = (Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || [])).map(b => ({
     value: b.id,
@@ -263,6 +263,12 @@ const TeamFormModal = ({
     >
       <div className="space-y-6">
         
+        {!branchId && !isEditMode && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold leading-relaxed">
+            ⚠️ No branch context detected. Please close this drawer, select a branch from the filter dropdown on the main page, and then click "Add Team" again.
+          </div>
+        )}
+
         {/* Section 1: Basic Info */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
@@ -297,50 +303,7 @@ const TeamFormModal = ({
           />
         </div>
 
-        {/* Section 2: Branch Scope */}
-        {!isEditMode && (canSelectCompany || currentUser?.primaryRole !== 'BRANCH_MANAGER') && (
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
-              Location & Scope
-            </h3>
 
-            {/* Company Selection (Super Admin only) */}
-            {canSelectCompany && (
-              <SelectField
-                id="companyId"
-                label="Assign to Company"
-                value={companyId}
-                onChange={(val) => {
-                  setCompanyId(val);
-                  setBranchId('');
-                  setBdeId('');
-                  if (errors.companyId) setErrors(prev => ({ ...prev, companyId: null }));
-                }}
-                options={companyOptions}
-                errorText={errors.companyId}
-                required
-              />
-            )}
-
-            {/* Branch Selection (Super Admin & Company Admin only) */}
-            {currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-              <SelectField
-                id="branchId"
-                label="Assign to Branch"
-                value={branchId}
-                onChange={(val) => {
-                  setBranchId(val);
-                  setBdeId('');
-                  if (errors.branchId) setErrors(prev => ({ ...prev, branchId: null }));
-                }}
-                options={branchOptions}
-                errorText={errors.branchId}
-                searchable={true}
-                required
-              />
-            )}
-          </div>
-        )}
 
         {/* Section 3: BDE Assignee */}
         <div className="space-y-4">

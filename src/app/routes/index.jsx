@@ -170,7 +170,7 @@ export const router = createBrowserRouter([
       {
         path: 'teams',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAMS}>
             <TeamsPage />
           </ProtectedRoute>
         ),

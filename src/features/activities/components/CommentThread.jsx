@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getLeadComments, addLeadComment } from '../../leads/services/leadService';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
@@ -6,6 +7,7 @@ import { Send, Loader2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CommentThread = ({ leadId }) => {
+  const queryClient = useQueryClient();
   const { hasPermission, user } = useAuth();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,10 @@ const CommentThread = ({ leadId }) => {
       const newComment = res?.data?.comment || { id: Date.now(), comment: msg, createdAt: new Date(), user: { name: user?.name || 'You' } };
       setComments(prev => [...prev, newComment]);
       setText('');
+      
+      // Invalidate timeline so new comments reflect in the timeline logs tab immediately
+      queryClient.invalidateQueries({ queryKey: ['leads', 'detail', leadId, 'timeline'] });
+
       // Scroll to bottom only when sending a new comment
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

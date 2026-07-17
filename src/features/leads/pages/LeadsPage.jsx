@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Dialog } from '@mui/material';
 import {
   Plus,
   RefreshCw,
@@ -15,7 +16,11 @@ import {
   Activity,
   Calendar,
   FileSpreadsheet,
-  Download
+  Download,
+  SlidersHorizontal,
+  BookmarkPlus,
+  Bookmark,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
@@ -24,8 +29,14 @@ import {
   useLeadsQuery,
   useLeadFormDataQuery,
   useDeleteLeadMutation,
-  useDeleteAllLeadsMutation
+  useDeleteAllLeadsMutation,
+  useUserPreferencesQuery,
+  useUpdateUserPreferencesMutation
 } from '../hooks/useLeads';
+import { useQuery } from '@tanstack/react-query';
+import { companyService } from '../../company/services/companyService';
+import { branchService } from '../../branch/services/branchService';
+import { teamService } from '../../teams/services/teamService';
 
 // Shared UI elements
 import Button from '../../../shared/components/elements/Button';
@@ -34,6 +45,8 @@ import Pagination from '../../../shared/components/elements/Pagination';
 import SearchInput from '../../../shared/components/elements/SearchInput';
 import SelectField from '../../../shared/components/elements/SelectField';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import Drawer from '../../../shared/components/elements/Drawer';
+import TextField from '../../../shared/components/elements/TextField';
 
 // Feature overlays
 import LeadCreateModal from '../components/LeadCreateModal';
@@ -49,6 +62,7 @@ export const LeadsPage = () => {
   // Overlay states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedLeadForEdit, setSelectedLeadForEdit] = useState(null);
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
@@ -73,13 +87,205 @@ export const LeadsPage = () => {
     defaultSort: { field: 'createdAt', order: 'desc' },
     defaultLimit: 10,
     initialFilters: {
+      companyId: '',
+      branchId: '',
+      teamId: '',
       sourceId: '',
       courseId: '',
       statusId: '',
       priority: '',
-      assignedToId: ''
+      assignedToId: '',
+      dateFrom: '',
+      dateTo: ''
     }
   });
+
+  // Local temporary filter states (does not trigger backend query until Apply is clicked)
+  const [tempFilters, setTempFilters] = useState({
+    companyId: '',
+    branchId: '',
+    teamId: '',
+    sourceId: '',
+    courseId: '',
+    statusId: '',
+    priority: '',
+    assignedToId: '',
+    dateFrom: '',
+    dateTo: ''
+  });
+
+  // Sync tempFilters with current filters when Drawer opens
+  useEffect(() => {
+    if (isFilterOpen) {
+      setTempFilters({
+        companyId: filters.companyId || '',
+        branchId: filters.branchId || '',
+        teamId: filters.teamId || '',
+        sourceId: filters.sourceId || '',
+        courseId: filters.courseId || '',
+        statusId: filters.statusId || '',
+        priority: filters.priority || '',
+        assignedToId: filters.assignedToId || '',
+        dateFrom: filters.dateFrom || '',
+        dateTo: filters.dateTo || ''
+      });
+    }
+  }, [isFilterOpen, filters]);
+
+  const handleTempFilterChange = (field, val) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      [field]: val
+    }));
+  };
+
+  // User preferences (Saved filters)
+  const { data: preferencesRes } = useUserPreferencesQuery();
+  const updatePreferencesMutation = useUpdateUserPreferencesMutation();
+
+  const sessionPreferences = preferencesRes?.data?.sessionPreferences || preferencesRes?.sessionPreferences || {};
+  const savedFiltersList = sessionPreferences?.savedLeadFilters || [];
+
+  const [filterName, setFilterName] = useState('');
+  const [filterModalConfig, setFilterModalConfig] = useState({ isOpen: false, mode: 'save', filterId: null });
+  const [deletingFilterId, setDeletingFilterId] = useState(null);
+
+  // Save or Rename filter handler
+  const handleSaveOrRenameFilter = () => {
+    const trimmedName = filterName.trim();
+    if (!trimmedName) return;
+
+    if (filterModalConfig.mode === 'save') {
+      // Check duplicate name
+      const nameExists = savedFiltersList.some(
+        (sf) => sf.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (nameExists) {
+        toast.error(`A saved filter with the name "${trimmedName}" already exists.`);
+        return;
+      }
+
+      const newSavedFilter = {
+        id: crypto.randomUUID(),
+        name: trimmedName,
+        filters: {
+          companyId: filters.companyId || '',
+          branchId: filters.branchId || '',
+          teamId: filters.teamId || '',
+          sourceId: filters.sourceId || '',
+          courseId: filters.courseId || '',
+          statusId: filters.statusId || '',
+          priority: filters.priority || '',
+          assignedToId: filters.assignedToId || '',
+          dateFrom: filters.dateFrom || '',
+          dateTo: filters.dateTo || ''
+        }
+      };
+
+      const updatedFilters = [...savedFiltersList, newSavedFilter];
+
+      updatePreferencesMutation.mutate({
+        ...sessionPreferences,
+        savedLeadFilters: updatedFilters
+      }, {
+        onSuccess: () => {
+          toast.success(`Filter "${trimmedName}" saved successfully`);
+          setFilterName('');
+          setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
+        }
+      });
+    } else if (filterModalConfig.mode === 'rename') {
+      // Check duplicate name except itself
+      const nameExists = savedFiltersList.some(
+        (sf) => sf.id !== filterModalConfig.filterId && sf.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (nameExists) {
+        toast.error(`A saved filter with the name "${trimmedName}" already exists.`);
+        return;
+      }
+
+      const updatedFilters = savedFiltersList.map(sf =>
+        sf.id === filterModalConfig.filterId ? { ...sf, name: trimmedName } : sf
+      );
+
+      updatePreferencesMutation.mutate({
+        ...sessionPreferences,
+        savedLeadFilters: updatedFilters
+      }, {
+        onSuccess: () => {
+          toast.success('Filter renamed successfully');
+          setFilterName('');
+          setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
+        }
+      });
+    }
+  };
+
+  // Delete saved filter handler
+  const handleDeleteFilter = () => {
+    if (!deletingFilterId) return;
+    const targetId = deletingFilterId;
+    setDeletingFilterId(null); // Close modal instantly
+
+    const updatedFilters = savedFiltersList.filter(sf => String(sf.id) !== String(targetId));
+
+    updatePreferencesMutation.mutate({
+      ...sessionPreferences,
+      savedLeadFilters: updatedFilters
+    }, {
+      onSuccess: () => {
+        toast.success('Saved filter removed');
+        // Clear filters to show all data
+        const cleared = {
+          companyId: '',
+          branchId: '',
+          teamId: '',
+          sourceId: '',
+          courseId: '',
+          statusId: '',
+          priority: '',
+          assignedToId: '',
+          dateFrom: '',
+          dateTo: ''
+        };
+        clearFilters(cleared);
+        setTempFilters(cleared);
+      }
+    });
+  };
+
+  // Update saved filter preset with current active filters
+  const handleUpdateFilterValues = (filterId) => {
+    const selected = savedFiltersList.find((sf) => String(sf.id) === String(filterId));
+    if (!selected) return;
+
+    const updatedFilters = savedFiltersList.map(sf =>
+      String(sf.id) === String(filterId) ? {
+        ...sf,
+        filters: {
+          companyId: filters.companyId || '',
+          branchId: filters.branchId || '',
+          teamId: filters.teamId || '',
+          sourceId: filters.sourceId || '',
+          courseId: filters.courseId || '',
+          statusId: filters.statusId || '',
+          priority: filters.priority || '',
+          assignedToId: filters.assignedToId || '',
+          dateFrom: filters.dateFrom || '',
+          dateTo: filters.dateTo || ''
+        }
+      } : sf
+    );
+
+    updatePreferencesMutation.mutate({
+      ...sessionPreferences,
+      savedLeadFilters: updatedFilters
+    }, {
+      onSuccess: () => {
+        toast.success(`Filter "${selected.name}" updated successfully`);
+      }
+    });
+  };
 
   // Query leads & drop options
   const { data: leadsData, isLoading, isFetching, isError, error, refetch } = useLeadsQuery(queryParams);
@@ -103,6 +309,24 @@ export const LeadsPage = () => {
   // Derived loading state
   const loadingState = getLoadingState(isLoading || isFetching, isError, leads.length);
 
+  // Active saved filter matching current active filters
+  const activeSavedFilterId = useMemo(() => {
+    const filterKeys = ['companyId', 'branchId', 'teamId', 'sourceId', 'courseId', 'statusId', 'priority', 'assignedToId', 'dateFrom', 'dateTo'];
+    const hasAnyFilter = filterKeys.some(key => filters[key] !== '' && filters[key] !== null && filters[key] !== undefined);
+    if (!hasAnyFilter) return '';
+
+    const active = savedFiltersList.find((sf) => {
+      return filterKeys.every((key) => {
+        const filterVal = filters[key];
+        const savedVal = sf.filters?.[key];
+        const normalizedFilterVal = (filterVal === null || filterVal === undefined) ? '' : String(filterVal).trim().toLowerCase();
+        const normalizedSavedVal = (savedVal === null || savedVal === undefined) ? '' : String(savedVal).trim().toLowerCase();
+        return normalizedFilterVal === normalizedSavedVal;
+      });
+    });
+    return active ? String(active.id) : '';
+  }, [savedFiltersList, filters]);
+
   // Handlers
   const handleDeleteConfirm = () => {
     if (!selectedLeadForDelete) return;
@@ -120,6 +344,61 @@ export const LeadsPage = () => {
       }
     });
   };
+
+  // Role-based scope permissions
+  const role = currentUser?.primaryRole;
+  const canSelectCompany = role === 'SUPER_ADMIN';
+  const canSelectBranch = role === 'SUPER_ADMIN' || role === 'COMPANY_ADMIN';
+
+  // Fetch Companies (for Super Admin)
+  const { data: companiesRes } = useQuery({
+    queryKey: ['companies-filter-options'],
+    queryFn: () => companyService.getCompaniesRaw(),
+    enabled: canSelectCompany
+  });
+  
+  const rawCompanies = Array.isArray(companiesRes)
+    ? companiesRes
+    : (Array.isArray(companiesRes?.data) ? companiesRes.data : (companiesRes?.data?.companies || []));
+
+  const companyOptions = rawCompanies.map(c => ({
+    value: c.id.toString(),
+    label: `${c.name} (${c.code})`
+  }));
+
+  // Target company ID for branch query
+  const targetCompanyId = canSelectCompany ? tempFilters.companyId : currentUser?.companyId;
+
+  // Fetch Branches
+  const { data: branchesRes } = useQuery({
+    queryKey: ['branches-filter-options', targetCompanyId],
+    queryFn: () => branchService.getBranchesRaw(targetCompanyId),
+    enabled: !!targetCompanyId && canSelectBranch
+  });
+
+  const rawBranches = Array.isArray(branchesRes)
+    ? branchesRes
+    : (Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || []));
+
+  const branchOptions = rawBranches.map(b => ({
+    value: b.id.toString(),
+    label: `${b.name} (${b.code})`
+  }));
+
+  // Fetch Teams
+  const { data: teamsRes } = useQuery({
+    queryKey: ['teams-filter-options'],
+    queryFn: () => teamService.getTeams({ limit: 1000 })
+  });
+
+  const rawTeams = Array.isArray(teamsRes)
+    ? teamsRes
+    : (Array.isArray(teamsRes?.data) ? teamsRes.data : (teamsRes?.data?.teams || []));
+
+  const teamOptions = rawTeams.map(t => ({
+    value: t.id.toString(),
+    label: t.name
+  }));
 
   // Format dropdown items
   const formData = formDataRes?.data || formDataRes || {};
@@ -372,94 +651,119 @@ export const LeadsPage = () => {
             className="flex-1 min-w-[280px]"
           />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-source"
-                placeholder="All Sources"
-                allowEmptyOption
-                value={filters.sourceId}
-                onChange={(val) => handleFilterChange('sourceId', val)}
-                options={sourcesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-course"
-                placeholder="All Courses"
-                allowEmptyOption
-                value={filters.courseId}
-                onChange={(val) => handleFilterChange('courseId', val)}
-                options={coursesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-status"
-                placeholder="All Statuses"
-                allowEmptyOption
-                value={filters.statusId}
-                onChange={(val) => handleFilterChange('statusId', val)}
-                options={statusesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[130px]">
-              <SelectField
-                id="filter-priority"
-                placeholder="All Priorities"
-                allowEmptyOption
-                value={filters.priority}
-                onChange={(val) => handleFilterChange('priority', val)}
-                options={priorityOptions}
-                searchable={false}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-assignee"
-                placeholder="All Assignees"
-                allowEmptyOption
-                value={filters.assignedToId}
-                onChange={(val) => handleFilterChange('assignedToId', val)}
-                options={assigneeOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            {savedFiltersList.length > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-[160px]">
+                  <SelectField
+                    id="apply-saved-filter-select"
+                    placeholder="Saved Filters"
+                    allowEmptyOption
+                    value={activeSavedFilterId}
+                    onChange={(val) => {
+                      if (val) {
+                        const selected = savedFiltersList.find((sf) => String(sf.id) === String(val));
+                        if (selected) {
+                          const defaultEmptyFilters = {
+                            companyId: '',
+                            branchId: '',
+                            teamId: '',
+                            sourceId: '',
+                            courseId: '',
+                            statusId: '',
+                            priority: '',
+                            assignedToId: '',
+                            dateFrom: '',
+                            dateTo: ''
+                          };
+                          handleFilterChange({
+                            ...defaultEmptyFilters,
+                            ...selected.filters
+                          });
+                          toast.success(`Applied filter "${selected.name}"`);
+                        }
+                      } else {
+                        clearFilters({
+                          companyId: '',
+                          branchId: '',
+                          teamId: '',
+                          sourceId: '',
+                          courseId: '',
+                          statusId: '',
+                          priority: '',
+                          assignedToId: '',
+                          dateFrom: '',
+                          dateTo: ''
+                        });
+                      }
+                    }}
+                    options={savedFiltersList.map((sf) => ({ value: sf.id, label: sf.name }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                hasActiveFilters
+                  ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
+                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <SlidersHorizontal size={15} />
+              Filters
+              {hasActiveFilters && (
+                <span className="flex items-center justify-center bg-orange-500 text-white text-[10px] font-black h-5 w-5 rounded-full">
+                  {Object.values(filters).filter(Boolean).length}
+                </span>
+              )}
+            </button>
 
             {hasActiveFilters && (
-              <button
-                onClick={() =>
-                  clearFilters({
-                    sourceId: '',
-                    courseId: '',
-                    statusId: '',
-                    priority: '',
-                    assignedToId: ''
-                  })
-                }
-                className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer shadow-sm active:scale-95"
-              >
-                <SearchX size={14} />
-                Clear
-              </button>
+              <div className="flex items-center gap-2">
+                {!activeSavedFilterId && (
+                  <button
+                    onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
+                    className="flex items-center gap-1.5 px-3.5 h-11 bg-orange-50 hover:bg-orange-100/80 text-orange-600 font-semibold rounded-xl text-[12px] transition-all cursor-pointer border border-orange-200/50 shadow-sm active:scale-95"
+                    title="Save current filters as preset"
+                  >
+                    <BookmarkPlus size={14} />
+                    Save Preset
+                  </button>
+                )}
+                <button
+                  onClick={() =>
+                    clearFilters({
+                      companyId: '',
+                      branchId: '',
+                      teamId: '',
+                      sourceId: '',
+                      courseId: '',
+                      statusId: '',
+                      priority: '',
+                      assignedToId: '',
+                      dateFrom: '',
+                      dateTo: ''
+                    })
+                  }
+                  className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer shadow-sm active:scale-95"
+                >
+                  <SearchX size={14} />
+                  Clear
+                </button>
+              </div>
             )}
-          </div>
 
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-            className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
-            title="Refresh List"
-          >
-            <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
-          </button>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading || isFetching}
+              className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+              title="Refresh List"
+            >
+              <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -477,7 +781,9 @@ export const LeadsPage = () => {
             courseId: '',
             statusId: '',
             priority: '',
-            assignedToId: ''
+            assignedToId: '',
+            dateFrom: '',
+            dateTo: ''
           })
         }
         emptyTitle="No leads registered"
@@ -500,6 +806,276 @@ export const LeadsPage = () => {
           />
         </div>
       )}
+
+      {/* Slide-over Filter Drawer */}
+      <Drawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Leads"
+        subtitle="Apply segmentation and business routing rules"
+      >
+        <div className="flex flex-col h-full justify-between">
+          <div className="space-y-5">
+            {savedFiltersList.length > 0 && (
+              <div className="border-b border-slate-100 pb-5 mb-3">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Saved Filters</label>
+                <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                  {savedFiltersList.map((sf) => (
+                    <div key={sf.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-all group/item">
+                      <button
+                        onClick={() => {
+                          const defaultEmptyFilters = {
+                            sourceId: '',
+                            courseId: '',
+                            statusId: '',
+                            priority: '',
+                            assignedToId: '',
+                            dateFrom: '',
+                            dateTo: '',
+                            branchId: '',
+                            teamId: ''
+                          };
+                          handleFilterChange({
+                            ...defaultEmptyFilters,
+                            ...sf.filters
+                          });
+                          setIsFilterOpen(false);
+                          toast.success(`Applied filter "${sf.name}"`);
+                        }}
+                        className="text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors text-left flex-1"
+                      >
+                        {sf.name}
+                      </button>
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => handleUpdateFilterValues(sf.id)}
+                          className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
+                          title="Update Preset with current filters"
+                        >
+                          <Bookmark size={11} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFilterName(sf.name);
+                            setFilterModalConfig({ isOpen: true, mode: 'rename', filterId: sf.id });
+                          }}
+                          className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
+                          title="Rename Filter"
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          onClick={() => setDeletingFilterId(sf.id)}
+                          className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover/item:opacity-100"
+                          title="Delete Filter"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {canSelectCompany && (
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Company</label>
+                <SelectField
+                  id="filter-company"
+                  placeholder="All Companies"
+                  allowEmptyOption
+                  value={tempFilters.companyId}
+                  onChange={(val) => {
+                    handleTempFilterChange('companyId', val);
+                    handleTempFilterChange('branchId', ''); // Reset branch selection
+                  }}
+                  options={companyOptions}
+                  searchable={true}
+                />
+              </div>
+            )}
+
+            {canSelectBranch && (
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Branch</label>
+                <SelectField
+                  id="filter-branch"
+                  placeholder="All Branches"
+                  allowEmptyOption
+                  value={tempFilters.branchId}
+                  onChange={(val) => handleTempFilterChange('branchId', val)}
+                  options={branchOptions}
+                  searchable={true}
+                  disabled={canSelectCompany && !tempFilters.companyId}
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lead Source</label>
+              <SelectField
+                id="filter-source"
+                placeholder="All Sources"
+                allowEmptyOption
+                value={tempFilters.sourceId}
+                onChange={(val) => handleTempFilterChange('sourceId', val)}
+                options={sourcesOptions}
+                searchable={true}
+                isLoading={isLoadingFormData}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Interested Course/Product</label>
+              <SelectField
+                id="filter-course"
+                placeholder="All Courses"
+                allowEmptyOption
+                value={tempFilters.courseId}
+                onChange={(val) => handleTempFilterChange('courseId', val)}
+                options={coursesOptions}
+                searchable={true}
+                isLoading={isLoadingFormData}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pipeline Status</label>
+              <SelectField
+                id="filter-status"
+                placeholder="All Statuses"
+                allowEmptyOption
+                value={tempFilters.statusId}
+                onChange={(val) => handleTempFilterChange('statusId', val)}
+                options={statusesOptions}
+                searchable={true}
+                isLoading={isLoadingFormData}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority Level</label>
+              <SelectField
+                id="filter-priority"
+                placeholder="All Priorities"
+                allowEmptyOption
+                value={tempFilters.priority}
+                onChange={(val) => handleTempFilterChange('priority', val)}
+                options={priorityOptions}
+                searchable={false}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assigned Owner</label>
+              <SelectField
+                id="filter-assignee"
+                placeholder="All Assignees"
+                allowEmptyOption
+                value={tempFilters.assignedToId}
+                onChange={(val) => handleTempFilterChange('assignedToId', val)}
+                options={assigneeOptions}
+                searchable={true}
+                isLoading={isLoadingFormData}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assigned Team</label>
+              <SelectField
+                id="filter-team"
+                placeholder="All Teams"
+                allowEmptyOption
+                value={tempFilters.teamId}
+                onChange={(val) => handleTempFilterChange('teamId', val)}
+                options={teamOptions}
+                searchable={true}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Creation Date Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block mb-1">From</span>
+                  <input
+                    type="date"
+                    value={tempFilters.dateFrom || ''}
+                    onChange={(e) => handleTempFilterChange('dateFrom', e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-slate-700"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block mb-1">To</span>
+                  <input
+                    type="date"
+                    value={tempFilters.dateTo || ''}
+                    onChange={(e) => handleTempFilterChange('dateTo', e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-slate-700"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 mt-8">
+            <Button
+              variant="outlined"
+              onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
+              disabled={!Object.values(tempFilters).some(Boolean)}
+              startIcon={<BookmarkPlus size={16} />}
+              sx={{
+                borderColor: '#f97316',
+                color: '#f97316',
+                py: 1.25,
+                '&:hover': {
+                  borderColor: '#ea580c',
+                  backgroundColor: '#fff7ed'
+                }
+              }}
+            >
+              Save Filter Preset
+            </Button>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const cleared = {
+                    sourceId: '',
+                    courseId: '',
+                    statusId: '',
+                    priority: '',
+                    assignedToId: '',
+                    dateFrom: '',
+                    dateTo: '',
+                    branchId: '',
+                    teamId: ''
+                  };
+                  setTempFilters(cleared);
+                  clearFilters(cleared);
+                  setIsFilterOpen(false);
+                }}
+                disabled={!Object.values(tempFilters).some(Boolean)}
+                sx={{ flex: 1, borderColor: '#cbd5e1', color: '#64748b' }}
+              >
+                Reset All
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  handleFilterChange(tempFilters);
+                  setIsFilterOpen(false);
+                }}
+                sx={{ flex: 1, backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+              >
+                Apply & Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Drawer>
 
       {/* Dialog Overlays */}
       <LeadCreateModal
@@ -551,6 +1127,92 @@ export const LeadsPage = () => {
         cancelText="Cancel"
         danger
         isLoading={deleteAllLeadsMutation.isPending}
+      />
+
+      {/* Saved Filters Management Modals */}
+      <Dialog
+        open={filterModalConfig.isOpen}
+        onClose={() => {
+          setFilterName('');
+          setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: '24px',
+            maxWidth: '440px',
+            width: '100%',
+            overflow: 'hidden',
+            margin: '16px'
+          }
+        }}
+      >
+        <div className="bg-white p-6 flex flex-col gap-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-heading font-extrabold text-slate-900 text-lg leading-tight">
+                {filterModalConfig.mode === 'save' ? 'Save Current Filter' : 'Rename Saved Filter'}
+              </h3>
+              <p className="text-[11px] text-slate-400 font-bold mt-1">
+                {filterModalConfig.mode === 'save'
+                  ? 'Enter a name to save this filter combination'
+                  : 'Enter a new name for this filter preset'}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setFilterName('');
+                setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
+              }}
+              className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg p-1.5 transition-all cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div>
+            <TextField
+              label="Filter Preset Name"
+              placeholder="e.g. High Priority Hot Leads"
+              value={filterName}
+              onChange={(val) => setFilterName(val)}
+              fullWidth
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFilterName('');
+                setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
+              }}
+              sx={{ borderColor: '#cbd5e1', color: '#64748b' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSaveOrRenameFilter}
+              disabled={!filterName.trim() || updatePreferencesMutation.isPending}
+              sx={{ backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <ConfirmModal
+        isOpen={!!deletingFilterId}
+        onClose={() => setDeletingFilterId(null)}
+        onConfirm={handleDeleteFilter}
+        title="Delete Saved Filter"
+        message="Are you sure you want to delete this saved filter? This action cannot be undone."
+        confirmText="Delete Preset"
+        cancelText="Cancel"
+        type="error"
+        isLoading={updatePreferencesMutation.isPending}
       />
     </div>
   );

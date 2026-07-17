@@ -16,6 +16,7 @@ import {
   updateLeadNote,
   deleteLeadNote
 } from '../services/leadService';
+import { userProfileService } from '../../userprofile/services/userProfileService';
 import { toast } from '../../../shared/utils/toast';
 
 export const LEAD_KEYS = {
@@ -235,7 +236,24 @@ export const useCreateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, data }) => createLeadNote(leadId, data),
     onSuccess: (res, variables) => {
+      const newNote = res?.data?.note || res?.note;
+      if (newNote) {
+        queryClient.setQueryData(
+          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+          (oldData) => {
+            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+            const updatedNotes = [newNote, ...oldNotes];
+            if (oldData?.data?.notes) {
+              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+            } else if (oldData?.notes) {
+              return { ...oldData, notes: updatedNotes };
+            }
+            return updatedNotes;
+          }
+        );
+      }
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note added successfully');
     },
@@ -254,7 +272,24 @@ export const useUpdateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId, data }) => updateLeadNote(leadId, noteId, data),
     onSuccess: (res, variables) => {
+      const updatedNote = res?.data?.note || res?.note;
+      if (updatedNote) {
+        queryClient.setQueryData(
+          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+          (oldData) => {
+            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+            const updatedNotes = oldNotes.map((n) => n.id === variables.noteId ? updatedNote : n);
+            if (oldData?.data?.notes) {
+              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+            } else if (oldData?.notes) {
+              return { ...oldData, notes: updatedNotes };
+            }
+            return updatedNotes;
+          }
+        );
+      }
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note updated successfully');
     },
@@ -273,7 +308,21 @@ export const useDeleteLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId }) => deleteLeadNote(leadId, noteId),
     onSuccess: (res, variables) => {
+      queryClient.setQueryData(
+        [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+        (oldData) => {
+          const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+          const updatedNotes = oldNotes.filter((n) => n.id !== variables.noteId);
+          if (oldData?.data?.notes) {
+            return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+          } else if (oldData?.notes) {
+            return { ...oldData, notes: updatedNotes };
+          }
+          return updatedNotes;
+        }
+      );
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note deleted successfully');
     },
@@ -281,5 +330,32 @@ export const useDeleteLeadNoteMutation = () => {
       const msg = error?.message || 'Failed to delete note';
       toast.error(msg);
     },
+  });
+};
+
+/**
+ * Hook to fetch user settings/preferences.
+ */
+export const useUserPreferencesQuery = () => {
+  return useQuery({
+    queryKey: ['user-preferences'],
+    queryFn: () => userProfileService.getUserPreferences()
+  });
+};
+
+/**
+ * Hook to update user sessionPreferences.
+ */
+export const useUpdateUserPreferencesMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionPreferences) => userProfileService.updateUserPreferences(sessionPreferences),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-preferences'] });
+    },
+    onError: (error) => {
+      const msg = error?.message || 'Failed to update preferences';
+      toast.error(msg);
+    }
   });
 };

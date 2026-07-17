@@ -51,5 +51,21 @@ export const userProfileService = {
    */
   deactivateAccount: () => {
     return axiosClient.post(`${BASE_PATH}/deactivate`);
+  },
+
+  /**
+   * Fetches logged in user's preferences.
+   * GET /api/user-profile/preferences
+   */
+  getUserPreferences: () => {
+    return axiosClient.get(`${BASE_PATH}/preferences`);
+  },
+
+  /**
+   * Updates logged in user's sessionPreferences.
+   * PUT /api/user-profile/preferences
+   */
+  updateUserPreferences: (sessionPreferences) => {
+    return axiosClient.put(`${BASE_PATH}/preferences`, { sessionPreferences });
   }
 };
