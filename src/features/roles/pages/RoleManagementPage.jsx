@@ -34,6 +34,8 @@ const MODULES_LIST = [
   { value: "TEAM", label: "Team Coordination" },
   { value: "LEAD", label: "Leads Management" },
   { value: "LEAD_ASSIGNMENT", label: "Lead Assignment" },
+  { value: "LEAD_SOURCE", label: "Lead Sources" },
+  { value: "LEAD_STATUS", label: "Lead Statuses" },
   { value: "PIPELINE", label: "Pipelines" },
   { value: "TASK", label: "Tasks" },
   { value: "ACTIVITY", label: "Activities" },
