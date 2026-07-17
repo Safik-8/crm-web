@@ -70,12 +70,12 @@ const BaseLayout = () => {
           <main
             ref={mainRef}
             className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-50 ${
-              isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-6 lg:p-8'
+              isFullWidthPage ? 'p-0' : 'p-2 sm:p-3 md:p-4 lg:p-4'
             }`}
           >
             <div
               className={`mx-auto h-full ${
-                isFullWidthPage ? 'max-w-none' : 'max-w-7xl'
+                isFullWidthPage ? 'max-w-none' : 'max-w-9xl'
               } animate-in fade-in slide-in-from-bottom-4 duration-500`}
             >
               <Outlet />

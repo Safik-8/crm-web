@@ -167,10 +167,10 @@ const CoursesPage = () => {
   return (
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pb-8">
-        
+
         {/* ── SEARCH AND ACTIONS HEADER ── */}
         <div className="relative z-20 p-4 bg-white border border-slate-200/60 mb-4">
-          
+
           {/* Row 1: Search & Main Actions */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
             <SearchInput
@@ -180,7 +180,7 @@ const CoursesPage = () => {
               isLoading={loadingState === 'loading'}
               className="w-full lg:max-w-md"
             />
-            
+
             <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
               <Button
                 variant="secondary"
@@ -217,7 +217,7 @@ const CoursesPage = () => {
           {/* Row 2: Select Filters group */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
             <div className="flex flex-wrap items-center gap-3 flex-1">
-              
+
               {/* Visual Label */}
               <div className="flex items-center gap-1.5 h-[42px] px-5 bg-slate-100/60 rounded-[10px] border border-slate-200/40 text-slate-500 font-semibold text-[13px] uppercase tracking-wider">
                 <Filter size={16} className="text-primary" />
@@ -278,32 +278,32 @@ const CoursesPage = () => {
             )}
           </div>
 
-        {/* Data Table */}
-        <CourseListTable
-          courses={courses}
-          loadingState={loadingState}
-          errorMessage={errorMessage}
-          onRetry={() => refetch()}
-          onViewDetails={handleOpenDetails}
-          onEdit={handleOpenEditForm}
-          onToggleStatus={handleOpenToggleStatus}
-          onDelete={handleOpenDelete}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-          canEdit={canEdit}
-          canDelete={canDelete}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={toggleSort}
-        />
+          {/* Data Table */}
+          <CourseListTable
+            courses={courses}
+            loadingState={loadingState}
+            errorMessage={errorMessage}
+            onRetry={() => refetch()}
+            onViewDetails={handleOpenDetails}
+            onEdit={handleOpenEditForm}
+            onToggleStatus={handleOpenToggleStatus}
+            onDelete={handleOpenDelete}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={toggleSort}
+          />
 
-        {/* Pagination Bar */}
-        <Pagination
-          pagination={pagination}
-          onPageChange={setPage}
-          isLoading={loadingState === 'loading'}
-          entityName="courses"
-        />
+          {/* Pagination Bar */}
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={loadingState === 'loading'}
+            entityName="courses"
+          />
         </div>
 
         {/* Modals & Slide-overs */}

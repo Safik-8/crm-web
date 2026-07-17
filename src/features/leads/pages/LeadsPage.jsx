@@ -274,14 +274,30 @@ export const LeadsPage = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[24px] font-extrabold text-slate-900 tracking-tight">Leads Registry</h1>
-          <p className="text-[13px] text-slate-500 font-medium mt-1">
-            Capture, organize, segment, and route sales pipeline contacts dynamically.
-          </p>
+    <div className="p-4 md:p-1 max-w-7xl mx-auto flex flex-col gap-4 animate-in fade-in duration-300">
+      {/* Header section in a white card */}
+      <div className="bg-white px-5 py-4 border border-slate-200/60 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
+            <User size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">
+                Leads Registry
+              </h1>
+              <button
+                onClick={refetch}
+                className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
+                title="Refresh Data"
+              >
+                <RefreshCw size={14} className={isLoading || isFetching ? 'animate-spin' : ''} />
+              </button>
+            </div>
+            <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+              Capture, organize, segment, and route sales pipeline contacts dynamically.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -314,144 +330,147 @@ export const LeadsPage = () => {
         </div>
       </div>
 
-      {/* Toolbar Filter Panel */}
-      <div className="bg-white border border-slate-200/60 rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <SearchInput
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Search by name, mobile, email..."
-            className="flex-1 min-w-[280px]"
-          />
+      {/* Main Content Area (Matches LeadSourcePage) */}
+      <div className="bg-white border border-slate-200/60 p-4">
+        {/* Top action bar */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 w-full bg-white border border-slate-200/60 p-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <SearchInput
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search by name, mobile, email..."
+              className="flex-1 min-w-[280px]"
+            />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-source"
-                placeholder="All Sources"
-                allowEmptyOption
-                value={filters.sourceId}
-                onChange={(val) => handleFilterChange('sourceId', val)}
-                options={sourcesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-course"
-                placeholder="All Courses"
-                allowEmptyOption
-                value={filters.courseId}
-                onChange={(val) => handleFilterChange('courseId', val)}
-                options={coursesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-status"
-                placeholder="All Statuses"
-                allowEmptyOption
-                value={filters.statusId}
-                onChange={(val) => handleFilterChange('statusId', val)}
-                options={statusesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-            <div className="w-[130px]">
-              <SelectField
-                id="filter-priority"
-                placeholder="All Priorities"
-                allowEmptyOption
-                value={filters.priority}
-                onChange={(val) => handleFilterChange('priority', val)}
-                options={priorityOptions}
-                searchable={false}
-              />
-            </div>
-            <div className="w-[150px]">
-              <SelectField
-                id="filter-assignee"
-                placeholder="All Assignees"
-                allowEmptyOption
-                value={filters.assignedToId}
-                onChange={(val) => handleFilterChange('assignedToId', val)}
-                options={assigneeOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-[150px]">
+                <SelectField
+                  id="filter-source"
+                  placeholder="All Sources"
+                  allowEmptyOption
+                  value={filters.sourceId}
+                  onChange={(val) => handleFilterChange('sourceId', val)}
+                  options={sourcesOptions}
+                  searchable={true}
+                  isLoading={isLoadingFormData}
+                />
+              </div>
+              <div className="w-[150px]">
+                <SelectField
+                  id="filter-course"
+                  placeholder="All Courses"
+                  allowEmptyOption
+                  value={filters.courseId}
+                  onChange={(val) => handleFilterChange('courseId', val)}
+                  options={coursesOptions}
+                  searchable={true}
+                  isLoading={isLoadingFormData}
+                />
+              </div>
+              <div className="w-[150px]">
+                <SelectField
+                  id="filter-status"
+                  placeholder="All Statuses"
+                  allowEmptyOption
+                  value={filters.statusId}
+                  onChange={(val) => handleFilterChange('statusId', val)}
+                  options={statusesOptions}
+                  searchable={true}
+                  isLoading={isLoadingFormData}
+                />
+              </div>
+              <div className="w-[130px]">
+                <SelectField
+                  id="filter-priority"
+                  placeholder="All Priorities"
+                  allowEmptyOption
+                  value={filters.priority}
+                  onChange={(val) => handleFilterChange('priority', val)}
+                  options={priorityOptions}
+                  searchable={false}
+                />
+              </div>
+              <div className="w-[150px]">
+                <SelectField
+                  id="filter-assignee"
+                  placeholder="All Assignees"
+                  allowEmptyOption
+                  value={filters.assignedToId}
+                  onChange={(val) => handleFilterChange('assignedToId', val)}
+                  options={assigneeOptions}
+                  searchable={true}
+                  isLoading={isLoadingFormData}
+                />
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={() =>
+                    clearFilters({
+                      sourceId: '',
+                      courseId: '',
+                      statusId: '',
+                      priority: '',
+                      assignedToId: ''
+                    })
+                  }
+                  className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer shadow-sm active:scale-95"
+                >
+                  <SearchX size={14} />
+                  Clear
+                </button>
+              )}
             </div>
 
-            {hasActiveFilters && (
-              <button
-                onClick={() =>
-                  clearFilters({
-                    sourceId: '',
-                    courseId: '',
-                    statusId: '',
-                    priority: '',
-                    assignedToId: ''
-                  })
-                }
-                className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer shadow-sm active:scale-95"
-              >
-                <SearchX size={14} />
-                Clear
-              </button>
-            )}
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading || isFetching}
+              className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+              title="Refresh List"
+            >
+              <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-            className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
-            title="Refresh List"
-          >
-            <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
-          </button>
         </div>
+
+        {/* Main Table Content */}
+        <Table
+          columns={columns}
+          data={leads}
+          loadingState={loadingState}
+          errorMessage={error?.message || 'Something went wrong.'}
+          onRetry={refetch}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={() =>
+            clearFilters({
+              sourceId: '',
+              courseId: '',
+              statusId: '',
+              priority: '',
+              assignedToId: ''
+            })
+          }
+          emptyTitle="No leads registered"
+          emptyDescription="Manually add a lead or import them from Excel to get started."
+          className=""
+          rowClassName="group border-b border-slate-100 last:border-0"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
+        />
+
+        {/* Pagination Footer */}
+        {leads.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <Pagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={isLoading || isFetching}
+              entityName="leads"
+            />
+          </div>
+        )}
       </div>
-
-      {/* Main Table Content */}
-      <Table
-        columns={columns}
-        data={leads}
-        loadingState={loadingState}
-        errorMessage={error?.message || 'Something went wrong.'}
-        onRetry={refetch}
-        hasActiveFilters={hasActiveFilters}
-        onClearFilters={() =>
-          clearFilters({
-            sourceId: '',
-            courseId: '',
-            statusId: '',
-            priority: '',
-            assignedToId: ''
-          })
-        }
-        emptyTitle="No leads registered"
-        emptyDescription="Manually add a lead or import them from Excel to get started."
-        className="rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
-        rowClassName="group"
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSort={toggleSort}
-      />
-
-      {/* Pagination Footer */}
-      {leads.length > 0 && (
-        <div className="flex justify-end mt-4">
-          <Pagination
-            pagination={pagination}
-            onPageChange={setPage}
-            isLoading={isLoading || isFetching}
-            entityName="leads"
-          />
-        </div>
-      )}
 
       {/* Dialog Overlays */}
       <LeadCreateModal

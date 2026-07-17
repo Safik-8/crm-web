@@ -1,7 +1,8 @@
 // src/features/leadsources/pages/LeadSourcePage.jsx
 
 import React, { useState } from 'react';
-import { Plus, Pencil, Power, Compass } from 'lucide-react';
+import { Plus, Pencil, Power, Compass, MoreVertical, RefreshCcw } from 'lucide-react';
+import { Menu, MenuItem, IconButton } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import {
   useLeadSourcesQuery,
@@ -13,13 +14,85 @@ import SearchInput from '../../../shared/components/elements/SearchInput';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import LeadSourceFormSlideover from '../components/LeadSourceFormSlideover';
 
+const ActionMenu = ({ source, onEdit, onToggleStatus }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = (event) => {
+    if (event) event.stopPropagation();
+    setAnchorEl(null);
+  };
+
+  const isActive = source.isActive;
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <IconButton
+        onClick={handleClick}
+        size="small"
+        className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
+      >
+        <MoreVertical size={18} />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.08))',
+            mt: 0.5,
+            borderRadius: '12px',
+            minWidth: 160,
+            border: '1px solid #f1f5f9',
+            '& .MuiMenuItem-root': {
+              px: 2,
+              py: 1.5,
+              fontSize: '13px',
+              fontFamily: '"DM Sans", sans-serif',
+              fontWeight: 600,
+              color: '#475569',
+              gap: '10px',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: '#f8fafc',
+              }
+            }
+          }
+        }}
+      >
+        <MenuItem onClick={(e) => { handleClose(e); onEdit(source); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Pencil size={16} className="text-slate-400" />
+          Edit Source
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => { handleClose(e); onToggleStatus(source); }}
+          sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: isActive ? '#ef4444 !important' : '#10b981 !important' }}
+        >
+          <Power size={16} className={isActive ? 'text-red-400' : 'text-emerald-400'} />
+          {isActive ? 'Deactivate' : 'Activate'}
+        </MenuItem>
+      </Menu>
+    </div>
+  );
+};
+
 export const LeadSourcePage = () => {
   const { hasPermission } = useAuth();
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
-  
+
   // Overlay states
   const [isSlideoverOpen, setIsSlideoverOpen] = useState(false);
   const [slideoverMode, setSlideoverMode] = useState('create'); // 'create' | 'edit'
@@ -70,10 +143,10 @@ export const LeadSourcePage = () => {
   const loadingState = (isLoading || isFetching)
     ? 'loading'
     : isError
-    ? 'error'
-    : !sources || sources.length === 0
-    ? 'empty'
-    : 'success';
+      ? 'error'
+      : !sources || sources.length === 0
+        ? 'empty'
+        : 'success';
 
   // Columns definition
   const columns = [
@@ -93,11 +166,10 @@ export const LeadSourcePage = () => {
       accessorKey: 'type',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.type === 'GLOBAL'
-              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-              : 'bg-amber-50 text-amber-700 border border-amber-100'
-          }`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.type === 'GLOBAL'
+            ? 'bg-blue-50 text-blue-700 border border-blue-100'
+            : 'bg-amber-50 text-amber-700 border border-amber-100'
+            }`}
         >
           {row.type}
         </span>
@@ -108,11 +180,10 @@ export const LeadSourcePage = () => {
       accessorKey: 'isActive',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.isActive
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-              : 'bg-slate-100 text-slate-600 border border-slate-200'
-          }`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.isActive
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+            : 'bg-slate-100 text-slate-600 border border-slate-200'
+            }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
         </span>
@@ -126,25 +197,12 @@ export const LeadSourcePage = () => {
       header: 'Actions',
       align: 'right',
       cell: (row) => (
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEditClick(row)}
-            className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-all"
-            title="Edit Lead Source"
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            onClick={() => handleToggleClick(row)}
-            className={`p-1.5 rounded-lg transition-all ${
-              row.isActive
-                ? 'text-red-500 hover:bg-red-50'
-                : 'text-emerald-500 hover:bg-emerald-50'
-            }`}
-            title={row.isActive ? 'Deactivate Lead Source' : 'Activate Lead Source'}
-          >
-            <Power size={15} />
-          </button>
+        <div className="flex items-center justify-end">
+          <ActionMenu
+            source={row}
+            onEdit={handleEditClick}
+            onToggleStatus={handleToggleClick}
+          />
         </div>
       )
     });
@@ -158,19 +216,32 @@ export const LeadSourcePage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto flex flex-col gap-6">
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold font-heading text-slate-900 tracking-tight flex items-center gap-2">
-            <Compass className="text-primary" size={24} />
-            Lead Sources
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage global default and company-specific lead acquisition channels
-          </p>
+    <div className="p-1 md:p-1 max-w-7xl mx-auto flex flex-col gap-4">
+      {/* Header section in a white card */}
+      <div className="bg-white px-5 py-4 border border-slate-200/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
+            <Compass size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">
+                Lead Sources
+              </h1>
+              <button
+                onClick={refetch}
+                className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
+                title="Refresh Data"
+              >
+                <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} />
+              </button>
+            </div>
+            <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+              Manage global default and company-specific lead acquisition channels
+            </p>
+          </div>
         </div>
-        
+
         {hasPermission('LEAD_SOURCE', 'canCreate') && (
           <Button
             onClick={handleAddClick}
@@ -184,51 +255,59 @@ export const LeadSourcePage = () => {
         )}
       </div>
 
-      {/* Filter tab bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl w-fit">
-          {[
-            { id: 'all', label: 'All Sources' },
-            { id: 'active', label: 'Active' },
-            { id: 'inactive', label: 'Inactive' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                statusFilter === tab.id
+      {/* Main Content Area (Matches RoleManagementPage) */}
+      <div className="bg-white border border-slate-200/60 p-4">
+
+        {/* Top action bar */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 w-full bg-white border border-slate-200/60 p-3 mb-4">
+
+          {/* Tabs */}
+          <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl w-fit shrink-0">
+            {[
+              { id: 'all', label: 'All Sources' },
+              { id: 'active', label: 'Active' },
+              { id: 'inactive', label: 'Inactive' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.id
                   ? 'bg-white text-slate-800 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="flex w-full lg:w-auto shrink-0 justify-end">
+            <div className="w-full sm:w-72">
+              <SearchInput
+                placeholder="Search sources..."
+                value={searchTerm}
+                onChange={setSearchTerm}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="w-full md:w-72">
-          <SearchInput
-            placeholder="Search sources..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
-        </div>
+        {/* Table section */}
+        <Table
+          columns={columns}
+          data={sources || []}
+          loadingState={loadingState}
+          errorMessage={error?.message}
+          onRetry={refetch}
+          hasActiveFilters={activeFiltersCount > 0}
+          onClearFilters={handleClearFilters}
+          emptyTitle="No lead sources found"
+          emptyDescription="Get started by creating your first lead source channel, or clear filters."
+          className=""
+          rowClassName="border-b border-slate-100 last:border-0"
+        />
       </div>
-
-      {/* Table section */}
-      <Table
-        columns={columns}
-        data={sources || []}
-        loadingState={loadingState}
-        errorMessage={error?.message}
-        onRetry={refetch}
-        hasActiveFilters={activeFiltersCount > 0}
-        onClearFilters={handleClearFilters}
-        emptyTitle="No lead sources found"
-        emptyDescription="Get started by creating your first lead source channel, or clear filters."
-        className="rounded-2xl shadow-sm border border-slate-200/60"
-        rowClassName="border-b border-slate-100 last:border-0"
-      />
 
       {/* Overlays */}
       <LeadSourceFormSlideover
