@@ -169,7 +169,7 @@ export const apiClient = async (endpoint, options = {}) => {
       if (response.status === 403 && !silent) {
         try {
           const { enhancedToast } = await import('../../shared/utils/toast');
-          enhancedToast.permissionDenied();
+          enhancedToast.permissionDenied(data?.message);
         } catch (e) {
           console.error('[API] Failed to show permission denied toast:', e);
         }
