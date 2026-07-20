@@ -51,6 +51,7 @@ export const navItems = [
   { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
   { name: 'Transfer Approvals', path: '/approvals', icon: ClipboardCheck, permission: PERMISSIONS.APPROVE_TRANSFERS },
   { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
+  { name: 'Teams', path: '/teams', icon: Users, permission: PERMISSIONS.VIEW_TEAMS, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'] },
   { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
   { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
   { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
@@ -63,6 +64,10 @@ export const getFilteredNavItems = (user, hasPermission) => {
   let items = [...navItems];
 
   return items.filter(item => {
+    // Check Role constraint if specified
+    if (item.roles && !item.roles.includes(user.primaryRole)) {
+      return false;
+    }
     // Check Permission constraint
     return !item.permission || hasPermission(item.permission);
   });

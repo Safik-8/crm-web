@@ -6,6 +6,9 @@ import {
   createLead,
   updateLead,
   deleteLead,
+  deleteAllLeads,
+  importLeadsPreview,
+  importLeadsCommit,
   restoreLead,
   getLeadTimeline,
   getLeadNotes,
@@ -13,6 +16,7 @@ import {
   updateLeadNote,
   deleteLeadNote
 } from '../services/leadService';
+import { userProfileService } from '../../userprofile/services/userProfileService';
 import { toast } from '../../../shared/utils/toast';
 
 export const LEAD_KEYS = {
@@ -130,6 +134,23 @@ export const useDeleteLeadMutation = () => {
   });
 };
 
+export const useDeleteAllLeadsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllLeads,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.lists() });
+      toast.success('All leads deleted successfully');
+    },
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to delete all leads';
+        toast.error(msg);
+      }
+    },
+  });
+};
+
 /**
  * Hook to restore a soft-deleted lead.
  */
@@ -152,6 +173,21 @@ export const useRestoreLeadMutation = () => {
 };
 
 /**
+ * Hook to handle bulk import preview mutation.
+ */
+export const useImportPreviewMutation = () => {
+  return useMutation({
+    mutationFn: importLeadsPreview,
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to generate import preview';
+        toast.error(msg);
+      }
+    }
+  });
+};
+
+/**
  * Hook to retrieve a lead's chronological activity timeline.
  */
 export const useLeadTimelineQuery = (leadId) => {
@@ -159,6 +195,25 @@ export const useLeadTimelineQuery = (leadId) => {
     queryKey: [...LEAD_KEYS.detail(leadId), 'timeline'],
     queryFn: () => getLeadTimeline(leadId),
     enabled: !!leadId,
+  });
+};
+
+/**
+ * Hook to handle bulk import commit mutation.
+ */
+export const useImportCommitMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importLeadsCommit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.lists() });
+    },
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to commit bulk import';
+        toast.error(msg);
+      }
+    }
   });
 };
 
@@ -181,7 +236,24 @@ export const useCreateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, data }) => createLeadNote(leadId, data),
     onSuccess: (res, variables) => {
+      const newNote = res?.data?.note || res?.note;
+      if (newNote) {
+        queryClient.setQueryData(
+          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+          (oldData) => {
+            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+            const updatedNotes = [newNote, ...oldNotes];
+            if (oldData?.data?.notes) {
+              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+            } else if (oldData?.notes) {
+              return { ...oldData, notes: updatedNotes };
+            }
+            return updatedNotes;
+          }
+        );
+      }
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note added successfully');
     },
@@ -200,7 +272,24 @@ export const useUpdateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId, data }) => updateLeadNote(leadId, noteId, data),
     onSuccess: (res, variables) => {
+      const updatedNote = res?.data?.note || res?.note;
+      if (updatedNote) {
+        queryClient.setQueryData(
+          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+          (oldData) => {
+            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+            const updatedNotes = oldNotes.map((n) => n.id === variables.noteId ? updatedNote : n);
+            if (oldData?.data?.notes) {
+              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+            } else if (oldData?.notes) {
+              return { ...oldData, notes: updatedNotes };
+            }
+            return updatedNotes;
+          }
+        );
+      }
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note updated successfully');
     },
@@ -219,7 +308,21 @@ export const useDeleteLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId }) => deleteLeadNote(leadId, noteId),
     onSuccess: (res, variables) => {
+      queryClient.setQueryData(
+        [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+        (oldData) => {
+          const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
+          const updatedNotes = oldNotes.filter((n) => n.id !== variables.noteId);
+          if (oldData?.data?.notes) {
+            return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
+          } else if (oldData?.notes) {
+            return { ...oldData, notes: updatedNotes };
+          }
+          return updatedNotes;
+        }
+      );
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note deleted successfully');
     },
@@ -230,3 +333,29 @@ export const useDeleteLeadNoteMutation = () => {
   });
 };
 
+/**
+ * Hook to fetch user settings/preferences.
+ */
+export const useUserPreferencesQuery = () => {
+  return useQuery({
+    queryKey: ['user-preferences'],
+    queryFn: () => userProfileService.getUserPreferences()
+  });
+};
+
+/**
+ * Hook to update user sessionPreferences.
+ */
+export const useUpdateUserPreferencesMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionPreferences) => userProfileService.updateUserPreferences(sessionPreferences),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-preferences'] });
+    },
+    onError: (error) => {
+      const msg = error?.message || 'Failed to update preferences';
+      toast.error(msg);
+    }
+  });
+};

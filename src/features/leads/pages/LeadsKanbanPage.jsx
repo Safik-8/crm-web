@@ -74,7 +74,7 @@ const LeadsKanbanPage = () => {
   const handleToggleCollapse = useCallback(() => {
     setIsSidebarCollapsed((v) => {
       const next = !v;
-      try { localStorage.setItem('kanban-sidebar-collapsed', String(next)); } catch {}
+      try { localStorage.setItem('kanban-sidebar-collapsed', String(next)); } catch { }
       return next;
     });
   }, []);
@@ -385,11 +385,10 @@ const LeadsKanbanPage = () => {
             {/* Mobile/Tablet filter toggle — hidden on lg+ where sidebar is always visible */}
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className={`lg:hidden flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all duration-150 shrink-0 text-[11px] sm:text-[12px] font-semibold ${
-                hasActiveFilters
+              className={`lg:hidden flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all duration-150 shrink-0 text-[11px] sm:text-[12px] font-semibold ${hasActiveFilters
                   ? 'border-orange-200 bg-orange-50 text-orange-600'
                   : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300'
-              }`}
+                }`}
               aria-label="Open filters"
             >
               <SlidersHorizontal size={13} />
@@ -526,7 +525,7 @@ const LeadsKanbanPage = () => {
             <DragOverlay>
               {activeCard ? (
                 <div className="w-[76vw] xs:w-[72vw] sm:w-[272px] md:w-[288px] rotate-1 sm:rotate-2 shadow-2xl opacity-90">
-                  <LeadCard lead={activeCard} stageId={activeFrom} onClick={() => {}} />
+                  <LeadCard lead={activeCard} stageId={activeFrom} onClick={() => { }} />
                 </div>
               ) : null}
             </DragOverlay>

@@ -7,6 +7,7 @@ import DynamicFormSlideover from '../../../shared/components/elements/DynamicFor
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
+import Button from '../../../shared/components/elements/Button';
 import { useCreateTeamMutation, useUpdateTeamMutation } from '../hooks/useTeams';
 import { teamService } from '../services/teamService';
 import { userService } from '../../users/services/userService';
@@ -83,7 +84,7 @@ const TeamFormModal = ({
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
-    enabled: !!targetCompanyId && isOpen && currentUser?.primaryRole !== 'BRANCH_MANAGER'
+    enabled: !!targetCompanyId && isOpen
   });
   const branchOptions = (Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || [])).map(b => ({
     value: b.id,
@@ -219,26 +220,32 @@ const TeamFormModal = ({
 
   const customFooter = (
     <div className="flex items-center gap-3">
-      <button
+      <Button
         type="button"
         disabled={isLoading}
         onClick={onClose}
-        className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none disabled:opacity-50"
+        variant="outlined"
+        sx={{
+          borderColor: '#E2E8F0',
+          color: '#475569',
+          '&:hover': {
+            borderColor: '#CBD5E1',
+            backgroundColor: '#F8FAFC',
+          }
+        }}
       >
         Cancel
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
         onClick={handleFormSubmit}
         disabled={isLoading}
-        className="px-5 py-2.5 rounded-xl bg-primary hover:bg-[#E06202] text-xs font-bold text-white shadow-md shadow-orange-100 transition-colors focus:outline-none disabled:opacity-50"
+        variant="contained"
+        color="primary"
+        isLoading={isLoading}
       >
-        {isLoading
-          ? 'Saving...'
-          : isEditMode
-          ? 'Update Team'
-          : 'Create Team'}
-      </button>
+        {isEditMode ? 'Update Team' : 'Create Team'}
+      </Button>
     </div>
   );
 
@@ -252,9 +259,16 @@ const TeamFormModal = ({
       isLoading={isLoading}
       showFooter={true}
       customFooter={customFooter}
+      onSubmit={() => handleFormSubmit({ preventDefault: () => {} })}
     >
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <div className="space-y-6">
         
+        {!branchId && !isEditMode && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold leading-relaxed">
+            ⚠️ No branch context detected. Please close this drawer, select a branch from the filter dropdown on the main page, and then click "Add Team" again.
+          </div>
+        )}
+
         {/* Section 1: Basic Info */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
@@ -289,50 +303,7 @@ const TeamFormModal = ({
           />
         </div>
 
-        {/* Section 2: Branch Scope */}
-        {!isEditMode && (canSelectCompany || currentUser?.primaryRole !== 'BRANCH_MANAGER') && (
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
-              Location & Scope
-            </h3>
 
-            {/* Company Selection (Super Admin only) */}
-            {canSelectCompany && (
-              <SelectField
-                id="companyId"
-                label="Assign to Company"
-                value={companyId}
-                onChange={(val) => {
-                  setCompanyId(val);
-                  setBranchId('');
-                  setBdeId('');
-                  if (errors.companyId) setErrors(prev => ({ ...prev, companyId: null }));
-                }}
-                options={companyOptions}
-                errorText={errors.companyId}
-                required
-              />
-            )}
-
-            {/* Branch Selection (Super Admin & Company Admin only) */}
-            {currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-              <SelectField
-                id="branchId"
-                label="Assign to Branch"
-                value={branchId}
-                onChange={(val) => {
-                  setBranchId(val);
-                  setBdeId('');
-                  if (errors.branchId) setErrors(prev => ({ ...prev, branchId: null }));
-                }}
-                options={branchOptions}
-                errorText={errors.branchId}
-                searchable={true}
-                required
-              />
-            )}
-          </div>
-        )}
 
         {/* Section 3: BDE Assignee */}
         <div className="space-y-4">
@@ -417,7 +388,7 @@ const TeamFormModal = ({
           </div>
         )}
 
-      </form>
+      </div>
     </DynamicFormSlideover>
   );
 };

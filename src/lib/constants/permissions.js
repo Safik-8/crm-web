@@ -23,6 +23,7 @@ export const PERMISSIONS = {
   VIEW_NOTIFICATIONS: 'view:notifications',
   VIEW_COURSES: 'view:courses',
   VIEW_LEAD_SOURCES: 'view:lead_sources',
+  VIEW_TEAMS: 'view:teams',
   VIEW_LEAD_STATUSES: 'view:lead_statuses',
 
   // Pipeline & Stage Permissions (Phase 1)

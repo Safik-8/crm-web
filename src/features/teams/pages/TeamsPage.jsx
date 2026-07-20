@@ -15,7 +15,7 @@ import { useTeamsQuery, useToggleTeamStatusMutation, useDeleteTeamMutation } fro
 import TeamListTable from '../components/TeamListTable';
 import TeamFormModal from '../components/TeamFormModal';
 import TeamDetailModal from '../components/TeamDetailModal';
-import TeamPagination from '../components/TeamPagination';
+import Pagination from '../../../shared/components/elements/Pagination';
 
 const TeamsPage = () => {
   const { user: currentUser, hasPermission } = useAuth();
@@ -170,7 +170,10 @@ const TeamsPage = () => {
 
   // Handlers for Table Row Actions
   const handleOpenCreateForm = () => {
-    setSelectedTeamForEdit(null);
+    setSelectedTeamForEdit({
+      companyId: companyId || currentUser?.companyId || '',
+      branchId: branchId || (currentUser?.primaryRole === 'BRANCH_MANAGER' ? currentUser.branchId : '')
+    });
     setIsFormOpen(true);
   };
 
@@ -316,38 +319,46 @@ const TeamsPage = () => {
 
               {/* Company Filter (Super Admin only) */}
               {canFilterByCompany && (
-                <SelectField
-                  id="companyFilter"
-                  value={companyId}
-                  onChange={(val) => handleFilterChange('companyId', val)}
-                  options={[{ value: '', label: 'All Companies' }, ...companies.map(c => ({ value: c.id, label: c.name }))]}
-                  className="min-w-[150px] !py-1"
-                />
+                <div className="w-full sm:w-[165px]">
+                  <SelectField
+                    id="companyFilter"
+                    value={companyId}
+                    onChange={(val) => handleFilterChange('companyId', val)}
+                    options={companies.map(c => ({ value: c.id, label: c.name }))}
+                    placeholder="All Companies"
+                    allowEmptyOption={true}
+                  />
+                </div>
               )}
 
               {/* Branch Filter */}
               {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-                <SelectField
-                  id="branchFilter"
-                  value={branchId}
-                  onChange={(val) => handleFilterChange('branchId', val)}
-                  options={[{ value: '', label: 'All Branches' }, ...branches.map(b => ({ value: b.id, label: b.name }))]}
-                  className="min-w-[150px] !py-1"
-                />
+                <div className="w-full sm:w-[165px]">
+                  <SelectField
+                    id="branchFilter"
+                    value={branchId}
+                    onChange={(val) => handleFilterChange('branchId', val)}
+                    options={branches.map(b => ({ value: b.id, label: b.name }))}
+                    placeholder="All Branches"
+                    allowEmptyOption={true}
+                  />
+                </div>
               )}
 
               {/* Status Filter */}
-              <SelectField
-                id="statusFilter"
-                value={status}
-                onChange={(val) => handleFilterChange('status', val)}
-                options={[
-                  { value: '', label: 'All Statuses' },
-                  { value: 'ACTIVE', label: 'ACTIVE' },
-                  { value: 'INACTIVE', label: 'INACTIVE' }
-                ]}
-                className="min-w-[130px] !py-1"
-              />
+              <div className="w-full sm:w-[150px]">
+                <SelectField
+                  id="statusFilter"
+                  value={status}
+                  onChange={(val) => handleFilterChange('status', val)}
+                  options={[
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'INACTIVE', label: 'Inactive' }
+                  ]}
+                  placeholder="All Statuses"
+                  allowEmptyOption={true}
+                />
+              </div>
 
               {/* Clear Filters Button */}
               {hasActiveFilters && (
@@ -378,12 +389,12 @@ const TeamsPage = () => {
         />
 
         {/* Pagination */}
-        <TeamPagination
+        <Pagination
           pagination={pagination}
           onPageChange={setPage}
           isLoading={isLoading}
+          entityName="teams"
         />
-
       </div>
 
       {/* ── MODAL AND SLIDE-OVER PORTALS ── */}
