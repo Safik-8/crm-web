@@ -168,8 +168,8 @@ const CoursesPage = () => {
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pb-8">
         
-        {/* ── SEARCH AND FILTER BAR ── */}
-        <div className="relative z-20 p-4 bg-white border border-slate-200/60 shadow-sm rounded-2xl mb-4 space-y-4">
+        {/* ── SEARCH AND ACTIONS HEADER ── */}
+        <div className="relative z-20 p-4 bg-white border border-slate-200/60 mb-4">
           
           {/* Row 1: Search & Main Actions */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
@@ -188,7 +188,7 @@ const CoursesPage = () => {
                 className="flex items-center gap-1.5 h-9 px-3 text-xs"
                 title="Refresh course list"
               >
-                <RefreshCw size={14} />
+                <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
                 <span>Refresh</span>
               </Button>
 
@@ -201,25 +201,26 @@ const CoursesPage = () => {
               {canCreate && (
                 <Button
                   onClick={handleOpenCreateForm}
-                  className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                  className="flex items-center gap-1.5 h-9 px-3 text-xs shadow-sm hover:shadow-md transition-all"
+                  variant="contained"
                 >
-                  <Plus size={14} />
+                  <Plus size={16} />
                   <span>Add Course</span>
                 </Button>
               )}
             </div>
           </div>
 
-          {/* Divider Line */}
-          <div className="border-t border-slate-100/80" />
+        </div>
 
+        <div className="bg-white border border-slate-200/60 p-4">
           {/* Row 2: Select Filters group */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
             <div className="flex flex-wrap items-center gap-3 flex-1">
               
               {/* Visual Label */}
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100/60 rounded-lg border border-slate-200/40 text-slate-500 font-bold text-[11px] uppercase tracking-wider">
-                <Filter size={12} className="text-primary" />
+              <div className="flex items-center gap-1.5 h-[42px] px-5 bg-slate-100/60 rounded-[10px] border border-slate-200/40 text-slate-500 font-semibold text-[13px] uppercase tracking-wider">
+                <Filter size={16} className="text-primary" />
                 <span>Filters</span>
               </div>
 
@@ -270,14 +271,12 @@ const CoursesPage = () => {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="px-3 py-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/50 rounded-xl transition-all self-end lg:self-auto"
+                className="flex items-center justify-center h-[42px] px-5 text-[13px] font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-[10px] transition-all self-end lg:self-auto"
               >
                 Clear Filters
               </button>
             )}
           </div>
-
-        </div>
 
         {/* Data Table */}
         <CourseListTable
@@ -305,9 +304,10 @@ const CoursesPage = () => {
           isLoading={loadingState === 'loading'}
           entityName="courses"
         />
+        </div>
 
         {/* Modals & Slide-overs */}
-        
+
         {/* Form Modal (Create / Edit Slide-over) */}
         <CourseFormModal
           isOpen={isFormOpen}

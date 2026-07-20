@@ -38,10 +38,10 @@ const CompanySettingsPage = () => {
 
   const toggleStatusMutation = useToggleCompanyStatus();
 
-  const [isFormOpen, setIsFormOpen]           = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
 
-  const [isToggleOpen, setIsToggleOpen]       = useState(false);
+  const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [companyToToggle, setCompanyToToggle] = useState(null);
 
   const handleAddCompany = () => {
@@ -71,16 +71,16 @@ const CompanySettingsPage = () => {
 
   const handleConfirmToggle = async () => {
     if (!companyToToggle) return;
-    
+
     const isActivating = companyToToggle.status === 'INACTIVE';
     const toastId = toast.loading(`Toggling status for ${companyToToggle.name}...`);
-    
+
     try {
       await toggleStatusMutation.mutateAsync({
         id: companyToToggle.id,
         currentStatus: companyToToggle.status
       });
-      
+
       toast.success(`${companyToToggle.name} is now ${isActivating ? 'ACTIVE' : 'INACTIVE'}`, { id: toastId });
       setIsToggleOpen(false);
       setCompanyToToggle(null);
@@ -115,9 +115,9 @@ const CompanySettingsPage = () => {
       <div className="flex flex-col gap-3 sm:gap-4">
 
         {/* ── Mobile section header ──────────────────────────────────────── */}
-        <div className="flex items-center justify-between lg:hidden bg-white rounded-2xl px-3 sm:px-4 py-3 border border-slate-200/60 shadow-sm">
+        <div className="flex items-center justify-between lg:hidden bg-white px-3 sm:px-4 py-3 border border-slate-200/60">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0">
+            <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
               <Building2 size={16} />
             </div>
             <div className="min-w-0">
@@ -150,9 +150,9 @@ const CompanySettingsPage = () => {
         </div>
 
         {/* ── Desktop section header ─────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white rounded-2xl px-5 py-4 border border-slate-200/60 shadow-sm">
+        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60">
           <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0 shadow-sm">
+            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
               <Building2 size={20} />
             </div>
             <div>
@@ -187,40 +187,44 @@ const CompanySettingsPage = () => {
           )}
         </div>
 
-        {/* ── Filters bar ───────────────────────────────────────────────── */}
-        <CompanyFilters
-          search={search}
-          status={status}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSearchChange={handleSearchChange}
-          onStatusChange={handleStatusChange}
-          onSortChange={handleSortChange}
-          isLoading={isLoading}
-        />
+        {/* ── Content Container (Matches User Manager Layout) ───────────────── */}
+        <div className="bg-white border border-slate-200/60 p-4">
 
-        {/* ── Table ─────────────────────────────────────────────────────── */}
-        <div className="w-full relative z-10 bg-white sm:bg-slate-50/50 rounded-3xl sm:p-2 sm:border border-slate-200/50">
-          <CompanyTable
-            companies={companies}
-            loadingState={loadingState}
-            errorMessage={errorMessage}
-            onEdit={handleEditCompany}
-            onToggleStatus={handleToggleStatusClick}
-            canEdit={companyPerms.canEdit}
-            onRetry={refetch}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
-
-        {/* ── Pagination ────────────────────────────────────────────────── */}
-        <div className="flex justify-center mt-2 pb-6">
-          <CompanyPagination
-            pagination={pagination}
-            onPageChange={setPage}
+          {/* ── Filters bar ───────────────────────────────────────────────── */}
+          <CompanyFilters
+            search={search}
+            status={status}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSearchChange={handleSearchChange}
+            onStatusChange={handleStatusChange}
+            onSortChange={handleSortChange}
             isLoading={isLoading}
           />
+
+          {/* ── Table ─────────────────────────────────────────────────────── */}
+          <div className="w-full relative z-10 bg-white">
+            <CompanyTable
+              companies={companies}
+              loadingState={loadingState}
+              errorMessage={errorMessage}
+              onEdit={handleEditCompany}
+              onToggleStatus={handleToggleStatusClick}
+              canEdit={companyPerms.canEdit}
+              onRetry={refetch}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+
+          {/* ── Pagination ────────────────────────────────────────────────── */}
+          <div className="w-full mt-4">
+            <CompanyPagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {/* ── Add / Edit drawer ─────────────────────────────────────────── */}

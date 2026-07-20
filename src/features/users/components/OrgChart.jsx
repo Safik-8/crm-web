@@ -225,7 +225,7 @@ const OrgChart = ({ users, currentUser }) => {
   );
 
   return (
-    <div className="bg-[#f8f9fa] p-8 md:p-12 rounded-[2rem] border border-slate-200/60 shadow-sm overflow-x-auto overflow-y-hidden min-h-[600px] relative touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+    <div className="bg-white p-8 md:p-12 border border-slate-200/60 overflow-x-auto overflow-y-hidden min-h-[600px] relative touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
 
       {/* Background decoration */}
       <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-40 pointer-events-none"></div>

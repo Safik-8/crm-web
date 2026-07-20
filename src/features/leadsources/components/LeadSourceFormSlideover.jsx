@@ -67,6 +67,8 @@ export const LeadSourceFormSlideover = ({ isOpen, mode, source, onClose }) => {
 
   const handleSubmit = async (values) => {
     try {
+      const isActiveBool = values.isActive === 'true' || values.isActive === true;
+
       if (!isEdit) {
         await createMutation.mutateAsync({
           name: values.name,
@@ -78,7 +80,7 @@ export const LeadSourceFormSlideover = ({ isOpen, mode, source, onClose }) => {
           data: {
             name: values.name,
             description: values.description,
-            isActive: values.isActive
+            isActive: isActiveBool
           }
         });
       }

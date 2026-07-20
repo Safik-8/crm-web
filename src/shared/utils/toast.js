@@ -22,7 +22,7 @@ export const toast = {
     return sonnerToast.success(message, {
       ...defaultOptions,
       ...options,
-      className: 'toast-success',
+      className: 'toast-root toast-success',
       description: options.description,
       action: options.action,
     });
@@ -38,7 +38,7 @@ export const toast = {
       ...defaultOptions,
       duration: 7000, // Longer duration for errors
       ...options,
-      className: 'toast-error',
+      className: 'toast-root toast-error',
       description: options.description,
       action: options.action,
     });
@@ -54,7 +54,7 @@ export const toast = {
       ...defaultOptions,
       duration: 6000,
       ...options,
-      className: 'toast-warning',
+      className: 'toast-root toast-warning',
       description: options.description,
       action: options.action,
     });
@@ -69,7 +69,7 @@ export const toast = {
     return sonnerToast.info(message, {
       ...defaultOptions,
       ...options,
-      className: 'toast-info',
+      className: 'toast-root toast-info',
       description: options.description,
       action: options.action,
     });
@@ -85,7 +85,7 @@ export const toast = {
       ...defaultOptions,
       duration: Infinity, // Loading toasts don't auto-dismiss
       ...options,
-      className: 'toast-loading',
+      className: 'toast-root toast-loading',
       description: options.description,
     });
   },
@@ -99,7 +99,7 @@ export const toast = {
     return sonnerToast(message, {
       ...defaultOptions,
       ...options,
-      className: 'toast-custom',
+      className: 'toast-root toast-custom',
     });
   },
 

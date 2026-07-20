@@ -48,7 +48,7 @@ export const Pagination = ({
   const pageRange = buildPageRange(page, totalPages);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-3 sm:px-5 py-3 mt-4">
+    <div className="bg-white border border-slate-200/60 px-3 sm:px-5 py-3 mt-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Summary text */}
         <p className="text-[13px] font-medium text-slate-500 shrink-0 order-2 sm:order-1">
