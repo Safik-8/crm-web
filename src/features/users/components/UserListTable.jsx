@@ -147,8 +147,19 @@ const UserListTable = ({
       className: 'min-w-[240px]',
       cell: (row) => (
         <div className="flex items-center gap-3 text-left">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
-            {row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'}
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0 overflow-hidden">
+            {row.profilePhoto ? (
+              <img
+                src={row.profilePhoto}
+                alt={row.name || 'User'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'
+            )}
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-800 text-[13px] leading-tight truncate">

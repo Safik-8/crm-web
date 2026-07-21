@@ -232,7 +232,11 @@ export const DynamicFormSlideover = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              gap: 2.5
+              gap: 2.5,
+              flexShrink: 0,
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 10
             }}
           >
             {customFooter ? (

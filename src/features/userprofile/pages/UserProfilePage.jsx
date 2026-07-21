@@ -18,14 +18,33 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
 
+import { useAuth } from '../../../app/providers/AuthProvider';
+
 const UserProfilePage = () => {
+  const { refetchUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences'
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [sessionToRevoke, setSessionToRevoke] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+
+  // Close lightbox modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsPreviewModalOpen(false);
+      }
+    };
+    if (isPreviewModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPreviewModalOpen]);
 
   // Local state for edit form fields
   const [editFields, setEditFields] = useState({
@@ -73,10 +92,10 @@ const UserProfilePage = () => {
       toast.success('Profile updated successfully!');
       setIsEditOpen(false);
       refetch();
+      if (typeof refetchUser === 'function') {
+        refetchUser();
+      }
       setEditErrors({});
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
     },
     onError: (err) => {
       const backendMsg = err?.response?.data?.message || err?.message || 'Failed to update profile';
@@ -406,13 +425,22 @@ const UserProfilePage = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-200/80 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
           {/* Avatar */}
-          <div className="shrink-0">
+          <div
+            className={`shrink-0 relative group ${profile?.profilePhoto ? 'cursor-pointer' : ''}`}
+            onClick={() => profile?.profilePhoto && setIsPreviewModalOpen(true)}
+            title={profile?.profilePhoto ? 'Click to view photo in full size' : ''}
+          >
             {profile?.profilePhoto ? (
-              <img
-                src={profile.profilePhoto}
-                alt={fullName}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full ring-4 ring-orange-500/10 shadow-sm"
-              />
+              <div className="relative overflow-hidden rounded-full ring-4 ring-orange-500/10 shadow-sm">
+                <img
+                  src={profile.profilePhoto}
+                  alt={fullName}
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white backdrop-blur-[1px]">
+                  <Eye size={22} className="drop-shadow-md" />
+                </div>
+              </div>
             ) : (
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center rounded-full ring-4 ring-orange-500/10 text-orange-600 font-extrabold text-2xl shadow-inner">
                 {profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
@@ -973,8 +1001,51 @@ const UserProfilePage = () => {
         }}
         title="Edit Profile Information"
         subtitle="Update your basic and location details"
-        showFooter={false}
-        onSubmit={() => handleEditSubmit({ preventDefault: () => {} })}
+        icon={Edit3}
+        showFooter={true}
+        customFooter={
+          <div className="flex items-center justify-end gap-3">
+            <Button 
+              type="button"
+              variant="outlined" 
+              onClick={() => {
+                setIsEditOpen(false);
+                setEditErrors({});
+              }}
+              disabled={isSavingProfile}
+              sx={{
+                borderColor: '#E2E8F0',
+                color: '#475569',
+                '&:hover': {
+                  borderColor: '#CBD5E1',
+                  backgroundColor: '#F8FAFC',
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              variant="contained" 
+              color="primary"
+              isLoading={isSavingProfile}
+              startIcon={<Check size={16} />}
+              onClick={handleEditSubmit}
+              sx={{
+                bgcolor: '#F86F03',
+                color: '#FFFFFF',
+                px: 5,
+                fontWeight: 600,
+                '&:hover': {
+                  bgcolor: '#E05D02'
+                }
+              }}
+            >
+              {isSavingProfile ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        }
+        onSubmit={handleEditSubmit}
       >
         <div className="space-y-6">
           {/* Global error alert */}
@@ -1104,38 +1175,6 @@ const UserProfilePage = () => {
               />
             </div>
           </div>
-
-          {/* Drawer Footer Actions */}
-          <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3 shrink-0">
-            <Button 
-              type="button"
-              variant="outlined" 
-              onClick={() => {
-                setIsEditOpen(false);
-                setEditErrors({});
-              }}
-              sx={{
-                borderColor: '#E2E8F0',
-                color: '#475569',
-                '&:hover': {
-                  borderColor: '#CBD5E1',
-                  backgroundColor: '#F8FAFC',
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button"
-              variant="contained" 
-              color="primary"
-              isLoading={isSavingProfile}
-              startIcon={<Check size={16} />}
-              onClick={() => handleEditSubmit({ preventDefault: () => {} })}
-            >
-              {isSavingProfile ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
         </div>
       </DynamicFormSlideover>
 
@@ -1174,6 +1213,51 @@ const UserProfilePage = () => {
           }
         }}
       />
+
+      {/* ── FULLSCREEN PROFILE PHOTO LIGHTBOX MODAL ── */}
+      {isPreviewModalOpen && profile?.profilePhoto && (
+        <div
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md animate-in fade-in duration-200 select-none"
+          onClick={() => setIsPreviewModalOpen(false)}
+        >
+          {/* Top Floating Header Bar */}
+          <div
+            className="absolute top-4 sm:top-6 left-4 sm:left-8 right-4 sm:right-8 flex items-center justify-between z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 font-extrabold text-base">
+                {profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <p className="text-white text-base font-extrabold leading-tight tracking-tight">{fullName}</p>
+                <p className="text-xs text-zinc-400 font-medium">Profile Photo</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsPreviewModalOpen(false)}
+              className="p-2.5 text-zinc-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all duration-150 backdrop-blur-sm cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Main Centered Image Frame (Sleek, Frameless, High Quality) */}
+          <div
+            className="relative max-w-md sm:max-w-lg w-full aspect-square rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/15 animate-in zoom-in-95 duration-200 bg-zinc-950 flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={profile.profilePhoto}
+              alt={fullName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
