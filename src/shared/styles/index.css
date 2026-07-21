@@ -68,6 +68,14 @@
     scrollbar-width: thin;
     scrollbar-color: #CBD5E1 transparent;
   }
+
+  button, [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled, [role="button"]:disabled, button[disabled], [role="button"][disabled] {
+    cursor: not-allowed;
+  }
 }
 
 /* Hide scrollbar */

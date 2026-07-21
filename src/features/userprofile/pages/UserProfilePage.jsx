@@ -14,15 +14,37 @@ import Alert from '../../../shared/components/elements/Alert';
 import TextField from '../../../shared/components/elements/TextField';
 import Button from '../../../shared/components/elements/Button';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
 
+import { useAuth } from '../../../app/providers/AuthProvider';
+
 const UserProfilePage = () => {
+  const { refetchUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences'
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [sessionToRevoke, setSessionToRevoke] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+
+  // Close lightbox modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsPreviewModalOpen(false);
+      }
+    };
+    if (isPreviewModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPreviewModalOpen]);
 
   // Local state for edit form fields
   const [editFields, setEditFields] = useState({
@@ -70,10 +92,10 @@ const UserProfilePage = () => {
       toast.success('Profile updated successfully!');
       setIsEditOpen(false);
       refetch();
+      if (typeof refetchUser === 'function') {
+        refetchUser();
+      }
       setEditErrors({});
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
     },
     onError: (err) => {
       const backendMsg = err?.response?.data?.message || err?.message || 'Failed to update profile';
@@ -149,6 +171,7 @@ const UserProfilePage = () => {
   const revokeSessionMutation = useMutation({
     mutationFn: (id) => userProfileService.revokeSession(id),
     onSuccess: (res, variables) => {
+      setSessionToRevoke(null);
       toast.success('Session revoked successfully!');
       refetchSessions();
       // If we revoked the current session, the backend cleared cookies, so we should reload/redirect
@@ -158,6 +181,7 @@ const UserProfilePage = () => {
       }
     },
     onError: (err) => {
+      setSessionToRevoke(null);
       toast.error(err?.response?.data?.message || err?.message || 'Failed to revoke session');
     }
   });
@@ -166,12 +190,14 @@ const UserProfilePage = () => {
   const deactivateAccountMutation = useMutation({
     mutationFn: () => userProfileService.deactivateAccount(),
     onSuccess: () => {
+      setIsDeactivateModalOpen(false);
       toast.success('Account deactivated and logged out successfully!');
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     },
     onError: (err) => {
+      setIsDeactivateModalOpen(false);
       toast.error(err?.response?.data?.message || err?.message || 'Failed to deactivate account');
     }
   });
@@ -270,9 +296,9 @@ const UserProfilePage = () => {
     // Front-end Validation
     const errors = {};
     if (editFields.mobileNumber && editFields.mobileNumber.trim() !== '') {
-      const mobileRegex = /^[+0-9\s-]{8,20}$/;
-      if (!mobileRegex.test(editFields.mobileNumber)) {
-        errors.mobileNumber = 'Invalid mobile number format (e.g. +12345678)';
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(editFields.mobileNumber.trim())) {
+        errors.mobileNumber = 'Mobile number must be exactly 10 digits';
       }
     }
 
@@ -399,13 +425,22 @@ const UserProfilePage = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-200/80 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
           {/* Avatar */}
-          <div className="shrink-0">
+          <div
+            className={`shrink-0 relative group ${profile?.profilePhoto ? 'cursor-pointer' : ''}`}
+            onClick={() => profile?.profilePhoto && setIsPreviewModalOpen(true)}
+            title={profile?.profilePhoto ? 'Click to view photo in full size' : ''}
+          >
             {profile?.profilePhoto ? (
-              <img
-                src={profile.profilePhoto}
-                alt={fullName}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full ring-4 ring-orange-500/10 shadow-sm"
-              />
+              <div className="relative overflow-hidden rounded-full ring-4 ring-orange-500/10 shadow-sm">
+                <img
+                  src={profile.profilePhoto}
+                  alt={fullName}
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white backdrop-blur-[1px]">
+                  <Eye size={22} className="drop-shadow-md" />
+                </div>
+              </div>
             ) : (
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center rounded-full ring-4 ring-orange-500/10 text-orange-600 font-extrabold text-2xl shadow-inner">
                 {profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
@@ -623,10 +658,10 @@ const UserProfilePage = () => {
         /* ── TAB: ACCOUNT SETTINGS ── */
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
           
-          <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
             
             {/* Left side: Navigation / Overview */}
-            <div className="w-full md:w-64 shrink-0 space-y-4">
+            <div className="w-full md:w-64 shrink-0 space-y-4 sticky top-6">
               <div className="bg-zinc-50 border border-zinc-200/60 rounded-2xl p-5 space-y-4">
                 <div>
                   <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Account Settings</h4>
@@ -847,11 +882,7 @@ const UserProfilePage = () => {
                         color="error"
                         className="shrink-0 bg-red-600 hover:bg-red-700 text-white font-bold"
                         isLoading={deactivateAccountMutation.isPending}
-                        onClick={() => {
-                          if (window.confirm("Are you absolutely sure you want to deactivate your account? This action terminates all active sessions immediately.")) {
-                            deactivateAccountMutation.mutate();
-                          }
-                        }}
+                        onClick={() => setIsDeactivateModalOpen(true)}
                       >
                         Deactivate Account
                       </Button>
@@ -928,9 +959,7 @@ const UserProfilePage = () => {
 
                               <button
                                 disabled={revokeSessionMutation.isPending}
-                                onClick={() => {
-                                  revokeSessionMutation.mutate(session.id);
-                                }}
+                                onClick={() => setSessionToRevoke(session)}
                                 className={`p-2 rounded-lg border transition-colors shrink-0 ml-4 ${
                                   session.isCurrent
                                     ? 'border-red-200 text-red-600 hover:bg-red-50 bg-white'
@@ -972,8 +1001,51 @@ const UserProfilePage = () => {
         }}
         title="Edit Profile Information"
         subtitle="Update your basic and location details"
-        showFooter={false}
-        onSubmit={() => handleEditSubmit({ preventDefault: () => {} })}
+        icon={Edit3}
+        showFooter={true}
+        customFooter={
+          <div className="flex items-center justify-end gap-3">
+            <Button 
+              type="button"
+              variant="outlined" 
+              onClick={() => {
+                setIsEditOpen(false);
+                setEditErrors({});
+              }}
+              disabled={isSavingProfile}
+              sx={{
+                borderColor: '#E2E8F0',
+                color: '#475569',
+                '&:hover': {
+                  borderColor: '#CBD5E1',
+                  backgroundColor: '#F8FAFC',
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              variant="contained" 
+              color="primary"
+              isLoading={isSavingProfile}
+              startIcon={<Check size={16} />}
+              onClick={handleEditSubmit}
+              sx={{
+                bgcolor: '#F86F03',
+                color: '#FFFFFF',
+                px: 5,
+                fontWeight: 600,
+                '&:hover': {
+                  bgcolor: '#E05D02'
+                }
+              }}
+            >
+              {isSavingProfile ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        }
+        onSubmit={handleEditSubmit}
       >
         <div className="space-y-6">
           {/* Global error alert */}
@@ -1103,40 +1175,89 @@ const UserProfilePage = () => {
               />
             </div>
           </div>
-
-          {/* Drawer Footer Actions */}
-          <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3 shrink-0">
-            <Button 
-              type="button"
-              variant="outlined" 
-              onClick={() => {
-                setIsEditOpen(false);
-                setEditErrors({});
-              }}
-              sx={{
-                borderColor: '#E2E8F0',
-                color: '#475569',
-                '&:hover': {
-                  borderColor: '#CBD5E1',
-                  backgroundColor: '#F8FAFC',
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button"
-              variant="contained" 
-              color="primary"
-              isLoading={isSavingProfile}
-              startIcon={<Check size={16} />}
-              onClick={() => handleEditSubmit({ preventDefault: () => {} })}
-            >
-              {isSavingProfile ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
         </div>
       </DynamicFormSlideover>
+
+      {/* Account Deactivation Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={isDeactivateModalOpen}
+        onClose={() => setIsDeactivateModalOpen(false)}
+        title="Deactivate Enterprise Account?"
+        message="Are you absolutely sure you want to deactivate your account? This action will block your login access and terminate all active sessions across all devices immediately."
+        warningMessage="Warning: Contact your Administrator to reactivate your system access once deactivated."
+        confirmText="Deactivate Account"
+        cancelText="Cancel"
+        type="error"
+        isLoading={deactivateAccountMutation.isPending}
+        onConfirm={() => deactivateAccountMutation.mutate()}
+      />
+
+      {/* Session Revocation Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={!!sessionToRevoke}
+        onClose={() => setSessionToRevoke(null)}
+        title={sessionToRevoke?.isCurrent ? "Terminate Current Session?" : "Terminate Device Session?"}
+        message={
+          sessionToRevoke?.isCurrent
+            ? "Are you sure you want to terminate your current active session? You will be signed out of this browser immediately."
+            : `Are you sure you want to log out the session on "${sessionToRevoke?.deviceName || 'this device'}" (${sessionToRevoke?.os || 'Unknown OS'} - ${sessionToRevoke?.browser || 'Unknown Browser'})?`
+        }
+        warningMessage={sessionToRevoke?.isCurrent ? "You will need to re-enter your credentials to sign back in." : undefined}
+        confirmText={sessionToRevoke?.isCurrent ? "Sign Out Device" : "Terminate Session"}
+        cancelText="Cancel"
+        type="error"
+        isLoading={revokeSessionMutation.isPending}
+        onConfirm={() => {
+          if (sessionToRevoke) {
+            revokeSessionMutation.mutate(sessionToRevoke.id);
+          }
+        }}
+      />
+
+      {/* ── FULLSCREEN PROFILE PHOTO LIGHTBOX MODAL ── */}
+      {isPreviewModalOpen && profile?.profilePhoto && (
+        <div
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md animate-in fade-in duration-200 select-none"
+          onClick={() => setIsPreviewModalOpen(false)}
+        >
+          {/* Top Floating Header Bar */}
+          <div
+            className="absolute top-4 sm:top-6 left-4 sm:left-8 right-4 sm:right-8 flex items-center justify-between z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 font-extrabold text-base">
+                {profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <p className="text-white text-base font-extrabold leading-tight tracking-tight">{fullName}</p>
+                <p className="text-xs text-zinc-400 font-medium">Profile Photo</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsPreviewModalOpen(false)}
+              className="p-2.5 text-zinc-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all duration-150 backdrop-blur-sm cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Main Centered Image Frame (Sleek, Frameless, High Quality) */}
+          <div
+            className="relative max-w-md sm:max-w-lg w-full aspect-square rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/15 animate-in zoom-in-95 duration-200 bg-zinc-950 flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={profile.profilePhoto}
+              alt={fullName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

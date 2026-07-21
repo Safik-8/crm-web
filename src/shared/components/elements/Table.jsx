@@ -28,6 +28,12 @@ const Table = ({
   const isError = loadingState === 'error';
   const isEmpty = loadingState === 'empty' || (!isLoading && !isError && data.length === 0);
 
+  const isActionColumn = (col) => {
+    if (col.isActionColumn !== undefined) return col.isActionColumn;
+    const headerText = typeof col.header === 'string' ? col.header.toLowerCase().trim() : '';
+    return headerText === 'actions' || headerText === 'action';
+  };
+
   // ── Desktop Skeletons ──────────────────────────────────────────────────────
   const DesktopSkeletons = () => (
     <>
@@ -41,10 +47,15 @@ const Table = ({
                 ? 'text-right'
                 : 'text-left';
 
+            const isAction = isActionColumn(col);
+            const stickyClass = isAction
+              ? 'sticky right-0 z-10 bg-white border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+              : '';
+
             return (
               <td
                 key={colIndex}
-                className={`py-4 px-6 ${alignmentClass} ${col.className || ''}`}
+                className={`py-4 px-6 ${alignmentClass} ${stickyClass} ${col.className || ''}`}
               >
                 {col.skeleton ? (
                   col.skeleton(rowIndex)
@@ -130,8 +141,8 @@ const Table = ({
   };
 
   return (
-    <div className={`bg-white  border border-slate-200/60 overflow-hidden ${className}`}>
-      <div className="overflow-x-auto scrollbar-hide">
+    <div className={`bg-white border border-slate-200/60 overflow-hidden ${className}`}>
+      <div className="overflow-x-auto scrollbar-hide relative">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/70 border-b border-slate-200/60">
@@ -143,10 +154,15 @@ const Table = ({
                     ? 'text-right'
                     : 'text-left';
 
+                const isAction = isActionColumn(col);
+                const stickyClass = isAction
+                  ? 'sticky right-0 z-20 bg-[#F8FAFC] border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+                  : '';
+
                 return (
                   <th
                     key={index}
-                    className={`py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap ${alignmentClass} ${col.headerClassName || ''}`}
+                    className={`py-3.5 px-6 text-[12px] font-bold text-slate-500 font-heading uppercase tracking-wider whitespace-nowrap ${alignmentClass} ${stickyClass} ${col.headerClassName || ''}`}
                   >
                     {col.sortable && onSort ? (
                       <SortableHeader
@@ -182,12 +198,17 @@ const Table = ({
                       ? 'text-right'
                       : 'text-left';
 
+                  const isAction = isActionColumn(col);
+                  const stickyClass = isAction
+                    ? 'sticky right-0 z-10 bg-white group-hover:bg-[#F8FAFC] transition-colors border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+                    : '';
+
                   const cellValue = col.accessorKey ? row[col.accessorKey] : undefined;
 
                   return (
                     <td
                       key={colIndex}
-                      className={`py-4 px-6 ${alignmentClass} ${col.className || ''}`}
+                      className={`py-4 px-6 ${alignmentClass} ${stickyClass} ${col.className || ''}`}
                     >
                       {col.cell ? col.cell(row, rowIndex) : cellValue ?? ''}
                     </td>

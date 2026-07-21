@@ -109,22 +109,19 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
 
     const handleConfirmToggle = async () => {
         if (!branchToToggle) return;
-        setIsToggleOpen(false);
-        const loadingToastId = toast.loading('Updating branch operational status...');
-
         try {
             await toggleStatusMutation.mutateAsync({
                 id: branchToToggle.id,
                 currentStatus: branchToToggle.status
             });
-            toast.dismiss(loadingToastId);
             toast.success(
                 `Branch "${branchToToggle.name}" has been successfully ${
                     branchToToggle.status === 'ACTIVE' ? 'deactivated' : 'activated'
                 }.`
             );
+            setIsToggleOpen(false);
+            setBranchToToggle(null);
         } catch (error) {
-            toast.dismiss(loadingToastId);
             toast.error(error?.message || 'Failed to update branch status.');
         }
     };

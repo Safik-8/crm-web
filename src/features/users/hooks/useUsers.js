@@ -96,3 +96,21 @@ export const useResetPasswordMutation = () => {
     }
   });
 };
+
+export const useDeleteUserMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, replacementUserId }) => userService.deleteUser(id, replacementUserId),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.all });
+      const msg = res?.message || 'User hard deleted successfully';
+      toast.success(msg);
+    },
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        const msg = error?.message || 'Failed to delete user';
+        toast.error(msg);
+      }
+    }
+  });
+};

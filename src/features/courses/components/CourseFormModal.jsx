@@ -40,7 +40,7 @@ const CourseFormModal = ({
     isEditMode,
     handleChange,
     handleSubmit
-  } = useCourseForm(handleFormSuccess, initialValues);
+  } = useCourseForm(handleFormSuccess, initialValues, isOpen);
 
   // Automatically lock companyId for non-Super Admins (Company Admin / Branch Manager)
   useEffect(() => {

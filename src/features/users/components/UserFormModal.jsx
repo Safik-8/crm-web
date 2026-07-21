@@ -1,8 +1,6 @@
-// src/features/users/components/UserFormModal.jsx
-
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users2 } from 'lucide-react';
+import { Users2, Camera, Trash2, User } from 'lucide-react';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
@@ -33,7 +31,7 @@ const UserFormModal = ({
     isEditMode,
     handleChange,
     handleSubmit
-  } = useUserForm(handleFormSuccess, initialValues);
+  } = useUserForm(handleFormSuccess, initialValues, isOpen);
 
   // Automatically bind companyId for Company Admin / Branch Manager (non-SuperAdmins)
   useEffect(() => {
@@ -197,6 +195,81 @@ const UserFormModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6 pb-6">
         
+        {/* Profile Picture Upload Section */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
+          <div className="relative group shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-orange-100 border-2 border-orange-200/80 text-orange-600 flex items-center justify-center font-bold text-xl overflow-hidden shadow-sm">
+              {values.profilePhoto ? (
+                <img
+                  src={values.profilePhoto}
+                  alt="Avatar Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <span className="uppercase text-lg font-black">
+                  {values.firstName?.charAt(0) || values.lastName?.charAt(0) || <User size={24} />}
+                </span>
+              )}
+            </div>
+            <label
+              htmlFor="user-avatar-upload"
+              className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-md cursor-pointer transition-transform hover:scale-105"
+              title="Upload Photo"
+            >
+              <Camera size={13} />
+              <input
+                id="user-avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 3 * 1024 * 1024) {
+                      toast.error('Image size must be under 3MB');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      handleChange('profilePhoto', reader.result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-1.5 text-center sm:text-left w-full">
+            <p className="text-xs font-bold text-slate-700">Profile Avatar</p>
+            <p className="text-[11px] text-slate-400 font-medium">Upload a photo (PNG, JPG under 3MB) or enter an image URL below.</p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1 min-w-0">
+                <TextField
+                  id="profilePhoto"
+                  placeholder="https://example.com/avatar.jpg"
+                  value={values.profilePhoto || ''}
+                  onChange={(val) => handleChange('profilePhoto', val)}
+                  errorText={errors.profilePhoto}
+                />
+              </div>
+              {values.profilePhoto && (
+                <button
+                  type="button"
+                  onClick={() => handleChange('profilePhoto', '')}
+                  className="p-2.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors shrink-0 border border-rose-100"
+                  title="Remove Photo"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Section 1: Personal Info */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
@@ -244,7 +317,7 @@ const UserFormModal = ({
             <TextField
               id="mobileNumber"
               label="Mobile Number"
-              placeholder="e.g. +91 9876543210"
+              placeholder="10-digit mobile number"
               value={values.mobileNumber}
               onChange={(val) => handleChange('mobileNumber', val)}
               errorText={errors.mobileNumber}

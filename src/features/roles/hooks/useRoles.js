@@ -35,6 +35,7 @@ export const useRoles = (companyId = '') => {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch
@@ -53,7 +54,7 @@ export const useRoles = (companyId = '') => {
   };
 
   let loadingState = 'success';
-  if (isLoading) {
+  if (isLoading || isFetching) {
     loadingState = 'loading';
   } else if (isError) {
     loadingState = 'error';

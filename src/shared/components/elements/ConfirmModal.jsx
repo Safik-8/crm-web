@@ -23,11 +23,14 @@ const ConfirmModal = ({
   onConfirm,
   confirmText = 'Yes, Confirm',
   cancelText = 'Cancel',
+  loadingText,
   type = 'info', // 'info' | 'error' | 'success'
-  isLoading = false
+  isLoading = false,
+  children
 }) => {
   const isDanger = type === 'error';
   const isSuccess = type === 'success';
+  const displayLoadingText = loadingText || (confirmText !== 'Yes, Confirm' ? confirmText : 'Processing...');
 
   return (
     <Dialog
@@ -38,7 +41,7 @@ const ConfirmModal = ({
       PaperProps={{
         sx: {
           borderRadius: '24px',
-          maxWidth: '440px',
+          maxWidth: '480px',
           width: '100%',
           overflow: 'hidden',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
@@ -75,6 +78,8 @@ const ConfirmModal = ({
               <span>{warningMessage}</span>
             </div>
           )}
+
+          {children}
         </div>
 
         {/* Footer Action Buttons */}
@@ -98,9 +103,9 @@ const ConfirmModal = ({
                 : isSuccess
                 ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100 hover:shadow-md'
                 : 'bg-primary hover:bg-[#E06202] shadow-orange-100 hover:shadow-md'
-            }`}
+            } ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
           >
-            {isLoading ? 'Processing...' : confirmText}
+            {isLoading ? displayLoadingText : confirmText}
           </button>
         </div>
       </div>
