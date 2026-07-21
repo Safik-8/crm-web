@@ -61,6 +61,7 @@ const ForcedChangePasswordModal = () => {
           description: 'Your new password is now active and verified.'
         });
         await refetchUser(); // Updates mustChangePassword to false, closing modal
+        window.location.replace('/');
       }
     } catch (err) {
       console.error('[ChangePassword] Failed:', err);

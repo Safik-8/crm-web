@@ -154,8 +154,14 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
     {
       header: 'User Count',
       cell: (branch) => (
-        <div className="flex items-center gap-2 text-slate-600">
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/users`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } });
+          }}
+          className="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-primary transition-colors group"
+        >
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors">
             <Users size={14} />
           </div>
           <span className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</span>
@@ -287,7 +293,10 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
               </div>
 
               <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-                <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">
+                <div 
+                  onClick={() => navigate(`/users`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } })}
+                  className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
+                >
                   <div className="font-black text-sm text-slate-800 leading-none mb-1">
                     {branch._count?.users ?? 0}
                   </div>

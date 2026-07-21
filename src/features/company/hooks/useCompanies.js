@@ -1,7 +1,7 @@
 // src/features/company/hooks/useCompanies.js
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useIsMutating } from '@tanstack/react-query';
 import { companyService } from '../services/companyService';
 
 const DEFAULT_LIMIT = 10;
@@ -78,9 +78,11 @@ export const useCompanies = () => {
     hasPrev: false
   };
 
+  const isMutatingCompanies = useIsMutating({ mutationKey: ['companies'] }) > 0;
+
   // Derive loadingState string expected by existing UI components
   let loadingState = 'success';
-  if (isLoading || isFetching) {
+  if (isLoading || isFetching || isMutatingCompanies) {
     loadingState = 'loading';
   } else if (isError) {
     loadingState = 'error';

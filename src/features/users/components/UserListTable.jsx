@@ -7,6 +7,7 @@ import { Edit2, Key, Power, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 const RowActionsMenu = ({
   row,
@@ -125,6 +126,8 @@ const UserListTable = ({
   sortOrder,
   onSort
 }) => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
 
   const columns = [
     {
@@ -197,6 +200,18 @@ const UserListTable = ({
         </div>
       )
     },
+    ...(isSuperAdmin ? [{
+      header: 'Company',
+      accessorKey: 'company',
+      align: 'left',
+      className: 'text-[13px] font-semibold text-slate-600',
+      cell: (row) => (
+        <span className="font-bold text-slate-700 text-[13px]">
+          {row.company?.name || 'Global / All'}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-4 w-28 rounded-md" />
+    }] : []),
     {
       header: 'Branch',
       accessorKey: 'branch',

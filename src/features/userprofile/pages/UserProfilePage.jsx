@@ -14,12 +14,15 @@ import Alert from '../../../shared/components/elements/Alert';
 import TextField from '../../../shared/components/elements/TextField';
 import Button from '../../../shared/components/elements/Button';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
 
 const UserProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences'
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [sessionToRevoke, setSessionToRevoke] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
@@ -149,6 +152,7 @@ const UserProfilePage = () => {
   const revokeSessionMutation = useMutation({
     mutationFn: (id) => userProfileService.revokeSession(id),
     onSuccess: (res, variables) => {
+      setSessionToRevoke(null);
       toast.success('Session revoked successfully!');
       refetchSessions();
       // If we revoked the current session, the backend cleared cookies, so we should reload/redirect
@@ -158,6 +162,7 @@ const UserProfilePage = () => {
       }
     },
     onError: (err) => {
+      setSessionToRevoke(null);
       toast.error(err?.response?.data?.message || err?.message || 'Failed to revoke session');
     }
   });
@@ -166,12 +171,14 @@ const UserProfilePage = () => {
   const deactivateAccountMutation = useMutation({
     mutationFn: () => userProfileService.deactivateAccount(),
     onSuccess: () => {
+      setIsDeactivateModalOpen(false);
       toast.success('Account deactivated and logged out successfully!');
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     },
     onError: (err) => {
+      setIsDeactivateModalOpen(false);
       toast.error(err?.response?.data?.message || err?.message || 'Failed to deactivate account');
     }
   });
@@ -270,9 +277,9 @@ const UserProfilePage = () => {
     // Front-end Validation
     const errors = {};
     if (editFields.mobileNumber && editFields.mobileNumber.trim() !== '') {
-      const mobileRegex = /^[+0-9\s-]{8,20}$/;
-      if (!mobileRegex.test(editFields.mobileNumber)) {
-        errors.mobileNumber = 'Invalid mobile number format (e.g. +12345678)';
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(editFields.mobileNumber.trim())) {
+        errors.mobileNumber = 'Mobile number must be exactly 10 digits';
       }
     }
 
@@ -623,10 +630,10 @@ const UserProfilePage = () => {
         /* ── TAB: ACCOUNT SETTINGS ── */
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
           
-          <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
             
             {/* Left side: Navigation / Overview */}
-            <div className="w-full md:w-64 shrink-0 space-y-4">
+            <div className="w-full md:w-64 shrink-0 space-y-4 sticky top-6">
               <div className="bg-zinc-50 border border-zinc-200/60 rounded-2xl p-5 space-y-4">
                 <div>
                   <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Account Settings</h4>
@@ -847,11 +854,7 @@ const UserProfilePage = () => {
                         color="error"
                         className="shrink-0 bg-red-600 hover:bg-red-700 text-white font-bold"
                         isLoading={deactivateAccountMutation.isPending}
-                        onClick={() => {
-                          if (window.confirm("Are you absolutely sure you want to deactivate your account? This action terminates all active sessions immediately.")) {
-                            deactivateAccountMutation.mutate();
-                          }
-                        }}
+                        onClick={() => setIsDeactivateModalOpen(true)}
                       >
                         Deactivate Account
                       </Button>
@@ -928,9 +931,7 @@ const UserProfilePage = () => {
 
                               <button
                                 disabled={revokeSessionMutation.isPending}
-                                onClick={() => {
-                                  revokeSessionMutation.mutate(session.id);
-                                }}
+                                onClick={() => setSessionToRevoke(session)}
                                 className={`p-2 rounded-lg border transition-colors shrink-0 ml-4 ${
                                   session.isCurrent
                                     ? 'border-red-200 text-red-600 hover:bg-red-50 bg-white'
@@ -1137,6 +1138,42 @@ const UserProfilePage = () => {
           </div>
         </div>
       </DynamicFormSlideover>
+
+      {/* Account Deactivation Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={isDeactivateModalOpen}
+        onClose={() => setIsDeactivateModalOpen(false)}
+        title="Deactivate Enterprise Account?"
+        message="Are you absolutely sure you want to deactivate your account? This action will block your login access and terminate all active sessions across all devices immediately."
+        warningMessage="Warning: Contact your Administrator to reactivate your system access once deactivated."
+        confirmText="Deactivate Account"
+        cancelText="Cancel"
+        type="error"
+        isLoading={deactivateAccountMutation.isPending}
+        onConfirm={() => deactivateAccountMutation.mutate()}
+      />
+
+      {/* Session Revocation Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={!!sessionToRevoke}
+        onClose={() => setSessionToRevoke(null)}
+        title={sessionToRevoke?.isCurrent ? "Terminate Current Session?" : "Terminate Device Session?"}
+        message={
+          sessionToRevoke?.isCurrent
+            ? "Are you sure you want to terminate your current active session? You will be signed out of this browser immediately."
+            : `Are you sure you want to log out the session on "${sessionToRevoke?.deviceName || 'this device'}" (${sessionToRevoke?.os || 'Unknown OS'} - ${sessionToRevoke?.browser || 'Unknown Browser'})?`
+        }
+        warningMessage={sessionToRevoke?.isCurrent ? "You will need to re-enter your credentials to sign back in." : undefined}
+        confirmText={sessionToRevoke?.isCurrent ? "Sign Out Device" : "Terminate Session"}
+        cancelText="Cancel"
+        type="error"
+        isLoading={revokeSessionMutation.isPending}
+        onConfirm={() => {
+          if (sessionToRevoke) {
+            revokeSessionMutation.mutate(sessionToRevoke.id);
+          }
+        }}
+      />
     </div>
   );
 };

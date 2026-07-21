@@ -21,15 +21,21 @@ import { useCompany } from '../hooks/useCompanies';
 const OrganizationSettingsPage = () => {
   const { user, refetchUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
-  const [activeTab, setActiveTab] = useState(0);
   const didHideInitialLoaderRef = useRef(false);
-
   const [searchParams, setSearchParams] = useSearchParams();
   const queryCompanyId = searchParams.get('companyId');
+  const tabParam = searchParams.get('tab');
+  const activeTab = (tabParam === 'branch' || tabParam === 'branches') ? 1 : 0;
   const { data: queriedCompany, isLoading: isQueryingCompany, refetch: refetchCompany } = useCompany(queryCompanyId);
 
   const handleTabChange = (newValue) => {
-    setActiveTab(newValue);
+    const newParams = new URLSearchParams(searchParams);
+    if (newValue === 1) {
+      newParams.set('tab', 'branch');
+    } else {
+      newParams.delete('tab');
+    }
+    setSearchParams(newParams);
   };
 
   const handleBackToRegistry = () => {
@@ -63,7 +69,7 @@ const OrganizationSettingsPage = () => {
   }, [primaryRole, queryCompanyId, isQueryingCompany, forceHideLoader]);
 
   // ── 1. SUPER ADMIN: Master Company Registry View ──
-  if (primaryRole === 'SUPER_ADMIN' && !queryCompanyId) {
+  if (primaryRole === 'SUPER_ADMIN' && !queryCompanyId && tabParam !== 'branch' && tabParam !== 'branches') {
     return <CompanySettingsPage />;
   }
 

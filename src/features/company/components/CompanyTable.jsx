@@ -186,14 +186,18 @@ const CompanyTable = ({
     {
       header: 'User Count',
       cell: (company) => (
-        <div className="flex items-center gap-2 text-slate-600">
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
+        <button
+          onClick={() => navigate(`/users`, { state: { filterCompanyId: company.id } })}
+          className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group/user focus:outline-none"
+          title="View Users"
+        >
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/user:bg-primary/10 group-hover/user:text-primary transition-all border border-slate-100 group-hover/user:border-primary/20 shadow-sm">
             <Users size={14} />
           </div>
-          <span className="font-bold text-sm">
+          <span className="font-bold text-sm group-hover/user:text-primary transition-colors">
             {company._count?.users ?? 0}
           </span>
-        </div>
+        </button>
       ),
       skeleton: () => <Skeleton className="h-5 w-10" />,
     },
@@ -403,15 +407,19 @@ const CompanyTable = ({
           </button>
 
           {/* Users */}
-          <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">
-            <div className="font-black text-sm text-slate-800 leading-none mb-1">
+          <button
+            onClick={() => navigate(`/users`, { state: { filterCompanyId: company.id } })}
+            className="flex flex-col items-center justify-center py-2 bg-slate-50 hover:bg-primary/5 rounded-xl transition-all group/user border border-transparent hover:border-primary/20 focus:outline-none"
+            title="View Users"
+          >
+            <div className="font-black text-sm text-slate-800 group-hover/user:text-primary transition-colors leading-none mb-1">
               {company._count?.users ?? 0}
             </div>
             <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
-              <Users size={10} />
+              <Users size={10} className="group-hover/user:text-primary" />
               Users
             </div>
-          </div>
+          </button>
 
           {/* Created date */}
           <div className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent">

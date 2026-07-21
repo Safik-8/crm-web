@@ -99,8 +99,8 @@ export const useUserForm = (onSuccess, initialValues = null) => {
 
     if (!values.mobileNumber?.trim()) {
       tempErrors.mobileNumber = 'Mobile number is required';
-    } else if (values.mobileNumber.trim().length < 10) {
-      tempErrors.mobileNumber = 'Mobile number must be at least 10 digits';
+    } else if (!/^\d{10}$/.test(values.mobileNumber.trim())) {
+      tempErrors.mobileNumber = 'Mobile number must be exactly 10 digits';
     }
 
     if (!values.branchId) tempErrors.branchId = 'Branch is required';

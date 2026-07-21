@@ -244,7 +244,7 @@ const UserFormModal = ({
             <TextField
               id="mobileNumber"
               label="Mobile Number"
-              placeholder="e.g. +91 9876543210"
+              placeholder="10-digit mobile number"
               value={values.mobileNumber}
               onChange={(val) => handleChange('mobileNumber', val)}
               errorText={errors.mobileNumber}

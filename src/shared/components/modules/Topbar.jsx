@@ -1,17 +1,105 @@
 import { useRef, useState, useCallback } from 'react';
-import { Search, Bell, Menu, User, LogOut, Loader2 } from 'lucide-react';
+import { Search, Bell, Menu, User, LogOut, Loader2, ChevronRight, Home } from 'lucide-react';
 import { Menu as MuiMenu, MenuItem } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider.jsx';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';
+
+const ROUTE_LABELS = {
+  'dashboard': 'Dashboard',
+  'branch': 'Branch Performance',
+  'organization': 'Organization',
+  'lead-sources': 'Lead Sources',
+  'lead-statuses': 'Lead Statuses',
+  'customers': 'Customers',
+  'deals': 'Deals',
+  'prospects': 'Prospects',
+  'pipelines': 'Pipelines',
+  'leads': 'Leads',
+  'activities': 'Activities',
+  'tasks': 'Tasks',
+  'sessions': 'Sessions',
+  'targets': 'Targets',
+  'reports': 'Reports',
+  'daily': 'Daily Report',
+  'audit': 'Audit Logs',
+  'approvals': 'Transfer Approvals',
+  'users': 'User Management',
+  'teams': 'Teams',
+  'courses': 'Courses',
+  'roles': 'Roles & Permissions',
+  'profile': 'My Profile',
+  'settings': 'Settings',
+  'companies': 'Companies',
+  'branches': 'Branches',
+};
+
+const buildBreadcrumbs = (pathname, search) => {
+  const segments = pathname.split('/').filter(Boolean);
+  const crumbs = [];
+
+  // Home root
+  crumbs.push({
+    label: 'Home',
+    path: '/dashboard/branch',
+    isHome: true
+  });
+
+  let currentPath = '';
+
+  segments.forEach((seg, index) => {
+    const isId = !isNaN(seg);
+    currentPath += `/${seg}`;
+
+    if (isId) return;
+
+    if (seg === 'organization' && search.includes('tab=branch')) {
+      crumbs.push({ label: 'Organization', path: '/settings/organization' });
+      crumbs.push({ label: 'Branches', path: '/settings/organization?tab=branch' });
+      return;
+    }
+
+    if (seg === 'companies') {
+      crumbs.push({ label: 'Organization', path: '/settings/organization' });
+      return;
+    }
+
+    if (seg === 'settings') {
+      return;
+    }
+
+    if (seg === 'dashboard' && segments[index + 1] === 'branch') {
+      return;
+    }
+
+    let label = ROUTE_LABELS[seg.toLowerCase()] || seg.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    if (currentPath === '/dashboard/branch') {
+      crumbs[0].label = 'Dashboard';
+      crumbs[0].path = '/dashboard/branch';
+      crumbs.push({ label: 'Branch Performance', path: currentPath });
+      return;
+    }
+
+    crumbs.push({
+      label,
+      path: currentPath
+    });
+  });
+
+  return crumbs.filter((c, idx, arr) => idx === 0 || c.path !== arr[idx - 1].path);
+};
 
 const Topbar = ({ toggleSidebar, pageTitle }) => {
   const { logout, user, isLoggingOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const bellButtonRef = useRef(null);
+
+  const crumbs = buildBreadcrumbs(location.pathname, location.search);
 
   const openPanel  = useCallback(() => setIsPanelOpen(true),  []);
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
@@ -40,8 +128,8 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
     <>
       <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-zinc-200/70 bg-white/80 px-4 sm:px-5 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
 
-        {/* Left: hamburger + title */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Left: hamburger + breadcrumbs */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">
           <button
             onClick={toggleSidebar}
             className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors lg:hidden shrink-0"
@@ -49,9 +137,32 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
           >
             <Menu size={18} />
           </button>
-          <h2 className="text-[15px] font-semibold text-zinc-800 tracking-tight truncate">
-            {pageTitle || 'Overview'}
-          </h2>
+
+          {/* Breadcrumb Trail */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1 sm:gap-1.5 min-w-0 overflow-hidden">
+            {crumbs.map((crumb, idx) => {
+              const isLast = idx === crumbs.length - 1;
+              return (
+                <div key={crumb.path + idx} className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  {idx > 0 && (
+                    <ChevronRight size={13} className="text-slate-300 shrink-0 stroke-[2.2]" />
+                  )}
+                  {isLast ? (
+                    <span className="text-[13px] font-bold text-slate-800 truncate tracking-tight font-heading">
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <Link
+                      to={crumb.path}
+                      className="text-[13px] font-semibold text-slate-400 hover:text-primary transition-colors truncate hidden sm:inline-flex items-center gap-1"
+                    >
+                      {crumb.isHome ? <Home size={14} className="shrink-0" /> : crumb.label}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
         </div>
 
         {/* Right: search + bell + profile */}

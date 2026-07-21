@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import logoOfficial from '../../../assets/logos/logo-official.png';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -60,40 +60,75 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <nav className="flex-1 overflow-y-auto h-0 px-2.5 py-3 space-y-0.5 scrollbar-hide">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
+            const hasChildren = item.children && item.children.length > 0;
+            const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
+
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  cn(
-                    'group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
-                    isActive
-                      ? 'bg-orange-50 text-orange-600 font-semibold'
-                      : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {/* Left accent line */}
-                    <span
+              <React.Fragment key={item.path}>
+                <NavLink
+                  to={item.path}
+                  end={!hasChildren}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 relative',
+                      (isActive && (!hasChildren || !isTabBranch))
+                        ? 'bg-orange-50 text-orange-600 font-semibold'
+                        : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                    )
+                  }
+                >
+                  {({ isActive }) => {
+                    const active = isActive && (!hasChildren || !isTabBranch);
+                    return (
+                      <>
+                        <span
+                          className={cn(
+                            'absolute left-0 w-[3px] h-5 rounded-r-full transition-all duration-200',
+                            active ? 'bg-orange-500 opacity-100' : 'opacity-0'
+                          )}
+                        />
+                        <Icon
+                          size={16}
+                          strokeWidth={active ? 2.2 : 1.8}
+                          className={cn(
+                            'shrink-0 transition-colors duration-150',
+                            active ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                          )}
+                        />
+                        <span className="truncate font-bold">{item.name}</span>
+                      </>
+                    );
+                  }}
+                </NavLink>
+
+                {hasChildren && item.children.map((child) => {
+                  const ChildIcon = child.icon;
+                  const isChildActive = location.pathname === item.path && isTabBranch;
+
+                  return (
+                    <NavLink
+                      key={child.path}
+                      to={child.path}
                       className={cn(
-                        'absolute left-0 w-[3px] h-5 rounded-r-full transition-all duration-200',
-                        isActive ? 'bg-orange-500 opacity-100' : 'opacity-0'
+                        'group flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 relative border-l-2',
+                        isChildActive
+                          ? 'bg-orange-50/70 text-orange-600 font-semibold border-orange-500'
+                          : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
                       )}
-                    />
-                    <Icon
-                      size={16}
-                      strokeWidth={isActive ? 2.2 : 1.8}
-                      className={cn(
-                        'shrink-0 transition-colors duration-150',
-                        isActive ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
-                      )}
-                    />
-                    <span className="truncate font-bold">{item.name}</span>
-                  </>
-                )}
-              </NavLink>
+                    >
+                      <ChildIcon
+                        size={14}
+                        strokeWidth={isChildActive ? 2.2 : 1.8}
+                        className={cn(
+                          'shrink-0 transition-colors duration-150',
+                          isChildActive ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                        )}
+                      />
+                      <span className="truncate font-bold">{child.name}</span>
+                    </NavLink>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
         </nav>

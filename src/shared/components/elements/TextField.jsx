@@ -106,7 +106,21 @@ const TextField = ({
         type={type}
         placeholder={placeholder}
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={(e) => {
+          let val = e.target.value;
+          const isMobileField =
+            (id && id.toLowerCase().includes('mobile')) ||
+            (label && label.toLowerCase().includes('mobile')) ||
+            type === 'tel';
+
+          if (isMobileField) {
+            val = val.replace(/\D/g, '');
+            if (val.length > 10) {
+              val = val.substring(0, 10);
+            }
+          }
+          onChange?.(val);
+        }}
         error={hasError}
         startAdornment={
           StartIcon ? (

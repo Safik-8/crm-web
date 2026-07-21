@@ -47,6 +47,7 @@ export const useBranches = (companyId) => {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch
@@ -77,7 +78,7 @@ export const useBranches = (companyId) => {
 
   // Derive loadingState string expected by UI components
   let loadingState = 'success';
-  if (isLoading) {
+  if (isLoading || isFetching) {
     loadingState = 'loading';
   } else if (isError) {
     loadingState = 'error';

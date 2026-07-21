@@ -38,6 +38,7 @@ export const useTeamQuery = (id) => {
 export const useCreateTeamMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'create'],
     mutationFn: teamService.createTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
@@ -55,6 +56,7 @@ export const useCreateTeamMutation = () => {
 export const useUpdateTeamMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'update'],
     mutationFn: ({ id, data }) => teamService.updateTeam(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
@@ -73,6 +75,7 @@ export const useUpdateTeamMutation = () => {
 export const useToggleTeamStatusMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'toggleStatus'],
     mutationFn: ({ id, status }) => teamService.toggleTeamStatus(id, status),
     onMutate: async ({ id, status }) => {
       // Cancel outgoing refetches
@@ -118,6 +121,7 @@ export const useToggleTeamStatusMutation = () => {
 export const useDeleteTeamMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'delete'],
     mutationFn: teamService.deleteTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
@@ -132,6 +136,7 @@ export const useDeleteTeamMutation = () => {
 export const useRemoveTeamMemberMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'removeMember'],
     mutationFn: ({ id, userId }) => teamService.removeTeamMember(id, userId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
@@ -147,6 +152,7 @@ export const useRemoveTeamMemberMutation = () => {
 export const useReplaceTeamOwnerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'replaceOwner'],
     mutationFn: ({ id, bdeId }) => teamService.replaceTeamOwner(id, bdeId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
@@ -154,7 +160,6 @@ export const useReplaceTeamOwnerMutation = () => {
       toast.success('Team owner replaced successfully');
     },
     onError: (error) => {
-      // Don't toast here if the controller handles it, but let's toast a fallback
       toast.error(error?.message || 'Failed to replace team owner');
     }
   });

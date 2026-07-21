@@ -87,7 +87,7 @@ export const LeadStatusPage = () => {
   };
 
   // Determine Table Loading State
-  const loadingState = (isLoading || isFetching)
+  const loadingState = (isLoading || isFetching || toggleMutation.isPending || deleteMutation.isPending || createMutation.isPending || updateMutation.isPending)
     ? 'loading'
     : isError
     ? 'error'
