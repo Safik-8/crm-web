@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getPipelineById } from '../../pipelines/services/pipelineService';
 import { updateLeadStage } from '../services/leadService';
 import { toast } from '../../../shared/utils/toast';
+import { isTerminalStage } from '../../pipelines/utils/stageRules';
+
 
 /**
  * useKanban — Manages full Kanban board state for a single pipeline.
@@ -75,14 +77,20 @@ export const useKanban = (pipelineId, filters = {}) => {
         stages.forEach((stage) => {
           cols[stage.id] = {
             stage: {
-              id: stage.id,
-              name: stage.name,
-              isDefault: stage.isDefault,
-              orderNo: stage.orderNo,
+              id:           stage.id,
+              name:         stage.name,
+              isDefault:    stage.isDefault,
+              orderNo:      stage.orderNo,
+              // J1: Sprint 4 — needed for terminal lock checks and column color
+              stageType:    stage.stageType  || null,
+              colorCode:    stage.colorCode  || null,
+              code:         stage.code       || null,
+              status:       stage.status     || 'ACTIVE',
             },
             leads: stage.leads || [],
           };
         });
+
 
         setColumns(cols);
       } catch (err) {
@@ -115,20 +123,25 @@ export const useKanban = (pipelineId, filters = {}) => {
    * Reads current columns from columnsRef — no dependency on columns state,
    * so this function is created exactly once per mount.
    *
-   * RULE: Leads in the Closure stage are permanently locked — they cannot be
-   * moved to any other stage. This is enforced here (data layer) as the single
-   * source of truth, in addition to UI-layer guards in the page component.
+   * RULE: Leads in WON or CLOSURE stage are permanently locked — they cannot
+   * be moved to any other stage. This is enforced here (data layer) as the
+   * single source of truth, in addition to UI-layer guards in the page.
+   *
+   * @param {number} leadId
+   * @param {number} fromStageId
+   * @param {number} toStageId
+   * @param {string|null} reason - required when moving to LOST stage
    */
-  const moveCard = useCallback(async (leadId, fromStageId, toStageId) => {
+  const moveCard = useCallback(async (leadId, fromStageId, toStageId, reason = null) => {
     // Normalize to strings — JS object keys are always strings
     const fromKey = String(fromStageId);
     const toKey = String(toStageId);
     if (fromKey === toKey) return;
 
-    // ── Closure lock: leads in the closure stage cannot be moved out ──────
+    // J2: Terminal lock: leads in WON/CLOSURE cannot be moved out
     const fromStage = columnsRef.current[fromKey]?.stage;
-    if (fromStage?.name?.toLowerCase() === 'closure') {
-      toast.error('Leads in Closure cannot be moved to another stage.');
+    if (isTerminalStage(fromStage)) {
+      toast.error(`Leads in "${fromStage?.name}" stage cannot be moved to another stage.`);
       return;
     }
 
@@ -152,12 +165,14 @@ export const useKanban = (pipelineId, filters = {}) => {
     });
 
     try {
-      await updateLeadStage(leadId, toStageId);
+      // J3: Pass reason to API (required for LOST stage)
+      await updateLeadStage(leadId, toStageId, reason);
     } catch (err) {
       if (snapshotRef.current) setColumns(snapshotRef.current);
       toast.error(err?.message || 'Could not move lead. Try again.');
     }
   }, []); // stable: no columns dependency
+
 
   const addLeadToColumn = useCallback((stageId, lead) => {
     setColumns((prev) => {

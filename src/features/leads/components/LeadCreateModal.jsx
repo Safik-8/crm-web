@@ -17,7 +17,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 
-export const LeadCreateModal = ({ isOpen, onClose, onCreated }) => {
+export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId }) => {
   const { user: currentUser } = useAuth();
   const createLeadMutation = useCreateLeadMutation();
 
@@ -57,10 +57,11 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated }) => {
     if (isOpen) {
       const initialCompany = currentUser?.companyId ? String(currentUser.companyId) : '';
       const initialBranch = currentUser?.branchId ? String(currentUser.branchId) : '';
-      
+      const initialPipeline = initialPipelineId ? String(initialPipelineId) : '';
+
       setSelectedCompanyId(initialCompany);
       setSelectedBranchId(initialBranch);
-      setSelectedPipelineId('');
+      setSelectedPipelineId(initialPipeline);
 
       setValues({
         name: '',
@@ -79,11 +80,11 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated }) => {
         assignedToId: '',
         companyId: initialCompany,
         branchId: initialBranch,
-        pipelineId: ''
+        pipelineId: initialPipeline
       });
       setErrors({});
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, initialPipelineId]);
 
   const targetCompanyId = isSuperAdmin ? selectedCompanyId : currentUser?.companyId;
   const targetBranchId = (isSuperAdmin || isCompanyAdmin) ? selectedBranchId : currentUser?.branchId;

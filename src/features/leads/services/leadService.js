@@ -82,17 +82,20 @@ export const deleteAllLeads = () =>
 
 /**
  * Update the Kanban pipeline stage of a lead (drag-and-drop).
+ * Optionally pass reason (required when moving to LOST stage).
  * 
  * @param {number|string} leadId
  * @param {number|string} stageId
+ * @param {string|null} reason - required for LOST stage
  * @returns {Promise<object>}
  */
-export const updateLeadStage = (leadId, stageId) =>
+export const updateLeadStage = (leadId, stageId, reason = null) =>
   apiClient(`/leads/${leadId}/stage`, {
     method: 'PATCH',
-    body: { stageId },
+    body: { stageId, ...(reason ? { reason } : {}) },
     silent: true,
   });
+
 
 /**
  * Get comment thread for a specific lead.
@@ -195,3 +198,11 @@ export const updateLeadNote = (leadId, noteId, data) =>
 export const deleteLeadNote = (leadId, noteId) =>
   apiClient(`/leads/${leadId}/notes/${noteId}`, { method: 'DELETE' });
 
+/**
+ * Fetch the full pipeline stage movement history for a lead.
+ * 
+ * @param {number|string} leadId
+ * @returns {Promise<object>}
+ */
+export const getLeadPipelineHistory = (leadId) =>
+  apiClient(`/leads/${leadId}/pipeline-history`, { method: 'GET' });

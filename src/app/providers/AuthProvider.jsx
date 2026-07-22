@@ -46,8 +46,8 @@ const RBAC_ADAPTER_MAP = {
   'create:pipeline':  { module: 'PIPELINE', action: 'canCreate' },
   'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
   'delete:pipeline':  { module: 'PIPELINE', action: 'canDelete' },
-  'view:stages':      { module: 'STAGE',    action: 'canView' },
-  'manage:stages':    { module: 'STAGE',    action: 'canEdit' },
+  'view:stages':      { module: 'PIPELINE', action: 'canView' },
+  'manage:stages':    { module: 'PIPELINE', action: 'canEdit' },
 
   // Lead Permissions (Phase 1)
   'view:leads_kanban': { module: 'LEAD', action: 'canView' },

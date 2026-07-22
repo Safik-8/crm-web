@@ -19,12 +19,15 @@ import { PERMISSIONS } from '../../../lib/constants/permissions';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import KanbanColumn from '../components/KanbanColumn';
 import LeadCard from '../components/LeadCard';
-import LeadFormModal from '../components/LeadFormModal';
+import LeadCreateModal from '../components/LeadCreateModal';
 import LeadImportModal from '../components/LeadImportModal';
 import LeadDetailDrawer from '../components/LeadDetailDrawer';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDeleteModal from '../components/LeadDeleteModal';
+import LostReasonModal from '../components/LostReasonModal';
 import { toast } from '../../../shared/utils/toast';
+import { isTerminalStage, requiresReason } from '../../pipelines/utils/stageRules';
+
 
 /**
  * LeadsKanbanPage — Main Kanban board orchestrator.
@@ -70,6 +73,12 @@ const LeadsKanbanPage = () => {
     try { return localStorage.getItem('kanban-sidebar-collapsed') === 'true'; } catch { return false; }
   });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // ── Lost Reason Modal state (Sprint 4) ─────────────────────────────
+  // When drag targets a LOST stage, we intercept and store the pending move
+  // here instead of calling moveCard immediately.
+  const [lostReasonModal, setLostReasonModal] = useState(null); // { leadId, fromStageId, toStageId, leadName, targetStageName }
+  const [isMovingLead, setIsMovingLead] = useState(false);
 
   const handleToggleCollapse = useCallback(() => {
     setIsSidebarCollapsed((v) => {
@@ -282,17 +291,44 @@ const LeadsKanbanPage = () => {
     if (!toStageId) return;
     if (String(fromStage) === String(toStageId)) return;
 
-    // ── Closure lock: prevent dragging out of the closure stage ──────────
+    // ── Terminal lock: prevent dragging OUT of WON/CLOSURE stages ─────────
     const fromStageObj = Object.values(columns).find(
       (col) => String(col.stage.id) === String(fromStage)
     )?.stage;
-    if (fromStageObj?.name?.toLowerCase() === 'closure') {
-      toast.error('Leads in Closure cannot be moved to another stage.');
+    if (isTerminalStage(fromStageObj)) {
+      toast.error(`Leads in "${fromStageObj?.name}" stage cannot be moved to another stage.`);
       return;
+    }
+
+    // ── LOST intercept: show reason modal before calling moveCard ─────────
+    const toStageObj = Object.values(columns).find(
+      (col) => String(col.stage.id) === String(toStageId)
+    )?.stage;
+    if (requiresReason(toStageObj)) {
+      setLostReasonModal({
+        leadId:          draggedCard.id,
+        fromStageId:     fromStage,
+        toStageId,
+        leadName:        draggedCard.name || 'this lead',
+        targetStageName: toStageObj?.name || 'Lost',
+      });
+      return; // do NOT call moveCard yet — modal will do it
     }
 
     await moveCard(draggedCard.id, fromStage, toStageId);
   };
+
+  // ── Lost Reason Modal handlers (Sprint 4) ───────────────────────────
+  const handleLostReasonConfirm = useCallback((reason) => {
+    if (!lostReasonModal) return;
+    const { leadId, fromStageId, toStageId } = lostReasonModal;
+    setLostReasonModal(null); // Close modal instantly for snappy UX
+    moveCard(leadId, fromStageId, toStageId, reason); // Optimistically move card & send API request
+  }, [lostReasonModal, moveCard]);
+
+  const handleLostReasonCancel = useCallback(() => {
+    setLostReasonModal(null);
+  }, []);
 
   const stageForLead = useCallback(
     (lead) => {
@@ -553,8 +589,9 @@ const LeadsKanbanPage = () => {
 
       {/* ── Modals ── */}
       {showForm && (
-        <LeadFormModal
-          pipelineId={Number(pipelineId)}
+        <LeadCreateModal
+          isOpen={showForm}
+          initialPipelineId={pipelineId}
           onClose={() => setShowForm(false)}
           onCreated={handleLeadCreated}
         />
@@ -588,8 +625,18 @@ const LeadsKanbanPage = () => {
           onDeleted={handleLeadDeleted}
         />
       )}
+      {/* Lost Reason Modal (Sprint 4) */}
+      <LostReasonModal
+        isOpen={!!lostReasonModal}
+        isLoading={isMovingLead}
+        leadName={lostReasonModal?.leadName}
+        targetStage={lostReasonModal?.targetStageName}
+        onConfirm={handleLostReasonConfirm}
+        onCancel={handleLostReasonCancel}
+      />
     </div>
   );
 };
+
 
 export default LeadsKanbanPage;
