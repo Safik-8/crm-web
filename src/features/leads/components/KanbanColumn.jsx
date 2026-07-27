@@ -43,6 +43,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
   });
   // Card sortable IDs are also prefixed to keep them in a separate namespace
   const sortableIds = useMemo(() => leads.map((l) => cardSortId(l.id)), [leads]);
+  const columnBudgetSum = useMemo(() => leads.reduce((sum, l) => sum + (Number(l.budget) || 0), 0), [leads]);
 
   return (
     <div className="flex flex-col w-[76vw] xs:w-[72vw] sm:w-[272px] md:w-[288px] flex-shrink-0 h-full">
@@ -70,7 +71,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
           )}
         </div>
 
-        {/* Lead count badge */}
+        {/* Lead count & Budget sum badge */}
         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center transition-all duration-300 ${
           isRefetching
             ? 'text-zinc-300 bg-zinc-100 animate-pulse'
@@ -80,7 +81,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
               : 'text-orange-600 bg-orange-50 border border-orange-200/60'
             : 'text-zinc-400 bg-zinc-100'
         }`}>
-          {leads.length}
+          {leads.length}{columnBudgetSum > 0 ? ` • ₹${columnBudgetSum.toLocaleString('en-IN')}` : ''}
         </span>
       </div>
 
@@ -136,6 +137,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
                   lead={lead}
                   stageId={stage.id}
                   stageName={stage.name}
+                  isTerminal={isTerminal}
                   onClick={() => onLeadClick(lead)}
                   canManage={canManage}
                   onEdit={onEditLead}

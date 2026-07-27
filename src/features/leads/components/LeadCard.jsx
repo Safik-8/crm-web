@@ -3,11 +3,11 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Phone, Calendar, BookOpen, User, MoreVertical, Pencil, Trash2, Lock } from 'lucide-react';
 
-const LeadCard = memo(({ lead, stageId, stageName, onClick, canManage = false, onEdit, onDelete }) => {
+const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, canManage = false, onEdit, onDelete }) => {
   const sortableId = `card-${lead.id}`;
 
-  // Leads in the Closure stage are permanently locked — drag is disabled entirely.
-  const isLocked = stageName?.toLowerCase() === 'closure';
+  // Card is locked if user lacks edit/create permissions OR if the stage is terminal (WON/CLOSURE)
+  const isLocked = !canManage || isTerminal;
 
   const {
     attributes,
@@ -76,11 +76,21 @@ const LeadCard = memo(({ lead, stageId, stageName, onClick, canManage = false, o
     ? lead.mobile.toString().replace(/^(\d{2})(\d+)(\d{2})$/, '$1••••••$3')
     : '—';
 
-  const date = lead.date
-    ? new Date(lead.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+  const followUpDate = lead.nextFollowUpDate || lead.next_followup_date || lead.followUpDate || lead.date;
+  const formattedFollowUp = followUpDate
+    ? new Date(followUpDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
     : null;
 
-  const interest = lead.interestedFor || lead.interested_for;
+  const isFollowUpOverdue = followUpDate && new Date(followUpDate) < new Date();
+
+  const interest = lead.course?.name || lead.interestedFor || lead.interested_for;
+
+  const priorityUpper = lead.priority?.toUpperCase();
+  const priorityBadgeStyle = {
+    HIGH: 'bg-rose-50 border-rose-200/80 text-rose-700',
+    MEDIUM: 'bg-amber-50 border-amber-200/80 text-amber-700',
+    LOW: 'bg-blue-50 border-blue-200/80 text-blue-700',
+  }[priorityUpper];
 
   return (
     <div
@@ -88,24 +98,26 @@ const LeadCard = memo(({ lead, stageId, stageName, onClick, canManage = false, o
       style={style}
       {...attributes}
       {...(isLocked ? {} : listeners)}
-      className={`relative bg-white rounded-xl border select-none overflow-visible group
+      onClick={() => {
+        if (!isDragging) onClick?.();
+      }}
+      className={`relative bg-white rounded-xl border select-none overflow-visible group cursor-pointer
         ${isLocked
-          ? 'border-emerald-200 bg-emerald-50/30 cursor-default shadow-sm'
+          ? 'border-emerald-200/80 bg-emerald-50/20 shadow-sm'
           : isDragging
             ? 'shadow-2xl ring-2 ring-primary/25 rotate-[1deg] border-primary/20 scale-[1.02] cursor-grabbing'
-            : 'border-zinc-200 shadow-sm hover:shadow-md hover:-translate-y-px hover:border-zinc-300 transition-[transform,box-shadow,border-color] duration-150 ease-out cursor-grab active:cursor-grabbing'
+            : 'border-zinc-200 shadow-sm hover:shadow-md hover:-translate-y-px hover:border-zinc-300 transition-[transform,box-shadow,border-color] duration-150 ease-out cursor-pointer active:cursor-grabbing'
         }`}
     >
 
-
-      {/* Lock badge for closure stage — replaces drag affordance */}
+      {/* Lock badge for locked cards — replaces drag affordance */}
       {isLocked && (
         <div className="absolute top-2.5 right-2.5 z-10">
           <div
-            className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 text-emerald-600"
-            title="This lead is in Closure and cannot be moved"
+            className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-100/80 text-emerald-600"
+            title={isTerminal ? "Terminal stage — leads cannot be moved out" : "Read-only access"}
           >
-            <Lock size={12} strokeWidth={2.5} />
+            <Lock size={11} strokeWidth={2.5} />
           </div>
         </div>
       )}
@@ -171,13 +183,20 @@ const LeadCard = memo(({ lead, stageId, stageName, onClick, canManage = false, o
           </p>
         </div>
 
-        {/* Interest tag — only when present */}
-        {interest && (
-          <div className="mt-2 pointer-events-none">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[11px] font-semibold text-orange-600 truncate max-w-full">
-              <BookOpen size={9} className="shrink-0 text-orange-400" />
-              {interest}
-            </span>
+        {/* Badges container: Course badge & Priority badge */}
+        {(interest || priorityBadgeStyle) && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 pointer-events-none">
+            {interest && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[11px] font-semibold text-orange-600 truncate max-w-full">
+                <BookOpen size={9} className="shrink-0 text-orange-400" />
+                {interest}
+              </span>
+            )}
+            {priorityBadgeStyle && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[10px] font-bold tracking-wide uppercase ${priorityBadgeStyle}`}>
+                {priorityUpper}
+              </span>
+            )}
           </div>
         )}
 
@@ -203,10 +222,17 @@ const LeadCard = memo(({ lead, stageId, stageName, onClick, canManage = false, o
             </span>
           </div>
 
-          {date && (
-            <div className="flex items-center gap-1 text-zinc-400">
-              <Calendar size={9} className="shrink-0" />
-              <span className="text-[10.5px] font-medium">{date}</span>
+          {formattedFollowUp && (
+            <div
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium transition-colors ${
+                isFollowUpOverdue
+                  ? 'bg-rose-50 text-rose-600 font-bold border border-rose-100'
+                  : 'text-zinc-500'
+              }`}
+              title={lead.nextFollowUpDate ? (isFollowUpOverdue ? 'Overdue Follow-up' : 'Next Follow-up Due') : 'Lead Date'}
+            >
+              <Calendar size={9} className={`shrink-0 ${isFollowUpOverdue ? 'text-rose-500' : 'text-zinc-400'}`} />
+              <span>{formattedFollowUp}</span>
             </div>
           )}
         </div>

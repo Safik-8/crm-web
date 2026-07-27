@@ -235,9 +235,9 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 min-h-[300px] flex flex-col">
                 {activeTab === 'comments' && (
-                  <div className="h-full overflow-y-auto pr-1">
+                  <div className="h-full flex-1 flex flex-col pr-1">
                     <CommentThread leadId={lead.id} />
                   </div>
                 )}

@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Drawer,
   IconButton,
-  Typography,
-  Box,
   CircularProgress
 } from '@mui/material';
 import { X, Plus, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge, ListFilter } from 'lucide-react';
@@ -300,36 +298,17 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
         }
       }}
     >
-      <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-white">
         {/* Header */}
-        <Box
-          sx={{
-            px: 4,
-            py: 2.5,
-            borderBottom: '1px solid #E2E8F0',
-            bgcolor: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2
-          }}
-        >
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 800,
-                color: '#0F172A',
-                fontSize: '16px',
-                fontFamily: '"Outfit", "Inter", sans-serif'
-              }}
-            >
+        <div className="px-4 py-2.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
+          <div>
+            <h2 className="font-extrabold text-slate-900 text-base font-heading">
               Create New Lead
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mt: 0.5, fontWeight: 500 }}>
+            </h2>
+            <span className="text-slate-500 text-xs block mt-0.5 font-medium">
               Add a new prospect to your sales registry.
-            </Typography>
-          </Box>
+            </span>
+          </div>
           <IconButton
             onClick={onClose}
             disabled={createLeadMutation.isPending}
@@ -344,27 +323,16 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
           >
             <X size={16} />
           </IconButton>
-        </Box>
+        </div>
 
         {/* Scrollable Form Body */}
-        <Box
-          className="custom-scrollbar"
-          sx={{
-            flex: 1,
-            overflowY: 'auto',
-            px: 4,
-            py: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3.5
-          }}
-        >
+        <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5">
           {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
           {(isSuperAdmin || isCompanyAdmin) && (
-            <Box className="space-y-3.5">
-              <Typography variant="caption" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
+            <div className="space-y-3.5">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
                 Territory Scope
-              </Typography>
+              </span>
 
               {isSuperAdmin && (
                 <SelectField
@@ -410,14 +378,14 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
                 startIcon={Building}
                 searchable={true}
               />
-            </Box>
+            </div>
           )}
 
           {/* Section 1: Contact Details */}
-          <Box className="space-y-3.5">
-            <Typography variant="caption" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
+          <div className="space-y-3.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
               Contact Details
-            </Typography>
+            </span>
             
             <TextField
               id="lead-name"
@@ -460,13 +428,13 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               errorText={errors.alternateMobile}
               startIcon={Phone}
             />
-          </Box>
+          </div>
 
           {/* Section 2: Engagement parameters */}
-          <Box className="space-y-3.5">
-            <Typography variant="caption" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
+          <div className="space-y-3.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
               Engagement & Routing
-            </Typography>
+            </span>
 
             <SelectField
               id="lead-source"
@@ -565,13 +533,13 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               isLoading={isLoadingFormData}
               disabled={!targetCompanyId || !targetBranchId}
             />
-          </Box>
+          </div>
 
           {/* Section 3: Geographic info */}
-          <Box className="space-y-3.5">
-            <Typography variant="caption" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
+          <div className="space-y-3.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
               Location Info
-            </Typography>
+            </span>
 
             <div className="grid grid-cols-3 gap-3">
               <TextField
@@ -599,13 +567,13 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
                 startIcon={MapPin}
               />
             </div>
-          </Box>
+          </div>
 
           {/* Section 4: Notes */}
-          <Box className="space-y-3.5">
-            <Typography variant="caption" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
+          <div className="space-y-3.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
               Remarks / Notes
-            </Typography>
+            </span>
 
             <TextField
               id="lead-notes"
@@ -617,22 +585,11 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               onChange={(val) => handleFieldChange('notes', val)}
               startIcon={FileText}
             />
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Footer Actions */}
-        <Box
-          sx={{
-            px: 4,
-            py: 2.5,
-            borderTop: '1px solid #E2E8F0',
-            bgcolor: '#FAFAFA',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 2
-          }}
-        >
+        <div className="px-4 py-2.5 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
           <Button
             variant="text"
             onClick={onClose}
@@ -656,8 +613,8 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
           >
             Create Lead
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </form>
 
       {/* Duplicate Alert Overlay Dialog */}
       {showDuplicateDialog && duplicateWarning && (

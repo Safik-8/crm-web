@@ -171,9 +171,8 @@ const LeadsKanbanPage = () => {
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
 
-  // canManage gates both Edit and Delete actions per backend permission spec:
-  // LEAD.canCreate === true is required for both edit and delete.
-  const canManage = !!(user?.permissions?.LEAD?.canCreate);
+  // canManage gates Edit, Delete, and Kanban drag actions:
+  const canManage = hasPermission(PERMISSIONS.MANAGE_KANBAN) || hasPermission(PERMISSIONS.MANAGE_LEADS) || canEdit || canCreate || !!(user?.permissions?.LEAD?.canCreate);
 
   const scrollContainerRef = useRef(null);
   const dragPositionRef = useRef({ x: 0, y: 0 });
@@ -184,24 +183,87 @@ const LeadsKanbanPage = () => {
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   );
 
+  const currentSpeedXRef = useRef(0);
+  const currentSpeedYRef = useRef(0);
+
   const startAutoScroll = useCallback(() => {
     const tick = () => {
       const container = scrollContainerRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
       const { x, y } = dragPositionRef.current;
-      const relX = x - rect.left;
-      const relY = y - rect.top;
-      if (relX < 80 && container.scrollLeft > 0) container.scrollLeft -= 12;
-      else if (relX > rect.width - 80) container.scrollLeft += 12;
-      if (relY < 60 && container.scrollTop > 0) container.scrollTop -= 10;
-      else if (relY > rect.height - 60) container.scrollTop += 10;
+
+      const thresholdX = Math.min(110, Math.max(50, rect.width * 0.22));
+      const thresholdY = Math.min(70, Math.max(35, rect.height * 0.18));
+
+      const distLeft = x - rect.left;
+      const distRight = rect.right - x;
+      const distTop = y - rect.top;
+      const distBottom = rect.bottom - y;
+
+      let targetSpeedX = 0;
+      let targetSpeedY = 0;
+
+      // Horizontal target speed calculation
+      if (distLeft < thresholdX && container.scrollLeft > 0) {
+        const intensity = Math.min(1, Math.max(0.15, (thresholdX - distLeft) / thresholdX));
+        targetSpeedX = -Math.round(intensity * 22); // Negative for left
+      } else if (distRight < thresholdX) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft < maxScroll) {
+          const intensity = Math.min(1, Math.max(0.15, (thresholdX - distRight) / thresholdX));
+          targetSpeedX = Math.round(intensity * 22); // Positive for right
+        }
+      }
+
+      // Vertical target speed calculation
+      if (distTop < thresholdY && container.scrollTop > 0) {
+        const intensity = Math.min(1, Math.max(0.15, (thresholdY - distTop) / thresholdY));
+        targetSpeedY = -Math.round(intensity * 14);
+      } else if (distBottom < thresholdY) {
+        const maxScrollY = container.scrollHeight - container.clientHeight;
+        if (container.scrollTop < maxScrollY) {
+          const intensity = Math.min(1, Math.max(0.15, (thresholdY - distBottom) / thresholdY));
+          targetSpeedY = Math.round(intensity * 14);
+        }
+      }
+
+      // Physics LERP (Linear Interpolation) for buttery smooth momentum
+      currentSpeedXRef.current = currentSpeedXRef.current * 0.72 + targetSpeedX * 0.28;
+      currentSpeedYRef.current = currentSpeedYRef.current * 0.72 + targetSpeedY * 0.28;
+
+      // Apply horizontal movement
+      if (Math.abs(currentSpeedXRef.current) > 0.1) {
+        if (currentSpeedXRef.current < 0 && container.scrollLeft > 0) {
+          container.scrollLeft = Math.max(0, container.scrollLeft + currentSpeedXRef.current);
+        } else if (currentSpeedXRef.current > 0) {
+          const maxScroll = container.scrollWidth - container.clientWidth;
+          if (container.scrollLeft < maxScroll) {
+            container.scrollLeft = Math.min(maxScroll, container.scrollLeft + currentSpeedXRef.current);
+          }
+        }
+      }
+
+      // Apply vertical movement
+      if (Math.abs(currentSpeedYRef.current) > 0.1) {
+        if (currentSpeedYRef.current < 0 && container.scrollTop > 0) {
+          container.scrollTop = Math.max(0, container.scrollTop + currentSpeedYRef.current);
+        } else if (currentSpeedYRef.current > 0) {
+          const maxScrollY = container.scrollHeight - container.clientHeight;
+          if (container.scrollTop < maxScrollY) {
+            container.scrollTop = Math.min(maxScrollY, container.scrollTop + currentSpeedYRef.current);
+          }
+        }
+      }
+
       autoScrollRafRef.current = requestAnimationFrame(tick);
     };
     autoScrollRafRef.current = requestAnimationFrame(tick);
   }, []);
 
   const stopAutoScroll = useCallback(() => {
+    currentSpeedXRef.current = 0;
+    currentSpeedYRef.current = 0;
     if (autoScrollRafRef.current) {
       cancelAnimationFrame(autoScrollRafRef.current);
       autoScrollRafRef.current = null;
@@ -248,44 +310,79 @@ const LeadsKanbanPage = () => {
     setSelectedLead((prev) => prev?.id === leadId ? null : prev);
   }, [deleteLeadLocal]);
 
-  const handleDragStart = ({ active }) => {
+  // Real-time window pointer listener for auto-scrolling during drag
+  const updatePointerPos = useCallback((e) => {
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX ?? e.changedTouches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? e.changedTouches?.[0]?.clientY;
+    if (clientX !== undefined && clientY !== undefined) {
+      dragPositionRef.current = { x: clientX, y: clientY };
+    }
+  }, []);
+
+  const handleDragStart = ({ active, activatorEvent }) => {
+    // Attach global listeners for active pointer position tracking
+    window.addEventListener('pointermove', updatePointerPos, { passive: true });
+    window.addEventListener('touchmove', updatePointerPos, { passive: true });
+
+    const initialX = activatorEvent?.clientX ?? activatorEvent?.nativeEvent?.clientX ?? activatorEvent?.touches?.[0]?.clientX ?? 0;
+    const initialY = activatorEvent?.clientY ?? activatorEvent?.nativeEvent?.clientY ?? activatorEvent?.touches?.[0]?.clientY ?? 0;
+    dragPositionRef.current = { x: initialX, y: initialY };
+
     // Read source stageId from DnD metadata attached in LeadCard's useSortable
     const data = active.data?.current;
-    const leadId = data?.leadId ?? active.id;
+    const rawId = active.id;
+    const leadId = data?.leadId ?? Number(String(rawId).replace('card-', ''));
     const fromStageId = data?.stageId ?? findColumn(leadId);
     if (!fromStageId) return;
 
     setActiveFrom(fromStageId);
-    const col = columns[fromStageId];
-    setActiveCard(col?.leads.find((l) => l.id === leadId) ?? null);
+    let card = null;
+    for (const col of Object.values(columns)) {
+      const found = col.leads.find((l) => Number(l.id) === Number(leadId));
+      if (found) {
+        card = found;
+        break;
+      }
+    }
+    setActiveCard(card);
     startAutoScroll();
   };
 
-  const handleDragMove = useCallback(({ activatorEvent, delta }) => {
-    const startX = activatorEvent?.clientX ?? activatorEvent?.touches?.[0]?.clientX ?? 0;
-    const startY = activatorEvent?.clientY ?? activatorEvent?.touches?.[0]?.clientY ?? 0;
-    dragPositionRef.current = { x: startX + (delta?.x ?? 0), y: startY + (delta?.y ?? 0) };
+  const handleDragMove = useCallback((event) => {
+    const { activatorEvent, delta } = event;
+    const startX = activatorEvent?.clientX ?? activatorEvent?.nativeEvent?.clientX ?? activatorEvent?.touches?.[0]?.clientX ?? 0;
+    const startY = activatorEvent?.clientY ?? activatorEvent?.nativeEvent?.clientY ?? activatorEvent?.touches?.[0]?.clientY ?? 0;
+    if (startX || startY) {
+      dragPositionRef.current = { x: startX + (delta?.x ?? 0), y: startY + (delta?.y ?? 0) };
+    }
   }, []);
 
   const handleDragEnd = async ({ active, over }) => {
+    window.removeEventListener('pointermove', updatePointerPos);
+    window.removeEventListener('touchmove', updatePointerPos);
     stopAutoScroll();
     const draggedCard = activeCard;
     const fromStage = activeFrom;
     setActiveCard(null);
     setActiveFrom(null);
 
-    if (!over || !canEdit || !fromStage || !draggedCard) return;
+    if (!over || !canManage || !fromStage || !draggedCard) return;
 
-    // Resolve the destination stageId from the over element's DnD metadata
+    // Resolve destination stageId robustly
     const overData = over.data?.current;
-    let toStageId;
-    if (overData?.type === 'column') {
-      toStageId = overData.stageId;
-    } else if (overData?.type === 'card') {
-      toStageId = overData.stageId;
-    } else {
-      // Fallback: try to extract from findColumn if metadata is missing
-      toStageId = findColumn(overData?.leadId ?? over.id);
+    let toStageId = overData?.stageId;
+
+    if (!toStageId && over.id) {
+      const strId = String(over.id);
+      if (strId.startsWith('stage-')) {
+        toStageId = Number(strId.replace('stage-', ''));
+      } else if (strId.startsWith('card-')) {
+        const targetLeadId = Number(strId.replace('card-', ''));
+        toStageId = findColumn(targetLeadId);
+      } else {
+        const parsed = Number(strId);
+        if (!isNaN(parsed)) toStageId = findColumn(parsed) || parsed;
+      }
     }
 
     if (!toStageId) return;
@@ -319,11 +416,18 @@ const LeadsKanbanPage = () => {
   };
 
   // ── Lost Reason Modal handlers (Sprint 4) ───────────────────────────
-  const handleLostReasonConfirm = useCallback((reason) => {
+  const handleLostReasonConfirm = useCallback(async (reason) => {
     if (!lostReasonModal) return;
     const { leadId, fromStageId, toStageId } = lostReasonModal;
-    setLostReasonModal(null); // Close modal instantly for snappy UX
-    moveCard(leadId, fromStageId, toStageId, reason); // Optimistically move card & send API request
+    setIsMovingLead(true);
+    try {
+      await moveCard(leadId, fromStageId, toStageId, reason);
+      setLostReasonModal(null);
+    } catch {
+      // Rollback handled inside moveCard
+    } finally {
+      setIsMovingLead(false);
+    }
   }, [lostReasonModal, moveCard]);
 
   const handleLostReasonCancel = useCallback(() => {
@@ -356,6 +460,14 @@ const LeadsKanbanPage = () => {
 
   const totalLeadsCount = useMemo(
     () => Object.values(columns).reduce((sum, col) => sum + (col.leads?.length || 0), 0),
+    [columns]
+  );
+
+  const totalPipelineRevenue = useMemo(
+    () =>
+      Object.values(columns).reduce((sum, col) => {
+        return sum + (col.leads?.reduce((cSum, lead) => cSum + (Number(lead.budget) || 0), 0) || 0);
+      }, 0),
     [columns]
   );
 
@@ -408,10 +520,15 @@ const LeadsKanbanPage = () => {
               <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-orange-50 shrink-0">
                 <Kanban size={14} className="text-primary" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex items-center gap-2">
                 <h1 className="text-[13px] sm:text-[15px] font-semibold font-heading text-zinc-900 truncate tracking-tight">
                   {boardTitle}
                 </h1>
+                {totalPipelineRevenue > 0 && (
+                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
+                    ₹{totalPipelineRevenue.toLocaleString('en-IN')}
+                  </span>
+                )}
               </div>
             </div>
           </div>

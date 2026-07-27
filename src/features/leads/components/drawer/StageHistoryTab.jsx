@@ -1,7 +1,7 @@
 // src/features/leads/components/drawer/StageHistoryTab.jsx
 
 import React, { useState, useEffect } from 'react';
-import { getLeadPipelineHistory } from '../../../pipelines/services/pipelineService';
+import { getLeadPipelineHistory } from '../../services/leadService';
 
 /**
  * StageHistoryTab — Audits stage movements for a lead (Sprint 4 Task 3).

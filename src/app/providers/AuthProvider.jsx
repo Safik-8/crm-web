@@ -78,6 +78,11 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = useCallback((moduleOrPermissionStr, action = null) => {
     if (!user) return false;
 
+    // Super Admin & Company Admin have full administrative permissions over all modules
+    if (user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || (user.primaryRoleRank >= 80)) {
+      return true;
+    }
+
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
     if (action) {
       return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);

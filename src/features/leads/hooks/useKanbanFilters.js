@@ -27,11 +27,9 @@ const DEFAULT_SORT_ORDER = 'desc';
 const EMPTY_FILTERS = {
   search: '',
   assignedToId: '',
+  priority: '',
   dateFrom: '',
   dateTo: '',
-  // Default to true: backend filters to today when no date params are sent,
-  // which would make the board appear empty for most users on first load.
-  // allDates=1 tells the backend to return all leads regardless of date.
   allDates: true,
   sortBy: DEFAULT_SORT_BY,
   sortOrder: DEFAULT_SORT_ORDER,
@@ -41,11 +39,9 @@ const EMPTY_FILTERS = {
 const parseAppliedFilters = (searchParams) => ({
   search: searchParams.get('search')?.trim() || '',
   assignedToId: searchParams.get('assignedToId') || '',
+  priority: searchParams.get('priority') || '',
   dateFrom: searchParams.get('dateFrom') || '',
   dateTo: searchParams.get('dateTo') || '',
-  // Default true: when the URL has no allDates param AND no date range params,
-  // treat it as "show all dates" to avoid the backend's today-only default.
-  // Becomes false only when the user explicitly sets a date range (dateFrom/dateTo).
   allDates: searchParams.has('allDates')
     ? searchParams.get('allDates') === '1'
     : !searchParams.get('dateFrom') && !searchParams.get('dateTo'),
@@ -63,6 +59,10 @@ const buildApiParams = (filters) => {
   const parsedUser = Number(filters.assignedToId);
   if (filters.assignedToId && !Number.isNaN(parsedUser)) {
     params.assignedToId = parsedUser;
+  }
+
+  if (filters.priority && filters.priority !== 'ALL') {
+    params.priority = filters.priority;
   }
 
   if (filters.allDates) {
@@ -93,7 +93,7 @@ const computeHasActiveFilters = (filters) =>
   !!(
     filters.search ||
     filters.assignedToId ||
-    // allDates=false is non-default (user has switched to date-range mode)
+    (filters.priority && filters.priority !== 'ALL') ||
     !filters.allDates ||
     filters.dateFrom ||
     filters.dateTo ||

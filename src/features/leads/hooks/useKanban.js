@@ -1,178 +1,138 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPipelineById } from '../../pipelines/services/pipelineService';
 import { updateLeadStage } from '../services/leadService';
 import { toast } from '../../../shared/utils/toast';
 import { isTerminalStage } from '../../pipelines/utils/stageRules';
 
+export const KANBAN_KEYS = {
+  all: ['kanban'],
+  board: (pipelineId, filters) => [...KANBAN_KEYS.all, pipelineId, filters],
+};
 
 /**
- * useKanban — Manages full Kanban board state for a single pipeline.
- *
- * columns: { [stageId]: { stage, leads: [] } }
- *
- * Loading states:
- *   loading      → true only on the FIRST load (no columns yet). Shows skeleton.
- *   isRefetching → true on subsequent fetches (columns already visible). Shows
- *                  subtle overlay — board stays mounted, no flash.
- *
- * Performance:
- *   - columnsRef mirrors columns so moveCard never needs columns in its dep array.
- *   - orderedStages is memoised to prevent downstream re-renders.
- *   - Request sequence tracking prevents stale response race conditions.
- *   - AbortController cancels in-flight requests on unmount / filter change.
+ * useKanban — Manages full Kanban board state using TanStack Query.
+ * Includes in-flight mutation counter to prevent query refetch race conditions
+ * during rapid drag-and-drop actions.
  */
 export const useKanban = (pipelineId, filters = {}) => {
+  const queryClient = useQueryClient();
   const [columns, setColumns] = useState({});
-  const [loading, setLoading] = useState(true);       // initial skeleton load
-  const [isRefetching, setIsRefetching] = useState(false); // background refresh
-  const [error, setError] = useState(null);
-  const [pipelineName, setPipelineName] = useState('');
-  // Users assignable within this pipeline — sourced directly from pipeline response.
-  // No separate API call needed; backend guarantees branch/company-scoped correctness.
-  const [assignableUsers, setAssignableUsers] = useState([]);
-
-  // Mirror of columns kept in a ref so moveCard can read the latest value
-  // without being recreated every time columns changes.
   const columnsRef = useRef(columns);
   columnsRef.current = columns;
-
-  // Snapshot ref for optimistic-update rollback
   const snapshotRef = useRef(null);
 
-  // Track request sequence to prevent out-of-order stale response race conditions
-  const activeRequestSeqRef = useRef(0);
+  // Track in-flight card move mutations to prevent refetch race conditions during rapid dragging
+  const inFlightMoveCountRef = useRef(0);
 
-  // Deep-stringify filters so useEffect dependencies are stable
-  const stringifiedFilters = JSON.stringify(filters);
+  const queryKey = useMemo(() => KANBAN_KEYS.board(pipelineId, filters), [pipelineId, filters]);
 
-  const fetchBoard = useCallback(
-    async (signal = null) => {
-      if (!pipelineId) return;
-
-      const currentSeq = ++activeRequestSeqRef.current;
-      const isInitialLoad = Object.keys(columnsRef.current).length === 0;
-
-      if (isInitialLoad) {
-        setLoading(true);
-      } else {
-        setIsRefetching(true);
-      }
-      setError(null);
-
-      try {
-        const res = await getPipelineById(pipelineId, filters, { signal });
-
-        // Discard if a newer request has already started or request was cancelled
-        if (currentSeq !== activeRequestSeqRef.current) return;
-        if (!res) return;
-
-        const pipeline = res?.data?.pipeline || res?.pipeline;
-        if (!pipeline) throw new Error('Pipeline board details not found');
-
-        setPipelineName(pipeline.name || '');
-        setAssignableUsers(pipeline.assignableUsers || []);
-
-        const stages = pipeline.stages || [];
-        const cols = {};
-        stages.forEach((stage) => {
-          cols[stage.id] = {
-            stage: {
-              id:           stage.id,
-              name:         stage.name,
-              isDefault:    stage.isDefault,
-              orderNo:      stage.orderNo,
-              // J1: Sprint 4 — needed for terminal lock checks and column color
-              stageType:    stage.stageType  || null,
-              colorCode:    stage.colorCode  || null,
-              code:         stage.code       || null,
-              status:       stage.status     || 'ACTIVE',
-            },
-            leads: stage.leads || [],
-          };
-        });
-
-
-        setColumns(cols);
-      } catch (err) {
-        if (currentSeq !== activeRequestSeqRef.current) return;
-        // AbortError is intentional cancellation — swallow silently, no toast
-        if (err?.name === 'AbortError') return;
-        setError(err?.message || 'Failed to load board');
-      } finally {
-        if (currentSeq === activeRequestSeqRef.current) {
-          setLoading(false);
-          setIsRefetching(false);
-        }
-      }
+  const {
+    data: boardData,
+    isLoading: isQueryLoading,
+    isFetching: isRefetching,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      const res = await getPipelineById(pipelineId, filters, { signal });
+      return res?.data?.pipeline || res?.pipeline || res;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pipelineId, stringifiedFilters]
-  );
+    enabled: !!pipelineId,
+    staleTime: 10000,
+  });
 
-  // Trigger board refetch on mount and whenever filters/pipelineId change
+  // Sync local columns state when Query Data updates, UNLESS rapid card moves are currently in-flight
   useEffect(() => {
-    const controller = new AbortController();
-    fetchBoard(controller.signal);
-    return () => {
-      controller.abort();
-    };
-  }, [fetchBoard]);
+    if (!boardData) return;
+    // Skip overwriting local optimistic columns while user has active card moves processing on the server
+    if (inFlightMoveCountRef.current > 0) return;
 
-  /**
-   * Optimistic card move.
-   * Reads current columns from columnsRef — no dependency on columns state,
-   * so this function is created exactly once per mount.
-   *
-   * RULE: Leads in WON or CLOSURE stage are permanently locked — they cannot
-   * be moved to any other stage. This is enforced here (data layer) as the
-   * single source of truth, in addition to UI-layer guards in the page.
-   *
-   * @param {number} leadId
-   * @param {number} fromStageId
-   * @param {number} toStageId
-   * @param {string|null} reason - required when moving to LOST stage
-   */
-  const moveCard = useCallback(async (leadId, fromStageId, toStageId, reason = null) => {
-    // Normalize to strings — JS object keys are always strings
-    const fromKey = String(fromStageId);
-    const toKey = String(toStageId);
-    if (fromKey === toKey) return;
-
-    // J2: Terminal lock: leads in WON/CLOSURE cannot be moved out
-    const fromStage = columnsRef.current[fromKey]?.stage;
-    if (isTerminalStage(fromStage)) {
-      toast.error(`Leads in "${fromStage?.name}" stage cannot be moved to another stage.`);
-      return;
-    }
-
-    // Deep-clone current state for rollback
-    snapshotRef.current = JSON.parse(JSON.stringify(columnsRef.current));
-
-    setColumns((prev) => {
-      const lead = prev[fromKey]?.leads.find((l) => l.id === leadId);
-      if (!lead) return prev;
-      return {
-        ...prev,
-        [fromKey]: {
-          ...prev[fromKey],
-          leads: prev[fromKey].leads.filter((l) => l.id !== leadId),
+    const stages = boardData.stages || [];
+    const cols = {};
+    stages.forEach((stage) => {
+      cols[stage.id] = {
+        stage: {
+          id: stage.id,
+          name: stage.name,
+          isDefault: stage.isDefault,
+          orderNo: stage.orderNo,
+          stageType: stage.stageType || null,
+          colorCode: stage.colorCode || null,
+          code: stage.code || null,
+          status: stage.status || 'ACTIVE',
         },
-        [toKey]: {
-          ...prev[toKey],
-          leads: [...(prev[toKey]?.leads || []), { ...lead, stageId: Number(toStageId) }],
-        },
+        leads: stage.leads || [],
       };
     });
 
-    try {
-      // J3: Pass reason to API (required for LOST stage)
-      await updateLeadStage(leadId, toStageId, reason);
-    } catch (err) {
+    setColumns(cols);
+  }, [boardData]);
+
+  const pipelineName = boardData?.name || '';
+  const assignableUsers = boardData?.assignableUsers || [];
+  const loading = isQueryLoading && Object.keys(columns).length === 0;
+  const error = queryError ? (queryError?.message || 'Failed to load board') : null;
+
+  // TanStack Mutation for card moves
+  const moveCardMutation = useMutation({
+    mutationFn: async ({ leadId, toStageId, reason }) => {
+      return updateLeadStage(leadId, toStageId, reason);
+    },
+    onSuccess: () => {
+      inFlightMoveCountRef.current = Math.max(0, inFlightMoveCountRef.current - 1);
+      // Only trigger query invalidation when ALL in-flight rapid moves have completed processing
+      if (inFlightMoveCountRef.current === 0) {
+        queryClient.invalidateQueries({ queryKey: KANBAN_KEYS.all });
+      }
+    },
+    onError: (err) => {
+      inFlightMoveCountRef.current = Math.max(0, inFlightMoveCountRef.current - 1);
       if (snapshotRef.current) setColumns(snapshotRef.current);
       toast.error(err?.message || 'Could not move lead. Try again.');
-    }
-  }, []); // stable: no columns dependency
+      if (inFlightMoveCountRef.current === 0) {
+        queryClient.invalidateQueries({ queryKey: KANBAN_KEYS.all });
+      }
+    },
+  });
 
+  const moveCard = useCallback(
+    async (leadId, fromStageId, toStageId, reason = null) => {
+      const fromKey = String(fromStageId);
+      const toKey = String(toStageId);
+      if (fromKey === toKey) return;
+
+      const fromStage = columnsRef.current[fromKey]?.stage;
+      if (isTerminalStage(fromStage)) {
+        toast.error(`Leads in "${fromStage?.name}" stage cannot be moved to another stage.`);
+        return;
+      }
+
+      snapshotRef.current = JSON.parse(JSON.stringify(columnsRef.current));
+
+      // Optimistically update local UI columns immediately
+      setColumns((prev) => {
+        const lead = prev[fromKey]?.leads.find((l) => l.id === leadId);
+        if (!lead) return prev;
+        return {
+          ...prev,
+          [fromKey]: {
+            ...prev[fromKey],
+            leads: prev[fromKey].leads.filter((l) => l.id !== leadId),
+          },
+          [toKey]: {
+            ...prev[toKey],
+            leads: [...(prev[toKey]?.leads || []), { ...lead, stageId: Number(toStageId) }],
+          },
+        };
+      });
+
+      inFlightMoveCountRef.current++;
+      return moveCardMutation.mutateAsync({ leadId, toStageId, reason });
+    },
+    [moveCardMutation]
+  );
 
   const addLeadToColumn = useCallback((stageId, lead) => {
     setColumns((prev) => {
@@ -182,12 +142,9 @@ export const useKanban = (pipelineId, filters = {}) => {
         [stageId]: { ...prev[stageId], leads: [lead, ...prev[stageId].leads] },
       };
     });
-  }, []);
+    queryClient.invalidateQueries({ queryKey: KANBAN_KEYS.all });
+  }, [queryClient]);
 
-  /**
-   * Update a lead's data in local state (optimistic update after successful PUT).
-   * Finds the lead across all columns and merges the updated fields.
-   */
   const updateLeadLocal = useCallback((leadId, updatedFields) => {
     setColumns((prev) => {
       const next = { ...prev };
@@ -203,11 +160,9 @@ export const useKanban = (pipelineId, filters = {}) => {
       }
       return next;
     });
-  }, []);
+    queryClient.invalidateQueries({ queryKey: KANBAN_KEYS.all });
+  }, [queryClient]);
 
-  /**
-   * Remove a lead from local state immediately (after successful DELETE or 404).
-   */
   const deleteLeadLocal = useCallback((leadId) => {
     setColumns((prev) => {
       const next = { ...prev };
@@ -223,7 +178,8 @@ export const useKanban = (pipelineId, filters = {}) => {
       }
       return next;
     });
-  }, []);
+    queryClient.invalidateQueries({ queryKey: KANBAN_KEYS.all });
+  }, [queryClient]);
 
   const orderedStages = useMemo(
     () =>
@@ -246,7 +202,7 @@ export const useKanban = (pipelineId, filters = {}) => {
     addLeadToColumn,
     updateLeadLocal,
     deleteLeadLocal,
-    refetch: () => fetchBoard(null),
+    refetch,
     pipelineName,
     assignableUsers,
   };
