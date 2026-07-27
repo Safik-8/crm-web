@@ -213,7 +213,7 @@ export const router = createBrowserRouter([
       {
         path: 'assignment-settings',
         element: (
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER']}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
             <AssignmentSettingsPage />
           </ProtectedRoute>
         ),
