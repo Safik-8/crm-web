@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog } from '@mui/material';
+import { Dialog, Checkbox, Menu, MenuItem } from '@mui/material';
 import {
   Plus,
   RefreshCw,
@@ -20,7 +20,11 @@ import {
   SlidersHorizontal,
   BookmarkPlus,
   Bookmark,
-  X
+  X,
+  MoreVertical,
+  UserCheck,
+  HelpCircle,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
@@ -53,6 +57,104 @@ import LeadCreateModal from '../components/LeadCreateModal';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDetailDrawer from '../components/LeadDetailDrawer';
 import LeadImportModal from '../components/LeadImportModal';
+import AssignLeadDrawer from '../components/AssignLeadDrawer';
+
+const RowActionsMenu = ({
+  row,
+  onViewDetails,
+  onEdit,
+  onAssign,
+  onDelete,
+  hasPermission
+}) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAction = (callback) => {
+    handleClose();
+    callback(row);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+        title="Actions"
+      >
+        <MoreVertical size={16} />
+      </button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        elevation={0}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+        }}
+      >
+        <MenuItem
+          onClick={() => handleAction(onViewDetails)}
+          className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+          sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+        >
+          <Eye size={14} className="text-slate-400" />
+          <span>View Details</span>
+        </MenuItem>
+
+        {hasPermission('LEAD', 'canEdit') && (
+          <MenuItem
+            onClick={() => handleAction(onEdit)}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Pencil size={13} className="text-slate-400" />
+            <span>Edit Lead</span>
+          </MenuItem>
+        )}
+
+        {(hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
+          <MenuItem
+            onClick={() => handleAction(onAssign)}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <UserCheck size={14} className="text-slate-400" />
+            <span>Assign Lead</span>
+          </MenuItem>
+        )}
+
+        {hasPermission('LEAD', 'canDelete') && (
+          <MenuItem
+            onClick={() => handleAction(onDelete)}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-rose-600 hover:text-rose-700 hover:bg-rose-50/30 border-t border-slate-100/50"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Trash2 size={13} className="text-rose-400" />
+            <span>Delete Lead</span>
+          </MenuItem>
+        )}
+      </Menu>
+    </>
+  );
+};
 
 export const LeadsPage = () => {
   const navigate = useNavigate();
@@ -67,6 +169,11 @@ export const LeadsPage = () => {
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+
+  // Lead assignment states
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [leadsToAssign, setLeadsToAssign] = useState([]);
 
   // List filter manager hook
   const {
@@ -345,6 +452,8 @@ export const LeadsPage = () => {
     });
   };
 
+
+
   // Role-based scope permissions
   const role = currentUser?.primaryRole;
   const canSelectCompany = role === 'SUPER_ADMIN';
@@ -510,12 +619,30 @@ export const LeadsPage = () => {
     },
     {
       header: 'Assigned To',
-      cell: (row) => (
-        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-600">
-          <User size={11} className="text-slate-400" />
-          {row.assignedTo?.name || <span className="text-slate-400 italic font-normal">Unassigned</span>}
-        </span>
-      )
+      cell: (row) => {
+        if (row.assignedTo) {
+          const roleName = row.assignedTo.userRoles?.[0]?.role?.name || row.assignedTo.primaryRole || 'Sales Rep';
+          return (
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-700">
+              <User size={12} className="text-slate-400" />
+              <span>Person: {row.assignedTo.name} ({roleName})</span>
+            </span>
+          );
+        } else if (row.team) {
+          return (
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-orange-600">
+              <Users size={12} className="text-orange-400" />
+              <span>Team: {row.team.name}</span>
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-slate-400 italic">
+            <HelpCircle size={12} className="text-slate-300" />
+            <span>Unassigned</span>
+          </span>
+        );
+      }
     },
     {
       header: 'Created',
@@ -533,35 +660,59 @@ export const LeadsPage = () => {
       )
     },
     {
+      header: (() => {
+        const unassignedLeads = leads.filter(l => !l.assignedToId && !l.teamId);
+        const isAllSelected = unassignedLeads.length > 0 && unassignedLeads.every(l => selectedLeadIds.includes(l.id));
+        const isSomeSelected = selectedLeadIds.length > 0 && !isAllSelected;
+        return (
+          <Checkbox
+            checked={isAllSelected}
+            indeterminate={isSomeSelected}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedLeadIds(unassignedLeads.map(l => l.id));
+              } else {
+                setSelectedLeadIds([]);
+              }
+            }}
+            size="small"
+          />
+        );
+      })(),
+      cell: (row) => {
+        const isAssigned = !!row.assignedToId || !!row.teamId;
+        return (
+          <Checkbox
+            checked={selectedLeadIds.includes(row.id)}
+            disabled={isAssigned}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedLeadIds(prev => [...prev, row.id]);
+              } else {
+                setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
+              }
+            }}
+            size="small"
+          />
+        );
+      }
+    },
+    {
       header: 'Actions',
       align: 'right',
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
-          <button
-            onClick={() => setSelectedLeadForView(row)}
-            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all"
-            title="View Details"
-          >
-            <Eye size={15} />
-          </button>
-          {hasPermission('LEAD', 'canEdit') && (
-            <button
-              onClick={() => setSelectedLeadForEdit(row)}
-              className="p-1 text-slate-400 hover:text-primary hover:bg-orange-50 rounded-md transition-all"
-              title="Edit Lead"
-            >
-              <Pencil size={15} />
-            </button>
-          )}
-          {hasPermission('LEAD', 'canDelete') && (
-            <button
-              onClick={() => setSelectedLeadForDelete(row)}
-              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
-              title="Delete Lead"
-            >
-              <Trash2 size={15} />
-            </button>
-          )}
+        <div className="flex items-center justify-end gap-1">
+          <RowActionsMenu
+            row={row}
+            onViewDetails={setSelectedLeadForView}
+            onEdit={setSelectedLeadForEdit}
+            onAssign={(r) => {
+              setLeadsToAssign([r]);
+              setIsAssignOpen(true);
+            }}
+            onDelete={setSelectedLeadForDelete}
+            hasPermission={hasPermission}
+          />
         </div>
       )
     }
@@ -579,6 +730,24 @@ export const LeadsPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {selectedLeadIds.length > 0 && (hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
+                setLeadsToAssign(selectedLeads);
+                setIsAssignOpen(true);
+              }}
+              startIcon={<UserCheck size={16} />}
+              sx={{
+                backgroundColor: '#F86F03',
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
+            >
+              Assign Selected ({selectedLeadIds.length})
+            </Button>
+          )}
+
           <Button
             variant="outlined"
             onClick={() => navigate('/pipelines')}
@@ -594,6 +763,25 @@ export const LeadsPage = () => {
           >
             Kanban Boards
           </Button>
+          
+          {hasPermission('LEAD', 'canDelete') && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setIsDeleteAllOpen(true)}
+              startIcon={<Trash2 size={16} />}
+              sx={{
+                borderColor: '#FEE2E2',
+                color: '#EF4444',
+                '&:hover': {
+                  borderColor: '#FCA5A5',
+                  bgcolor: '#FEF2F2'
+                }
+              }}
+            >
+              Delete All
+            </Button>
+          )}
 
           {hasPermission('LEAD', 'canCreate') && (
             <div className="flex gap-2">
@@ -611,22 +799,6 @@ export const LeadsPage = () => {
                 }}
               >
                 Import Leads
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => setIsDeleteAllOpen(true)}
-                startIcon={<Trash2 size={16} />}
-                sx={{
-                  borderColor: '#FCA5A5',
-                  color: '#EF4444',
-                  '&:hover': {
-                    borderColor: '#F87171',
-                    bgcolor: '#FEF2F2'
-                  }
-                }}
-              >
-                Delete All
               </Button>
               <Button
                 variant="contained"
@@ -1105,6 +1277,18 @@ export const LeadsPage = () => {
         />
       )}
 
+      <AssignLeadDrawer
+        isOpen={isAssignOpen}
+        onClose={() => {
+          setIsAssignOpen(false);
+          setLeadsToAssign([]);
+        }}
+        leads={leadsToAssign}
+        onSuccess={() => {
+          setSelectedLeadIds([]);
+        }}
+      />
+
       <ConfirmModal
         isOpen={!!selectedLeadForDelete}
         onClose={() => setSelectedLeadForDelete(null)}
@@ -1122,12 +1306,14 @@ export const LeadsPage = () => {
         onClose={() => setIsDeleteAllOpen(false)}
         onConfirm={handleDeleteAllConfirm}
         title="Delete All Leads"
-        message="Are you sure you want to delete ALL leads? This action will archive all active leads in the current scope. This cannot be undone."
-        confirmText="Delete All"
+        message="Are you sure you want to delete ALL leads in your current scope? This will soft-delete all active leads."
+        confirmText="Delete All Leads"
         cancelText="Cancel"
         danger
         isLoading={deleteAllLeadsMutation.isPending}
       />
+
+
 
       {/* Saved Filters Management Modals */}
       <Dialog

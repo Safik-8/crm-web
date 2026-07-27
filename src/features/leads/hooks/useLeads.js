@@ -14,7 +14,8 @@ import {
   getLeadNotes,
   createLeadNote,
   updateLeadNote,
-  deleteLeadNote
+  deleteLeadNote,
+  assignLeads
 } from '../services/leadService';
 import { userProfileService } from '../../userprofile/services/userProfileService';
 import { toast } from '../../../shared/utils/toast';
@@ -359,3 +360,22 @@ export const useUpdateUserPreferencesMutation = () => {
     }
   });
 };
+
+/**
+ * Hook to assign one or more leads to a team and/or user.
+ */
+export const useAssignLeadsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: assignLeads,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.details() });
+    },
+    onError: (error) => {
+      const msg = error?.message || 'Failed to assign leads';
+      toast.error(msg);
+    }
+  });
+};
+

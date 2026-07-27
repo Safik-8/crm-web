@@ -535,6 +535,9 @@ const TimelineTab = ({ leadId }) => {
           if (newObj.assignedToId !== oldObj.assignedToId || (newObj.assignedTo && oldObj.assignedTo && newObj.assignedTo.name !== oldObj.assignedTo.name)) {
             changes.push(`reassigned lead to ${newObj.assignedTo?.name || 'nobody'}`);
           }
+          if (newObj.teamId !== oldObj.teamId || (newObj.team && oldObj.team && newObj.team.name !== oldObj.team.name)) {
+            changes.push(`assigned lead to team "${newObj.team?.name || 'none'}"`);
+          }
           if (newObj.stageId !== oldObj.stageId || (newObj.stage && oldObj.stage && newObj.stage.name !== oldObj.stage.name)) {
             changes.push(`moved stage to "${newObj.stage?.name || 'Unknown'}"`);
           }
