@@ -45,3 +45,6 @@ export const reorderPipelineStages = (pipelineId, orderedStageIds) =>
     method: 'PUT',
     body: { orderedStageIds },
   });
+
+export const getLeadPipelineHistory = (leadId) =>
+  apiClient(`/leads/${leadId}/pipeline-history`, { method: 'GET' });

@@ -11,6 +11,8 @@ import { branchService } from '../../branch/services/branchService';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
+import Button from '../../../shared/components/elements/Button';
+
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
   const { user } = useAuth();
@@ -205,10 +207,14 @@ const PipelinesPage = () => {
           <p className="text-sm text-slate-500 mt-1">Build your sales flow. Track every lead.</p>
         </div>
         {canCreate && (
-          <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
-            <Plus size={18} /> New Pipeline
-          </button>
+          <Button
+            onClick={() => setShowModal(true)}
+            variant="contained"
+            size="medium"
+            startIcon={<Plus size={18} />}
+          >
+            New Pipeline
+          </Button>
         )}
       </div>
 
@@ -218,10 +224,14 @@ const PipelinesPage = () => {
           <Kanban size={48} className="text-slate-300" />
           <p className="font-semibold text-slate-500 text-lg">No pipelines yet</p>
           {canCreate && (
-            <button onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90">
-              <Plus size={16} /> Create your first pipeline
-            </button>
+            <Button
+              onClick={() => setShowModal(true)}
+              variant="contained"
+              size="medium"
+              startIcon={<Plus size={16} />}
+            >
+              Create your first pipeline
+            </Button>
           )}
         </div>
       )}

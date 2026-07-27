@@ -51,6 +51,21 @@ const SortableStageRow = ({
     zIndex: isDragging ? 50 : 'auto',
   };
 
+  const getStageTypeBadge = () => {
+    switch (stage.stageType) {
+      case 'WON':
+        return <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">WON</span>;
+      case 'LOST':
+        return <span className="text-[9px] font-extrabold text-red-600 bg-red-50 border border-red-200/80 px-1.5 py-0.5 rounded-md">LOST</span>;
+      case 'PROSPECT':
+        return <span className="text-[9px] font-extrabold text-blue-600 bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded-md">PROSPECT</span>;
+      case 'CLOSURE':
+        return <span className="text-[9px] font-extrabold text-purple-600 bg-purple-50 border border-purple-200/80 px-1.5 py-0.5 rounded-md">CLOSURE</span>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -87,6 +102,15 @@ const SortableStageRow = ({
         }
       </div>
 
+      {/* Stage color dot */}
+      {stage.colorCode && (
+        <span
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: stage.colorCode }}
+          title={`Color: ${stage.colorCode}`}
+        />
+      )}
+
       {/* Stage name or inline editor */}
       {isEditing ? (
         <InlineStageNameEditor
@@ -97,11 +121,23 @@ const SortableStageRow = ({
           loading={renaming}
         />
       ) : (
-        <span className={`flex-1 text-sm font-semibold truncate transition-colors ${
-          mandatory ? 'text-primary' : isDeleting ? 'text-slate-400' : 'text-slate-800'
-        }`}>
-          {stage.name}
-        </span>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className={`text-sm font-semibold truncate transition-colors ${
+            mandatory ? 'text-primary' : isDeleting ? 'text-slate-400' : 'text-slate-800'
+          }`}>
+            {stage.name}
+          </span>
+
+          {/* Code badge (only if different from stageType) */}
+          {stage.code && stage.code !== stage.stageType && (
+            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+              {stage.code}
+            </span>
+          )}
+
+          {/* StageType badge */}
+          {getStageTypeBadge()}
+        </div>
       )}
 
       {/* Right side actions */}

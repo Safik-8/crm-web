@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
   Drawer,
   IconButton,
-  Typography,
-  Box,
   CircularProgress,
   Dialog
 } from '@mui/material';
@@ -235,25 +233,25 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
         }
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
+      <div className="flex flex-col h-full bg-white">
         {/* Header */}
-        <Box sx={{ p: 3, borderBottom: '1px solid #F1F5F9', display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="p-3 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <h2 className="font-extrabold text-slate-900 text-base flex items-center gap-1 font-heading">
               <FileSpreadsheet className="text-orange-500 w-5 h-5" />
               <span>Bulk Import Leads</span>
-            </Typography>
-            <Typography variant="caption" className="text-slate-400 font-medium">
+            </h2>
+            <span className="text-slate-400 font-medium text-xs block">
               Upload spreadsheets to populate contacts dynamically.
-            </Typography>
+            </span>
           </div>
           <IconButton onClick={handleClose} size="small" className="text-slate-400 hover:text-slate-600">
             <X size={20} />
           </IconButton>
-        </Box>
+        </div>
 
         {/* Content */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+        <div className="flex-1 overflow-y-auto p-3">
           {step === 'upload' && (
             <div className="space-y-6">
               {/* Scope Selection */}
@@ -518,10 +516,10 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
               )}
             </div>
           )}
-        </Box>
+        </div>
 
         {/* Footer */}
-        <Box sx={{ p: 3, borderTop: '1px solid #F1F5F9', display: 'flex', justifyItems: 'center', justifyContent: 'flex-end', gap: 2, bgcolor: '#F8FAFC' }}>
+        <div className="p-3 border-t border-slate-100 flex items-center justify-end gap-2 bg-slate-50">
           {step === 'upload' && (
             <Button variant="outlined" onClick={handleClose} sx={{ color: '#475569', borderColor: '#E2E8F0' }}>
               Cancel
@@ -549,8 +547,8 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
               Done
             </Button>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
     </Drawer>
 
     <Dialog
@@ -570,25 +568,25 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
         zIndex: 1400,
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="flex flex-col h-full">
         {/* Dialog Header */}
-        <Box sx={{ p: 3, borderBottom: '1px solid #E2E8F0', display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#FFFFFF' }}>
+        <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-white">
           <div>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <h2 className="font-extrabold text-slate-900 text-base flex items-center gap-1 font-heading">
               <FileSpreadsheet className="text-orange-500 w-5 h-5" />
               <span>Spreadsheet Preview: {file?.name || 'leads_import.xlsx'}</span>
-            </Typography>
-            <Typography variant="caption" className="text-slate-400 font-medium">
+            </h2>
+            <span className="text-slate-400 font-medium text-xs block">
               Showing rows preview of parsed spreadsheet data
-            </Typography>
+            </span>
           </div>
           <IconButton onClick={() => setIsFullScreenOpen(false)} size="small" className="text-slate-400 hover:text-slate-600">
             <X size={20} />
           </IconButton>
-        </Box>
+        </div>
 
         {/* Dialog Content */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+        <div className="flex-1 overflow-auto p-3">
           <div className="space-y-4 max-w-7xl mx-auto">
             {/* Stats Block */}
             {previewData && (
@@ -663,15 +661,15 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
               </div>
             )}
           </div>
-        </Box>
+        </div>
 
         {/* Dialog Footer */}
-        <Box sx={{ p: 3, borderTop: '1px solid #E2E8F0', display: 'flex', justifyItems: 'center', justifyContent: 'flex-end', bgcolor: '#FFFFFF' }}>
+        <div className="p-3 border-t border-slate-200 flex items-center justify-end bg-white">
           <Button variant="outlined" onClick={() => setIsFullScreenOpen(false)} sx={{ color: '#475569', borderColor: '#E2E8F0' }}>
             Close Preview
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
     </Dialog>
     </>
   );

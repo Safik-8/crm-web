@@ -39,6 +39,13 @@ const SORT_BY_OPTIONS = [
   { id: 'mobile', name: 'Mobile Number' },
 ];
 
+const PRIORITY_OPTIONS = [
+  { id: 'ALL', name: 'All Priorities' },
+  { id: 'HIGH', name: 'High' },
+  { id: 'MEDIUM', name: 'Medium' },
+  { id: 'LOW', name: 'Low' },
+];
+
 const SIDEBAR_WIDTH = 252;
 const RAIL_WIDTH = 48;
 
@@ -197,6 +204,7 @@ export const KanbanFilterSidebar = ({
     let count = 0;
     if (draftFilters.search) count++;
     if (draftFilters.assignedToId) count++;
+    if (draftFilters.priority && draftFilters.priority !== 'ALL') count++;
     if (!draftFilters.allDates) {
       if (draftFilters.dateFrom) count++;
       if (draftFilters.dateTo) count++;
@@ -272,6 +280,19 @@ export const KanbanFilterSidebar = ({
             placeholder="All users"
             icon={Users}
             emptyMessage="No assignable users found"
+            className="w-full"
+            block
+          />
+        </FilterSection>
+
+        <FilterSection title="Priority">
+          <SearchableDropdown
+            options={PRIORITY_OPTIONS}
+            value={draftFilters.priority || 'ALL'}
+            onChange={(val) => setDraftFilters({ priority: val === 'ALL' ? '' : val })}
+            clearable={false}
+            placeholder="All Priorities"
+            icon={SlidersHorizontal}
             className="w-full"
             block
           />

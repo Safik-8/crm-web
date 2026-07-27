@@ -46,8 +46,8 @@ const RBAC_ADAPTER_MAP = {
   'create:pipeline':  { module: 'PIPELINE', action: 'canCreate' },
   'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
   'delete:pipeline':  { module: 'PIPELINE', action: 'canDelete' },
-  'view:stages':      { module: 'STAGE',    action: 'canView' },
-  'manage:stages':    { module: 'STAGE',    action: 'canEdit' },
+  'view:stages':      { module: 'PIPELINE', action: 'canView' },
+  'manage:stages':    { module: 'PIPELINE', action: 'canEdit' },
 
   // Lead Permissions (Phase 1)
   'view:leads_kanban': { module: 'LEAD', action: 'canView' },
@@ -77,6 +77,11 @@ export const AuthProvider = ({ children }) => {
   //   2. hasPermission('PIPELINE', 'canCreate') -> directly evaluates backend permissions (fully dynamic/extendable)
   const hasPermission = useCallback((moduleOrPermissionStr, action = null) => {
     if (!user) return false;
+
+    // Super Admin & Company Admin have full administrative permissions over all modules
+    if (user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || (user.primaryRoleRank >= 80)) {
+      return true;
+    }
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
     if (action) {
