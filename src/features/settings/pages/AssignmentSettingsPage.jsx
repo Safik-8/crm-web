@@ -15,7 +15,7 @@ export const AssignmentSettingsPage = () => {
 
   const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
   const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER';
+  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && !!currentUser?.branchId);
 
   // Selection states
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
