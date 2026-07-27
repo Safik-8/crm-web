@@ -1,6 +1,7 @@
 // src/features/users/pages/UsersPage.jsx
 
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Users2, Plus, RefreshCw, Filter, Search, List, Network } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
@@ -82,6 +83,26 @@ const UsersPage = () => {
   } = useUserList(currentUser);
 
   const resetPasswordMutation = useResetPasswordMutation();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync incoming navigation filters
+  useEffect(() => {
+    const state = location.state;
+    if (state?.filterBranchId || state?.filterCompanyId) {
+      if (state.filterCompanyId) {
+        handleFilterChange('companyId', state.filterCompanyId);
+      }
+      if (state.filterBranchId) {
+        handleFilterChange('branchId', state.filterBranchId);
+      } else {
+        handleFilterChange('branchId', ''); // Reset branch if only filtering company
+      }
+      // Clear route state to prevent persistent filtering on reload
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate, handleFilterChange]);
 
   // Hide page loader on mount
   useEffect(() => {
@@ -171,11 +192,15 @@ const UsersPage = () => {
     setIsConfirmStatusOpen(true);
   };
 
-  const handleConfirmToggleStatus = () => {
+  const handleConfirmToggleStatus = async () => {
     if (!selectedUserForStatus) return;
-    handleToggleStatus(selectedUserForStatus.id, selectedUserForStatus.status);
-    setIsConfirmStatusOpen(false);
-    setSelectedUserForStatus(null);
+    try {
+      await handleToggleStatus(selectedUserForStatus.id, selectedUserForStatus.status);
+      setIsConfirmStatusOpen(false);
+      setSelectedUserForStatus(null);
+    } catch (err) {
+      // Error toast handled by mutation
+    }
   };
 
   return (

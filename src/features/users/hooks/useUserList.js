@@ -77,11 +77,11 @@ export const useUserList = (currentUser = null) => {
 
   const handleToggleStatus = (id, currentStatus) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    toggleStatusMutation.mutate({ id, nextStatus });
+    return toggleStatusMutation.mutateAsync({ id, nextStatus });
   };
 
   // Derive page loading states
-  const loadingState = getLoadingState(isLoading || isFetching, isError, users.length);
+  const loadingState = getLoadingState(isLoading || isFetching || toggleStatusMutation.isPending, isError, users.length);
 
   /**
    * Clears all filters and resets search inputs with respects to user rank isolation rules

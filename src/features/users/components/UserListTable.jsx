@@ -1,20 +1,23 @@
-// src/features/users/components/UserListTable.jsx
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Edit2, Key, Power, Eye, MoreVertical } from 'lucide-react';
+import { Edit2, Key, Power, Eye, MoreVertical, Trash2 } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import UserDeleteModal from './UserDeleteModal';
 
 const RowActionsMenu = ({
   row,
   canEdit,
+  canHardDelete,
+  currentUserId,
   onViewDetails,
   onEdit,
   onResetPassword,
-  onToggleStatus
+  onToggleStatus,
+  onDelete
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -58,7 +61,7 @@ const RowActionsMenu = ({
           horizontal: 'right',
         }}
         PaperProps={{
-          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[160px] py-1 text-slate-700 font-sans"
         }}
       >
         <MenuItem
@@ -104,9 +107,25 @@ const RowActionsMenu = ({
             </MenuItem>
           </>
         )}
+
+        {canHardDelete && row.id !== currentUserId && (
+          <MenuItem
+            onClick={() => handleAction(onDelete)}
+            className="px-3.5 py-2 text-[12px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50/60 transition-colors border-t border-slate-100/50"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Trash2 size={13} className="text-rose-500" />
+            <span>Hard Delete User</span>
+          </MenuItem>
+        )}
       </Menu>
     </>
   );
+};
+
+const getRowRank = (rowUser) => {
+  const primaryRole = rowUser?.userRoles?.find(ur => ur.isPrimary) || rowUser?.userRoles?.[0];
+  return primaryRole?.role?.rank ?? 0;
 };
 
 const UserListTable = ({
@@ -125,6 +144,10 @@ const UserListTable = ({
   sortOrder,
   onSort
 }) => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+  const actorRank = user?.primaryRoleRank ?? 0;
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const columns = [
     {
@@ -144,8 +167,19 @@ const UserListTable = ({
       className: 'min-w-[240px]',
       cell: (row) => (
         <div className="flex items-center gap-3 text-left">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
-            {row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'}
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0 overflow-hidden">
+            {row.profilePhoto ? (
+              <img
+                src={row.profilePhoto}
+                alt={row.name || 'User'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              row.firstName?.charAt(0) || row.name?.charAt(0) || 'U'
+            )}
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-800 text-[13px] leading-tight truncate">
@@ -197,6 +231,18 @@ const UserListTable = ({
         </div>
       )
     },
+    ...(isSuperAdmin ? [{
+      header: 'Company',
+      accessorKey: 'company',
+      align: 'left',
+      className: 'text-[13px] font-semibold text-slate-600',
+      cell: (row) => (
+        <span className="font-bold text-slate-700 text-[13px]">
+          {row.company?.name || 'Global / All'}
+        </span>
+      ),
+      skeleton: () => <Skeleton className="h-4 w-28 rounded-md" />
+    }] : []),
     {
       header: 'Branch',
       accessorKey: 'branch',
@@ -246,18 +292,29 @@ const UserListTable = ({
       header: 'Actions',
       align: 'right',
       className: 'w-[60px]',
-      cell: (row) => (
-        <div className="flex justify-end">
-          <RowActionsMenu
-            row={row}
-            onViewDetails={onViewDetails}
-            onEdit={onEdit}
-            onResetPassword={onResetPassword}
-            onToggleStatus={onToggleStatus}
-            canEdit={canEdit}
-          />
-        </div>
-      ),
+      cell: (row) => {
+        const rowRank = getRowRank(row);
+        // Can delete row if:
+        // 1. Row is NOT current user's own account (row.id !== user?.id)
+        // 2. Actor is SUPER_ADMIN OR (actorRank >= 80 AND actorRank > rowRank)
+        const canDeleteThisRow = row.id !== user?.id && (isSuperAdmin || (actorRank >= 80 && actorRank > rowRank));
+
+        return (
+          <div className="flex justify-end">
+            <RowActionsMenu
+              row={row}
+              onViewDetails={onViewDetails}
+              onEdit={onEdit}
+              onResetPassword={onResetPassword}
+              onToggleStatus={onToggleStatus}
+              onDelete={(targetRow) => setUserToDelete(targetRow)}
+              canEdit={canEdit}
+              canHardDelete={canDeleteThisRow}
+              currentUserId={user?.id}
+            />
+          </div>
+        );
+      },
       skeleton: () => (
         <div className="flex justify-end">
           <Skeleton className="h-8 w-8 rounded-lg" />
@@ -267,20 +324,28 @@ const UserListTable = ({
   ];
 
   return (
-    <Table
-      columns={columns}
-      data={users}
-      loadingState={loadingState}
-      errorMessage={errorMessage}
-      onRetry={onRetry}
-      hasActiveFilters={hasActiveFilters}
-      onClearFilters={onClearFilters}
-      emptyTitle="No users found"
-      emptyDescription="Could not find any user accounts matching the filters or query."
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      onSort={onSort}
-    />
+    <>
+      <Table
+        columns={columns}
+        data={users}
+        loadingState={loadingState}
+        errorMessage={errorMessage}
+        onRetry={onRetry}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={onClearFilters}
+        emptyTitle="No users found"
+        emptyDescription="Could not find any user accounts matching the filters or query."
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={onSort}
+      />
+
+      <UserDeleteModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        user={userToDelete}
+      />
+    </>
   );
 };
 

@@ -1,27 +1,80 @@
 /**
- * Centralized mandatory stage rules.
+ * Centralized stage rules — Sprint 4 update.
+ *
+ * All logic uses stageType as the primary check (rename-safe),
+ * with name-based fallback for backward compatibility.
  *
  * Prospect → always index 0, locked first
  * Closure  → always last index, locked last
- *
- * All logic that needs to know "is this stage protected?" should use these helpers
- * instead of scattered hardcoded checks.
+ * WON      → terminal (locked, no exit)
+ * LOST     → requires reason when entering
  */
 
-/** Names of system-mandatory stages (case-insensitive match) */
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/** Stage types that cannot be dragged OUT of once a lead is there */
+export const LOCKED_STAGE_TYPES = ['WON', 'CLOSURE'];
+
+/** Stage types that show as terminal (lock icon) in Kanban column header */
+export const TERMINAL_STAGE_TYPES = ['WON', 'CLOSURE', 'LOST'];
+
+/** Names of system-mandatory stages (case-insensitive — backward compat) */
 const MANDATORY_NAMES = ['prospect', 'closure'];
 
-/** Returns true if a stage is a mandatory system stage (cannot be removed or reordered) */
-export const isMandatoryStage = (stage) =>
-  !!(stage?.isDefault || MANDATORY_NAMES.includes(stage?.name?.toLowerCase()));
+/** StageTypes that are system-anchored (cannot remove/reorder) */
+const MANDATORY_TYPES = ['PROSPECT', 'CLOSURE'];
+
+// ─── Core Predicates ─────────────────────────────────────────────────────────
+
+/**
+ * Returns true if a stage is a mandatory system stage.
+ * Checks stageType first (rename-safe), falls back to name for legacy data.
+ */
+export const isMandatoryStage = (stage) => {
+  if (MANDATORY_TYPES.includes(stage?.stageType)) return true;
+  return !!(stage?.isDefault || MANDATORY_NAMES.includes(stage?.name?.toLowerCase()));
+};
 
 /** Returns true if a stage is the Prospect anchor (must be first) */
-export const isProspectStage = (stage) =>
-  stage?.name?.toLowerCase() === 'prospect' || (stage?.isDefault && stage?.name?.toLowerCase() !== 'closure');
+export const isProspectStage = (stage) => {
+  if (stage?.stageType === 'PROSPECT') return true;
+  return stage?.name?.toLowerCase() === 'prospect' ||
+    (stage?.isDefault && stage?.name?.toLowerCase() !== 'closure');
+};
 
 /** Returns true if a stage is the Closure anchor (must be last) */
-export const isClosureStage = (stage) =>
-  stage?.name?.toLowerCase() === 'closure';
+export const isClosureStage = (stage) => {
+  if (stage?.stageType === 'CLOSURE') return true;
+  return stage?.name?.toLowerCase() === 'closure';
+};
+
+/** Returns true if a stage is WON */
+export const isWonStage = (stage) =>
+  stage?.stageType === 'WON' || stage?.name?.toLowerCase() === 'won';
+
+/** Returns true if a stage is LOST */
+export const isLostStage = (stage) =>
+  stage?.stageType === 'LOST' || stage?.name?.toLowerCase() === 'lost';
+
+/**
+ * Returns true if a lead in this stage cannot be dragged OUT.
+ * WON and CLOSURE are terminal — once a lead reaches them it's locked.
+ */
+export const isTerminalStage = (stage) => {
+  if (LOCKED_STAGE_TYPES.includes(stage?.stageType)) return true;
+  // name-based fallback for legacy data
+  const name = stage?.name?.toLowerCase();
+  return name === 'closure' || name === 'won';
+};
+
+/**
+ * Returns true if moving TO this stage requires a reason.
+ * Currently: only LOST requires a reason.
+ */
+export const requiresReason = (stage) =>
+  stage?.stageType === 'LOST' || stage?.name?.toLowerCase() === 'lost';
+
+// ─── Ordering Utilities ───────────────────────────────────────────────────────
 
 /**
  * Enforce mandatory stage positions in a selectedStages array.

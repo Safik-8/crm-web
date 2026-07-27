@@ -20,10 +20,11 @@ const initialFormState = {
   country: '',
   pincode: '',
   emergencyContact: '',
+  profilePhoto: '',
   status: 'ACTIVE'
 };
 
-export const useUserForm = (onSuccess, initialValues = null) => {
+export const useUserForm = (onSuccess, initialValues = null, isOpen = false) => {
   const [values, setValues] = useState(initialFormState);
   const [errors, setErrors] = useState({});
 
@@ -33,8 +34,10 @@ export const useUserForm = (onSuccess, initialValues = null) => {
   const isEditMode = !!initialValues && !!initialValues.id;
   const isLoading = createUserMutation.isPending || updateUserMutation.isPending;
 
-  // Initialize form values if editing
+  // Initialize form values if editing or modal opens
   useEffect(() => {
+    if (isOpen === false) return;
+
     if (initialValues) {
       // Find roleId
       const primaryUserRole = initialValues.userRoles?.find(ur => ur.isPrimary) || initialValues.userRoles?.[0];
@@ -61,13 +64,14 @@ export const useUserForm = (onSuccess, initialValues = null) => {
         country: initialValues.profile?.country || '',
         pincode: initialValues.profile?.pincode || '',
         emergencyContact: initialValues.profile?.emergencyContact || '',
+        profilePhoto: initialValues.profilePhoto || '',
         status: initialValues.status || 'ACTIVE'
       });
     } else {
       setValues(initialFormState);
     }
     setErrors({});
-  }, [initialValues]);
+  }, [initialValues, isOpen]);
 
   const handleChange = useCallback((field, value) => {
     setValues(prev => ({ ...prev, [field]: value }));
@@ -99,8 +103,8 @@ export const useUserForm = (onSuccess, initialValues = null) => {
 
     if (!values.mobileNumber?.trim()) {
       tempErrors.mobileNumber = 'Mobile number is required';
-    } else if (values.mobileNumber.trim().length < 10) {
-      tempErrors.mobileNumber = 'Mobile number must be at least 10 digits';
+    } else if (!/^\d{10}$/.test(values.mobileNumber.trim())) {
+      tempErrors.mobileNumber = 'Mobile number must be exactly 10 digits';
     }
 
     if (!values.branchId) tempErrors.branchId = 'Branch is required';

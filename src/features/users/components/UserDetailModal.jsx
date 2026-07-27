@@ -38,8 +38,19 @@ const UserDetailModal = ({ isOpen, onClose, user = null }) => {
         
         {/* Banner Card */}
         <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-2xl flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-lg font-black shadow-md uppercase">
-            {user.firstName?.charAt(0) || user.name?.charAt(0) || 'U'}
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-lg font-black shadow-md uppercase overflow-hidden shrink-0">
+            {user.profilePhoto ? (
+              <img
+                src={user.profilePhoto}
+                alt={user.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              user.firstName?.charAt(0) || user.name?.charAt(0) || 'U'
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="font-extrabold text-slate-800 text-[15px] leading-tight truncate">

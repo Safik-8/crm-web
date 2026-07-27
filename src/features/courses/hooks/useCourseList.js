@@ -74,7 +74,7 @@ export const useCourseList = (currentUser = null) => {
   };
 
   // Derive page loading states
-  const loadingState = getLoadingState(isLoading || isFetching, isError, courses.length);
+  const loadingState = getLoadingState(isLoading || isFetching || toggleStatusMutation.isPending, isError, courses.length);
 
   /**
    * Clears all filters and resets search inputs with respects to user rank isolation rules

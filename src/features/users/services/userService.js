@@ -67,4 +67,19 @@ export const userService = {
     return axiosClient.get(`${BASE_PATH}/assignable-roles`);
   },
 
+  /**
+   * Fetches eligible replacement users for reassignment before deleting a user.
+   */
+  getEligibleReplacements: (id) => {
+    return axiosClient.get(`${BASE_PATH}/${id}/eligible-replacements`);
+  },
+
+  /**
+   * Hard deletes a user with mandatory asset reassignment payload.
+   */
+  deleteUser: (id, replacementUserId) => {
+    return axiosClient.delete(`${BASE_PATH}/${id}`, {
+      data: { replacementUserId: replacementUserId ? Number(replacementUserId) : null }
+    });
+  }
 };

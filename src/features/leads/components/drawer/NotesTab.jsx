@@ -1,15 +1,21 @@
-// src/features/leads/components/LeadDetailDrawer.jsx
+// src/features/leads/components/drawer/NotesTab.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { Bold, Italic, Heading1, Heading2, List, ListOrdered, Send, Pin, Pencil, Trash2 } from 'lucide-react';
+import Button from '../../../../shared/components/elements/Button';
 import {
-  useLeadQuery,
   useLeadNotesQuery,
   useCreateLeadNoteMutation,
   useUpdateLeadNoteMutation,
-  useDeleteLeadNoteMutation,
-  useLeadTimelineQuery
-} from '../hooks/useLeads';
+  useDeleteLeadNoteMutation
+} from '../../hooks/useLeads';
 
+/**
+ * NotesTab — Interactive markdown note creation, formatting, pinning, editing, and history log.
+ *
+ * @param {Object} props
+ * @param {number} props.leadId - ID of the target lead
+ */
 const NotesTab = ({ leadId }) => {
   const { data: notesRes, isLoading } = useLeadNotesQuery(leadId);
   const createNoteMutation = useCreateLeadNoteMutation();
@@ -146,12 +152,10 @@ const NotesTab = ({ leadId }) => {
         let selectionIndex;
         
         if (currentLine === prefix) {
-          // Erase prefix to end the list
           const lineStart = start - currentLine.length;
           newText = text.substring(0, lineStart) + '\n' + text.substring(start);
           selectionIndex = lineStart + 1;
         } else {
-          // Auto-continue list
           const insertion = `\n${prefix}`;
           newText = text.substring(0, start) + insertion + text.substring(start);
           selectionIndex = start + insertion.length;
@@ -222,12 +226,10 @@ const NotesTab = ({ leadId }) => {
     return parts.length > 0 ? parts : line;
   };
 
-  // Safe and clean custom markdown renderer
   const renderFormattedText = (text) => {
     if (!text) return null;
     const lines = text.split('\n');
     return lines.map((line, idx) => {
-      // Parse headings first
       if (line.trim().startsWith('# ')) {
         const cleanContent = line.trim().substring(2);
         return (
@@ -245,7 +247,6 @@ const NotesTab = ({ leadId }) => {
         );
       }
 
-      // Unordered list
       if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
         const cleanContent = line.trim().substring(2);
         return (
@@ -256,7 +257,6 @@ const NotesTab = ({ leadId }) => {
         );
       }
 
-      // Ordered list
       const olMatch = line.trim().match(/^(\d+)\.\s+(.*)/);
       if (olMatch) {
         const num = olMatch[1];
@@ -277,7 +277,6 @@ const NotesTab = ({ leadId }) => {
     });
   };
 
-  // Sort notes to float pinned ones to the top, maintaining secondary date order
   const sortedNotes = [...notes].sort((a, b) => {
     const aPinned = pinnedNoteIds.includes(a.id);
     const bPinned = pinnedNoteIds.includes(b.id);
@@ -291,7 +290,6 @@ const NotesTab = ({ leadId }) => {
   return (
     <div className="space-y-4 flex flex-col h-full">
       <form onSubmit={handleAddNote} className="flex flex-col gap-1.5 border border-slate-200 rounded-2xl p-2 bg-white focus-within:border-orange-500 transition-colors">
-        {/* Formatting Toolbar */}
         <div className="flex gap-1 border-b border-slate-100 pb-1.5 flex-wrap">
           <button
             type="button"
@@ -382,7 +380,6 @@ const NotesTab = ({ leadId }) => {
                 </div>
                 {editingNoteId === n.id ? (
                   <div className="mt-1 space-y-2 border border-slate-200 rounded-xl p-2 bg-white focus-within:border-orange-500 transition-colors">
-                    {/* Edit Toolbar */}
                     <div className="flex gap-1 border-b border-slate-100 pb-1.5 flex-wrap">
                       <button
                         type="button"
@@ -500,373 +497,4 @@ const NotesTab = ({ leadId }) => {
   );
 };
 
-const TimelineTab = ({ leadId }) => {
-  const { data: timelineRes, isLoading } = useLeadTimelineQuery(leadId);
-  const timeline = timelineRes?.data?.timeline || timelineRes?.timeline || timelineRes || [];
-
-  if (isLoading) return <div className="py-4 text-center text-xs text-slate-400">Loading history...</div>;
-
-  const getTimelineIconConfig = (action) => {
-    switch (action) {
-      case 'CREATE': return { color: 'bg-emerald-500', ring: 'ring-emerald-50' };
-      case 'DELETE': return { color: 'bg-red-500', ring: 'ring-red-50' };
-      case 'RESTORE': return { color: 'bg-teal-500', ring: 'ring-teal-50' };
-      case 'STAGE_CHANGE': return { color: 'bg-blue-500', ring: 'ring-blue-50' };
-      case 'UPDATE': return { color: 'bg-indigo-500', ring: 'ring-indigo-50' };
-      case 'NOTE_ADD': return { color: 'bg-amber-500', ring: 'ring-amber-50' };
-      case 'NOTE_UPDATE': return { color: 'bg-amber-600', ring: 'ring-amber-50' };
-      case 'NOTE_DELETE': return { color: 'bg-rose-500', ring: 'ring-rose-50' };
-      default: return { color: 'bg-slate-400', ring: 'ring-slate-50' };
-    }
-  };
-
-  const getActionLabel = (action, oldValue, newValue) => {
-    switch (action) {
-      case 'CREATE': return 'created the lead';
-      case 'UPDATE': {
-        try {
-          const oldObj = JSON.parse(oldValue || '{}');
-          const newObj = JSON.parse(newValue || '{}');
-          const changes = [];
-          if (newObj.statusId !== oldObj.statusId || (newObj.status && oldObj.status && newObj.status.name !== oldObj.status.name)) {
-            changes.push(`changed status to "${newObj.status?.name || 'Unknown'}"`);
-          }
-          if (newObj.assignedToId !== oldObj.assignedToId || (newObj.assignedTo && oldObj.assignedTo && newObj.assignedTo.name !== oldObj.assignedTo.name)) {
-            changes.push(`reassigned lead to ${newObj.assignedTo?.name || 'nobody'}`);
-          }
-          if (newObj.teamId !== oldObj.teamId || (newObj.team && oldObj.team && newObj.team.name !== oldObj.team.name)) {
-            changes.push(`assigned lead to team "${newObj.team?.name || 'none'}"`);
-          }
-          if (newObj.stageId !== oldObj.stageId || (newObj.stage && oldObj.stage && newObj.stage.name !== oldObj.stage.name)) {
-            changes.push(`moved stage to "${newObj.stage?.name || 'Unknown'}"`);
-          }
-          if (changes.length > 0) {
-            return changes.join(' and ');
-          }
-        } catch (e) {
-          // fallback
-        }
-        return 'updated lead details';
-      }
-      case 'DELETE': return 'soft-deleted the lead';
-      case 'RESTORE': return 'restored the lead';
-      case 'STAGE_CHANGE': {
-        try {
-          const newObj = JSON.parse(newValue || '{}');
-          if (newObj.stageId) {
-            return 'moved lead stage';
-          }
-        } catch (e) {}
-        return 'moved lead stage';
-      }
-      case 'NOTE_ADD': {
-        try {
-          const newObj = JSON.parse(newValue || '{}');
-          if (newObj.text) {
-            return `added a note: "${newObj.text}"`;
-          }
-        } catch (e) {}
-        return 'added a note';
-      }
-      case 'NOTE_UPDATE': {
-        try {
-          const newObj = JSON.parse(newValue || '{}');
-          if (newObj.text) {
-            return `updated a note to: "${newObj.text}"`;
-          }
-        } catch (e) {}
-        return 'updated a note';
-      }
-      case 'NOTE_DELETE': return 'deleted a note';
-      default: return `performed ${action}`;
-    }
-  };
-
-  return (
-    <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] custom-scrollbar text-xs pr-1 py-1">
-      {timeline.length === 0 ? (
-        <p className="text-xs text-center text-slate-400 py-6">No history logs found.</p>
-      ) : (
-        timeline.map((log) => {
-          const config = getTimelineIconConfig(log.action);
-          return (
-            <div key={log.id} className="flex gap-4 items-start border-l border-slate-100 pl-4 ml-2.5 relative">
-              {/* Timeline Indicator Ring */}
-              <span className={`w-2.5 h-2.5 rounded-full ${config.color} border-2 border-white ring-4 ${config.ring} absolute -left-[5px] top-2 transition-all duration-300`} />
-              
-              <div className="flex-1 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3 rounded-2xl transition-all duration-200">
-                <p className="text-slate-700 leading-relaxed font-medium">
-                  <span className="font-bold text-slate-800">{log.performedBy?.name || 'System'}</span>{' '}
-                  {getActionLabel(log.action, log.oldValue, log.newValue)}
-                </p>
-                <span className="text-[10px] text-slate-400 block mt-1 font-semibold">
-                  {new Date(log.createdAt).toLocaleString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                  })}
-                </span>
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-};
-
-  X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
-  MapPin, Award, ShieldAlert, History, MessageSquare,
-  ClipboardList, UserCheck, GitBranch
-} from 'lucide-react';
-import CommentThread from '../../activities/components/CommentThread';
-import { useLeadQuery } from '../hooks/useLeads';
-
-// Extracted Sub-Tabs (Sprint 4 Refactoring)
-import NotesTab from './drawer/NotesTab';
-import TimelineTab from './drawer/TimelineTab';
-import StageHistoryTab from './drawer/StageHistoryTab';
-
-/**
- * LeadDetailDrawer — Slide-over drawer component displaying comprehensive lead metadata,
- * assigned user/branch scope, notes, activities, timeline logs, and stage history.
- *
- * @param {Object} props
- * @param {Object} props.lead - Initial lead data object
- * @param {string} [props.stageName] - Optional display name of the current stage
- * @param {Function} props.onClose - Callback invoked when drawer is closed
- */
-const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
-  const [activeTab, setActiveTab] = useState('comments');
-  const { data: leadRes } = useLeadQuery(initialLead?.id);
-  const lead = leadRes?.data?.lead || leadRes?.lead || initialLead;
-
-  if (!lead) return null;
-
-  // Prevent body scroll while drawer is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  const date = lead.createdAt
-    ? new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
-    : lead.date
-    ? new Date(lead.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
-    : '—';
-
-  const locationStr = [lead.city, lead.state, lead.country].filter(Boolean).join(', ') || '—';
-
-  const contactDetails = [
-    { icon: Phone,      label: 'Mobile',            value: lead.mobile || '—' },
-    { icon: Phone,      label: 'Alt Contact',       value: lead.alternateMobile || '—' },
-    { icon: Mail,       label: 'Email',            value: lead.email || '—' },
-    { icon: Calendar,   label: 'Created Date',      value: date },
-    { icon: MapPin,     label: 'Location',          value: locationStr, colSpan: 'sm:col-span-2 md:col-span-2 lg:col-span-2' },
-  ];
-
-  const interestDetails = [
-    { icon: Compass,    label: 'Source',            value: lead.source?.name || '—' },
-    { icon: Award,      label: 'Interested Course', value: lead.course?.name || lead.interestedFor || lead.interested_for || '—' },
-    { icon: DollarSign, label: 'Budget',            value: lead.budget !== null && lead.budget !== undefined ? `₹${lead.budget.toLocaleString('en-IN')}` : '—' },
-    { icon: ShieldAlert,label: 'Priority',          value: lead.priority || 'MEDIUM' },
-  ];
-
-  const assignmentDetails = [
-    { icon: User,       label: 'Assigned User',     value: lead.assignedTo?.name || 'Unassigned' },
-    { icon: UserCheck,  label: 'Reporting Manager',  value: lead.reportingManager?.name || '—' },
-    { icon: Tag,        label: 'Assigned Team',     value: lead.assignedTeam?.name || '—' },
-    { icon: MapPin,     label: 'Branch',            value: lead.branch?.name || '—' },
-  ];
-
-  const effectiveStageName = stageName || lead.stage?.name || '—';
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Centered Modal Content Card */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-        <div
-          className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-5 right-5 z-10 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X size={18} />
-          </button>
-
-          {/* Modal Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-3 flex-wrap pr-8">
-              <h2 className="text-xl font-black text-slate-800 tracking-tight">
-                {lead.name}
-              </h2>
-              {/* Stage Pill */}
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-200/60 text-orange-600 rounded-full text-xs font-bold">
-                <Tag size={12} />
-                {effectiveStageName}
-              </span>
-              {/* Status Pill */}
-              {lead.status?.name && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border border-rose-200/60 text-rose-600 rounded-full text-xs font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                  {lead.status.name}
-                </span>
-              )}
-              {/* Priority Pill */}
-              {lead.priority && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200/60 rounded-lg text-[11px] font-bold">
-                  <ShieldAlert size={11} />
-                  {lead.priority}
-                </span>
-              )}
-              {/* Owner / Creator Info */}
-              {lead.assignedTo?.name && (
-                <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-                  <User size={11} /> Owner: {lead.assignedTo.name}
-                </span>
-              )}
-              {lead.createdBy?.name && (
-                <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-                  <User size={11} /> Creator: {lead.createdBy.name}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Modal Body */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* Lead Primary Details Section */}
-            <div className="px-6 py-5 border-b border-slate-100 space-y-6">
-              {/* Contact Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {contactDetails.map((item, idx) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <div key={idx} className={`bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1 ${item.colSpan || ''}`}>
-                      <div className="flex items-center gap-1.5 text-slate-400">
-                        <IconComponent size={13} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Course & Budget Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {interestDetails.map((item, idx) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-slate-400">
-                        <IconComponent size={13} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Assignment & Scope Details */}
-              <div>
-                <div className="flex items-center gap-1.5 text-slate-400 mb-2.5">
-                  <User size={13} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assignment & Scope</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {assignmentDetails.map((item, idx) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <IconComponent size={12} />
-                          <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
-                        </div>
-                        <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Notes Summary */}
-              {lead.notes && (
-                <div>
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1.5">
-                    <ClipboardList size={13} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lead Summary / Notes</span>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-xs text-slate-600 leading-relaxed font-medium">
-                    {lead.notes}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tabbed Activity / Note / Timeline Section */}
-            <div className="px-6 py-5 flex flex-col min-h-[380px]">
-              {/* Tab Header Selector */}
-              <div className="flex border-b border-slate-100 mb-4 gap-4">
-                <button
-                  onClick={() => setActiveTab('comments')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider ${activeTab === 'comments' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  <MessageSquare size={13} />
-                  Comments
-                </button>
-                <button
-                  onClick={() => setActiveTab('notes')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider ${activeTab === 'notes' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  <ClipboardList size={13} />
-                  Notes History
-                </button>
-                <button
-                  onClick={() => setActiveTab('timeline')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider ${activeTab === 'timeline' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  <History size={13} />
-                  Timeline Log
-                </button>
-                <button
-                  onClick={() => setActiveTab('stage-history')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider ${activeTab === 'stage-history' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  <GitBranch size={13} />
-                  Stage History
-                </button>
-              </div>
-
-              <div className="flex-1 min-h-[300px] flex flex-col">
-                {activeTab === 'comments' && (
-                  <div className="h-full flex-1 flex flex-col pr-1">
-                    <CommentThread leadId={lead.id} />
-                  </div>
-                )}
-                {activeTab === 'notes' && <NotesTab leadId={lead.id} />}
-                {activeTab === 'timeline' && <TimelineTab leadId={lead.id} />}
-                {activeTab === 'stage-history' && <StageHistoryTab leadId={lead.id} />}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-export default LeadDetailDrawer;
+export default NotesTab;

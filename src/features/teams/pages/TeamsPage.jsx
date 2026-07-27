@@ -4,14 +4,14 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Users2, Plus, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useIsMutating } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import SelectField from '../../../shared/components/elements/SelectField';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
-import { useTeamsQuery, useToggleTeamStatusMutation, useDeleteTeamMutation } from '../hooks/useTeams';
+import { useTeamsQuery, useToggleTeamStatusMutation, useDeleteTeamMutation, TEAM_KEYS } from '../hooks/useTeams';
 import TeamListTable from '../components/TeamListTable';
 import TeamFormModal from '../components/TeamFormModal';
 import TeamDetailModal from '../components/TeamDetailModal';
@@ -129,6 +129,7 @@ const TeamsPage = () => {
   const {
     data: teamsData,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch
@@ -207,8 +208,10 @@ const TeamsPage = () => {
     });
   };
 
+  const isMutatingTeams = useIsMutating({ mutationKey: TEAM_KEYS.all }) > 0;
+
   // Determine page loading state
-  const loadingState = isLoading
+  const loadingState = (isLoading || isFetching || isMutatingTeams)
     ? 'loading'
     : isError
     ? 'error'
