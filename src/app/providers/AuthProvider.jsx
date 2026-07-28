@@ -34,6 +34,7 @@ const RBAC_ADAPTER_MAP = {
   'view:lead_sources': { module: 'LEAD_SOURCE', action: 'canView' },
   'view:teams': { module: 'TEAM', action: 'canView' },
   'view:lead_statuses': { module: 'LEAD_STATUS', action: 'canView' },
+  'view:lead_assignment': { module: 'LEAD_ASSIGNMENT', action: 'canView' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH

@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
 
-const ProtectedRoute = ({ children, requiredPermission }) => {
-  const { isAuthenticated, loading, isLoggingOut, hasPermission } = useAuth();
+const ProtectedRoute = ({ children, requiredPermission, allowedRoles }) => {
+  const { isAuthenticated, loading, isLoggingOut, hasPermission, user } = useAuth();
   const location = useLocation();
 
   // Show spinner only during initial auth check (app boot), not during logout.
@@ -25,6 +25,11 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
     // If user doesn't have required permission, redirect to unauthorized page
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user?.primaryRole)) {
+    // If user role is not in allowed roles, redirect to unauthorized
     return <Navigate to="/unauthorized" replace />;
   }
 

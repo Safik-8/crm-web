@@ -199,6 +199,15 @@ export const deleteLeadNote = (leadId, noteId) =>
   apiClient(`/leads/${leadId}/notes/${noteId}`, { method: 'DELETE' });
 
 /**
+ * Assign leads (manual or bulk) to a team and/or user.
+ * 
+ * @param {object} data - { leadIds: number[], teamId?: number, assignedToId?: number, notes?: string, reason?: string }
+ * @returns {Promise<object>}
+ */
+export const assignLeads = (data) =>
+  apiClient('/leads/assign', { method: 'POST', body: data });
+
+
  * Fetch the full pipeline stage movement history for a lead.
  * 
  * @param {number|string} leadId

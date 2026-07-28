@@ -337,6 +337,9 @@ export const LeadImportModal = ({ isOpen, onClose, onImported, initialPipelineId
                     <span className="text-xs font-semibold text-slate-600 mt-1 block">Email, Alternate Contact, Budget, City, State, Country, Notes</span>
                   </div>
                 </div>
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-xs font-semibold">
+                  ⚠️ Import Limit: Maximum of 1,000 rows per spreadsheet import run.
+                </div>
               </div>
             </div>
           )}

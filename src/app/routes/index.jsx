@@ -31,6 +31,7 @@ import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
 import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
+import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 
@@ -206,6 +207,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ROLES}>
             <RoleManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'assignment-settings',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
+            <AssignmentSettingsPage />
           </ProtectedRoute>
         ),
       },

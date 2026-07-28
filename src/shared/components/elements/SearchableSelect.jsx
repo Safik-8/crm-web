@@ -121,18 +121,22 @@ export const SearchableSelect = ({
             ) : (
               filteredOptions.map((opt) => {
                 const isSelected = opt.id === value?.toString() || opt.id === value;
+                const isDisabled = !!opt.disabled;
                 return (
                   <li
                     key={opt.id}
                     onClick={() => {
+                      if (isDisabled) return;
                       onChange(opt.id);
                       setIsOpen(false);
                       setSearchTerm('');
                     }}
-                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium rounded-lg cursor-pointer transition-colors ${
-                      isSelected 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'text-slate-700 hover:bg-slate-100'
+                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium rounded-lg transition-colors ${
+                      isDisabled
+                        ? 'opacity-40 bg-slate-50/50 text-slate-400 cursor-not-allowed'
+                        : isSelected 
+                          ? 'bg-primary/10 text-primary cursor-pointer' 
+                          : 'text-slate-700 hover:bg-slate-100 cursor-pointer'
                     }`}
                   >
                     <span>{opt.name}</span>
