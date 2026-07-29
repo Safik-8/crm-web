@@ -1,8 +1,9 @@
-// src/features/leads/components/drawer/NotesTab.jsx
-
 import React, { useState } from 'react';
-import { Bold, Italic, Heading1, Heading2, List, ListOrdered, Send, Pin, Pencil, Trash2 } from 'lucide-react';
+import { Bold, Italic, Heading1, Heading2, List, ListOrdered, Send, Pin, Pencil, Trash2, Search, RotateCcw, RotateCw } from 'lucide-react';
 import Button from '../../../../shared/components/elements/Button';
+import { useAuth } from '../../../../app/providers/AuthProvider';
+import SearchInput from '../../../../shared/components/elements/SearchInput';
+import { SearchableSelect } from '../../../../shared/components/elements/SearchableSelect';
 import {
   useLeadNotesQuery,
   useCreateLeadNoteMutation,
@@ -17,96 +18,152 @@ import {
  * @param {number} props.leadId - ID of the target lead
  */
 const NotesTab = ({ leadId }) => {
-  const { data: notesRes, isLoading } = useLeadNotesQuery(leadId);
+  const { user: currentUser } = useAuth();
+
+  // Search & Filter states
+  const [search, setSearch] = useState('');
+  const [authorId, setAuthorId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  // Fetch all notes (unfiltered) to extract unique authors
+  const { data: allNotesRes } = useLeadNotesQuery(leadId);
+  const allNotes = allNotesRes?.data?.notes || allNotesRes?.notes || allNotesRes || [];
+
+  const uniqueAuthors = [];
+  const seenIds = new Set();
+  allNotes.forEach((n) => {
+    if (n.createdBy && !seenIds.has(n.createdBy.id)) {
+      seenIds.add(n.createdBy.id);
+      uniqueAuthors.push({ id: n.createdBy.id, name: n.createdBy.name });
+    }
+  });
+
+  const datesSelected = dateFrom && dateTo;
+  const { data: notesRes, isLoading, refetch } = useLeadNotesQuery(leadId, {
+    search,
+    authorId,
+    ...(datesSelected ? { dateFrom, dateTo } : {})
+  });
   const createNoteMutation = useCreateLeadNoteMutation();
   const updateNoteMutation = useUpdateLeadNoteMutation();
   const deleteNoteMutation = useDeleteLeadNoteMutation();
   const [newNote, setNewNote] = useState('');
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingText, setEditingText] = useState('');
+
+  const localStorageKey = `pinned_notes_lead_${leadId}`;
   const [pinnedNoteIds, setPinnedNoteIds] = useState(() => {
     try {
-      const saved = localStorage.getItem(`pinned_notes_${leadId}`);
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+      const saved = localStorage.getItem(localStorageKey);
+      return saved ? JSON.parse(saved).map(Number) : [];
+    } catch {
       return [];
     }
   });
+  const notesList = notesRes?.data?.notes || notesRes?.notes || notesRes || [];
 
-  const notes = notesRes?.data?.notes || notesRes?.notes || notesRes || [];
-
-  const handleAddNote = (e) => {
+  const handleAddNote = async (e) => {
     e.preventDefault();
     if (!newNote.trim()) return;
-    createNoteMutation.mutate({ leadId, data: { note: newNote } }, {
-      onSuccess: () => setNewNote('')
-    });
+    try {
+      await createNoteMutation.mutateAsync({ leadId, data: { note: newNote.trim() } });
+      setNewNote('');
+      refetch();
+    } catch (err) {
+      // Error handled by mutation
+    }
   };
 
-  const handleStartEdit = (note) => {
-    setEditingNoteId(note.id);
-    setEditingText(note.note);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingNoteId(null);
-    setEditingText('');
-  };
-
-  const handleSaveEdit = (noteId) => {
+  const handleUpdateNote = async (id) => {
     if (!editingText.trim()) return;
-    updateNoteMutation.mutate({ leadId, noteId, data: { note: editingText } }, {
-      onSuccess: () => {
-        setEditingNoteId(null);
-        setEditingText('');
-      }
-    });
+    try {
+      await updateNoteMutation.mutateAsync({ leadId, noteId: id, data: { note: editingText } });
+      setEditingNoteId(null);
+      setEditingText('');
+      refetch();
+    } catch (err) {
+      // Error handled by mutation
+    }
   };
 
-  const togglePinNote = (noteId) => {
-    setPinnedNoteIds((prev) => {
-      const isPinned = prev.includes(noteId);
-      const next = isPinned ? prev.filter((id) => id !== noteId) : [...prev, noteId];
-      localStorage.setItem(`pinned_notes_${leadId}`, JSON.stringify(next));
-      return next;
-    });
+  const handleDeleteNote = async (id) => {
+    try {
+      await deleteNoteMutation.mutateAsync({ leadId, noteId: id });
+      refetch();
+    } catch (err) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleTogglePin = (n) => {
+    const noteIdNum = Number(n.id);
+    const isPinned = pinnedNoteIds.includes(noteIdNum);
+    let updated;
+    if (isPinned) {
+      updated = pinnedNoteIds.filter(id => id !== noteIdNum);
+    } else {
+      updated = [...pinnedNoteIds, noteIdNum];
+    }
+    setPinnedNoteIds(updated);
+    try {
+      localStorage.setItem(localStorageKey, JSON.stringify(updated));
+    } catch (e) {
+      // LocalStorage full or blocked
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setAuthorId('');
+    setDateFrom('');
+    setDateTo('');
   };
 
   const insertFormat = (formatType, isEdit = false) => {
-    const textarea = document.getElementById(isEdit ? 'edit-note-textarea' : 'new-note-textarea');
+    const textareaId = isEdit ? 'edit-note-textarea' : 'new-note-textarea';
+    const textarea = document.getElementById(textareaId);
     if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = isEdit ? editingText : newNote;
-    
+    const selectedText = text.substring(start, end);
+
     let formatted = '';
-    let cursorOffset = 0;
+    let selectionStartOffset = start;
+    let selectionEndOffset = end;
 
     if (formatType === 'bold') {
-      const selectedText = text.substring(start, end);
-      formatted = `**${selectedText || 'bold text'}**`;
-      cursorOffset = selectedText ? formatted.length : 11;
+      const defaultText = selectedText || 'bold text';
+      formatted = `**${defaultText}**`;
+      selectionStartOffset = start + 2;
+      selectionEndOffset = selectionStartOffset + defaultText.length;
     } else if (formatType === 'italic') {
-      const selectedText = text.substring(start, end);
-      formatted = `*${selectedText || 'italic text'}*`;
-      cursorOffset = selectedText ? formatted.length : 13;
+      const defaultText = selectedText || 'italic text';
+      formatted = `*${defaultText}*`;
+      selectionStartOffset = start + 1;
+      selectionEndOffset = selectionStartOffset + defaultText.length;
     } else if (formatType === 'bullet') {
       const hasNewline = start === 0 || text.charAt(start - 1) === '\n';
       formatted = `${hasNewline ? '' : '\n'}- `;
-      cursorOffset = formatted.length;
+      selectionStartOffset = start + formatted.length;
+      selectionEndOffset = start + formatted.length;
     } else if (formatType === 'number') {
       const hasNewline = start === 0 || text.charAt(start - 1) === '\n';
       formatted = `${hasNewline ? '' : '\n'}1. `;
-      cursorOffset = formatted.length;
+      selectionStartOffset = start + formatted.length;
+      selectionEndOffset = start + formatted.length;
     } else if (formatType === 'h1') {
       const hasNewline = start === 0 || text.charAt(start - 1) === '\n';
       formatted = `${hasNewline ? '' : '\n'}# `;
-      cursorOffset = formatted.length;
+      selectionStartOffset = start + formatted.length;
+      selectionEndOffset = start + formatted.length;
     } else if (formatType === 'h2') {
       const hasNewline = start === 0 || text.charAt(start - 1) === '\n';
       formatted = `${hasNewline ? '' : '\n'}## `;
-      cursorOffset = formatted.length;
+      selectionStartOffset = start + formatted.length;
+      selectionEndOffset = start + formatted.length;
     }
 
     const newText = text.substring(0, start) + formatted + text.substring(end);
@@ -119,7 +176,7 @@ const NotesTab = ({ leadId }) => {
 
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
+      textarea.setSelectionRange(selectionStartOffset, selectionEndOffset);
     }, 50);
   };
 
@@ -175,206 +232,304 @@ const NotesTab = ({ leadId }) => {
     }
   };
 
-  const parseItalics = (text) => {
+  const parseInlineStyles = (text) => {
     if (typeof text !== 'string') return [text];
-    const italicRegex = /\*(.*?)\*/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
     
-    while ((match = italicRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
+    const tokens = [];
+    let i = 0;
+    
+    while (i < text.length) {
+      // Check for bold (double asterisks)
+      if (text.startsWith('**', i)) {
+        const closingIndex = text.indexOf('**', i + 2);
+        if (closingIndex !== -1) {
+          const content = text.substring(i + 2, closingIndex);
+          tokens.push(
+            <strong key={`b-${i}`} className="font-bold text-slate-800">
+              {parseInlineStyles(content)}
+            </strong>
+          );
+          i = closingIndex + 2;
+          continue;
+        }
       }
-      parts.push(
-        <em key={`i-${match.index}`} className="italic text-slate-700 font-medium">
-          {match[1]}
-        </em>
-      );
-      lastIndex = italicRegex.lastIndex;
+      
+      // Check for italic (single asterisk)
+      if (text.startsWith('*', i)) {
+        const closingIndex = text.indexOf('*', i + 1);
+        if (closingIndex !== -1) {
+          const content = text.substring(i + 1, closingIndex);
+          tokens.push(
+            <em key={`i-${i}`} className="italic text-slate-700">
+              {parseInlineStyles(content)}
+            </em>
+          );
+          i = closingIndex + 1;
+          continue;
+        }
+      }
+      
+      // Plain text block
+      let nextSpecial = text.length;
+      const nextStar = text.indexOf('*', i + 1);
+      if (nextStar !== -1) nextSpecial = nextStar;
+      
+      tokens.push(text.substring(i, nextSpecial));
+      i = nextSpecial;
     }
     
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
-    
-    return parts.length > 0 ? parts : [text];
+    return tokens;
   };
 
-  const parseInlineStyles = (line) => {
-    const boldRegex = /\*\*(.*?)\*\*/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
+  const renderNoteContent = (noteText) => {
+    if (!noteText) return null;
     
-    while ((match = boldRegex.exec(line)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(...parseItalics(line.substring(lastIndex, match.index)));
+    const lines = noteText.split('\n');
+    return lines.map((line, index) => {
+      // 1. Headings
+      if (line.startsWith('# ')) {
+        return <h1 key={index} className="text-sm font-bold text-slate-800 mt-1.5 mb-1">{parseInlineStyles(line.substring(2))}</h1>;
       }
-      parts.push(
-        <strong key={`b-${match.index}`} className="font-bold text-slate-800">
-          {parseItalics(match[1])}
-        </strong>
-      );
-      lastIndex = boldRegex.lastIndex;
-    }
-    
-    if (lastIndex < line.length) {
-      parts.push(...parseItalics(line.substring(lastIndex)));
-    }
-    
-    return parts.length > 0 ? parts : line;
-  };
-
-  const renderFormattedText = (text) => {
-    if (!text) return null;
-    const lines = text.split('\n');
-    return lines.map((line, idx) => {
-      if (line.trim().startsWith('# ')) {
-        const cleanContent = line.trim().substring(2);
+      if (line.startsWith('## ')) {
+        return <h2 key={index} className="text-xs font-bold text-slate-700 mt-1 mb-0.5">{parseInlineStyles(line.substring(3))}</h2>;
+      }
+      
+      // 2. Bullet lists
+      if (line.startsWith('- ') || line.startsWith('* ')) {
         return (
-          <h4 key={idx} className="text-base font-black text-slate-800 my-1.5">
-            {parseInlineStyles(cleanContent)}
-          </h4>
+          <ul key={index} className="list-disc pl-4 space-y-0.5 my-0.5 text-slate-600">
+            <li>{parseInlineStyles(line.substring(2))}</li>
+          </ul>
         );
       }
-      if (line.trim().startsWith('## ')) {
-        const cleanContent = line.trim().substring(3);
+      
+      // 3. Numbered lists
+      const numMatch = line.match(/^(\d+)\.\s+/);
+      if (numMatch) {
         return (
-          <h5 key={idx} className="text-sm font-extrabold text-slate-700 my-1">
-            {parseInlineStyles(cleanContent)}
-          </h5>
+          <ol key={index} className="list-decimal pl-4 space-y-0.5 my-0.5 text-slate-600">
+            <li value={parseInt(numMatch[1], 10)}>{parseInlineStyles(line.substring(numMatch[0].length))}</li>
+          </ol>
         );
       }
-
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-        const cleanContent = line.trim().substring(2);
-        return (
-          <div key={idx} className="flex items-start gap-1.5 pl-2 my-0.5">
-            <span className="text-orange-500 font-bold">•</span>
-            <span className="flex-1 text-slate-600 leading-normal">{parseInlineStyles(cleanContent)}</span>
-          </div>
-        );
+      
+      // 4. Plain paragraph (non-empty)
+      if (line.trim()) {
+        return <p key={index} className="my-0.5 text-slate-600 leading-relaxed">{parseInlineStyles(line)}</p>;
       }
-
-      const olMatch = line.trim().match(/^(\d+)\.\s+(.*)/);
-      if (olMatch) {
-        const num = olMatch[1];
-        const cleanContent = olMatch[2];
-        return (
-          <div key={idx} className="flex items-start gap-1.5 pl-2 my-0.5">
-            <span className="text-orange-500 font-semibold">{num}.</span>
-            <span className="flex-1 text-slate-600 leading-normal">{parseInlineStyles(cleanContent)}</span>
-          </div>
-        );
-      }
-
-      return (
-        <p key={idx} className="text-slate-600 leading-normal min-h-[1.1em]">
-          {parseInlineStyles(line)}
-        </p>
-      );
+      
+      // 5. Empty line spacer
+      return <div key={index} className="h-1" />;
     });
   };
 
-  const sortedNotes = [...notes].sort((a, b) => {
+  // Sort notes so pinned ones are always at the top, then newest first
+  const sortedNotes = [...notesList].sort((a, b) => {
     const aPinned = pinnedNoteIds.includes(a.id);
     const bPinned = pinnedNoteIds.includes(b.id);
     if (aPinned && !bPinned) return -1;
     if (!aPinned && bPinned) return 1;
-    return 0;
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  if (isLoading) return <div className="py-4 text-center text-xs text-slate-400">Loading notes...</div>;
 
   return (
     <div className="space-y-4 flex flex-col h-full">
-      <form onSubmit={handleAddNote} className="flex flex-col gap-1.5 border border-slate-200 rounded-2xl p-2 bg-white focus-within:border-orange-500 transition-colors">
-        <div className="flex gap-1 border-b border-slate-100 pb-1.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => insertFormat('bold', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Bold"
-          >
-            <Bold size={13} className="stroke-[2.5]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertFormat('italic', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Italic"
-          >
-            <Italic size={13} className="stroke-[2.5]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertFormat('h1', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Heading 1"
-          >
-            <Heading1 size={13} className="stroke-[2.5]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertFormat('h2', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Heading 2"
-          >
-            <Heading2 size={13} className="stroke-[2.5]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertFormat('bullet', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Bullet List"
-          >
-            <List size={13} className="stroke-[2.5]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertFormat('number', false)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-            title="Numbered List"
-          >
-            <ListOrdered size={13} className="stroke-[2.5]" />
-          </button>
+      {/* Add Note Form & Filters side-by-side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch shrink-0">
+        <form onSubmit={handleAddNote} className="flex flex-col gap-1.5 border border-slate-200 rounded-2xl p-3 bg-white focus-within:border-orange-500 transition-colors justify-between min-h-[190px]">
+          <div>
+            <div className="flex gap-1 border-b border-slate-100 pb-1.5 flex-wrap">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('bold', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Bold"
+              >
+                <Bold size={13} className="stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('italic', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Italic"
+              >
+                <Italic size={13} className="stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('h1', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Heading 1"
+              >
+                <Heading1 size={13} className="stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('h2', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Heading 2"
+              >
+                <Heading2 size={13} className="stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('bullet', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Bullet List"
+              >
+                <List size={13} className="stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertFormat('number', false)}
+                className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                title="Numbered List"
+              >
+                <ListOrdered size={13} className="stroke-[2.5]" />
+              </button>
+            </div>
+            <textarea
+              id="new-note-textarea"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, false)}
+              placeholder="Add a detailed note with formatting..."
+              className="w-full text-xs px-1 py-1 focus:outline-none resize-none h-20 bg-transparent text-slate-700 placeholder-slate-400 mt-1"
+            />
+          </div>
+          <div className="flex justify-end pt-0.5">
+            <Button
+              type="submit"
+              variant="contained"
+              size="small"
+              isLoading={createNoteMutation.isPending}
+              startIcon={<Send size={11} />}
+              sx={{ height: '28px', backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+            >
+              Send
+            </Button>
+          </div>
+        </form>
+
+        {/* Search & Filter Controls */}
+        <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl flex flex-col gap-2.5 text-xs justify-between min-h-[190px]">
+          <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 pl-0.5">Filters & Controls</span>
+            <button 
+              type="button"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center disabled:opacity-50"
+              title="Refresh notes list"
+            >
+              <RotateCw size={12} className={isLoading ? "animate-spin" : ""} />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+            {/* Keyword Search */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">Search Notes</span>
+              <SearchInput
+                value={search}
+                onChange={(val) => setSearch(val)}
+                placeholder="Search notes..."
+                className="w-full !min-w-0"
+              />
+            </div>
+
+            {/* Filter by Author */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">Filter by Author</span>
+              <SearchableSelect
+                options={uniqueAuthors}
+                value={authorId}
+                onChange={(val) => setAuthorId(val)}
+                placeholder="All Authors"
+                allowEmptyOption={true}
+                searchable={true}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Date From */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">From Date</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full text-[12px] px-2.5 py-1.5 border border-[#E2E8F0] rounded-[8px] focus:outline-none focus:border-[#F86F03] bg-white text-slate-700 font-medium transition-all"
+              />
+            </div>
+
+            {/* Date To */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">To Date</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full text-[12px] px-2.5 py-1.5 border border-[#E2E8F0] rounded-[8px] focus:outline-none focus:border-[#F86F03] bg-white text-slate-700 font-medium transition-all"
+              />
+            </div>
+          </div>
+
+          {(search || authorId || dateFrom || dateTo) && (
+            <div className="flex justify-end border-t border-slate-200/60 pt-1.5">
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-orange-500 transition-colors font-semibold"
+              >
+                <RotateCcw size={9} />
+                Reset Filters
+              </button>
+            </div>
+          )}
         </div>
-        <textarea
-          id="new-note-textarea"
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          onKeyDown={(e) => handleKeyDown(e, false)}
-          placeholder="Add a detailed note with formatting..."
-          className="w-full text-xs px-1 py-1 focus:outline-none resize-none h-16 bg-transparent text-slate-700 placeholder-slate-400"
-        />
-        <div className="flex justify-end pt-0.5">
-          <Button
-            type="submit"
-            variant="contained"
-            size="small"
-            isLoading={createNoteMutation.isPending}
-            startIcon={<Send size={11} />}
-            sx={{ height: '28px', backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
-          >
-            Send
-          </Button>
-        </div>
-      </form>
-      <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[220px] custom-scrollbar pr-1">
-        {sortedNotes.length === 0 ? (
-          <p className="text-xs text-center text-slate-400 py-6">No notes added yet.</p>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 custom-scrollbar pr-1">
+        {isLoading && notesList.length === 0 ? (
+          <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+            <RotateCw size={18} className="animate-spin text-orange-500" />
+            <span className="font-semibold text-slate-500">Loading notes...</span>
+          </div>
+        ) : sortedNotes.length === 0 ? (
+          <p className="text-sm text-center text-slate-400 py-6">No notes added yet.</p>
         ) : (
           sortedNotes.map((n) => {
             const isPinned = pinnedNoteIds.includes(n.id);
+            const isOwn = n.createdById === currentUser?.id || n.createdBy?.id === currentUser?.id;
+            
+            let cardBgClass = 'bg-slate-50 border-slate-200';
+            if (isPinned) {
+              cardBgClass = 'bg-amber-50/80 border-amber-200 shadow-xs';
+            } else if (isOwn) {
+              cardBgClass = 'bg-orange-50/60 border-orange-200/80 border-l-4 border-l-orange-500 shadow-xs';
+            }
+
             return (
-              <div key={n.id} className={`border p-3 text-xs relative group animate-in fade-in duration-200 rounded-xl transition-all duration-200 ${isPinned ? 'bg-amber-50/40 border-amber-200/80 shadow-[0_2px_8px_rgba(245,158,11,0.04)]' : 'bg-slate-50 border-slate-100'}`}>
-                <div className="flex justify-between items-start mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-700">{n.createdBy?.name || 'User'}</span>
+              <div key={n.id} className={`border p-4 text-[13px] relative group animate-in fade-in duration-200 rounded-2xl transition-all duration-200 ${cardBgClass}`}>
+                <div className="flex justify-between items-start mb-2 border-b border-slate-200/40 pb-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                      {n.createdBy?.name || 'User'}
+                      {isOwn && (
+                        <span className="text-[9px] text-orange-600 font-bold bg-orange-100/80 px-1.5 py-0.5 rounded-md leading-none border border-orange-200/60">You</span>
+                      )}
+                    </span>
                     {isPinned && <Pin size={10} className="fill-amber-500 text-amber-500 stroke-[2.5]" />}
                   </div>
-                  <span className="text-[10px] text-slate-400 group-hover:opacity-0 transition-opacity duration-150">
+                  <span className="text-[10px] text-slate-400 group-hover:opacity-0 transition-opacity duration-150 font-medium">
                     {new Date(n.createdAt).toLocaleDateString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -383,6 +538,7 @@ const NotesTab = ({ leadId }) => {
                     <div className="flex gap-1 border-b border-slate-100 pb-1.5 flex-wrap">
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('bold', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Bold"
@@ -391,6 +547,7 @@ const NotesTab = ({ leadId }) => {
                       </button>
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('italic', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Italic"
@@ -399,6 +556,7 @@ const NotesTab = ({ leadId }) => {
                       </button>
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('h1', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Heading 1"
@@ -407,6 +565,7 @@ const NotesTab = ({ leadId }) => {
                       </button>
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('h2', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Heading 2"
@@ -415,6 +574,7 @@ const NotesTab = ({ leadId }) => {
                       </button>
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('bullet', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Bullet List"
@@ -423,6 +583,7 @@ const NotesTab = ({ leadId }) => {
                       </button>
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => insertFormat('number', true)}
                         className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
                         title="Numbered List"
@@ -435,23 +596,25 @@ const NotesTab = ({ leadId }) => {
                       value={editingText}
                       onChange={(e) => setEditingText(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, true)}
-                      className="w-full text-xs p-1 focus:outline-none resize-none h-16 bg-transparent text-slate-700"
+                      className="w-full text-xs p-1 focus:outline-none resize-none h-16 bg-transparent text-slate-700 placeholder-slate-400"
                     />
-                    <div className="flex gap-1.5 justify-end">
+                    <div className="flex justify-end gap-1.5 pt-1">
                       <Button
-                        onClick={handleCancelEdit}
                         variant="outlined"
-                        size="small"
-                        sx={{ height: '28px', color: '#64748b', borderColor: '#cbd5e1', '&:hover': { borderColor: '#94a3b8', backgroundColor: '#f1f5f9' } }}
+                        size="xs"
+                        onClick={() => {
+                          setEditingNoteId(null);
+                          setEditingText('');
+                        }}
                       >
                         Cancel
                       </Button>
                       <Button
-                        onClick={() => handleSaveEdit(n.id)}
                         variant="contained"
-                        size="small"
+                        size="xs"
+                        onClick={() => handleUpdateNote(n.id)}
                         isLoading={updateNoteMutation.isPending}
-                        sx={{ height: '28px', backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+                        sx={{ backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
                       >
                         Save
                       </Button>
@@ -459,32 +622,38 @@ const NotesTab = ({ leadId }) => {
                   </div>
                 ) : (
                   <>
-                    <div className="pr-20 space-y-0.5 break-words">
-                      {renderFormattedText(n.note)}
-                    </div>
-                    <div className="absolute right-3 top-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-all duration-150">
+                    <div className="whitespace-pre-line">{renderNoteContent(n.note)}</div>
+                    
+                    {/* Hover Actions Bar */}
+                    <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1 bg-white border border-slate-100 p-0.5 rounded-lg shadow-xs transition-all animate-in fade-in duration-100">
                       <button
-                        onClick={() => togglePinNote(n.id)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-colors"
-                        title={isPinned ? "Unpin Note" : "Pin Note"}
+                        onClick={() => handleTogglePin(n)}
+                        className="p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-colors"
+                        title={isPinned ? "Unpin note" : "Pin note"}
                       >
-                        <Pin size={12} className={isPinned ? "fill-amber-500 text-amber-500" : ""} />
+                        <Pin size={11} className={isPinned ? "fill-amber-500 text-amber-500" : ""} />
                       </button>
-                      <button
-                        onClick={() => handleStartEdit(n)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors"
-                        title="Edit Note"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={() => deleteNoteMutation.mutate({ leadId, noteId: n.id })}
-                        disabled={deleteNoteMutation.isPending}
-                        className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                        title="Delete Note"
-                      >
-                        <Trash2 size={12} />
-                      </button>
+                      {isOwn && (
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditingNoteId(n.id);
+                              setEditingText(n.note);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors"
+                            title="Edit note"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNote(n.id)}
+                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            title="Delete note"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </>
                 )}
