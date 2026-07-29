@@ -5,7 +5,9 @@ import { Plus, Pencil, Power, Compass } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import {
   useLeadSourcesQuery,
-  useToggleLeadSourceStatusMutation
+  useToggleLeadSourceStatusMutation,
+  useCreateLeadSourceMutation,
+  useUpdateLeadSourceMutation
 } from '../hooks/useLeadSources';
 import Button from '../../../shared/components/elements/Button';
 import Table from '../../../shared/components/elements/Table';
@@ -19,7 +21,7 @@ export const LeadSourcePage = () => {
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
-  
+
   // Overlay states
   const [isSlideoverOpen, setIsSlideoverOpen] = useState(false);
   const [slideoverMode, setSlideoverMode] = useState('create'); // 'create' | 'edit'
@@ -35,6 +37,8 @@ export const LeadSourcePage = () => {
   const { data: sourcesRes, isLoading, isFetching, isError, error, refetch } = useLeadSourcesQuery(queryParams);
   const sources = sourcesRes?.data || [];
   const toggleMutation = useToggleLeadSourceStatusMutation();
+  const createMutation = useCreateLeadSourceMutation();
+  const updateMutation = useUpdateLeadSourceMutation();
 
   // Handlers
   const handleAddClick = () => {
@@ -70,10 +74,10 @@ export const LeadSourcePage = () => {
   const loadingState = (isLoading || isFetching || toggleMutation.isPending || createMutation.isPending || updateMutation.isPending)
     ? 'loading'
     : isError
-    ? 'error'
-    : !sources || sources.length === 0
-    ? 'empty'
-    : 'success';
+      ? 'error'
+      : !sources || sources.length === 0
+        ? 'empty'
+        : 'success';
 
   // Columns definition
   const columns = [
@@ -93,11 +97,10 @@ export const LeadSourcePage = () => {
       accessorKey: 'type',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.type === 'GLOBAL'
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.type === 'GLOBAL'
               ? 'bg-blue-50 text-blue-700 border border-blue-100'
               : 'bg-amber-50 text-amber-700 border border-amber-100'
-          }`}
+            }`}
         >
           {row.type}
         </span>
@@ -108,11 +111,10 @@ export const LeadSourcePage = () => {
       accessorKey: 'isActive',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.isActive
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.isActive
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
               : 'bg-slate-100 text-slate-600 border border-slate-200'
-          }`}
+            }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
         </span>
@@ -136,11 +138,10 @@ export const LeadSourcePage = () => {
           </button>
           <button
             onClick={() => handleToggleClick(row)}
-            className={`p-1.5 rounded-lg transition-all ${
-              row.isActive
+            className={`p-1.5 rounded-lg transition-all ${row.isActive
                 ? 'text-red-500 hover:bg-red-50'
                 : 'text-emerald-500 hover:bg-emerald-50'
-            }`}
+              }`}
             title={row.isActive ? 'Deactivate Lead Source' : 'Activate Lead Source'}
           >
             <Power size={15} />
@@ -170,7 +171,7 @@ export const LeadSourcePage = () => {
             Manage global default and company-specific lead acquisition channels
           </p>
         </div>
-        
+
         {hasPermission('LEAD_SOURCE', 'canCreate') && (
           <Button
             onClick={handleAddClick}
@@ -195,11 +196,10 @@ export const LeadSourcePage = () => {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                statusFilter === tab.id
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.id
                   ? 'bg-white text-slate-800 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
