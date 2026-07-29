@@ -25,6 +25,12 @@ const TimelineTab = ({ leadId }) => {
       case 'NOTE_ADD': return { color: 'bg-amber-500', ring: 'ring-amber-50' };
       case 'NOTE_UPDATE': return { color: 'bg-amber-600', ring: 'ring-amber-50' };
       case 'NOTE_DELETE': return { color: 'bg-rose-500', ring: 'ring-rose-50' };
+      case 'FOLLOWUP_CREATED':   return { color: 'bg-cyan-500',    ring: 'ring-cyan-50' };
+      case 'FOLLOWUP_UPDATED':   return { color: 'bg-sky-500',     ring: 'ring-sky-50' };
+      case 'FOLLOWUP_COMPLETED': return { color: 'bg-emerald-600', ring: 'ring-emerald-50' };
+      case 'FOLLOWUP_CANCELLED': return { color: 'bg-gray-400',    ring: 'ring-gray-50' };
+      case 'FOLLOWUP_MISSED':    return { color: 'bg-rose-400',    ring: 'ring-rose-50' };
+      case 'FOLLOWUP_DELETED':   return { color: 'bg-red-400',     ring: 'ring-red-50' };
       default: return { color: 'bg-slate-400', ring: 'ring-slate-50' };
     }
   };
@@ -76,6 +82,12 @@ const TimelineTab = ({ leadId }) => {
         return 'updated a note';
       }
       case 'NOTE_DELETE': return 'deleted a note';
+      case 'FOLLOWUP_CREATED':   return 'scheduled a follow-up';
+      case 'FOLLOWUP_UPDATED':   return 'rescheduled a follow-up';
+      case 'FOLLOWUP_COMPLETED': return 'completed a follow-up';
+      case 'FOLLOWUP_CANCELLED': return 'cancelled a follow-up';
+      case 'FOLLOWUP_MISSED':    return 'missed a follow-up';
+      case 'FOLLOWUP_DELETED':   return 'deleted a follow-up';
       default: return `performed ${action}`;
     }
   };

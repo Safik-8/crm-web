@@ -44,6 +44,12 @@ export const PERMISSIONS = {
   VIEW_ACTIVITY_FEED: 'view:activity_feed',
   CREATE_ACTIVITY: 'create:activity',
 
+  // Follow-up Permissions (Sprint 4 — Task 5)
+  VIEW_FOLLOWUPS:   'view:followups',
+  CREATE_FOLLOWUP:  'create:followup',
+  EDIT_FOLLOWUP:    'edit:followup',
+  DELETE_FOLLOWUP:  'delete:followup',
+
   // Action Permissions
   APPROVE_TRANSFERS: 'action:approve_transfers',
   MANAGE_USERS: 'action:manage_users',

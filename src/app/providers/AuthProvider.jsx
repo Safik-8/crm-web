@@ -59,6 +59,12 @@ const RBAC_ADAPTER_MAP = {
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 
+  // Follow-up Permissions (Sprint 4 — Task 5)
+  'view:followups':   { module: 'FOLLOWUP', action: 'canView' },
+  'create:followup':  { module: 'FOLLOWUP', action: 'canCreate' },
+  'edit:followup':    { module: 'FOLLOWUP', action: 'canEdit' },
+  'delete:followup':  { module: 'FOLLOWUP', action: 'canDelete' },
+
   // Daily Report (ISE)
   'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
   'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' }, 
