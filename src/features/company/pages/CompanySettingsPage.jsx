@@ -13,6 +13,7 @@ import CompanyForm from '../components/CompanyForm';
 import GenericPage from '../../../shared/components/templates/GenericPage';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 const CompanySettingsPage = () => {
   const { permissions } = useAuth();
@@ -114,78 +115,34 @@ const CompanySettingsPage = () => {
     >
       <div className="flex flex-col gap-3 sm:gap-4">
 
-        {/* ── Mobile section header ──────────────────────────────────────── */}
-        <div className="flex items-center justify-between lg:hidden bg-white px-3 sm:px-4 py-3 border border-slate-200/60">
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
-              <Building2 size={16} />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-slate-800 font-heading leading-tight">Companies</h2>
-              <p className="text-[11px] text-slate-500 font-medium">
-                {isLoading ? 'Loading…' : `${pagination.total} total`}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-2">
-            <button
-              onClick={refetch}
-              disabled={isLoading}
-              className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
-              title="Refresh"
-            >
-              <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
-            </button>
-            {companyPerms.canCreate && (
-              <Button
-                onClick={handleAddCompany}
-                variant="contained"
-                size="small"
-                startIcon={<Plus size={15} />}
+        {/* ── Unified Page Header ── */}
+        <PageHeader
+          title="Entity Registry"
+          description={isLoading ? 'Loading…' : `${pagination.total} ${pagination.total === 1 ? 'company' : 'companies'} total`}
+          icon={Building2}
+          className="bg-white px-5 py-4 border border-slate-200/60"
+          actions={
+            <>
+              <button
+                onClick={refetch}
+                disabled={isLoading}
+                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                title="Refresh"
               >
-                Add
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* ── Desktop section header ─────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
-              <Building2 size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Entity Registry</h2>
-                <button
-                  onClick={refetch}
-                  disabled={isLoading}
-                  className="text-slate-400 hover:text-primary transition-colors disabled:opacity-50 focus:outline-none"
-                  title="Refresh Data"
+                <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+              </button>
+              {companyPerms.canCreate && (
+                <Button
+                  onClick={handleAddCompany}
+                  variant="contained"
+                  startIcon={<Plus size={15} />}
                 >
-                  <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} />
-                </button>
-              </div>
-              {!isLoading && pagination.total > 0 && (
-                <p className="text-[13px] text-slate-500 font-medium mt-0.5">
-                  {pagination.total} {pagination.total === 1 ? 'company' : 'companies'} total
-                </p>
+                  Add Company
+                </Button>
               )}
-            </div>
-          </div>
-          {companyPerms.canCreate && (
-            <Button
-              onClick={handleAddCompany}
-              variant="contained"
-              size="medium"
-              startIcon={<Plus size={18} />}
-              className="group shadow-sm hover:shadow-md transition-all"
-            >
-              Add Company
-            </Button>
-          )}
-        </div>
+            </>
+          }
+        />
 
         {/* ── Content Container (Matches User Manager Layout) ───────────────── */}
         <div className="bg-white border border-slate-200/60 p-4">

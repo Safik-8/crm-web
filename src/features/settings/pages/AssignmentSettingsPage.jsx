@@ -8,6 +8,7 @@ import { Toggle } from '../../../shared/components/elements/Toggle';
 import Button from '../../../shared/components/elements/Button';
 import { toast } from '../../../shared/utils/toast';
 import { GitBranch, Building2, Save, Info, Settings, AlertCircle } from 'lucide-react';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 export const AssignmentSettingsPage = () => {
   const { user: currentUser } = useAuth();
@@ -139,22 +140,20 @@ export const AssignmentSettingsPage = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-500">
       
       {/* Header section */}
-      <div className="flex items-center gap-3 border-b border-zinc-200/80 pb-5 shrink-0">
-        <div className="p-2.5 bg-orange-100 rounded-xl text-orange-600">
-          <Settings size={22} className="animate-spin-slow" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-zinc-950 tracking-tight">Lead Distribution Rules</h1>
-          <p className="text-xs font-medium text-zinc-400 mt-1">Configure auto-routing parameters, daily limits, and resolution levels per branch.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Lead Distribution Rules"
+        description="Configure auto-routing parameters, daily limits, and resolution levels per branch."
+        icon={Settings}
+        className="border bg-white border-zinc-200/80 p-4 shrink-0"
+        iconClassName="bg-orange-100 text-orange-600"
+      />
 
       {/* Selectors section */}
       {(isSuperAdmin || isCompanyAdmin) && (
-        <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-zinc-200/80  p-5  space-y-4">
           <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Branch Scope</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {isSuperAdmin && (
@@ -194,7 +193,7 @@ export const AssignmentSettingsPage = () => {
       {/* Settings Form */}
       {activeBranchId ? (
         isLoadingDetails ? (
-          <div className="flex flex-col items-center justify-center p-20 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
+          <div className="flex flex-col items-center justify-center p-20 bg-white border border-zinc-200/80  ">
             <svg className="animate-spin h-8 w-8 text-orange-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -205,7 +204,7 @@ export const AssignmentSettingsPage = () => {
           <form onSubmit={handleSave} className="space-y-6" noValidate>
             
             {hasNoMembers && (
-              <div className="bg-red-50 border border-red-200/60 rounded-2xl p-5 flex gap-3.5">
+              <div className="bg-red-50 border border-red-200/60  p-5 flex gap-3.5">
                 <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
                 <div>
                   <h3 className="text-sm font-bold text-red-800">Automatic Lead Assignment Restricted</h3>
@@ -217,7 +216,7 @@ export const AssignmentSettingsPage = () => {
             )}
 
             {/* Form Fields Card */}
-            <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-zinc-200/80   overflow-hidden">
               <div className="p-6 border-b border-zinc-100 bg-zinc-50/50">
                 <Toggle
                   id="autoAssignmentEnabled"
@@ -282,7 +281,7 @@ export const AssignmentSettingsPage = () => {
                       placeholder="Select Algorithm..."
                       searchable={false}
                     />
-                    <div className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200/60 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200/60  p-5 space-y-4 ">
                       {assignmentAlgorithm === 'ROUND_ROBIN' && (
                         <>
                           <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
@@ -389,13 +388,13 @@ export const AssignmentSettingsPage = () => {
                     <p className="text-xs font-semibold text-zinc-400 mt-1">Determine whether leads are assigned to individual people or teams.</p>
                   </div>
                   <div className="md:col-span-2 space-y-4">
-                    <div className="grid grid-cols-2 p-1 bg-slate-100/80 rounded-xl border border-slate-200/50">
+                    <div className="grid grid-cols-2 p-1 bg-slate-100/80  border border-slate-200/50">
                       <button
                         type="button"
                         onClick={() => setAssignmentResolutionLevel('PERSON')}
                         className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                           assignmentResolutionLevel === 'PERSON'
-                            ? 'bg-white text-slate-800 shadow-sm border border-slate-200/20'
+                            ? 'bg-white text-slate-800  border border-slate-200/20'
                             : 'text-slate-400 hover:text-slate-600'
                         }`}
                       >
@@ -406,7 +405,7 @@ export const AssignmentSettingsPage = () => {
                         onClick={() => setAssignmentResolutionLevel('TEAM')}
                         className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                           assignmentResolutionLevel === 'TEAM'
-                            ? 'bg-white text-slate-800 shadow-sm border border-slate-200/20'
+                            ? 'bg-white text-slate-800  border border-slate-200/20'
                             : 'text-slate-400 hover:text-slate-600'
                         }`}
                       >
@@ -414,7 +413,7 @@ export const AssignmentSettingsPage = () => {
                       </button>
                     </div>
 
-                    <div className="text-xs font-semibold text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-xl p-3.5 space-y-2">
+                    <div className="text-xs font-semibold text-zinc-500 bg-zinc-50 border border-zinc-100  p-3.5 space-y-2">
                       {assignmentResolutionLevel === 'PERSON' ? (
                         <>
                           <p className="text-slate-800 font-bold">Assign to Person Mode:</p>
@@ -452,7 +451,7 @@ export const AssignmentSettingsPage = () => {
           </form>
         )
       ) : (
-        <div className="flex flex-col items-center justify-center p-12 bg-white border border-dashed border-zinc-300 rounded-2xl text-center space-y-3">
+        <div className="flex flex-col items-center justify-center p-12 bg-white border border-dashed border-zinc-300  text-center space-y-3">
           <AlertCircle size={32} className="text-zinc-300" />
           <h3 className="text-sm font-bold text-zinc-700">No Branch Selected</h3>
           <p className="text-xs font-medium text-zinc-400">Please choose a branch from the selector above to view and configure its lead assignment parameters.</p>

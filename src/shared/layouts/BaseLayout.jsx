@@ -69,7 +69,7 @@ const BaseLayout = () => {
           {/* Main content */}
           <main
             ref={mainRef}
-            className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-50 ${isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-6 lg:p-8'
+            className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-50 ${isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-4 lg:p-6'
               }`}
           >
             <div

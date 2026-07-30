@@ -13,6 +13,7 @@ import SearchInput from '../../../shared/components/elements/SearchInput';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import LeadStatusFormSlideover from '../components/LeadStatusFormSlideover';
 import LeadStatusReorderModal from '../components/LeadStatusReorderModal';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 export const LeadStatusPage = () => {
   const { user, hasPermission } = useAuth();
@@ -87,13 +88,13 @@ export const LeadStatusPage = () => {
   };
 
   // Determine Table Loading State
-  const loadingState = (isLoading || isFetching || toggleMutation.isPending || deleteMutation.isPending || createMutation.isPending || updateMutation.isPending)
+  const loadingState = (isLoading || isFetching || toggleMutation.isPending || deleteMutation.isPending)
     ? 'loading'
     : isError
-    ? 'error'
-    : !statuses || statuses.length === 0
-    ? 'empty'
-    : 'success';
+      ? 'error'
+      : !statuses || statuses.length === 0
+        ? 'empty'
+        : 'success';
 
   // Columns definition
   const columns = [
@@ -104,7 +105,7 @@ export const LeadStatusPage = () => {
       className: 'w-16',
       cell: (row) => (
         <div
-          className="h-5 w-5 rounded-full border border-slate-200 shadow-sm mx-auto"
+          className="h-5 w-5 rounded-full border border-slate-200  mx-auto"
           style={{ background: row.displayColor }}
         />
       )
@@ -128,11 +129,10 @@ export const LeadStatusPage = () => {
       accessorKey: 'type',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.type === 'GLOBAL'
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.type === 'GLOBAL'
               ? 'bg-blue-50 text-blue-700 border border-blue-100'
               : 'bg-amber-50 text-amber-700 border border-amber-100'
-          }`}
+            }`}
         >
           {row.type}
         </span>
@@ -162,11 +162,10 @@ export const LeadStatusPage = () => {
       accessorKey: 'isActive',
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-            row.isActive
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.isActive
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
               : 'bg-slate-100 text-slate-600 border border-slate-200'
-          }`}
+            }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
         </span>
@@ -201,19 +200,18 @@ export const LeadStatusPage = () => {
                 <button
                   onClick={() => handleToggleClick(row)}
                   disabled={row.isDefault && row.isActive}
-                  className={`p-1.5 rounded-lg transition-all ${
-                    row.isDefault && row.isActive
+                  className={`p-1.5 rounded-lg transition-all ${row.isDefault && row.isActive
                       ? 'text-slate-300 cursor-not-allowed opacity-40'
                       : row.isActive
-                      ? 'text-red-500 hover:bg-red-50'
-                      : 'text-emerald-500 hover:bg-emerald-50'
-                  }`}
+                        ? 'text-red-500 hover:bg-red-50'
+                        : 'text-emerald-500 hover:bg-emerald-50'
+                    }`}
                   title={
                     row.isDefault && row.isActive
                       ? 'Cannot deactivate default status'
                       : row.isActive
-                      ? 'Deactivate Lead Status'
-                      : 'Activate Lead Status'
+                        ? 'Deactivate Lead Status'
+                        : 'Activate Lead Status'
                   }
                 >
                   <Power size={15} />
@@ -224,11 +222,10 @@ export const LeadStatusPage = () => {
               <button
                 onClick={() => handleDeleteClick(row)}
                 disabled={row.isDefault}
-                className={`p-1.5 rounded-lg transition-all ${
-                  row.isDefault
+                className={`p-1.5 rounded-lg transition-all ${row.isDefault
                     ? 'text-slate-300 cursor-not-allowed opacity-40'
                     : 'text-red-500 hover:bg-red-50 hover:text-red-700'
-                }`}
+                  }`}
                 title={row.isDefault ? 'Cannot delete default status' : 'Delete Lead Status'}
               >
                 <Trash2 size={15} />
@@ -248,89 +245,86 @@ export const LeadStatusPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto flex flex-col gap-6">
+    <div className=" max-w-7xl mx-auto flex flex-col gap-6">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold font-heading text-slate-900 tracking-tight flex items-center gap-2">
-            <Tags className="text-primary" size={24} />
-            Lead Statuses
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage global default and company-specific lead stages for the sales pipeline
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 sm:self-center">
-          {canEdit && statuses && statuses.length > 0 && (isSuperAdmin || statuses.some(s => s.companyId !== null)) && (
-            <Button
-              onClick={() => setIsReorderOpen(true)}
-              variant="outlined"
-              color="secondary"
-              startIcon={<ArrowUpDown size={16} />}
-              className="px-4 py-2 text-slate-600 border-slate-200 hover:bg-slate-50 font-bold"
-            >
-              Reorder
-            </Button>
-          )}
-          {hasPermission('LEAD_STATUS', 'canCreate') && (
-            <Button
-              onClick={handleAddClick}
-              variant="contained"
-              color="primary"
-              startIcon={<Plus size={16} />}
-            >
-              Add Status
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Filter tab bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl w-fit">
-          {[
-            { id: 'all', label: 'All Statuses' },
-            { id: 'active', label: 'Active' },
-            { id: 'inactive', label: 'Inactive' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                statusFilter === tab.id
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="w-full md:w-72">
-          <SearchInput
-            placeholder="Search statuses..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
-        </div>
-      </div>
-
-      {/* Table section */}
-      <Table
-        columns={columns}
-        data={statuses || []}
-        loadingState={loadingState}
-        errorMessage={error?.message}
-        onRetry={refetch}
-        hasActiveFilters={activeFiltersCount > 0}
-        onClearFilters={handleClearFilters}
-        emptyTitle="No lead statuses found"
-        emptyDescription="Get started by creating your first lead status, or clear filters."
-        className="rounded-2xl shadow-sm border border-slate-200/60"
-        rowClassName="border-b border-slate-100 last:border-0"
+      <PageHeader
+        title="Lead Statuses"
+        description="Manage global default and company-specific lead stages for the sales pipeline"
+        icon={Tags}
+        actions={
+          <>
+            {canEdit && statuses && statuses.length > 0 && (isSuperAdmin || statuses.some(s => s.companyId !== null)) && (
+              <Button
+                onClick={() => setIsReorderOpen(true)}
+                variant="outlined"
+                color="secondary"
+                startIcon={<ArrowUpDown size={16} />}
+                className="px-4 py-2 text-slate-600 border-slate-200 hover:bg-slate-50 font-bold"
+              >
+                Reorder
+              </Button>
+            )}
+            {hasPermission('LEAD_STATUS', 'canCreate') && (
+              <Button
+                onClick={handleAddClick}
+                variant="contained"
+                color="primary"
+                startIcon={<Plus size={16} />}
+              >
+                Add Status
+              </Button>
+            )}
+          </>
+        }
       />
+
+      <section>
+        {/* Filter tab bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4  border-x border-t border-slate-200/60 ">
+          <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl w-fit">
+            {[
+              { id: 'all', label: 'All Statuses' },
+              { id: 'active', label: 'Active' },
+              { id: 'inactive', label: 'Inactive' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.id
+                    ? 'bg-white text-slate-800 '
+                    : 'text-slate-500 hover:text-slate-800'
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-full md:w-72">
+            <SearchInput
+              placeholder="Search statuses..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
+          </div>
+        </div>
+
+        {/* Table section */}
+        <Table
+          columns={columns}
+          data={statuses || []}
+          loadingState={loadingState}
+          errorMessage={error?.message}
+          onRetry={refetch}
+          hasActiveFilters={activeFiltersCount > 0}
+          onClearFilters={handleClearFilters}
+          emptyTitle="No lead statuses found"
+          emptyDescription="Get started by creating your first lead status, or clear filters."
+          className="  border border-slate-200/60"
+          rowClassName="border-b border-slate-100 last:border-0"
+        />
+      </section>
+
 
       {/* Overlays */}
       <LeadStatusFormSlideover

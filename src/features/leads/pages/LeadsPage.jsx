@@ -23,6 +23,7 @@ import {
   X,
   MoreVertical,
   UserCheck,
+  ClipboardList,
   HelpCircle,
   Users
 } from 'lucide-react';
@@ -44,6 +45,8 @@ import { teamService } from '../../teams/services/teamService';
 
 // Shared UI elements
 import Button from '../../../shared/components/elements/Button';
+
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import Table from '../../../shared/components/elements/Table';
 import Pagination from '../../../shared/components/elements/Pagination';
 import SearchInput from '../../../shared/components/elements/SearchInput';
@@ -465,7 +468,7 @@ export const LeadsPage = () => {
     queryFn: () => companyService.getCompaniesRaw(),
     enabled: canSelectCompany
   });
-  
+
   const rawCompanies = Array.isArray(companiesRes)
     ? companiesRes
     : (Array.isArray(companiesRes?.data) ? companiesRes.data : (companiesRes?.data?.companies || []));
@@ -719,124 +722,145 @@ export const LeadsPage = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className=" max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[24px] font-extrabold text-slate-900 tracking-tight">Leads Registry</h1>
-          <p className="text-[13px] text-slate-500 font-medium mt-1">
-            Capture, organize, segment, and route sales pipeline contacts dynamically.
-          </p>
-        </div>
+      <PageHeader
+        title="Leads Registry"
+        description="Capture, track, and convert leads."
+        icon={ClipboardList}
+        actions={
+          <>
+            {selectedLeadIds.length > 0 && (hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
+                  setLeadsToAssign(selectedLeads);
+                  setIsAssignOpen(true);
+                }}
+                startIcon={<UserCheck size={16} />}
+                sx={{
+                  backgroundColor: '#F86F03',
+                  '&:hover': { backgroundColor: '#DE5D02' }
+                }}
+              >
+                Assign Selected ({selectedLeadIds.length})
+              </Button>
+            )}
 
-        <div className="flex items-center gap-3">
-          {selectedLeadIds.length > 0 && (hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
-            <Button
-              variant="contained"
-              onClick={() => {
-                const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
-                setLeadsToAssign(selectedLeads);
-                setIsAssignOpen(true);
-              }}
-              startIcon={<UserCheck size={16} />}
-              sx={{
-                backgroundColor: '#F86F03',
-                '&:hover': { backgroundColor: '#DE5D02' }
-              }}
-            >
-              Assign Selected ({selectedLeadIds.length})
-            </Button>
-          )}
-
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/pipelines')}
-            startIcon={<Kanban size={16} />}
-            sx={{
-              borderColor: '#E2E8F0',
-              color: '#475569',
-              '&:hover': {
-                borderColor: '#CBD5E1',
-                bgcolor: '#F8FAFC'
-              }
-            }}
-          >
-            Kanban Boards
-          </Button>
-          
-          {hasPermission('LEAD', 'canDelete') && (
             <Button
               variant="outlined"
-              color="error"
-              onClick={() => setIsDeleteAllOpen(true)}
-              startIcon={<Trash2 size={16} />}
+              onClick={() => navigate('/pipelines')}
+              startIcon={<Kanban size={16} />}
               sx={{
-                borderColor: '#FEE2E2',
-                color: '#EF4444',
+                borderColor: '#E2E8F0',
+                color: '#475569',
                 '&:hover': {
-                  borderColor: '#FCA5A5',
-                  bgcolor: '#FEF2F2'
+                  borderColor: '#CBD5E1',
+                  bgcolor: '#F8FAFC'
                 }
               }}
             >
-              Delete All
+              Kanban Boards
             </Button>
-          )}
 
-          {hasPermission('LEAD', 'canCreate') && (
-            <div className="flex gap-2">
+            {hasPermission('LEAD', 'canDelete') && (
               <Button
                 variant="outlined"
-                onClick={() => setIsImportOpen(true)}
-                startIcon={<FileSpreadsheet size={16} />}
+                color="error"
+                onClick={() => setIsDeleteAllOpen(true)}
+                startIcon={<Trash2 size={16} />}
                 sx={{
-                  borderColor: '#E2E8F0',
-                  color: '#475569',
+                  borderColor: '#FEE2E2',
+                  color: '#EF4444',
                   '&:hover': {
-                    borderColor: '#CBD5E1',
-                    bgcolor: '#F8FAFC'
+                    borderColor: '#FCA5A5',
+                    bgcolor: '#FEF2F2'
                   }
                 }}
               >
-                Import Leads
+                Delete All
               </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setIsCreateOpen(true)}
-                startIcon={<Plus size={16} />}
-              >
-                Add Lead
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
 
-      {/* Toolbar Filter Panel */}
-      <div className="bg-white border border-slate-200/60 rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <SearchInput
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Search by name, mobile, email..."
-            className="flex-1 min-w-[280px]"
-          />
+            {hasPermission('LEAD', 'canCreate') && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outlined"
+                  onClick={() => setIsImportOpen(true)}
+                  startIcon={<FileSpreadsheet size={16} />}
+                  sx={{
+                    borderColor: '#E2E8F0',
+                    color: '#475569',
+                    '&:hover': {
+                      borderColor: '#CBD5E1',
+                      bgcolor: '#F8FAFC'
+                    }
+                  }}
+                >
+                  Import Leads
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setIsCreateOpen(true)}
+                  startIcon={<Plus size={16} />}
+                >
+                  Add Lead
+                </Button>
+              </div>
+            )}
+          </>
+        }
+      />
 
-          <div className="flex items-center gap-2">
-            {savedFiltersList.length > 0 && (
-              <div className="flex items-center gap-1">
-                <div className="w-[160px]">
-                  <SelectField
-                    id="apply-saved-filter-select"
-                    placeholder="Saved Filters"
-                    allowEmptyOption
-                    value={activeSavedFilterId}
-                    onChange={(val) => {
-                      if (val) {
-                        const selected = savedFiltersList.find((sf) => String(sf.id) === String(val));
-                        if (selected) {
-                          const defaultEmptyFilters = {
+
+
+      <section className=''>
+
+        {/* Toolbar Filter Panel */}
+        <div className="bg-white border-x border-t border-slate-200/60  p-4 ">
+          <div className="flex flex-wrap items-center gap-3">
+            <SearchInput
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search by name, mobile, email..."
+              className="flex-1 min-w-[280px]"
+            />
+
+            <div className="flex items-center gap-2">
+              {savedFiltersList.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <div className="w-[160px]">
+                    <SelectField
+                      id="apply-saved-filter-select"
+                      placeholder="Saved Filters"
+                      allowEmptyOption
+                      value={activeSavedFilterId}
+                      onChange={(val) => {
+                        if (val) {
+                          const selected = savedFiltersList.find((sf) => String(sf.id) === String(val));
+                          if (selected) {
+                            const defaultEmptyFilters = {
+                              companyId: '',
+                              branchId: '',
+                              teamId: '',
+                              sourceId: '',
+                              courseId: '',
+                              statusId: '',
+                              priority: '',
+                              assignedToId: '',
+                              dateFrom: '',
+                              dateTo: ''
+                            };
+                            handleFilterChange({
+                              ...defaultEmptyFilters,
+                              ...selected.filters
+                            });
+                            toast.success(`Applied filter "${selected.name}"`);
+                          }
+                        } else {
+                          clearFilters({
                             companyId: '',
                             branchId: '',
                             teamId: '',
@@ -847,137 +871,120 @@ export const LeadsPage = () => {
                             assignedToId: '',
                             dateFrom: '',
                             dateTo: ''
-                          };
-                          handleFilterChange({
-                            ...defaultEmptyFilters,
-                            ...selected.filters
                           });
-                          toast.success(`Applied filter "${selected.name}"`);
                         }
-                      } else {
-                        clearFilters({
-                          companyId: '',
-                          branchId: '',
-                          teamId: '',
-                          sourceId: '',
-                          courseId: '',
-                          statusId: '',
-                          priority: '',
-                          assignedToId: '',
-                          dateFrom: '',
-                          dateTo: ''
-                        });
-                      }
-                    }}
-                    options={savedFiltersList.map((sf) => ({ value: sf.id, label: sf.name }))}
-                  />
+                      }}
+                      options={savedFiltersList.map((sf) => ({ value: sf.id, label: sf.name }))}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-                hasActiveFilters
-                  ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <SlidersHorizontal size={15} />
-              Filters
-              {hasActiveFilters && (
-                <span className="flex items-center justify-center bg-orange-500 text-white text-[10px] font-black h-5 w-5 rounded-full">
-                  {Object.values(filters).filter(Boolean).length}
-                </span>
               )}
-            </button>
 
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2">
-                {!activeSavedFilterId && (
-                  <button
-                    onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
-                    className="flex items-center gap-1.5 px-3.5 h-11 bg-orange-50 hover:bg-orange-100/80 text-orange-600 font-semibold rounded-xl text-[12px] transition-all cursor-pointer border border-orange-200/50 shadow-sm active:scale-95"
-                    title="Save current filters as preset"
-                  >
-                    <BookmarkPlus size={14} />
-                    Save Preset
-                  </button>
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${hasActiveFilters
+                    ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+              >
+                <SlidersHorizontal size={15} />
+                Filters
+                {hasActiveFilters && (
+                  <span className="flex items-center justify-center bg-orange-500 text-white text-[10px] font-black h-5 w-5 rounded-full">
+                    {Object.values(filters).filter(Boolean).length}
+                  </span>
                 )}
-                <button
-                  onClick={() =>
-                    clearFilters({
-                      companyId: '',
-                      branchId: '',
-                      teamId: '',
-                      sourceId: '',
-                      courseId: '',
-                      statusId: '',
-                      priority: '',
-                      assignedToId: '',
-                      dateFrom: '',
-                      dateTo: ''
-                    })
-                  }
-                  className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  <SearchX size={14} />
-                  Clear
-                </button>
-              </div>
-            )}
+              </button>
 
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading || isFetching}
-              className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
-              title="Refresh List"
-            >
-              <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
-            </button>
+              {hasActiveFilters && (
+                <div className="flex items-center gap-2">
+                  {!activeSavedFilterId && (
+                    <button
+                      onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
+                      className="flex items-center gap-1.5 px-3.5 h-11 bg-orange-50 hover:bg-orange-100/80 text-orange-600 font-semibold rounded-xl text-[12px] transition-all cursor-pointer border border-orange-200/50  active:scale-95"
+                      title="Save current filters as preset"
+                    >
+                      <BookmarkPlus size={14} />
+                      Save Preset
+                    </button>
+                  )}
+                  <button
+                    onClick={() =>
+                      clearFilters({
+                        companyId: '',
+                        branchId: '',
+                        teamId: '',
+                        sourceId: '',
+                        courseId: '',
+                        statusId: '',
+                        priority: '',
+                        assignedToId: '',
+                        dateFrom: '',
+                        dateTo: ''
+                      })
+                    }
+                    className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer  active:scale-95"
+                  >
+                    <SearchX size={14} />
+                    Clear
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => refetch()}
+                disabled={isLoading || isFetching}
+                className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                title="Refresh List"
+              >
+                <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+        {/* Main Table Content */}
+        <Table
+          columns={columns}
+          data={leads}
+          loadingState={loadingState}
+          errorMessage={error?.message || 'Something went wrong.'}
+          onRetry={refetch}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={() =>
+            clearFilters({
+              sourceId: '',
+              courseId: '',
+              statusId: '',
+              priority: '',
+              assignedToId: '',
+              dateFrom: '',
+              dateTo: ''
+            })
+          }
+          emptyTitle="No leads registered"
+          emptyDescription="Manually add a lead or import them from Excel to get started."
+          className=" shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
+          rowClassName="group"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
+        />
 
-      {/* Main Table Content */}
-      <Table
-        columns={columns}
-        data={leads}
-        loadingState={loadingState}
-        errorMessage={error?.message || 'Something went wrong.'}
-        onRetry={refetch}
-        hasActiveFilters={hasActiveFilters}
-        onClearFilters={() =>
-          clearFilters({
-            sourceId: '',
-            courseId: '',
-            statusId: '',
-            priority: '',
-            assignedToId: '',
-            dateFrom: '',
-            dateTo: ''
-          })
-        }
-        emptyTitle="No leads registered"
-        emptyDescription="Manually add a lead or import them from Excel to get started."
-        className="rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
-        rowClassName="group"
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSort={toggleSort}
-      />
+        {/* Pagination Footer */}
+        {leads.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <Pagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={isLoading || isFetching}
+              entityName="leads"
+            />
+          </div>
+        )}
 
-      {/* Pagination Footer */}
-      {leads.length > 0 && (
-        <div className="flex justify-end mt-4">
-          <Pagination
-            pagination={pagination}
-            onPageChange={setPage}
-            isLoading={isLoading || isFetching}
-            entityName="leads"
-          />
-        </div>
-      )}
+
+      </section>
+
 
       {/* Slide-over Filter Drawer */}
       <Drawer
@@ -1209,7 +1216,7 @@ export const LeadsPage = () => {
             >
               Save Filter Preset
             </Button>
-            
+
             <div className="flex gap-3">
               <Button
                 variant="outlined"

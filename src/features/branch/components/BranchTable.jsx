@@ -99,7 +99,7 @@ const StatusBadge = ({ status }) => (
   <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
     status === 'ACTIVE'
       ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
-      : 'bg-slate-500/10 text-slate-500 border-slate-500/20 shadow-sm'
+      : 'bg-slate-500/10 text-slate-500 border-slate-500/20 '
   }`}>
     <span className={`w-1.5 h-1.5 rounded-full ${
       status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
@@ -135,7 +135,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
     {
       header: 'Branch Code',
       cell: (branch) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-50 text-slate-600 border border-slate-200 uppercase tracking-tighter shadow-sm">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black bg-slate-50 text-slate-600 border border-slate-200 uppercase tracking-tighter ">
           {branch.code}
         </span>
       ),
@@ -161,7 +161,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
           }}
           className="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-primary transition-colors group"
         >
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100  group-hover:bg-primary/10 group-hover:text-primary transition-colors">
             <Users size={14} />
           </div>
           <span className="font-bold text-sm tracking-tight">{branch._count?.users || 0}</span>
@@ -179,7 +179,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
           }}
           className="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-primary transition-colors group"
         >
-          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+          <div className="h-7 w-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100  group-hover:bg-primary/10 group-hover:text-primary transition-colors">
             <GitBranch size={14} />
           </div>
           <span className="font-bold text-sm tracking-tight">{branch._count?.teams || 0}</span>
@@ -209,7 +209,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
   const renderMobileSkeletons = () => (
     <div className="space-y-3">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+        <div key={i} className="bg-white p-4 border border-slate-200/60 ">
           <div className="flex items-start gap-3 mb-4">
             <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
             <div className="flex-1 min-w-0">
@@ -253,12 +253,12 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
         {branches.map((branch) => (
           <div 
             key={branch.id} 
-            className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 overflow-hidden group relative border border-slate-100"
+            className="bg-white  shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 overflow-hidden group relative border border-slate-100"
           >
             <div className="p-4">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="h-11 w-11 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary border border-primary/10 group-hover:from-primary group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shrink-0 shadow-sm">
+                  <div className="h-11 w-11 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary border border-primary/10 group-hover:from-primary group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shrink-0 ">
                     <GitBranch size={20} />
                   </div>
                   
@@ -337,7 +337,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+    <div className=" overflow-hidden">
       {/* Mobile Layout */}
       <div className="block lg:hidden p-3 sm:p-4">
         {isLoading ? renderMobileSkeletons() : renderMobileCards()}
