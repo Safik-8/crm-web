@@ -321,7 +321,7 @@ const TeamContributionPanel = ({ cards, fixedHeight }) => {
 
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex flex-col"
+      className="bg-white  border border-slate-200/70 p-4 sm:p-5 flex flex-col"
       
     >
       {/* Header */}
@@ -405,7 +405,7 @@ const MetricCard = ({ card, index, chartColor, isExpanded, onToggle, isSelfView 
 
   return (
     <div
-      className="group relative bg-white rounded-2xl border border-slate-200/70 overflow-hidden animate-slide-in-bottom"
+      className="group relative bg-white  border border-slate-200/70 overflow-hidden animate-slide-in-bottom"
       style={{
         animationDelay: `${index * 55}ms`,
         boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)',
@@ -503,7 +503,7 @@ const Shimmer = ({ className = '' }) => (
 
 // ─── Metric Card skeleton ─────────────────────────────────────────────────────
 const MetricCardSkeleton = () => (
-  <div className="relative bg-white rounded-2xl border border-slate-200/70 overflow-hidden" >
+  <div className="relative bg-white  border border-slate-200/70 overflow-hidden" >
     <div className="absolute top-0 left-0 w-[3px] h-full bg-slate-100" />
     <div className="px-5 pt-5 pb-4 space-y-4">
       <Shimmer className="h-11 w-11 rounded-xl" />
@@ -523,7 +523,7 @@ const MetricCardSkeleton = () => (
 const SummaryStripSkeleton = () => (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
     {[1,2,3,4].map(i => (
-      <div key={i} className="bg-white rounded-2xl border border-slate-100 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div key={i} className="bg-white  border border-slate-100 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <Shimmer className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl shrink-0" />
         <div className="space-y-2 flex-1 min-w-0">
           <Shimmer className="h-2 w-16" />
@@ -537,7 +537,7 @@ const SummaryStripSkeleton = () => (
 // ─── Chart section skeleton ───────────────────────────────────────────────────
 const ChartSectionSkeleton = () => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-    <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" >
+    <div className="lg:col-span-2 bg-white  border border-slate-200/70 p-4 sm:p-5" >
       <div className="flex items-center justify-between mb-3">
         <div className="space-y-2">
           <Shimmer className="h-2.5 w-24" />
@@ -547,7 +547,7 @@ const ChartSectionSkeleton = () => (
       <div className="h-px bg-slate-100 mb-3" />
       <Shimmer className="flex-1 h-[300px] w-full rounded-xl" />
     </div>
-    <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" >
+    <div className="bg-white  border border-slate-200/70 p-4 sm:p-5" >
       <div className="flex items-center justify-between mb-3">
         <div className="space-y-2">
           <Shimmer className="h-2.5 w-16" />
@@ -667,7 +667,7 @@ const StageBarChart = ({ cards }) => {
 
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex flex-col"
+      className="bg-white  border border-slate-200/70 p-4 sm:p-5 flex flex-col"
     >
       {/* ── Header: title ── */}
       <div className="mb-3 shrink-0">
@@ -784,7 +784,7 @@ const StageDonutChart = ({ cards }) => {
   const hasData = pieData.length > 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/70 p-5" >
+    <div className="bg-white  border border-slate-200/70 p-5" >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -863,7 +863,7 @@ const ScopeHeader = ({ viewMode, viewer }) => {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border animate-fade-in"
+      className="relative overflow-hidden  border animate-fade-in"
       style={
         isSelf
           ? {
@@ -1026,7 +1026,7 @@ const SelfPersonalSummary = ({ cards, totalLeads }) => {
 
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-200/70 p-5 flex flex-col overflow-hidden animate-fade-in"
+      className="bg-white  border border-slate-200/70 p-5 flex flex-col overflow-hidden animate-fade-in"
       
     >
       {/* ── Header ── */}
@@ -1187,7 +1187,7 @@ const BranchDashboardPage = () => {
     return (
       <div className="p-4 sm:p-6 flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4 bg-white rounded-3xl p-8 sm:p-10 shadow-soft border border-slate-100 max-w-sm w-full text-center">
-          <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${is403 ? 'bg-amber-50 text-amber-500' : 'bg-rose-50 text-rose-500'}`}>
+          <div className={`h-12 w-12  flex items-center justify-center ${is403 ? 'bg-amber-50 text-amber-500' : 'bg-rose-50 text-rose-500'}`}>
             {is403 ? <AlertTriangle size={22} /> : <RefreshCw size={22} />}
           </div>
           <div>
@@ -1221,7 +1221,7 @@ const BranchDashboardPage = () => {
            Mobile  : stacked — title block / date filter / total leads
            Tablet+ : 2-col — [title] [filter controls]
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden" >
+      <div className="bg-white  border border-slate-200/80 overflow-hidden" >
 
         {/* Brand accent bar */}
         {/* <div className="h-[3px] w-full bg-gradient-to-r from-primary via-orange-400 to-amber-300" /> */}
@@ -1263,7 +1263,7 @@ const BranchDashboardPage = () => {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3 shrink-0">
 
             {/* MOBILE date filter (hidden sm+) */}
-            <div className="sm:hidden bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+            <div className="sm:hidden bg-slate-50 border border-slate-200  overflow-hidden">
               <label className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 cursor-pointer">
                 <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <Calendar size={15} className="text-primary" />
@@ -1385,7 +1385,7 @@ const BranchDashboardPage = () => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 animate-fade-in">
           {/* Total Leads */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
+          <div className="bg-white  border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <TrendingUp size={16} strokeWidth={1.8} />
             </div>
@@ -1398,7 +1398,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Active Stages */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
+          <div className="bg-white  border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
               <Activity size={16} strokeWidth={1.8} />
             </div>
@@ -1411,7 +1411,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Best Stage */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
+          <div className="bg-white  border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
               <Flame size={16} strokeWidth={1.8} />
             </div>
@@ -1426,7 +1426,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Date range */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
+          <div className="bg-white  border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
               <Calendar size={16} strokeWidth={1.8} />
             </div>
@@ -1467,8 +1467,8 @@ const BranchDashboardPage = () => {
           ? Array.from({ length: 5 }).map((_, i) => <MetricCardSkeleton key={i} />)
           : cards.length === 0
             ? (
-              <div className="col-span-full flex flex-col items-center justify-center gap-4 bg-white rounded-2xl border border-slate-100 py-16 px-6 text-center animate-fade-in" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                <div className="h-14 w-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-200">
+              <div className="col-span-full flex flex-col items-center justify-center gap-4 bg-white  border border-slate-100 py-16 px-6 text-center animate-fade-in" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                <div className="h-14 w-14  bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-200">
                   <BarChart3 size={26} />
                 </div>
                 <div>

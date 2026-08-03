@@ -19,6 +19,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     [user, hasPermission]
   );
 
+  const location = useLocation();
+  const navRef = React.useRef(null);
+  const [indicatorStyle, setIndicatorStyle] = React.useState({ top: 0, left: 0, width: 0, height: 0, opacity: 0, isChild: false });
+
   const [expandedGroups, setExpandedGroups] = React.useState({});
   
   const toggleGroup = (groupName) => {
@@ -28,6 +32,31 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       [groupName]: prev[groupName] === false ? true : false
     }));
   };
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (navRef.current) {
+        const activeEl = navRef.current.querySelector('.active-nav-link');
+        if (activeEl) {
+          const navRect = navRef.current.getBoundingClientRect();
+          const activeRect = activeEl.getBoundingClientRect();
+          const scrollTop = navRef.current.scrollTop;
+          
+          setIndicatorStyle({
+            top: activeRect.top - navRect.top + scrollTop,
+            left: activeRect.left - navRect.left,
+            width: activeRect.width,
+            height: activeRect.height,
+            opacity: 1,
+            isChild: activeEl.classList.contains('is-child-link')
+          });
+        } else {
+          setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+        }
+      }
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [location.pathname, location.search, expandedGroups]);
 
   return (
     <>
@@ -67,7 +96,26 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* ── Navigation ── */}
-        <nav className="flex-1 overflow-y-auto h-0 px-2.5 py-3 space-y-4 scrollbar-hide">
+        <nav ref={navRef} className="flex-1 relative overflow-y-auto h-0 px-2.5 py-3 space-y-4 scrollbar-hide">
+          {/* Floating Active Indicator */}
+          <div 
+            className="absolute bg-orange-50 shadow rounded-lg transition-all duration-300 ease-in-out pointer-events-none z-0"
+            style={{ 
+              top: indicatorStyle.top, 
+              left: indicatorStyle.left,
+              width: indicatorStyle.width,
+              height: indicatorStyle.height, 
+              opacity: indicatorStyle.opacity 
+            }}
+          >
+            {!indicatorStyle.isChild && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-500 transition-opacity duration-300" />
+            )}
+            {indicatorStyle.isChild && (
+              <div className="absolute left-[-2px] top-0 bottom-0 w-[2px] bg-orange-500 transition-opacity duration-300" />
+            )}
+          </div>
+
           {filteredNavGroups.map((group, groupIdx) => {
             const expanded = expandedGroups[group.group] !== false;
 
@@ -108,25 +156,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <NavLink
                       to={item.path}
                       end={!hasChildren}
-                      className={({ isActive }) =>
-                        cn(
-                          'group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 relative',
-                          (isActive && (!hasChildren || !isTabBranch))
-                            ? 'bg-orange-50 text-orange-600 font-semibold'
+                      className={({ isActive }) => {
+                        const active = isActive && (!hasChildren || !isTabBranch);
+                        return cn(
+                          'group relative z-10 flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+                          active
+                            ? 'text-orange-600 font-semibold active-nav-link'
                             : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
-                        )
-                      }
+                        );
+                      }}
                     >
                       {({ isActive }) => {
                         const active = isActive && (!hasChildren || !isTabBranch);
                         return (
                           <>
-                            <span
-                              className={cn(
-                                'absolute left-0 w-[3px] h-5 rounded-r-full transition-all duration-200',
-                                active ? 'bg-orange-500 opacity-100' : 'opacity-0'
-                              )}
-                            />
                             <Icon
                               size={16}
                               strokeWidth={active ? 2.2 : 1.8}
@@ -149,12 +192,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <NavLink
                           key={child.path}
                           to={child.path}
-                          className={cn(
-                            'group flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 relative border-l-2',
-                            isChildActive
-                              ? 'bg-orange-50/70 text-orange-600 font-semibold border-orange-500'
-                              : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
-                          )}
+                          className={({ isActive }) => {
+                            const isChildActive = location.pathname === item.path && isTabBranch;
+                            return cn(
+                              'group relative z-10 flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 border-l-2',
+                              isChildActive
+                                ? 'text-orange-600 font-semibold active-nav-link is-child-link border-transparent'
+                                : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
+                            );
+                          }}
                         >
                           <ChildIcon
                             size={14}
