@@ -1,7 +1,6 @@
 // src/features/leads/components/LeadDetailDrawer.jsx
 
 import React, { useEffect, useState, useRef } from 'react';
-import React, { useEffect, useState } from 'react';
 import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
