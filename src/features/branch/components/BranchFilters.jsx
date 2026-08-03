@@ -20,7 +20,7 @@ const BranchFilters = ({
   const hasActiveFilters = search || status;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-3 sm:px-4 py-3">
+    <div className="bg-white  border-x border-t border-slate-200/60  px-3 sm:px-4 py-3">
       <div className="flex flex-col sm:flex-row gap-2.5 items-center">
 
         {/* ── Search Bar (Unified Component) ── */}

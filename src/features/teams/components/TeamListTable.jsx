@@ -197,7 +197,7 @@ const TeamListTable = ({
       onRetry={onRetry}
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
-      className="rounded-2xl shadow-sm border border-slate-200/50"
+      className=""
     />
   );
 };

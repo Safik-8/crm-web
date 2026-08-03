@@ -155,8 +155,14 @@ export const restoreLead = (leadId) =>
  * @param {number|string} leadId
  * @returns {Promise<object>}
  */
-export const getLeadTimeline = (leadId) =>
-  apiClient(`/leads/${leadId}/timeline`, { method: 'GET' });
+export const getLeadTimeline = (leadId, params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, v);
+  });
+  const url = `/leads/${leadId}/timeline${qs.toString() ? `?${qs.toString()}` : ""}`;
+  return apiClient(url, { method: 'GET' });
+};
 
 /**
  * Fetch notes list for a specific lead.
@@ -164,8 +170,14 @@ export const getLeadTimeline = (leadId) =>
  * @param {number|string} leadId
  * @returns {Promise<object>}
  */
-export const getLeadNotes = (leadId) =>
-  apiClient(`/leads/${leadId}/notes`, { method: 'GET' });
+export const getLeadNotes = (leadId, params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, v);
+  });
+  const url = `/leads/${leadId}/notes${qs.toString() ? `?${qs.toString()}` : ""}`;
+  return apiClient(url, { method: 'GET' });
+};
 
 /**
  * Create a new note on a lead.
@@ -216,3 +228,38 @@ export const assignLeads = (data) =>
  */
 export const getLeadPipelineHistory = (leadId) =>
   apiClient(`/leads/${leadId}/pipeline-history`, { method: 'GET' });
+
+/**
+ * Fetch communication logs for a specific lead.
+ * 
+ * @param {number|string} leadId
+ * @param {object} params
+ * @returns {Promise<object>}
+ */
+export const getLeadCommunicationLogs = (leadId, params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, v);
+  });
+  return apiClient(`/leads/${leadId}/communication-logs${qs.toString() ? `?${qs.toString()}` : ""}`, { method: 'GET' });
+};
+
+/**
+ * Create a new communication log entry for a lead.
+ * 
+ * @param {number|string} leadId
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export const createLeadCommunicationLog = (leadId, data) =>
+  apiClient(`/leads/${leadId}/communication-logs`, { method: 'POST', body: data });
+
+/**
+ * Soft-delete a communication log entry.
+ * 
+ * @param {number|string} leadId
+ * @param {number|string} logId
+ * @returns {Promise<object>}
+ */
+export const deleteLeadCommunicationLog = (leadId, logId) =>
+  apiClient(`/leads/${leadId}/communication-logs/${logId}`, { method: 'DELETE' });

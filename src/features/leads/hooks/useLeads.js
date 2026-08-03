@@ -15,7 +15,10 @@ import {
   createLeadNote,
   updateLeadNote,
   deleteLeadNote,
-  assignLeads
+  assignLeads,
+  getLeadCommunicationLogs,
+  createLeadCommunicationLog,
+  deleteLeadCommunicationLog
 } from '../services/leadService';
 import { userProfileService } from '../../userprofile/services/userProfileService';
 import { toast } from '../../../shared/utils/toast';
@@ -191,11 +194,12 @@ export const useImportPreviewMutation = () => {
 /**
  * Hook to retrieve a lead's chronological activity timeline.
  */
-export const useLeadTimelineQuery = (leadId) => {
+export const useLeadTimelineQuery = (leadId, params = {}) => {
   return useQuery({
-    queryKey: [...LEAD_KEYS.detail(leadId), 'timeline'],
-    queryFn: () => getLeadTimeline(leadId),
+    queryKey: [...LEAD_KEYS.detail(leadId), 'timeline', params],
+    queryFn: () => getLeadTimeline(leadId, params),
     enabled: !!leadId,
+    staleTime: 0,
   });
 };
 
@@ -221,11 +225,12 @@ export const useImportCommitMutation = () => {
 /**
  * Hook to retrieve notes list for a specific lead.
  */
-export const useLeadNotesQuery = (leadId) => {
+export const useLeadNotesQuery = (leadId, params = {}) => {
   return useQuery({
-    queryKey: [...LEAD_KEYS.detail(leadId), 'notes'],
-    queryFn: () => getLeadNotes(leadId),
+    queryKey: [...LEAD_KEYS.detail(leadId), 'notes', params],
+    queryFn: () => getLeadNotes(leadId, params),
     enabled: !!leadId,
+    staleTime: 0,
   });
 };
 
@@ -237,23 +242,10 @@ export const useCreateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, data }) => createLeadNote(leadId, data),
     onSuccess: (res, variables) => {
-      const newNote = res?.data?.note || res?.note;
-      if (newNote) {
-        queryClient.setQueryData(
-          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
-          (oldData) => {
-            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
-            const updatedNotes = [newNote, ...oldNotes];
-            if (oldData?.data?.notes) {
-              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
-            } else if (oldData?.notes) {
-              return { ...oldData, notes: updatedNotes };
-            }
-            return updatedNotes;
-          }
-        );
-      }
-      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({
+        queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+        exact: false
+      });
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note added successfully');
@@ -273,23 +265,10 @@ export const useUpdateLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId, data }) => updateLeadNote(leadId, noteId, data),
     onSuccess: (res, variables) => {
-      const updatedNote = res?.data?.note || res?.note;
-      if (updatedNote) {
-        queryClient.setQueryData(
-          [...LEAD_KEYS.detail(variables.leadId), 'notes'],
-          (oldData) => {
-            const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
-            const updatedNotes = oldNotes.map((n) => n.id === variables.noteId ? updatedNote : n);
-            if (oldData?.data?.notes) {
-              return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
-            } else if (oldData?.notes) {
-              return { ...oldData, notes: updatedNotes };
-            }
-            return updatedNotes;
-          }
-        );
-      }
-      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({
+        queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+        exact: false
+      });
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note updated successfully');
@@ -309,20 +288,10 @@ export const useDeleteLeadNoteMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, noteId }) => deleteLeadNote(leadId, noteId),
     onSuccess: (res, variables) => {
-      queryClient.setQueryData(
-        [...LEAD_KEYS.detail(variables.leadId), 'notes'],
-        (oldData) => {
-          const oldNotes = oldData?.data?.notes || oldData?.notes || oldData || [];
-          const updatedNotes = oldNotes.filter((n) => n.id !== variables.noteId);
-          if (oldData?.data?.notes) {
-            return { ...oldData, data: { ...oldData.data, notes: updatedNotes } };
-          } else if (oldData?.notes) {
-            return { ...oldData, notes: updatedNotes };
-          }
-          return updatedNotes;
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'] });
+      queryClient.invalidateQueries({
+        queryKey: [...LEAD_KEYS.detail(variables.leadId), 'notes'],
+        exact: false
+      });
       queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(variables.leadId) });
       toast.success('Note deleted successfully');
@@ -374,6 +343,56 @@ export const useAssignLeadsMutation = () => {
     },
     onError: (error) => {
       const msg = error?.message || 'Failed to assign leads';
+      toast.error(msg);
+    }
+  });
+};
+
+/**
+ * Hook to retrieve communication logs for a specific lead.
+ */
+export const useLeadCommunicationLogsQuery = (leadId, params = {}) => {
+  return useQuery({
+    queryKey: [...LEAD_KEYS.detail(leadId), 'communication-logs', params],
+    queryFn: () => getLeadCommunicationLogs(leadId, params),
+    enabled: !!leadId,
+    staleTime: 0,
+  });
+};
+
+/**
+ * Hook to log a new communication interaction.
+ */
+export const useCreateCommunicationLogMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leadId, data }) => createLeadCommunicationLog(leadId, data),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'communication-logs'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
+      toast.success('Communication logged successfully');
+    },
+    onError: (error) => {
+      const msg = error?.message || 'Failed to log communication';
+      toast.error(msg);
+    }
+  });
+};
+
+/**
+ * Hook to soft-delete a communication log.
+ */
+export const useDeleteCommunicationLogMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leadId, logId }) => deleteLeadCommunicationLog(leadId, logId),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'communication-logs'] });
+      queryClient.invalidateQueries({ queryKey: [...LEAD_KEYS.detail(variables.leadId), 'timeline'] });
+      toast.success('Communication log deleted successfully');
+    },
+    onError: (error) => {
+      const msg = error?.message || 'Failed to delete communication log';
       toast.error(msg);
     }
   });

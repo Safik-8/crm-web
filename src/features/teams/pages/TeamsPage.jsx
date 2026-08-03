@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import SelectField from '../../../shared/components/elements/SelectField';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
 import { useTeamsQuery, useToggleTeamStatusMutation, useDeleteTeamMutation, TEAM_KEYS } from '../hooks/useTeams';
@@ -77,7 +78,7 @@ const TeamsPage = () => {
       const targetCompanyId = location.state.companyId;
       setSelectedTeamForEdit({ branchId: targetBranchId, companyId: targetCompanyId });
       setIsFormOpen(true);
-      
+
       // Clear the router state using navigate to prevent reopening on reload
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -214,191 +215,188 @@ const TeamsPage = () => {
   const loadingState = (isLoading || isFetching || isMutatingTeams)
     ? 'loading'
     : isError
-    ? 'error'
-    : teams.length === 0
-    ? 'empty'
-    : 'success';
+      ? 'error'
+      : teams.length === 0
+        ? 'empty'
+        : 'success';
 
   const hasActiveFilters = !!(debouncedSearch || status || view !== 'active' || (canFilterByCompany && companyId) || (canFilterByBranch && branchId && currentUser?.primaryRole !== 'BRANCH_MANAGER'));
 
   return (
     <>
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-        
+
         {/* Header Title Section */}
-        <div className="bg-white border border-slate-200/60 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-50 rounded-2xl text-orange-600">
-              <Users2 size={24} className="stroke-[2]" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-slate-800 tracking-tight leading-none">Team Manager</h1>
-              <p className="text-slate-400 text-xs font-semibold leading-relaxed mt-1">
-                Organize, delegate, and manage branch level business execution teams
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="h-10 px-4 flex items-center justify-center gap-2"
-            >
-              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-              <span>Sync</span>
-            </Button>
-            {canCreate && (
+        <PageHeader
+          title="Team Manager"
+          description="Organize, delegate, and manage branch level business execution teams"
+          icon={Users2}
+          className=""
+          actions={
+            <>
               <Button
-                onClick={handleOpenCreateForm}
+                variant="secondary"
+                onClick={() => refetch()}
+                disabled={isLoading}
                 className="h-10 px-4 flex items-center justify-center gap-2"
               >
-                <Plus size={16} />
-                <span>Add Team</span>
+                <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                <span>Sync</span>
               </Button>
-            )}
-          </div>
-        </div>
+              {canCreate && (
+                <Button
+                  onClick={handleOpenCreateForm}
+                  className="h-10 px-4 flex items-center justify-center gap-2"
+                >
+                  <Plus size={16} />
+                  <span>Add Team</span>
+                </Button>
+              )}
+            </>
+          }
+        />
 
-        {/* Filter and Search Bar */}
-        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-            
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[240px]">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                <Search size={15} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search name, code..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
+        <section>
+          {/* Filter and Search Bar */}
+          <div className="bg-white border-x border-t border-slate-200/60 p-4 ">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-[240px]">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                  <Search size={15} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search name, code..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
                      focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
-              />
-            </div>
-
-            {/* Filter Dropdowns */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              
-              {/* View Toggle Tabs */}
-              <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/60">
-                <button
-                  type="button"
-                  onClick={() => { setView('active'); setPage(1); }}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${
-                    view === 'active'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                  }`}
-                >
-                  Active
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setView('archived'); setPage(1); }}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${
-                    view === 'archived'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                  }`}
-                >
-                  Archived
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setView('all'); setPage(1); }}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${
-                    view === 'all'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                  }`}
-                >
-                  All
-                </button>
-              </div>
-
-              {/* Company Filter (Super Admin only) */}
-              {canFilterByCompany && (
-                <div className="w-full sm:w-[165px]">
-                  <SelectField
-                    id="companyFilter"
-                    value={companyId}
-                    onChange={(val) => handleFilterChange('companyId', val)}
-                    options={companies.map(c => ({ value: c.id, label: c.name }))}
-                    placeholder="All Companies"
-                    allowEmptyOption={true}
-                  />
-                </div>
-              )}
-
-              {/* Branch Filter */}
-              {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-                <div className="w-full sm:w-[165px]">
-                  <SelectField
-                    id="branchFilter"
-                    value={branchId}
-                    onChange={(val) => handleFilterChange('branchId', val)}
-                    options={branches.map(b => ({ value: b.id, label: b.name }))}
-                    placeholder="All Branches"
-                    allowEmptyOption={true}
-                  />
-                </div>
-              )}
-
-              {/* Status Filter */}
-              <div className="w-full sm:w-[150px]">
-                <SelectField
-                  id="statusFilter"
-                  value={status}
-                  onChange={(val) => handleFilterChange('status', val)}
-                  options={[
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' }
-                  ]}
-                  placeholder="All Statuses"
-                  allowEmptyOption={true}
                 />
               </div>
 
-              {/* Clear Filters Button */}
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="px-3.5 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
-                >
-                  Clear Filters
-                </button>
-              )}
+              {/* Filter Dropdowns */}
+              <div className="flex flex-wrap items-center gap-2.5">
+
+                {/* View Toggle Tabs */}
+                <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/60">
+                  <button
+                    type="button"
+                    onClick={() => { setView('active'); setPage(1); }}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'active'
+                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      }`}
+                  >
+                    Active
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setView('archived'); setPage(1); }}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'archived'
+                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      }`}
+                  >
+                    Archived
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setView('all'); setPage(1); }}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'all'
+                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      }`}
+                  >
+                    All
+                  </button>
+                </div>
+
+                {/* Company Filter (Super Admin only) */}
+                {canFilterByCompany && (
+                  <div className="w-full sm:w-[165px]">
+                    <SelectField
+                      id="companyFilter"
+                      value={companyId}
+                      onChange={(val) => handleFilterChange('companyId', val)}
+                      options={companies.map(c => ({ value: c.id, label: c.name }))}
+                      placeholder="All Companies"
+                      allowEmptyOption={true}
+                    />
+                  </div>
+                )}
+
+                {/* Branch Filter */}
+                {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
+                  <div className="w-full sm:w-[165px]">
+                    <SelectField
+                      id="branchFilter"
+                      value={branchId}
+                      onChange={(val) => handleFilterChange('branchId', val)}
+                      options={branches.map(b => ({ value: b.id, label: b.name }))}
+                      placeholder="All Branches"
+                      allowEmptyOption={true}
+                    />
+                  </div>
+                )}
+
+                {/* Status Filter */}
+                <div className="w-full sm:w-[150px]">
+                  <SelectField
+                    id="statusFilter"
+                    value={status}
+                    onChange={(val) => handleFilterChange('status', val)}
+                    options={[
+                      { value: 'ACTIVE', label: 'Active' },
+                      { value: 'INACTIVE', label: 'Inactive' }
+                    ]}
+                    placeholder="All Statuses"
+                    allowEmptyOption={true}
+                  />
+                </div>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-3.5 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+
             </div>
-
           </div>
-        </div>
 
-        {/* Data Table */}
-        <TeamListTable
-          teams={teams}
-          loadingState={loadingState}
-          errorMessage={error?.message}
-          onRetry={refetch}
-          onViewDetails={handleOpenDetails}
-          onEdit={handleOpenEditForm}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleOpenDelete}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-        />
+          {/* Data Table */}
+          <TeamListTable
+            teams={teams}
+            loadingState={loadingState}
+            errorMessage={error?.message}
+            onRetry={refetch}
+            onViewDetails={handleOpenDetails}
+            onEdit={handleOpenEditForm}
+            onToggleStatus={handleToggleStatus}
+            onDelete={handleOpenDelete}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+          />
 
-        {/* Pagination */}
-        <Pagination
-          pagination={pagination}
-          onPageChange={setPage}
-          isLoading={isLoading}
-          entityName="teams"
-        />
+          {/* Pagination */}
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={isLoading}
+            entityName="teams"
+          />
+
+
+        </section>
       </div>
+
+
 
       {/* ── MODAL AND SLIDE-OVER PORTALS ── */}
 

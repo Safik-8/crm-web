@@ -12,6 +12,7 @@ import { SearchableSelect } from '../../../shared/components/elements/Searchable
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
 
 import Button from '../../../shared/components/elements/Button';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
@@ -198,25 +199,23 @@ const PipelinesPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-heading text-slate-900 flex items-center gap-2">
-            <GitBranch className="text-primary" size={24} />
-            Pipelines
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">Build your sales flow. Track every lead.</p>
-        </div>
-        {canCreate && (
-          <Button
-            onClick={() => setShowModal(true)}
-            variant="contained"
-            size="medium"
-            startIcon={<Plus size={18} />}
-          >
-            New Pipeline
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Pipelines"
+        description="Build your sales flow. Track every lead."
+        icon={GitBranch}
+        actions={
+          canCreate && (
+            <Button
+              onClick={() => setShowModal(true)}
+              variant="contained"
+              size="medium"
+              startIcon={<Plus size={18} />}
+            >
+              New Pipeline
+            </Button>
+          )
+        }
+      />
 
       {/* Empty state */}
       {pipelines.length === 0 && (

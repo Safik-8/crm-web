@@ -1,28 +1,25 @@
 // src/features/leads/components/LeadDetailDrawer.jsx
 
 import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
   MapPin, Award, ShieldAlert, History, MessageSquare,
   ClipboardList, UserCheck, GitBranch, CalendarClock
 } from 'lucide-react';
 import CommentThread from '../../activities/components/CommentThread';
-import { useLeadQuery } from '../hooks/useLeads';
 
-// Extracted Sub-Tabs (Sprint 4 Refactoring)
+// Extracted Sub-Tabs
 import NotesTab from './drawer/NotesTab';
 import TimelineTab from './drawer/TimelineTab';
 import StageHistoryTab from './drawer/StageHistoryTab';
 import FollowupsTab from './drawer/FollowupsTab';
+import CommunicationsTab from './drawer/CommunicationsTab';
 
 /**
- * LeadDetailDrawer — Slide-over drawer component displaying comprehensive lead metadata,
+ * LeadDetailDrawer — Premium dashboard-style two-column view displaying lead metadata,
  * assigned user/branch scope, notes, activities, timeline logs, and stage history.
- *
- * @param {Object} props
- * @param {Object} props.lead - Initial lead data object
- * @param {string} [props.stageName] - Optional display name of the current stage
- * @param {Function} props.onClose - Callback invoked when drawer is closed
  */
 const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
   const [activeTab, setActiveTab] = useState('comments');
@@ -40,10 +37,25 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
   if (!lead) return null;
 
   // Prevent body scroll while drawer is open
+  // Prevent body scroll and hide background footer while drawer is open
   useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+
+    const footerEl = document.querySelector('footer');
+    if (footerEl) {
+      footerEl.style.display = 'none';
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      if (footerEl) {
+        footerEl.style.display = '';
+      }
+    };
   }, []);
+
+  if (!lead) return null;
 
   const date = lead.createdAt
     ? new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -58,7 +70,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
     { icon: Phone,      label: 'Alt Contact',       value: lead.alternateMobile || '—' },
     { icon: Mail,       label: 'Email',            value: lead.email || '—' },
     { icon: Calendar,   label: 'Created Date',      value: date },
-    { icon: MapPin,     label: 'Location',          value: locationStr, colSpan: 'sm:col-span-2 md:col-span-2 lg:col-span-2' },
+    { icon: MapPin,     label: 'Location',          value: locationStr },
   ];
 
   const interestDetails = [
@@ -86,9 +98,9 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
       />
 
       {/* Centered Modal Content Card */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 overflow-hidden">
         <div
-          className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
+          className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[92vh] md:h-[85vh] max-h-[92vh] md:max-h-[85vh] animate-in fade-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
@@ -100,7 +112,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
           </button>
 
           {/* Modal Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+          <div className="px-6 py-4 border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-3 flex-wrap pr-8">
               <h2 className="text-xl font-black text-slate-800 tracking-tight">
                 {lead.name}
@@ -138,72 +150,80 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
             </div>
           </div>
 
-          {/* Modal Body */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* Lead Primary Details Section */}
-            <div className="px-6 py-5 border-b border-slate-100 space-y-6">
-              {/* Contact Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {contactDetails.map((item, idx) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <div key={idx} className={`bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1 ${item.colSpan || ''}`}>
-                      <div className="flex items-center gap-1.5 text-slate-400">
-                        <IconComponent size={13} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Course & Budget Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {interestDetails.map((item, idx) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-slate-400">
-                        <IconComponent size={13} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Assignment & Scope Details */}
-              <div>
-                <div className="flex items-center gap-1.5 text-slate-400 mb-2.5">
-                  <User size={13} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assignment & Scope</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {assignmentDetails.map((item, idx) => {
+          {/* Modal Body (Two-Column Layout) */}
+          <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
+            
+            {/* Left Column: Metadata Sidebar */}
+            <div className="w-full md:w-[320px] bg-slate-50/40 border-b md:border-b-0 border-r-0 md:border-r border-slate-100 overflow-y-visible md:overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 flex flex-col">
+              
+              {/* Contact Information */}
+              <div className="space-y-2.5">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 pl-0.5">Contact Details</h3>
+                <div className="space-y-1.5">
+                  {contactDetails.map((item, idx) => {
                     const IconComponent = item.icon;
                     return (
-                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <IconComponent size={12} />
-                          <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+                      <div key={idx} className="bg-white border border-slate-100 rounded-xl p-2.5 flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 shrink-0">
+                          <IconComponent size={13} />
                         </div>
-                        <span className="text-xs font-bold text-slate-700 truncate">{item.value}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{item.label}</div>
+                          <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Notes Summary */}
+              {/* Interest details */}
+              <div className="space-y-2.5">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 pl-0.5">Lead Interest Info</h3>
+                <div className="space-y-1.5">
+                  {interestDetails.map((item, idx) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <div key={idx} className="bg-white border border-slate-100 rounded-xl p-2.5 flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 shrink-0">
+                          <IconComponent size={13} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{item.label}</div>
+                          <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Assignment details */}
+              <div className="space-y-2.5">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 pl-0.5">Assignment & Scope</h3>
+                <div className="space-y-1.5">
+                  {assignmentDetails.map((item, idx) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <div key={idx} className="bg-white border border-slate-100 rounded-xl p-2.5 flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 shrink-0">
+                          <IconComponent size={13} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{item.label}</div>
+                          <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Lead notes description summary */}
               {lead.notes && (
-                <div>
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1.5">
-                    <ClipboardList size={13} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lead Summary / Notes</span>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-xs text-slate-600 leading-relaxed font-medium">
+                <div className="space-y-2.5">
+                  <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 pl-0.5">Lead Description Summary</h3>
+                  <div className="bg-white border border-slate-100 rounded-xl p-3 text-xs text-slate-600 leading-relaxed font-semibold">
                     {lead.notes}
                   </div>
                 </div>
@@ -213,7 +233,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
             {/* Tabbed Activity / Note / Timeline Section */}
             <div ref={tabSectionRef} className="px-6 py-5 flex flex-col min-h-[380px]">
               {/* Tab Header Selector */}
-              <div className="flex border-b border-slate-100 mb-4 gap-4">
+              <div className="flex border-b border-slate-100 gap-4 shrink-0 overflow-x-auto custom-scrollbar">
                 <button
                   onClick={() => handleTabClick('comments')}
                   className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'comments' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
@@ -229,8 +249,15 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                   Notes History
                 </button>
                 <button
+                  onClick={() => setActiveTab('communications')}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'communications' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                >
+                  <Phone size={13} />
+                  Communications
+                </button>
+                <button
                   onClick={() => handleTabClick('timeline')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'timeline' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'timeline' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   <History size={13} />
                   Timeline Log
@@ -251,18 +278,21 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                 </button>
               </div>
 
-              <div className="flex-1 min-h-[300px] flex flex-col">
+              {/* Tab Contents wrapper */}
+              <div className="flex-1 min-h-[420px] md:min-h-0 overflow-y-auto md:overflow-hidden mt-5 flex flex-col">
                 {activeTab === 'comments' && (
                   <div className="h-full flex-1 flex flex-col pr-1">
                     <CommentThread leadId={lead.id} />
                   </div>
                 )}
                 {activeTab === 'notes' && <NotesTab leadId={lead.id} />}
-                {activeTab === 'timeline' && <TimelineTab leadId={lead.id} />}
+                {activeTab === 'communications' && <CommunicationsTab leadId={lead.id} />}
+                {activeTab === 'timeline' && <TimelineTab leadId={lead.id} branchId={lead.branchId} />}
                 {activeTab === 'stage-history' && <StageHistoryTab leadId={lead.id} />}
                 {activeTab === 'followups' && <FollowupsTab leadId={lead.id} />}
               </div>
             </div>
+
           </div>
         </div>
       </div>

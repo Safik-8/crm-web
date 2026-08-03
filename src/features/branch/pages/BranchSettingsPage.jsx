@@ -15,6 +15,7 @@ import BranchFilters from '../components/BranchFilters';
 import BranchPagination from '../components/BranchPagination';
 import GenericPage from '../../../shared/components/templates/GenericPage';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 /**
  * BranchSettingsPage
@@ -115,8 +116,7 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
                 currentStatus: branchToToggle.status
             });
             toast.success(
-                `Branch "${branchToToggle.name}" has been successfully ${
-                    branchToToggle.status === 'ACTIVE' ? 'deactivated' : 'activated'
+                `Branch "${branchToToggle.name}" has been successfully ${branchToToggle.status === 'ACTIVE' ? 'deactivated' : 'activated'
                 }.`
             );
             setIsToggleOpen(false);
@@ -169,83 +169,46 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
                 </div>
             )}
 
-            {/* ── Mobile section header ── */}
+            {/* ── Unified Page Header ── */}
             {!inlineMode && (
-                <div className="flex items-center justify-between lg:hidden bg-white rounded-2xl px-4 py-3 border border-slate-200/60 shadow-sm">
-                    <div className="flex items-center gap-2.5">
-                        <button
-                            onClick={() => navigate('/settings/organization')}
-                            className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-all active:scale-95"
-                            title="Back to Company Registry"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                            <GitBranch size={15} />
-                        </div>
-                        <div>
-                            <h2 className="text-sm font-bold text-slate-800 font-heading leading-tight">Branches</h2>
-                            <p className="text-[11px] text-slate-500 font-medium">Hub Directory</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => refetch()}
-                            disabled={isLoading}
-                            className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
-                            title="Refresh"
-                        >
-                            <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
-                        </button>
-                        {branchPerms.canCreate && (
-                            <Button
-                                onClick={handleAddBranch}
-                                variant="contained"
-                                size="small"
-                                startIcon={<Plus size={15} />}
+                <PageHeader
+                    title="Hub Directory"
+                    description="Manage geographical and functional hubs for the selected company."
+                    icon={GitBranch}
+                    className="bg-white px-5 py-4 border border-slate-200/60"
+                    actions={
+                        <>
+                            <button
+                                onClick={() => navigate('/settings/organization')}
+                                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all active:scale-95"
+                                title="Back to Company Registry"
                             >
-                                Add
-                            </Button>
-                        )}
-                    </div>
-                </div>
+                                <ChevronLeft size={18} />
+                            </button>
+                            <button
+                                onClick={() => refetch()}
+                                disabled={isLoading}
+                                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                                title="Refresh Data"
+                            >
+                                <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+                            </button>
+                            {branchPerms.canCreate && (
+                                <Button
+                                    onClick={handleAddBranch}
+                                    variant="contained"
+                                    size="medium"
+                                    startIcon={<Plus size={15} />}
+                                >
+                                    Add Branch
+                                </Button>
+                            )}
+                        </>
+                    }
+                />
             )}
 
-            {/* ── Desktop section header ── */}
-            {!inlineMode && (
-                <div className="hidden lg:flex lg:items-center lg:justify-between">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => navigate('/settings/organization')}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
-                            title="Back to Company Registry"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <button
-                            onClick={() => refetch()}
-                            disabled={isLoading}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200 disabled:opacity-50"
-                            title="Refresh Data"
-                        >
-                            <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-                        </button>
-                        <h2 className="text-lg font-bold text-slate-800 font-heading">Hub Directory</h2>
-                    </div>
-                    {branchPerms.canCreate && (
-                        <Button
-                            onClick={handleAddBranch}
-                            variant="contained"
-                            size="medium"
-                            startIcon={<Plus size={18} />}
-                            className="group"
-                        >
-                            Add Branch
-                        </Button>
-                    )}
-                </div>
-            )}
-
+            <section className=''>
                 {/* ── Filters bar ── */}
                 <BranchFilters
                     search={search}
@@ -289,47 +252,51 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
                     />
                 )}
 
-                {/* Dynamic Slide-over Form */}
-                <BranchForm
-                    isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
-                    branch={selectedBranch}
-                    companyId={companyId}
-                    onSuccess={handleFormSuccess}
-                />
 
-                {/* Assign User Modal */}
-                <UserFormModal
-                    isOpen={isAssignModalOpen}
-                    onClose={() => setIsAssignModalOpen(false)}
-                    initialValues={assignBranch ? { companyId: assignBranch.companyId, branchId: assignBranch.id } : null}
-                    onSuccess={handleAssignSuccess}
-                    currentUser={user}
-                    isBranchScoped={true}
-                />
+            </section>
 
-                {/* Status Change Confirmation Dialog */}
-                <ConfirmModal
-                    isOpen={isToggleOpen}
-                    onClose={() => setIsToggleOpen(false)}
-                    title="Confirm Status Change"
-                    message={
-                        <span>
-                            Are you sure you want to change the status of <strong>{branchToToggle?.name}</strong> to{' '}
-                            <strong className={branchToToggle?.status === 'ACTIVE' ? 'text-slate-500 font-extrabold' : 'text-emerald-600 font-extrabold'}>
-                                {branchToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
-                            </strong>?
-                        </span>
-                    }
-                    warningMessage={
-                        branchToToggle?.status === 'ACTIVE'
-                            ? 'Warning: Setting this branch to Inactive will block access for all associated employees.'
-                            : undefined
-                    }
-                    onConfirm={handleConfirmToggle}
-                    type={branchToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
-                    isLoading={toggleStatusMutation.isPending}
-                />
+
+            {/* Dynamic Slide-over Form */}
+            <BranchForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                branch={selectedBranch}
+                companyId={companyId}
+                onSuccess={handleFormSuccess}
+            />
+
+            {/* Assign User Modal */}
+            <UserFormModal
+                isOpen={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
+                initialValues={assignBranch ? { companyId: assignBranch.companyId, branchId: assignBranch.id } : null}
+                onSuccess={handleAssignSuccess}
+                currentUser={user}
+                isBranchScoped={true}
+            />
+
+            {/* Status Change Confirmation Dialog */}
+            <ConfirmModal
+                isOpen={isToggleOpen}
+                onClose={() => setIsToggleOpen(false)}
+                title="Confirm Status Change"
+                message={
+                    <span>
+                        Are you sure you want to change the status of <strong>{branchToToggle?.name}</strong> to{' '}
+                        <strong className={branchToToggle?.status === 'ACTIVE' ? 'text-slate-500 font-extrabold' : 'text-emerald-600 font-extrabold'}>
+                            {branchToToggle?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
+                        </strong>?
+                    </span>
+                }
+                warningMessage={
+                    branchToToggle?.status === 'ACTIVE'
+                        ? 'Warning: Setting this branch to Inactive will block access for all associated employees.'
+                        : undefined
+                }
+                onConfirm={handleConfirmToggle}
+                type={branchToToggle?.status === 'ACTIVE' ? 'error' : 'success'}
+                isLoading={toggleStatusMutation.isPending}
+            />
         </div>
     );
 
@@ -342,6 +309,7 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
             title="Branch Registry"
             description="Manage geographical and functional hubs for the selected company."
             icon={GitBranch}
+            hideHeader={true}
         >
             {renderContent()}
         </GenericPage>

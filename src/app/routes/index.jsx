@@ -32,6 +32,7 @@ import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
+import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 
@@ -215,6 +216,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
             <AssignmentSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/branch',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
+            <GlobalBranchPage />
           </ProtectedRoute>
         ),
       },
