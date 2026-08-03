@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/modules/Sidebar';
+import ModernSidebar from '../components/modules/ModernSidebar';
 import Topbar from '../components/modules/Topbar';
 import GlobalLoader from '../components/elements/GlobalLoader';
 import useRouteLoader from '../hooks/useRouteLoader';
@@ -46,6 +47,7 @@ const BaseLayout = () => {
       <ForcedChangePasswordModal />
 
       {/* Sidebar — fixed on mobile, static on desktop */}
+      {/* <ModernSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} /> */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/*
