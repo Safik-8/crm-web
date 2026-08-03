@@ -11,14 +11,14 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  
+
   const handleClick = (event) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = (event) => {
-    if(event) event.stopPropagation();
+    if (event) event.stopPropagation();
     setAnchorEl(null);
   };
 
@@ -32,7 +32,7 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <IconButton 
+      <IconButton
         onClick={handleClick}
         size="small"
         className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
@@ -82,7 +82,7 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
           <GitBranch size={16} className="text-slate-400" />
           Create Team
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={(e) => { handleClose(e); onToggleStatus(branch); }}
           sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: branch.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
         >
@@ -96,14 +96,12 @@ const ActionMenu = ({ branch, canEdit, onEdit, onToggleStatus, onAssignUser }) =
 
 // ── Status badge ──────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => (
-  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
-    status === 'ACTIVE'
+  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${status === 'ACTIVE'
       ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
       : 'bg-slate-500/10 text-slate-500 border-slate-500/20 '
-  }`}>
-    <span className={`w-1.5 h-1.5 rounded-full ${
-      status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
-    }`} />
+    }`}>
+    <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
+      }`} />
     {status}
   </div>
 );
@@ -154,7 +152,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
     {
       header: 'User Count',
       cell: (branch) => (
-        <div 
+        <div
           onClick={(e) => {
             e.stopPropagation();
             navigate(`/users`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } });
@@ -172,7 +170,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
     {
       header: 'Team Count',
       cell: (branch) => (
-        <div 
+        <div
           onClick={(e) => {
             e.stopPropagation();
             navigate(`/teams`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } });
@@ -192,11 +190,11 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
       align: 'right',
       cell: (branch) => (
         <div className="flex items-center justify-end">
-          <ActionMenu 
-            branch={branch} 
-            canEdit={canEdit} 
-            onEdit={onEdit} 
-            onToggleStatus={onToggleStatus} 
+          <ActionMenu
+            branch={branch}
+            canEdit={canEdit}
+            onEdit={onEdit}
+            onToggleStatus={onToggleStatus}
             onAssignUser={onAssignUser}
           />
         </div>
@@ -209,7 +207,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
   const renderMobileSkeletons = () => (
     <div className="space-y-3">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white p-4 border border-slate-200/60 ">
+        <div key={i} className="bg-white p-4 border border-slate-200 ">
           <div className="flex items-start gap-3 mb-4">
             <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
             <div className="flex-1 min-w-0">
@@ -234,7 +232,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
   const renderMobileCards = () => {
     if (branches.length === 0) {
       return (
-        <div className="bg-white rounded-2xl p-8 border border-slate-200/60 text-center">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
               <GitBranch size={32} />
@@ -251,8 +249,8 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
     return (
       <div className="space-y-3">
         {branches.map((branch) => (
-          <div 
-            key={branch.id} 
+          <div
+            key={branch.id}
             className="bg-white  shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 overflow-hidden group relative border border-slate-100"
           >
             <div className="p-4">
@@ -261,7 +259,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
                   <div className="h-11 w-11 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center text-primary border border-primary/10 group-hover:from-primary group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shrink-0 ">
                     <GitBranch size={20} />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <h3 className="font-black text-slate-900 font-heading text-[16px] leading-tight line-clamp-2 hover:text-primary transition-colors text-left focus:outline-none w-full">
                       {branch.name}
@@ -282,18 +280,18 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
                 </div>
 
                 <div className="shrink-0 ml-2">
-                  <ActionMenu 
-                    branch={branch} 
-                    canEdit={canEdit} 
-                    onEdit={onEdit} 
-                    onToggleStatus={onToggleStatus} 
+                  <ActionMenu
+                    branch={branch}
+                    canEdit={canEdit}
+                    onEdit={onEdit}
+                    onToggleStatus={onToggleStatus}
                     onAssignUser={onAssignUser}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-                <div 
+                <div
                   onClick={() => navigate(`/users`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } })}
                   className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
                 >
@@ -306,7 +304,7 @@ const BranchTable = ({ branches = [], isLoading, onEdit, onToggleStatus, onAssig
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => navigate(`/teams`, { state: { filterBranchId: branch.id, filterCompanyId: branch.companyId } })}
                   className="flex flex-col items-center justify-center py-2 bg-slate-50 rounded-xl border border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
                 >

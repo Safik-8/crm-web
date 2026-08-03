@@ -48,7 +48,7 @@ export const Pagination = ({
   const pageRange = buildPageRange(page, totalPages);
 
   return (
-    <div className="bg-white border border-slate-200/60 px-3 sm:px-5 py-3 mt-4">
+    <div className="bg-white border border-slate-200 px-3 sm:px-5 py-3 mt-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Summary text */}
         <p className="text-[13px] font-medium text-slate-500 shrink-0 order-2 sm:order-1">
@@ -90,10 +90,9 @@ export const Pagination = ({
                   onClick={() => onPageChange(p)}
                   disabled={isLoading}
                   className={`h-8 w-8 flex items-center justify-center rounded-lg text-sm font-semibold transition-all
-                    ${
-                      p === page
-                        ? 'bg-primary text-white shadow-md shadow-primary/25 border border-primary'
-                        : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-primary hover:border-primary/30 disabled:opacity-40 disabled:cursor-not-allowed'
+                    ${p === page
+                      ? 'bg-primary text-white shadow-md shadow-primary/25 border border-primary'
+                      : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-primary hover:border-primary/30 disabled:opacity-40 disabled:cursor-not-allowed'
                     }`}
                   aria-label={`Page ${p}`}
                   aria-current={p === page ? 'page' : undefined}

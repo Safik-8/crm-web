@@ -29,7 +29,7 @@ function buildPageRange(current, total) {
   if (current > 3) addEllipsis();
 
   const start = Math.max(2, current - 1);
-  const end   = Math.min(total - 1, current + 1);
+  const end = Math.min(total - 1, current + 1);
   for (let i = start; i <= end; i++) addPage(i);
 
   if (current < total - 2) addEllipsis();
@@ -44,11 +44,11 @@ const CompanyPagination = ({ pagination, onPageChange, isLoading }) => {
   if (total === 0) return null;
 
   const from = (page - 1) * PAGE_LIMIT + 1;
-  const to   = Math.min(page * PAGE_LIMIT, total);
+  const to = Math.min(page * PAGE_LIMIT, total);
   const pageRange = buildPageRange(page, pages);
 
   return (
-    <div className="w-full bg-white border border-slate-200/60 px-3 sm:px-5 py-3">
+    <div className="w-full bg-white border border-slate-200 px-3 sm:px-5 py-3">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
 
         {/* ── Summary ──────────────────────────────────────────────────── */}

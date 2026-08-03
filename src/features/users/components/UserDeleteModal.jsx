@@ -85,7 +85,7 @@ const UserDeleteModal = ({ isOpen, onClose, user = null }) => {
     >
       <div className="space-y-4 pt-2 text-left">
         {isFetchingReplacements ? (
-          <div className="space-y-3 p-3 bg-slate-50 border border-slate-200/60 rounded-2xl animate-pulse">
+          <div className="space-y-3 p-3 bg-slate-50 border border-slate-200 rounded-2xl animate-pulse">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
               <Loader2 size={14} className="animate-spin text-orange-500" />
               <span>Analyzing employee CRM dependencies & candidates...</span>
@@ -113,7 +113,7 @@ const UserDeleteModal = ({ isOpen, onClose, user = null }) => {
                 </div>
               </div>
             ) : (
-              <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-center gap-2 text-xs text-slate-600">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-600">
                 <UserCheck size={16} className="text-emerald-500 shrink-0" />
                 <span>This user has no active leads or direct reports. Deletion is clean.</span>
               </div>

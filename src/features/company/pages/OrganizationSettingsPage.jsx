@@ -98,7 +98,7 @@ const OrganizationSettingsPage = () => {
       >
         <div className="flex flex-col gap-4">
           {/* ── Desktop section header ─────────────────────────────────────── */}
-          <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60">
+          <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
                 <Building2 size={20} />
@@ -121,10 +121,10 @@ const OrganizationSettingsPage = () => {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200/60 p-4">
+          <div className="bg-white border border-slate-200 p-4">
             {/* Top navigation tabs with segmented control styling */}
             <div className="mb-8 flex">
-              <div className="inline-flex items-center p-1 bg-slate-100/70 border border-slate-200/60 rounded-xl shadow-inner">
+              <div className="inline-flex items-center p-1 bg-slate-100/70 border border-slate-200 rounded-xl shadow-inner">
                 <button
                   onClick={() => handleTabChange(0)}
                   className={`flex items-center gap-2 px-6 py-2.5 text-[14px] font-bold font-heading rounded-lg transition-all focus:outline-none ${activeTab === 0

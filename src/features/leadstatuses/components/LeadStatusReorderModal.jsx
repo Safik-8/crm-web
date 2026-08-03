@@ -53,7 +53,7 @@ const SortableStatusRow = ({ status, isSuperAdmin }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 p-3 bg-white border border-slate-200/60 rounded-xl mb-2
+      className={`flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl mb-2
                   ${isDragging ? 'shadow-lg border-primary/30' : 'hover:border-slate-300'}`}
     >
       {isDragDisabled ? (
@@ -94,11 +94,10 @@ const SortableStatusRow = ({ status, isSuperAdmin }) => {
           </span>
         )}
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide ${
-            status.isActive
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide ${status.isActive
               ? 'bg-blue-50 text-blue-700 border border-blue-100'
               : 'bg-slate-100 text-slate-500 border border-slate-200'
-          }`}
+            }`}
         >
           {status.isActive ? 'Active' : 'Inactive'}
         </span>

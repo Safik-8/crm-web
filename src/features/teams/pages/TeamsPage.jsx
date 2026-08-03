@@ -280,13 +280,13 @@ const TeamsPage = () => {
               <div className="flex flex-wrap items-center gap-2.5">
 
                 {/* View Toggle Tabs */}
-                <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/60">
+                <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
                   <button
                     type="button"
                     onClick={() => { setView('active'); setPage(1); }}
                     className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'active'
-                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
                       }`}
                   >
                     Active
@@ -295,8 +295,8 @@ const TeamsPage = () => {
                     type="button"
                     onClick={() => { setView('archived'); setPage(1); }}
                     className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'archived'
-                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
                       }`}
                   >
                     Archived
@@ -305,8 +305,8 @@ const TeamsPage = () => {
                     type="button"
                     onClick={() => { setView('all'); setPage(1); }}
                     className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'all'
-                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                        : 'text-slate-400 hover:text-slate-600 border border-transparent'
+                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
+                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
                       }`}
                   >
                     All

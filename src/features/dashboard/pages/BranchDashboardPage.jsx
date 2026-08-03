@@ -322,7 +322,7 @@ const TeamContributionPanel = ({ cards, fixedHeight }) => {
   return (
     <div
       className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex flex-col"
-      style={{ height: '420px', boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+      
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3 shrink-0">
@@ -503,7 +503,7 @@ const Shimmer = ({ className = '' }) => (
 
 // ─── Metric Card skeleton ─────────────────────────────────────────────────────
 const MetricCardSkeleton = () => (
-  <div className="relative bg-white rounded-2xl border border-slate-200/70 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)' }}>
+  <div className="relative bg-white rounded-2xl border border-slate-200/70 overflow-hidden" >
     <div className="absolute top-0 left-0 w-[3px] h-full bg-slate-100" />
     <div className="px-5 pt-5 pb-4 space-y-4">
       <Shimmer className="h-11 w-11 rounded-xl" />
@@ -537,7 +537,7 @@ const SummaryStripSkeleton = () => (
 // ─── Chart section skeleton ───────────────────────────────────────────────────
 const ChartSectionSkeleton = () => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-    <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" style={{ height: '420px', boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+    <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" >
       <div className="flex items-center justify-between mb-3">
         <div className="space-y-2">
           <Shimmer className="h-2.5 w-24" />
@@ -547,7 +547,7 @@ const ChartSectionSkeleton = () => (
       <div className="h-px bg-slate-100 mb-3" />
       <Shimmer className="flex-1 h-[300px] w-full rounded-xl" />
     </div>
-    <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" style={{ height: '420px', boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+    <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5" >
       <div className="flex items-center justify-between mb-3">
         <div className="space-y-2">
           <Shimmer className="h-2.5 w-16" />
@@ -668,7 +668,6 @@ const StageBarChart = ({ cards }) => {
   return (
     <div
       className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex flex-col"
-      style={{ height: '420px', boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
     >
       {/* ── Header: title ── */}
       <div className="mb-3 shrink-0">
@@ -785,7 +784,7 @@ const StageDonutChart = ({ cards }) => {
   const hasData = pieData.length > 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/70 p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+    <div className="bg-white rounded-2xl border border-slate-200/70 p-5" >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -1028,7 +1027,7 @@ const SelfPersonalSummary = ({ cards, totalLeads }) => {
   return (
     <div
       className="bg-white rounded-2xl border border-slate-200/70 p-5 flex flex-col overflow-hidden animate-fade-in"
-      style={{ height: '420px', boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+      
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-3 shrink-0">
@@ -1215,23 +1214,23 @@ const BranchDashboardPage = () => {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-5 lg:p-6 space-y-3 sm:space-y-4 min-h-screen" style={{ marginTop: '-35px', backgroundColor: '#f0f4f8' }}>
+    <div className="  space-y-4  min-h-screen">
 
       {/* ══════════════════════════════════════════════════════
            PAGE HEADER
            Mobile  : stacked — title block / date filter / total leads
            Tablet+ : 2-col — [title] [filter controls]
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden" >
 
         {/* Brand accent bar */}
-        <div className="h-[3px] w-full bg-gradient-to-r from-primary via-orange-400 to-amber-300" />
+        {/* <div className="h-[3px] w-full bg-gradient-to-r from-primary via-orange-400 to-amber-300" /> */}
 
         <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
 
           {/* ── LEFT: Identity ─────────────────────────────────── */}
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div className="h-11 w-11 sm:h-12 sm:w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/30 shrink-0">
+            <div className="h-11 w-11 sm:h-12 sm:w-12 bg-orange-50 rounded-lg flex items-center justify-center text-primary  shrink-0">
               <LayoutDashboard size={20} />
             </div>
             <div className="min-w-0">
@@ -1386,7 +1385,7 @@ const BranchDashboardPage = () => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 animate-fade-in">
           {/* Total Leads */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <TrendingUp size={16} strokeWidth={1.8} />
             </div>
@@ -1399,7 +1398,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Active Stages */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
               <Activity size={16} strokeWidth={1.8} />
             </div>
@@ -1412,7 +1411,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Best Stage */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
               <Flame size={16} strokeWidth={1.8} />
             </div>
@@ -1427,7 +1426,7 @@ const BranchDashboardPage = () => {
           </div>
 
           {/* Date range */}
-          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-2xl border border-slate-200/70 px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2.5 sm:gap-3" >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
               <Calendar size={16} strokeWidth={1.8} />
             </div>

@@ -48,9 +48,8 @@ const Directory = ({ users, isLoading }) => {
       header: 'Status',
       accessor: 'status',
       render: (value) => (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-          value === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-        }`}>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${value === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
           {value}
         </span>
       )
@@ -58,11 +57,11 @@ const Directory = ({ users, isLoading }) => {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-      <Table 
-        columns={columns} 
-        data={users} 
-        isLoading={isLoading} 
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <Table
+        columns={columns}
+        data={users}
+        isLoading={isLoading}
         emptyMessage="No users found in directory."
       />
     </div>

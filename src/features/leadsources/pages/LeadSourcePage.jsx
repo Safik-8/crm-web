@@ -223,7 +223,7 @@ export const LeadSourcePage = () => {
           onClearFilters={handleClearFilters}
           emptyTitle="No lead sources found"
           emptyDescription="Get started by creating your first lead source channel, or clear filters."
-          className="  border border-slate-200/60"
+          className="  border border-slate-200"
           rowClassName="border-b border-slate-100 last:border-0"
         />
 

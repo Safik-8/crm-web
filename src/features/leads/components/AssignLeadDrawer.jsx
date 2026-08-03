@@ -39,7 +39,7 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
       if (singleLead) {
         setSelectedCompanyId(singleLead.companyId ? singleLead.companyId.toString() : '');
         setSelectedBranchId(singleLead.branchId ? singleLead.branchId.toString() : '');
-        
+
         if (singleLead.assignedToId) {
           setAssignType('PERSON');
           setSelectedUserId(singleLead.assignedToId.toString());
@@ -240,7 +240,7 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
         <div className="space-y-5 overflow-y-auto pr-1">
           {/* Current Owner Visibility */}
           {!isBulk && singleLead && (
-            <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Current Ownership</span>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
@@ -256,7 +256,7 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
           )}
 
           {isBulk && (
-            <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Selected Leads</span>
               <p className="text-xs text-slate-600 font-semibold">
                 You are assigning {leadsArray.length} leads:
@@ -326,11 +326,10 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
                       setAssignType('TEAM');
                       setSelectedUserId('');
                     }}
-                    className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                      assignType === 'TEAM'
+                    className={`py-2 text-xs font-bold rounded-lg transition-all ${assignType === 'TEAM'
                         ? 'bg-white text-slate-800 shadow-sm border border-slate-200/20'
                         : 'text-slate-400 hover:text-slate-600'
-                    }`}
+                      }`}
                   >
                     Assign to Team
                   </button>
@@ -340,11 +339,10 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
                       setAssignType('PERSON');
                       setSelectedTeamId('');
                     }}
-                    className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                      assignType === 'PERSON'
+                    className={`py-2 text-xs font-bold rounded-lg transition-all ${assignType === 'PERSON'
                         ? 'bg-white text-slate-800 shadow-sm border border-slate-200/20'
                         : 'text-slate-400 hover:text-slate-600'
-                    }`}
+                      }`}
                   >
                     Assign to Person
                   </button>

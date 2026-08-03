@@ -126,7 +126,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-zinc-200/70 bg-white/80 px-4 sm:px-5 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+      <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl ">
 
         {/* Left: hamburger + breadcrumbs */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">

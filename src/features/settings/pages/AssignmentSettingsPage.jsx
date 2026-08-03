@@ -141,7 +141,7 @@ export const AssignmentSettingsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-500">
-      
+
       {/* Header section */}
       <PageHeader
         title="Lead Distribution Rules"
@@ -202,7 +202,7 @@ export const AssignmentSettingsPage = () => {
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6" noValidate>
-            
+
             {hasNoMembers && (
               <div className="bg-red-50 border border-red-200/60  p-5 flex gap-3.5">
                 <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
@@ -232,7 +232,7 @@ export const AssignmentSettingsPage = () => {
 
               {/* Child settings wrapper with visual de-emphasis if auto-assignment is disabled */}
               <div className={`p-6 space-y-6 transition-all duration-300 ${!autoAssignmentEnabled ? 'opacity-55 filter grayscale-[30%] pointer-events-none' : ''}`}>
-                
+
                 {/* Daily Lead Limit */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-b border-zinc-100 pb-6">
                   <div>
@@ -245,11 +245,10 @@ export const AssignmentSettingsPage = () => {
                       placeholder="50"
                       value={maxDailyLeadsPerUser}
                       onChange={(e) => setMaxDailyLeadsPerUser(e.target.value)}
-                      className={`w-full bg-[#F8FAFC] border rounded-[10px] px-3.5 py-[10px] text-[13px] font-medium outline-none focus:ring-3 transition-all ${
-                        maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50
+                      className={`w-full bg-[#F8FAFC] border rounded-[10px] px-3.5 py-[10px] text-[13px] font-medium outline-none focus:ring-3 transition-all ${maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50
                           ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500/14'
                           : 'border-[#E2E8F0] text-slate-900 focus:border-orange-500 focus:ring-orange-500/14'
-                      }`}
+                        }`}
                     />
                     {maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50 && (
                       <p className="text-red-500 text-[11px] font-semibold mt-1">
@@ -259,7 +258,7 @@ export const AssignmentSettingsPage = () => {
                     <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-100 rounded-lg p-2.5">
                       <Info size={13} className="text-zinc-500 shrink-0" />
                       <span>
-                        {maxDailyLeadsPerUser.trim() === '' 
+                        {maxDailyLeadsPerUser.trim() === ''
                           ? 'No override is set. Using system-wide default limit: 50 leads per day.'
                           : 'Currently overriding the system default.'}
                       </span>
@@ -281,18 +280,18 @@ export const AssignmentSettingsPage = () => {
                       placeholder="Select Algorithm..."
                       searchable={false}
                     />
-                    <div className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200/60  p-5 space-y-4 ">
+                    <div className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200  p-5 space-y-4 ">
                       {assignmentAlgorithm === 'ROUND_ROBIN' && (
                         <>
                           <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
                             <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">ROUND ROBIN</span>
                             <span className="text-slate-800 font-bold text-sm">Sequential Rotation</span>
                           </div>
-                          
+
                           <p className="leading-relaxed">
                             Distributes incoming leads sequentially in a strict queue order to ensure equal opportunity.
                           </p>
-                          
+
                           <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
                             <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
                             {assignmentResolutionLevel === 'PERSON' ? (
@@ -305,7 +304,7 @@ export const AssignmentSettingsPage = () => {
                               </p>
                             )}
                           </div>
-                          
+
                           <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
                             <strong className="block mb-1 font-bold">Example scenario:</strong>
                             Lead 1 &rarr; {assignmentResolutionLevel === 'PERSON' ? 'Person' : 'Team'} A <br />
@@ -322,11 +321,11 @@ export const AssignmentSettingsPage = () => {
                             <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">LEAST WORKLOAD</span>
                             <span className="text-slate-800 font-bold text-sm">Dynamic Load Balancing</span>
                           </div>
-                          
+
                           <p className="leading-relaxed">
                             Routes new leads dynamically to the candidate with the lowest number of assignments today to prevent workload imbalance.
                           </p>
-                          
+
                           <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
                             <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
                             {assignmentResolutionLevel === 'PERSON' ? (
@@ -339,7 +338,7 @@ export const AssignmentSettingsPage = () => {
                               </p>
                             )}
                           </div>
-                          
+
                           <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
                             <strong className="block mb-1 font-bold">Example scenario:</strong>
                             If Candidate A has received 2 leads today and Candidate B has 5 leads, the next incoming lead is assigned to Candidate A to balance their daily load.
@@ -353,11 +352,11 @@ export const AssignmentSettingsPage = () => {
                             <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">PRIORITY BASED</span>
                             <span className="text-slate-800 font-bold text-sm">Rank / Seniority Cascading</span>
                           </div>
-                          
+
                           <p className="leading-relaxed">
                             Prioritizes routing leads to the highest-ranking reps or teams based on their role level/seniority.
                           </p>
-                          
+
                           <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
                             <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
                             {assignmentResolutionLevel === 'PERSON' ? (
@@ -370,7 +369,7 @@ export const AssignmentSettingsPage = () => {
                               </p>
                             )}
                           </div>
-                          
+
                           <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
                             <strong className="block mb-1 font-bold">Example scenario:</strong>
                             A Senior Person (rank 40) receives all incoming leads first. Only when they reach their daily limit (e.g. 50 leads) will leads begin routing to Junior Salespeople (rank 20).
@@ -392,22 +391,20 @@ export const AssignmentSettingsPage = () => {
                       <button
                         type="button"
                         onClick={() => setAssignmentResolutionLevel('PERSON')}
-                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                          assignmentResolutionLevel === 'PERSON'
+                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${assignmentResolutionLevel === 'PERSON'
                             ? 'bg-white text-slate-800  border border-slate-200/20'
                             : 'text-slate-400 hover:text-slate-600'
-                        }`}
+                          }`}
                       >
                         Assign to Person
                       </button>
                       <button
                         type="button"
                         onClick={() => setAssignmentResolutionLevel('TEAM')}
-                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                          assignmentResolutionLevel === 'TEAM'
+                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${assignmentResolutionLevel === 'TEAM'
                             ? 'bg-white text-slate-800  border border-slate-200/20'
                             : 'text-slate-400 hover:text-slate-600'
-                        }`}
+                          }`}
                       >
                         Assign to Team
                       </button>

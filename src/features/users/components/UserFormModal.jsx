@@ -60,7 +60,7 @@ const UserFormModal = ({
   // 1. Fetch Branches for selected company
   const formActorRank = currentUser?.primaryRoleRank ?? 0;
   const formCanSelectCompany = formActorRank >= 100; // rank-based, works for any custom role
-  const formCanViewRoles     = formActorRank >= 80;  // rank-based: Company Admin+ can use roleApi
+  const formCanViewRoles = formActorRank >= 80;  // rank-based: Company Admin+ can use roleApi
   const targetCompanyId = formCanSelectCompany ? values.companyId : currentUser?.companyId;
 
   const { data: branchesRes } = useQuery({
@@ -96,7 +96,7 @@ const UserFormModal = ({
     enabled: !!targetCompanyId && isOpen
   });
   const formManagers = Array.isArray(managersRes?.data?.users) ? managersRes.data.users : (Array.isArray(managersRes?.data) ? managersRes.data : []);
-  
+
   // Find rank of selected role
   const selectedRole = filteredRoles.find(r => r.id === Number(values.roleId));
   const selectedRoleRank = selectedRole ? (selectedRole.rank || 0) : 0;
@@ -105,7 +105,7 @@ const UserFormModal = ({
   const filteredManagers = formManagers.filter(m => {
     if (m.id === initialValues?.id) return false;
     if (!values.roleId) return false;
-    
+
     // 1. Rank Check
     const managerRole = m.userRoles?.[0]?.role;
     const managerRank = managerRole ? (managerRole.rank || 0) : 0;
@@ -117,7 +117,7 @@ const UserFormModal = ({
     if (m.branchId && values.branchId && Number(m.branchId) !== Number(values.branchId)) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -128,7 +128,7 @@ const UserFormModal = ({
       if (selectedManager) {
         const managerRole = selectedManager.userRoles?.[0]?.role;
         const managerRank = managerRole ? (managerRole.rank || 0) : 0;
-        
+
         if (managerRank <= selectedRoleRank) {
           handleChange('reportingManagerId', '');
           toast.warning('Reporting Manager Reset', {
@@ -194,9 +194,9 @@ const UserFormModal = ({
       customFooter={customFooter}
     >
       <form onSubmit={handleSubmit} className="space-y-6 pb-6">
-        
+
         {/* Profile Picture Upload Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
+        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
           <div className="relative group shrink-0">
             <div className="w-16 h-16 rounded-2xl bg-orange-100 border-2 border-orange-200/80 text-orange-600 flex items-center justify-center font-bold text-xl overflow-hidden shadow-sm">
               {values.profilePhoto ? (
@@ -416,16 +416,16 @@ const UserFormModal = ({
               !values.roleId
                 ? [{ value: '', label: 'Please assign a Role first to view eligible managers' }]
                 : [
-                    { value: '', label: 'None (Direct Report / Head)' },
-                    ...filteredManagers.map(m => {
-                      const mRole = m.userRoles?.[0]?.role;
-                      const roleText = mRole ? ` [${mRole.name} - Rank ${mRole.rank || 0}]` : '';
-                      return {
-                        value: m.id,
-                        label: `${m.name} (${m.email})${roleText}`
-                      };
-                    })
-                  ]
+                  { value: '', label: 'None (Direct Report / Head)' },
+                  ...filteredManagers.map(m => {
+                    const mRole = m.userRoles?.[0]?.role;
+                    const roleText = mRole ? ` [${mRole.name} - Rank ${mRole.rank || 0}]` : '';
+                    return {
+                      value: m.id,
+                      label: `${m.name} (${m.email})${roleText}`
+                    };
+                  })
+                ]
             }
             disabled={!values.companyId || !values.roleId}
           />

@@ -99,17 +99,17 @@ export const LeadStatusFormSlideover = ({ isOpen, mode, status, onClose }) => {
 
   const initialValues = isEdit
     ? {
-        name: status?.name || '',
-        displayColor: status?.displayColor || '#3b82f6',
-        isActive: status?.isActive ?? true,
-        isDefault: status?.isDefault ?? false,
-      }
+      name: status?.name || '',
+      displayColor: status?.displayColor || '#3b82f6',
+      isActive: status?.isActive ?? true,
+      isDefault: status?.isDefault ?? false,
+    }
     : {
-        name: '',
-        displayColor: '#3b82f6',
-        isActive: true,
-        isDefault: false,
-      };
+      name: '',
+      displayColor: '#3b82f6',
+      isActive: true,
+      isDefault: false,
+    };
 
   const handleSubmit = async (values) => {
     try {
@@ -164,7 +164,7 @@ export const LeadStatusFormSlideover = ({ isOpen, mode, status, onClose }) => {
       isLoading={createMutation.isPending || updateMutation.isPending}
     >
       {isEdit && (
-        <div className="mb-4 mx-6 mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200/60 flex items-center gap-2">
+        <div className="mb-4 mx-6 mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Code:</span>
           <code className="font-mono text-xs bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-700">
             {status?.code}

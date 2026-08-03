@@ -1,15 +1,15 @@
 import React from 'react';
 
-const PageHeader = ({ 
+const PageHeader = ({
   icon: Icon,
   iconClassName,
-  title, 
-  description, 
+  title,
+  description,
   actions,
   className = ''
 }) => {
   return (
-    <div className={`flex flex-col bg-white p-4 border border-slate-200/60 md:flex-row md:items-center justify-between gap-4 ${className}`}>
+    <div className={`flex flex-col bg-white p-4 border border-slate-200 md:flex-row md:items-center justify-between gap-4 ${className}`}>
       <div className="flex items-center gap-4">
         {Icon && (
           <div className={`p-2.5 rounded-lg shrink-0 ${iconClassName || 'bg-gradient-to-br from-primary/10 to-primary/5 text-primary '}`}>
@@ -25,7 +25,7 @@ const PageHeader = ({
           )}
         </div>
       </div>
-      
+
       {actions && (
         <div className="flex items-center gap-3">
           {actions}

@@ -21,7 +21,7 @@ function buildPageRange(current, total) {
   if (current > 3) addEllipsis();
 
   const start = Math.max(2, current - 1);
-  const end   = Math.min(total - 1, current + 1);
+  const end = Math.min(total - 1, current + 1);
   for (let i = start; i <= end; i++) addPage(i);
 
   if (current < total - 2) addEllipsis();
@@ -43,13 +43,13 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
   const hasNext = page < totalPages;
 
   const from = (page - 1) * PAGE_LIMIT + 1;
-  const to   = Math.min(page * PAGE_LIMIT, total);
+  const to = Math.min(page * PAGE_LIMIT, total);
   const pageRange = buildPageRange(page, totalPages);
 
   return (
-    <div className="w-full bg-white border border-slate-200/60 px-3 sm:px-5 py-3 mt-4">
+    <div className="w-full bg-white border border-slate-200 px-3 sm:px-5 py-3 mt-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        
+
         {/* Summary text */}
         <p className="text-[13px] font-medium text-slate-500 shrink-0 order-2 sm:order-1">
           Showing{' '}
@@ -61,7 +61,7 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
 
         {/* Controls */}
         <div className="flex items-center gap-1 order-1 sm:order-2">
-          
+
           {/* Previous Page */}
           <button
             onClick={() => onPageChange(page - 1)}

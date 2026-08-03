@@ -208,7 +208,7 @@ const UsersPage = () => {
       <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
 
         {/* ── TABS FOR VIEW MODE ── */}
-        <div className="bg-white border border-slate-200/60 flex items-center px-6 pt-4">
+        <div className="bg-white border border-slate-200 flex items-center px-6 pt-4">
           <div className="flex space-x-6 relative top-[1px]">
             <button
               onClick={() => setViewMode('list')}
@@ -226,19 +226,19 @@ const UsersPage = () => {
         </div>
 
         {viewMode === 'orgchart' ? (
-           <div className="bg-white border border-slate-200/60 p-4">
-             <OrgChart users={allUsers || []} currentUser={currentUser} />
-           </div>
+          <div className="bg-white border border-slate-200 p-4">
+            <OrgChart users={allUsers || []} currentUser={currentUser} />
+          </div>
         ) : (
           <>
 
 
 
 
-            <div className='bg-white border border-slate-200/60 p-4'>
+            <div className='bg-white border border-slate-200 p-4'>
               {/* ── SEARCH AND FILTER BAR ── */}
-              <div className="relative z-20 p-4 bg-white border border-slate-200/60 mb-4 space-y-4">
-                
+              <div className="relative z-20 p-4 bg-white border border-slate-200 mb-4 space-y-4">
+
                 {/* Row 1: Search & Main Actions */}
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
                   <SearchInput
@@ -248,7 +248,7 @@ const UsersPage = () => {
                     isLoading={loadingState === 'loading'}
                     className="w-full lg:max-w-md"
                   />
-                  
+
                   <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
                     <Button
                       variant="secondary"
@@ -284,7 +284,7 @@ const UsersPage = () => {
                 {/* Row 2: Select Filters group */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-3 flex-1">
-                    
+
                     {/* Visual Label */}
                     <div className="flex items-center gap-1.5 h-[42px] px-5 bg-slate-100/60 rounded-[10px] border border-slate-200/40 text-slate-500 font-semibold text-[13px] uppercase tracking-wider">
                       <Filter size={16} className="text-primary" />

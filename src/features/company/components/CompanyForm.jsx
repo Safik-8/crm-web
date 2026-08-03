@@ -185,7 +185,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
                   <UploadCloud size={24} className="mb-1" />
                 </div>
               )}
-              
+
               <div className="flex flex-col gap-2">
                 <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={handleFileChange} id="logo-file-input" className="hidden" />
                 <label htmlFor="logo-file-input" className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2 px-5 shadow-sm hover:border-primary hover:text-primary hover:bg-primary/5 cursor-pointer select-none transition-all">
@@ -333,7 +333,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   // ─── PROFILE SKELETON LOADER ───────────────────────────────────────────────
   const ProfileSkeleton = () => (
     <div className="flex flex-col gap-5 w-full px-0 lg:px-1">
-      <div className="bg-white rounded-3xl border border-slate-200/60 w-full shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 w-full shadow-sm overflow-hidden">
         <div className="flex items-center gap-4 py-5 px-6 md:py-6 md:px-8 border-b border-slate-100">
           <Skeleton className="h-14 w-14 rounded-2xl shrink-0" />
           <div className="flex-1">
@@ -346,12 +346,12 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6" />
         </div>
-        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6" />
@@ -368,7 +368,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   if (inlineMode) {
     return (
       <div className="flex flex-col gap-5 w-full px-0 lg:px-1">
-        <div className="bg-white rounded-3xl border border-slate-200/60 overflow-hidden w-full shadow-sm">
+        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden w-full shadow-sm">
           <div className="py-5 px-6 md:py-6 md:px-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, rgba(248, 111, 3, 0.05) 100%)' }}>
             <div className="absolute right-0 top-0 w-[180px] h-full pointer-events-none opacity-30" style={{ backgroundImage: 'radial-gradient(circle, rgba(248, 111, 3, 0.1) 0%, transparent 70%)' }} />
             <div className="flex items-center gap-6">
@@ -429,7 +429,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0"><Shield size={16} /></div>
               <div>
@@ -448,7 +448,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
               </div>
             </div>
           </div>
-          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0"><Activity size={16} /></div>
               <div>

@@ -49,12 +49,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         )}
       >
         {/* ── Logo header ── */}
-        <div className="flex h-[60px] items-center justify-between px-4 border-b border-zinc-100 shrink-0">
-          <div className="flex items-center h-full flex-1 min-w-0">
+        <div className="flex h-[60px] items-center justify-between  border-b border-zinc-100 shrink-0">
+          <div className="flex p-4 items-center justify-start h-full flex-1 min-w-0">
             <img
               src={logoOfficial}
               alt="StackCode"
-              className="w-auto  object-contain transition-all duration-300 hover:opacity-80"
+              className="w-auto p-4 object-contain transition-all duration-300 hover:opacity-80"
             />
           </div>
           <button

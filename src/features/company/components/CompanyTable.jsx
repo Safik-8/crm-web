@@ -14,14 +14,14 @@ import Table from '../../../shared/components/elements/Table';
 const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  
+
   const handleClick = (event) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = (event) => {
-    if(event) event.stopPropagation();
+    if (event) event.stopPropagation();
     setAnchorEl(null);
   };
 
@@ -35,7 +35,7 @@ const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <IconButton 
+      <IconButton
         onClick={handleClick}
         size="small"
         className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
@@ -77,7 +77,7 @@ const ActionMenu = ({ company, canEdit, onEdit, onToggleStatus }) => {
           <Edit2 size={16} className="text-slate-400" />
           Edit Details
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={(e) => { handleClose(e); onToggleStatus(company); }}
           sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: company.status === 'ACTIVE' ? '#ef4444 !important' : '#10b981 !important' }}
         >
@@ -219,11 +219,11 @@ const CompanyTable = ({
       align: 'right',
       cell: (company) => (
         <div className="flex items-center justify-end">
-          <ActionMenu 
-            company={company} 
-            canEdit={canEdit} 
-            onEdit={onEdit} 
-            onToggleStatus={onToggleStatus} 
+          <ActionMenu
+            company={company}
+            canEdit={canEdit}
+            onEdit={onEdit}
+            onToggleStatus={onToggleStatus}
           />
         </div>
       ),
@@ -233,14 +233,12 @@ const CompanyTable = ({
 
   // ── Status badge ──────────────────────────────────────────────────────────
   const StatusBadge = ({ status }) => (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
-      status === 'ACTIVE'
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${status === 'ACTIVE'
         ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
         : 'bg-slate-500/10 text-slate-500 border-slate-500/20 shadow-sm'
-    }`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${
-        status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
-      }`} />
+      }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'
+        }`} />
       {status}
     </div>
   );
@@ -249,7 +247,7 @@ const CompanyTable = ({
   const MobileSkeletons = () => (
     <div className="space-y-3 mt-2">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-start gap-3 mb-4">
             <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
             <div className="flex-1 min-w-0">
@@ -296,7 +294,7 @@ const CompanyTable = ({
     );
     return colSpan
       ? <tr><td colSpan={colSpan}>{inner}</td></tr>
-      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm mt-2">{inner}</div>;
+      : <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mt-2">{inner}</div>;
   };
 
   // ── Empty state ───────────────────────────────────────────────────────────
@@ -330,7 +328,7 @@ const CompanyTable = ({
     );
     return colSpan
       ? <tr><td colSpan={colSpan}>{inner}</td></tr>
-      : <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm mt-2">{inner}</div>;
+      : <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mt-2">{inner}</div>;
   };
 
   // ── Mobile card ───────────────────────────────────────────────────────────
@@ -358,7 +356,7 @@ const CompanyTable = ({
             >
               <Building2 size={19} />
             </div>
-  
+
             <div className="flex-1 min-w-0">
               <button
                 onClick={() => navigate(`/settings/organization?companyId=${company.id}`)}
@@ -377,14 +375,14 @@ const CompanyTable = ({
               </div>
             </div>
           </div>
-          
+
           {/* Actions - using Three Dot Menu */}
           <div className="shrink-0 ml-2">
-            <ActionMenu 
-              company={company} 
-              canEdit={canEdit} 
-              onEdit={onEdit} 
-              onToggleStatus={onToggleStatus} 
+            <ActionMenu
+              company={company}
+              canEdit={canEdit}
+              onEdit={onEdit}
+              onToggleStatus={onToggleStatus}
             />
           </div>
         </div>

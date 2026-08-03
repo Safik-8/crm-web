@@ -44,8 +44,8 @@ const Table = ({
               col.align === 'center'
                 ? 'text-center'
                 : col.align === 'right'
-                ? 'text-right'
-                : 'text-left';
+                  ? 'text-right'
+                  : 'text-left';
 
             const isAction = isActionColumn(col);
             const stickyClass = isAction
@@ -141,7 +141,7 @@ const Table = ({
   };
 
   return (
-    <div className={`bg-white border border-slate-200/60 overflow-hidden ${className}`}>
+    <div className={`bg-white border border-slate-200 overflow-hidden ${className}`}>
       <div className="overflow-x-auto scrollbar-hide relative">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -151,8 +151,8 @@ const Table = ({
                   col.align === 'center'
                     ? 'text-center'
                     : col.align === 'right'
-                    ? 'text-right'
-                    : 'text-left';
+                      ? 'text-right'
+                      : 'text-left';
 
                 const isAction = isActionColumn(col);
                 const stickyClass = isAction
@@ -195,8 +195,8 @@ const Table = ({
                     col.align === 'center'
                       ? 'text-center'
                       : col.align === 'right'
-                      ? 'text-right'
-                      : 'text-left';
+                        ? 'text-right'
+                        : 'text-left';
 
                   const isAction = isActionColumn(col);
                   const stickyClass = isAction

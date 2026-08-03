@@ -120,7 +120,7 @@ const CompanySettingsPage = () => {
           title="Entity Registry"
           description={isLoading ? 'Loading…' : `${pagination.total} ${pagination.total === 1 ? 'company' : 'companies'} total`}
           icon={Building2}
-          className="bg-white px-5 py-4 border border-slate-200/60"
+          className="bg-white px-5 py-4 border border-slate-200"
           actions={
             <>
               <button
@@ -145,7 +145,7 @@ const CompanySettingsPage = () => {
         />
 
         {/* ── Content Container (Matches User Manager Layout) ───────────────── */}
-        <div className="bg-white border border-slate-200/60 p-4">
+        <div className="bg-white border border-slate-200 p-4">
 
           {/* ── Filters bar ───────────────────────────────────────────────── */}
           <CompanyFilters

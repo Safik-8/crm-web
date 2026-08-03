@@ -6,7 +6,7 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
       {/* Mobile Header */}
       {!hideHeader && (
         <div className="block lg:hidden">
-          <div className="bg-white p-3 sm:p-5 border border-slate-200/60">
+          <div className="bg-white p-3 sm:p-5 border border-slate-200">
             <div className="flex items-start gap-3 sm:gap-4">
               <div className="bg-primary/10 p-2 sm:p-3 rounded-full text-primary flex-shrink-0 mt-0.5">
                 <Icon size={22} strokeWidth={1.5} className="sm:hidden" />
@@ -23,9 +23,9 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
 
       {/* Desktop Header */}
       {!hideHeader && (
-        <div className="hidden lg:flex lg:items-center lg:gap-4 bg-white p-4 border border-slate-200/60">
+        <div className="hidden lg:flex lg:items-center lg:gap-4 bg-white p-4 border border-slate-200">
           <div className="bg-gradient-to-br p-2.5 rounded-lg shrink-0 from-primary/10 to-primary/5 text-primary">
-            <Icon size={24}  />
+            <Icon size={24} />
           </div>
           <div>
             <h1 className="text-lg font-medium text-slate-900 tracking-tight">{title}</h1>
@@ -33,13 +33,13 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
           </div>
         </div>
       )}
-      
+
       <div className="grid gap-4 sm:gap-6">
         <div className="min-w-0 w-full flex flex-col">
           {children || (
-            <div className="bg-white p-8 sm:p-12 border border-slate-200/60 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="bg-white p-8 sm:p-12 border border-slate-200 flex flex-col items-center justify-center text-center space-y-4">
               <div className="h-16 w-16 sm:h-20 sm:w-20 bg-slate-50 flex items-center justify-center text-slate-300">
-                 <Icon size={32} className="sm:w-10 sm:h-10" />
+                <Icon size={32} className="sm:w-10 sm:h-10" />
               </div>
               <div className="max-w-md">
                 <h3 className="text-lg font-semibold text-slate-800">Welcome to {title}</h3>

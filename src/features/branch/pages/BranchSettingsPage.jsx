@@ -175,7 +175,7 @@ const BranchSettingsPage = ({ overrideCompanyId, inlineMode = false }) => {
                     title="Hub Directory"
                     description="Manage geographical and functional hubs for the selected company."
                     icon={GitBranch}
-                    className="bg-white px-5 py-4 border border-slate-200/60"
+                    className="bg-white px-5 py-4 border border-slate-200"
                     actions={
                         <>
                             <button

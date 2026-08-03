@@ -130,8 +130,8 @@ export const LeadStatusPage = () => {
       cell: (row) => (
         <span
           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.type === 'GLOBAL'
-              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-              : 'bg-amber-50 text-amber-700 border border-amber-100'
+            ? 'bg-blue-50 text-blue-700 border border-blue-100'
+            : 'bg-amber-50 text-amber-700 border border-amber-100'
             }`}
         >
           {row.type}
@@ -163,8 +163,8 @@ export const LeadStatusPage = () => {
       cell: (row) => (
         <span
           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${row.isActive
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-              : 'bg-slate-100 text-slate-600 border border-slate-200'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+            : 'bg-slate-100 text-slate-600 border border-slate-200'
             }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
@@ -201,10 +201,10 @@ export const LeadStatusPage = () => {
                   onClick={() => handleToggleClick(row)}
                   disabled={row.isDefault && row.isActive}
                   className={`p-1.5 rounded-lg transition-all ${row.isDefault && row.isActive
-                      ? 'text-slate-300 cursor-not-allowed opacity-40'
-                      : row.isActive
-                        ? 'text-red-500 hover:bg-red-50'
-                        : 'text-emerald-500 hover:bg-emerald-50'
+                    ? 'text-slate-300 cursor-not-allowed opacity-40'
+                    : row.isActive
+                      ? 'text-red-500 hover:bg-red-50'
+                      : 'text-emerald-500 hover:bg-emerald-50'
                     }`}
                   title={
                     row.isDefault && row.isActive
@@ -223,8 +223,8 @@ export const LeadStatusPage = () => {
                 onClick={() => handleDeleteClick(row)}
                 disabled={row.isDefault}
                 className={`p-1.5 rounded-lg transition-all ${row.isDefault
-                    ? 'text-slate-300 cursor-not-allowed opacity-40'
-                    : 'text-red-500 hover:bg-red-50 hover:text-red-700'
+                  ? 'text-slate-300 cursor-not-allowed opacity-40'
+                  : 'text-red-500 hover:bg-red-50 hover:text-red-700'
                   }`}
                 title={row.isDefault ? 'Cannot delete default status' : 'Delete Lead Status'}
               >
@@ -291,8 +291,8 @@ export const LeadStatusPage = () => {
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === tab.id
-                    ? 'bg-white text-slate-800 '
-                    : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white text-slate-800 '
+                  : 'text-slate-500 hover:text-slate-800'
                   }`}
               >
                 {tab.label}
@@ -320,7 +320,7 @@ export const LeadStatusPage = () => {
           onClearFilters={handleClearFilters}
           emptyTitle="No lead statuses found"
           emptyDescription="Get started by creating your first lead status, or clear filters."
-          className="  border border-slate-200/60"
+          className="  border border-slate-200"
           rowClassName="border-b border-slate-100 last:border-0"
         />
       </section>
