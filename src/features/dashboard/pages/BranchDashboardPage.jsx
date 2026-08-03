@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useBranchDashboard } from '../hooks/useBranchDashboard';
 import { useLoader } from '../../../shared/context/LoaderContext';
+import ReminderWidget from '../components/ReminderWidget';
 import { toast } from 'sonner';
 import CountUp from 'react-countup';
 import {
@@ -1444,6 +1445,9 @@ const BranchDashboardPage = () => {
           </div>
         </div>
       )}
+
+      {/* ── Follow-up Reminders Widget ── */}
+      <ReminderWidget />
 
       {/* ── Charts Section ── */}
       {loading ? (

@@ -16,13 +16,15 @@ import FollowupList from '../../../followups/components/FollowupList';
 const FollowupsTab = ({ leadId }) => {
   const { user } = useAuth();
 
-  // Super Admin has full system access; other roles (including Company Admin & Branch Manager)
-  // are evaluated against their actual DB permissions for the FOLLOWUP module.
+  // Super Admin has full system access; all other roles (including Managers & Admins)
+  // strictly follow their assigned DB permission matrix for the FOLLOWUP module.
   const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
 
   const canCreate = isSuperAdmin || !!(user?.permissions?.FOLLOWUP?.canCreate);
   const canEdit   = isSuperAdmin || !!(user?.permissions?.FOLLOWUP?.canEdit);
   const canDelete = isSuperAdmin || !!(user?.permissions?.FOLLOWUP?.canDelete);
+
+
 
   return (
     <div style={{ paddingTop: '4px', paddingBottom: '8px' }}>

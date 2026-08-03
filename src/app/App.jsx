@@ -7,17 +7,8 @@ import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
 import muiTheme from '../shared/theme/muiTheme.js';
 import CustomToaster from '../shared/components/elements/CustomToaster.jsx';
 import '../shared/styles/index.css';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
-    },
-  },
-});
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../lib/queryClient';
 
 function App() {
   return (

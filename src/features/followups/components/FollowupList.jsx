@@ -1,7 +1,8 @@
 // src/features/followups/components/FollowupList.jsx
 
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
+
 import FollowupCard from './FollowupCard';
 import FollowupForm from './FollowupForm';
 import CompleteFollowupModal from './CompleteFollowupModal';
@@ -37,11 +38,19 @@ const FollowupList = ({ leadId, canCreate, canEdit, canDelete }) => {
     target: null,
   });
 
-  const { data: res, isLoading, refetch } = useFollowupsByLeadQuery(leadId);
+  const { data: res, isLoading, isFetching, refetch } = useFollowupsByLeadQuery(leadId);
   const cancelMutation = useCancelFollowupMutation();
   const deleteMutation = useDeleteFollowupMutation();
 
   const followups = res?.data?.followups || res?.followups || res || [];
+  const showSkeletons = isLoading || (isFetching && followups.length === 0);
+
+
+  const overdueCount = followups.filter(
+    (f) => f.status === 'MISSED' || (f.status === 'PENDING' && new Date(f.scheduledAt) < new Date())
+  ).length;
+
+
 
   const filteredFollowups = followups.filter((f) => {
     if (filterStatus === 'ALL') return true;
@@ -85,25 +94,34 @@ const FollowupList = ({ leadId, canCreate, canEdit, canDelete }) => {
   };
 
   const handleConfirmAction = () => {
-    if (!confirmState.target) return;
+    if (!confirmState.target || cancelMutation.isPending || deleteMutation.isPending) return;
     const id = confirmState.target.id;
 
     if (confirmState.action === 'CANCEL') {
       cancelMutation.mutate(id, {
         onSuccess: () => {
           refetch();
-          setConfirmState((prev) => ({ ...prev, isOpen: false, target: null, action: null }));
+          setConfirmState({ isOpen: false, title: '', message: '', confirmText: '', action: null, target: null });
         },
+        onError: () => {
+          refetch();
+          setConfirmState({ isOpen: false, title: '', message: '', confirmText: '', action: null, target: null });
+        }
       });
     } else if (confirmState.action === 'DELETE') {
       deleteMutation.mutate(id, {
         onSuccess: () => {
           refetch();
-          setConfirmState((prev) => ({ ...prev, isOpen: false, target: null, action: null }));
+          setConfirmState({ isOpen: false, title: '', message: '', confirmText: '', action: null, target: null });
         },
+        onError: () => {
+          refetch();
+          setConfirmState({ isOpen: false, title: '', message: '', confirmText: '', action: null, target: null });
+        }
       });
     }
   };
+
 
   const counts = {
     ALL:       followups.length,
@@ -165,8 +183,58 @@ const FollowupList = ({ leadId, canCreate, canEdit, canDelete }) => {
         )}
       </div>
 
+      {/* Overdue Alert Banner */}
+      {overdueCount > 0 && (() => {
+        const pendingOverdueCount = followups.filter(
+          (f) => f.status === 'PENDING' && new Date(f.scheduledAt) < new Date()
+        ).length;
+        const missedCount = counts.MISSED || 0;
+        const hasBoth = missedCount > 0 && pendingOverdueCount > 0;
+        const targetFilter = hasBoth ? 'ALL' : missedCount > 0 ? 'MISSED' : 'PENDING';
+        const buttonLabel  = hasBoth ? 'Show All' : missedCount > 0 ? 'Show Missed' : 'Show Pending';
+
+        return (
+          <div
+            role="alert"
+            style={{
+              background:   '#FEF2F2',
+              border:       '1px solid #FECACA',
+              borderRadius: '10px',
+              padding:      '10px 14px',
+              display:      'flex',
+              alignItems:   'center',
+              gap:          '10px',
+            }}
+          >
+            <AlertTriangle size={16} color="#EF4444" aria-hidden="true" />
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#DC2626' }}>
+                {overdueCount} overdue follow-up{overdueCount > 1 ? 's' : ''}
+              </span>
+              <span style={{ fontSize: '12px', color: '#991B1B', marginLeft: '6px' }}>
+                — Please complete or reschedule immediately.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFilterStatus(targetFilter)}
+              style={{
+                fontSize: '11px', fontWeight: 600, color: '#DC2626',
+                background: '#FEE2E2', border: '1px solid #FECACA',
+                borderRadius: '6px', padding: '3px 8px',
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              {buttonLabel}
+            </button>
+          </div>
+        );
+      })()}
+
+
+
       {/* Content Area */}
-      {isLoading ? (
+      {showSkeletons ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <Skeleton height={80} style={{ borderRadius: '12px' }} />
           <Skeleton height={80} style={{ borderRadius: '12px' }} />
@@ -234,9 +302,11 @@ const FollowupList = ({ leadId, canCreate, canEdit, canDelete }) => {
         message={confirmState.message}
         type="error"
         confirmText={confirmState.confirmText}
+        loadingText={confirmState.action === 'DELETE' ? 'Deleting...' : 'Cancelling...'}
         isLoading={cancelMutation.isPending || deleteMutation.isPending}
         onConfirm={handleConfirmAction}
       />
+
     </div>
   );
 };
