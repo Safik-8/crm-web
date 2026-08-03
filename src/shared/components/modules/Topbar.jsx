@@ -5,6 +5,7 @@ import { useAuth } from '../../../app/providers/AuthProvider.jsx';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';
+import { useNotificationBadge } from '../../../features/notifications/hooks/useNotificationBadge.js';
 
 const ROUTE_LABELS = {
   'dashboard': 'Dashboard',
@@ -98,6 +99,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const bellButtonRef = useRef(null);
+  const { unreadCount } = useNotificationBadge();
 
   const crumbs = buildBreadcrumbs(location.pathname, location.search);
 
@@ -200,10 +202,15 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
             ].join(' ')}
           >
             <Bell size={17} aria-hidden="true" />
-            <span
-              className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-white"
-              aria-hidden="true"
-            />
+            {unreadCount > 0 ? (
+              <span
+                aria-label={`${unreadCount} unread notifications`}
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center
+                  rounded-full bg-red-500 px-[3px] text-[9px] font-bold text-white ring-1 ring-white"
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            ) : null}
           </button>
 
           {/* Divider */}

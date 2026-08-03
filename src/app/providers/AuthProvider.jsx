@@ -30,6 +30,9 @@ const RBAC_ADAPTER_MAP = {
   'view:audit': { module: 'AUDIT', action: 'canView' },
   'view:targets': { module: 'TARGET', action: 'canView' },
   'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
+  'read:notification': { module: 'NOTIFICATION', action: 'canEdit' },
+  'delete:notification': { module: 'NOTIFICATION', action: 'canDelete' },
+
   'view:courses': { module: 'COURSE', action: 'canView' },
   'view:lead_sources': { module: 'LEAD_SOURCE', action: 'canView' },
   'view:teams': { module: 'TEAM', action: 'canView' },
@@ -59,6 +62,12 @@ const RBAC_ADAPTER_MAP = {
   'view:activity_feed': { module: 'ACTIVITY', action: 'canView' },
   'create:activity':    { module: 'ACTIVITY', action: 'canCreate' },
 
+  // Follow-up Permissions (Sprint 4 — Task 5)
+  'view:followups':   { module: 'FOLLOWUP', action: 'canView' },
+  'create:followup':  { module: 'FOLLOWUP', action: 'canCreate' },
+  'edit:followup':    { module: 'FOLLOWUP', action: 'canEdit' },
+  'delete:followup':  { module: 'FOLLOWUP', action: 'canDelete' },
+
   // Daily Report (ISE)
   'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
   'create:daily_report': { module: 'NOTIFICATION', action: 'canCreate' }, 
@@ -82,6 +91,22 @@ export const AuthProvider = ({ children }) => {
     // Super Admin & Company Admin have full administrative permissions over all modules
     if (user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || (user.primaryRoleRank >= 80)) {
       return true;
+    }
+
+    // Branch Managers have permission to view & edit their own branch and organization settings
+    if (
+      user.primaryRole === 'BRANCH_MANAGER' ||
+      (user.primaryRoleRank && Number(user.primaryRoleRank) >= 60)
+    ) {
+      if (
+        moduleOrPermissionStr === 'view:settings' ||
+        moduleOrPermissionStr === 'view:branches' ||
+        moduleOrPermissionStr === 'view:branch_settings' ||
+        moduleOrPermissionStr === 'view:branch_dashboard' ||
+        (moduleOrPermissionStr === 'BRANCH' && (action === 'canView' || action === 'canEdit'))
+      ) {
+        return true;
+      }
     }
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
@@ -146,10 +171,12 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response && response.success && response.data?.user) {
+        queryClient.clear();
         setUser(response.data.user);
         setLoading(false);
         return { success: true };
       }
+
 
       setLoading(false);
       return { success: false, message: response?.message || 'Login failed', rawData: response };

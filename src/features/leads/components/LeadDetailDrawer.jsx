@@ -1,11 +1,11 @@
 // src/features/leads/components/LeadDetailDrawer.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
   MapPin, Award, ShieldAlert, History, MessageSquare,
-  ClipboardList, UserCheck, GitBranch
+  ClipboardList, UserCheck, GitBranch, CalendarClock
 } from 'lucide-react';
 import CommentThread from '../../activities/components/CommentThread';
 
@@ -13,6 +13,7 @@ import CommentThread from '../../activities/components/CommentThread';
 import NotesTab from './drawer/NotesTab';
 import TimelineTab from './drawer/TimelineTab';
 import StageHistoryTab from './drawer/StageHistoryTab';
+import FollowupsTab from './drawer/FollowupsTab';
 import CommunicationsTab from './drawer/CommunicationsTab';
 
 /**
@@ -21,9 +22,20 @@ import CommunicationsTab from './drawer/CommunicationsTab';
  */
 const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
   const [activeTab, setActiveTab] = useState('comments');
+  const tabSectionRef = useRef(null);
   const { data: leadRes } = useLeadQuery(initialLead?.id);
   const lead = leadRes?.data?.lead || leadRes?.lead || initialLead;
 
+  const handleTabClick = (tabKey) => {
+    setActiveTab(tabKey);
+    setTimeout(() => {
+      tabSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 30);
+  };
+
+  if (!lead) return null;
+
+  // Prevent body scroll while drawer is open
   // Prevent body scroll and hide background footer while drawer is open
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
@@ -217,20 +229,20 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
               )}
             </div>
 
-            {/* Right Column: Tab Content Area */}
-            <div className="flex-1 flex flex-col min-h-[520px] md:min-h-0 overflow-visible md:overflow-hidden p-4 md:p-6">
+            {/* Tabbed Activity / Note / Timeline Section */}
+            <div ref={tabSectionRef} className="px-6 py-5 flex flex-col min-h-[380px]">
               {/* Tab Header Selector */}
               <div className="flex border-b border-slate-100 gap-4 shrink-0 overflow-x-auto custom-scrollbar">
                 <button
-                  onClick={() => setActiveTab('comments')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'comments' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => handleTabClick('comments')}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'comments' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   <MessageSquare size={13} />
                   Comments
                 </button>
                 <button
-                  onClick={() => setActiveTab('notes')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'notes' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => handleTabClick('notes')}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'notes' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   <ClipboardList size={13} />
                   Notes History
@@ -243,18 +255,25 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                   Communications
                 </button>
                 <button
-                  onClick={() => setActiveTab('timeline')}
+                  onClick={() => handleTabClick('timeline')}
                   className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'timeline' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   <History size={13} />
                   Timeline Log
                 </button>
                 <button
-                  onClick={() => setActiveTab('stage-history')}
-                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider whitespace-nowrap ${activeTab === 'stage-history' ? 'border-orange-500 text-orange-600 font-extrabold' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => handleTabClick('stage-history')}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'stage-history' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   <GitBranch size={13} />
                   Stage History
+                </button>
+                <button
+                  onClick={() => handleTabClick('followups')}
+                  className={`flex items-center gap-1.5 pb-2.5 text-xs font-bold transition-all border-b-2 uppercase tracking-wider focus:outline-none ${activeTab === 'followups' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                >
+                  <CalendarClock size={13} />
+                  Follow-ups
                 </button>
               </div>
 
@@ -269,6 +288,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                 {activeTab === 'communications' && <CommunicationsTab leadId={lead.id} />}
                 {activeTab === 'timeline' && <TimelineTab leadId={lead.id} branchId={lead.branchId} />}
                 {activeTab === 'stage-history' && <StageHistoryTab leadId={lead.id} />}
+                {activeTab === 'followups' && <FollowupsTab leadId={lead.id} />}
               </div>
             </div>
 
