@@ -2,7 +2,7 @@
 
 const GenericPage = ({ title, description, icon: Icon, children, hideHeader = false }) => {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-4">
       {/* Mobile Header */}
       {!hideHeader && (
         <div className="block lg:hidden">
@@ -13,7 +13,7 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
                 <Icon size={28} strokeWidth={1.5} className="hidden sm:block" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">{title}</h1>
+                <h1 className="text-lg font-medium text-slate-900 tracking-tight">{title}</h1>
                 <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1 leading-relaxed">{description}</p>
               </div>
             </div>
@@ -23,13 +23,13 @@ const GenericPage = ({ title, description, icon: Icon, children, hideHeader = fa
 
       {/* Desktop Header */}
       {!hideHeader && (
-        <div className="hidden lg:flex lg:items-center lg:gap-4 bg-white p-6 border border-slate-200/60">
-          <div className="bg-primary/10 p-3 rounded-full text-primary">
-            <Icon size={32} strokeWidth={1.5} />
+        <div className="hidden lg:flex lg:items-center lg:gap-4 bg-white p-4 border border-slate-200/60">
+          <div className="bg-gradient-to-br p-2.5 rounded-lg shrink-0 from-primary/10 to-primary/5 text-primary">
+            <Icon size={24}  />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
-            <p className="text-slate-500 font-medium">{description}</p>
+            <h1 className="text-lg font-medium text-slate-900 tracking-tight">{title}</h1>
+            <p className="text-xs text-slate-500 font-medium mt-1">{description}</p>
           </div>
         </div>
       )}

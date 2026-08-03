@@ -12,7 +12,7 @@ const PageHeader = ({
     <div className={`flex flex-col bg-white p-4 border border-slate-200/60 md:flex-row md:items-center justify-between gap-4 ${className}`}>
       <div className="flex items-center gap-4">
         {Icon && (
-          <div className={`p-2.5 rounded-lg shrink-0 ${iconClassName || 'bg-orange-100 text-orange-600'}`}>
+          <div className={`p-2.5 rounded-lg shrink-0 ${iconClassName || 'bg-gradient-to-br from-primary/10 to-primary/5 text-primary '}`}>
             <Icon size={24} />
           </div>
         )}

@@ -5,6 +5,7 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole, useToggleRoleStatus } from '../hooks/useRoles';
 import { roleApi } from '../api/roleApi';
 import GenericPage from '../../../shared/components/templates/GenericPage';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
@@ -412,28 +413,21 @@ const RoleManagementPage = () => {
     >
       <div className="flex flex-col gap-4">
         {/* ── Desktop section header ─────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
-              <Shield size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Role & Permission Settings</h2>
-                <button
-                  onClick={refetch}
-                  className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
-                  title="Refresh Data"
-                >
-                  <RefreshCcw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-                </button>
-              </div>
-              <p className="text-[13px] text-slate-500 font-medium mt-0.5">
-                Manage role-based security configurations
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader 
+          title="Role & Permission Settings"
+          description="Manage role-based security configurations"
+          icon={Shield}
+          className="hidden lg:flex"
+          actions={
+            <button
+              onClick={refetch}
+              className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
+              title="Refresh Data"
+            >
+              <RefreshCcw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+            </button>
+          }
+        />
 
         <div className="bg-white border border-slate-200/60 p-4">
 
