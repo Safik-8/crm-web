@@ -122,12 +122,17 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                 {effectiveStageName}
               </span>
               {/* Status Pill */}
-              {lead.status?.name && (
+              {(lead.opportunities && lead.opportunities.length > 0) || lead.isConverted ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/60 text-emerald-700 rounded-full text-xs font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  CONVERTED
+                </span>
+              ) : lead.status?.name ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border border-rose-200/60 text-rose-600 rounded-full text-xs font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                   {lead.status.name}
                 </span>
-              )}
+              ) : null}
               {/* Priority Pill */}
               {lead.priority && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200/60 rounded-lg text-[11px] font-bold">

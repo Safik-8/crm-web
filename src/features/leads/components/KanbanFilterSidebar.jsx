@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ChevronLeft,
   Check,
+  Tag,
 } from 'lucide-react';
 import { SearchableDropdown } from './SearchableDropdown';
 
@@ -293,6 +294,23 @@ export const KanbanFilterSidebar = ({
             clearable={false}
             placeholder="All Priorities"
             icon={SlidersHorizontal}
+            className="w-full"
+            block
+          />
+        </FilterSection>
+
+        <FilterSection title="Lead Scope / Conversion">
+          <SearchableDropdown
+            options={[
+              { id: 'false', name: '🟢 Active Prospects Only (Default)' },
+              { id: 'true', name: '🌐 All Leads (Inc. Converted)' },
+              { id: 'only', name: '⚡ Converted Leads Only' },
+            ]}
+            value={draftFilters.includeConverted || 'false'}
+            onChange={(val) => setDraftFilters({ includeConverted: val })}
+            clearable={false}
+            placeholder="Select Category"
+            icon={Tag}
             className="w-full"
             block
           />

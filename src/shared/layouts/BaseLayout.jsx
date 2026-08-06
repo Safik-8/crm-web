@@ -42,7 +42,7 @@ const BaseLayout = () => {
   const isFullWidthPage = location.pathname.includes('/board') || location.pathname.includes('/stages');
 
   return (
-    <div className="flex bg-zinc-50 h-screen overflow-hidden">
+    <div className="flex bg-slate-100 h-screen overflow-hidden">
       {/* Forced Password Reset Enforcer */}
       <ForcedChangePasswordModal />
 
@@ -71,7 +71,7 @@ const BaseLayout = () => {
           {/* Main content */}
           <main
             ref={mainRef}
-            className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-50 ${isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-4 lg:p-6'
+            className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-100 ${isFullWidthPage ? 'p-0' : 'p-4 sm:p-5 md:p-4 lg:p-6'
               }`}
           >
             <div

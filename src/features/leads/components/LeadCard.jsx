@@ -183,9 +183,15 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
           </p>
         </div>
 
-        {/* Badges container: Course badge & Priority badge */}
-        {(interest || priorityBadgeStyle) && (
+        {/* Badges container: Course badge, Priority badge & Converted badge */}
+        {(interest || priorityBadgeStyle || (lead.opportunities && lead.opportunities.length > 0) || lead.isConverted) && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5 pointer-events-none">
+            {((lead.opportunities && lead.opportunities.length > 0) || lead.isConverted) && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                CONVERTED
+              </span>
+            )}
             {interest && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[11px] font-semibold text-orange-600 truncate max-w-full">
                 <BookOpen size={9} className="shrink-0 text-orange-400" />

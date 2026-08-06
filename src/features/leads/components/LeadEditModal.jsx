@@ -472,20 +472,32 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
               disabled={!targetCompanyId}
             />
 
-            <SelectField
-              id="lead-status"
-              label="Status"
-              placeholder="Select Status..."
-              allowEmptyOption
-              value={values.statusId}
-              onChange={(val) => handleFieldChange('statusId', val)}
-              options={statusesOptions}
-              errorText={errors.statusId}
-              startIcon={Activity}
-              searchable={true}
-              isLoading={isLoadingFormData}
-              disabled={!targetCompanyId}
-            />
+            {(() => {
+              const isConverted = (lead?.opportunities && lead.opportunities.length > 0) || lead?.isConverted;
+              return (
+                <div className="space-y-1">
+                  <SelectField
+                    id="lead-status"
+                    label="Status"
+                    placeholder="Select Status..."
+                    allowEmptyOption={!isConverted}
+                    value={isConverted ? 'CONVERTED' : values.statusId}
+                    onChange={(val) => !isConverted && handleFieldChange('statusId', val)}
+                    options={isConverted ? [{ value: 'CONVERTED', label: '⚡ CONVERTED (Locked to Opportunity)' }] : statusesOptions}
+                    errorText={errors.statusId}
+                    startIcon={Activity}
+                    searchable={!isConverted}
+                    isLoading={isLoadingFormData}
+                    disabled={!targetCompanyId || isConverted}
+                  />
+                  {isConverted && (
+                    <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-md font-medium">
+                      🔒 Lead is converted to an Opportunity deal. Status is locked to CONVERTED.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             <SelectField
               id="lead-priority"

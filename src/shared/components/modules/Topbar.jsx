@@ -36,7 +36,7 @@ const ROUTE_LABELS = {
   'branches': 'Branches',
 };
 
-const buildBreadcrumbs = (pathname, search) => {
+const buildBreadcrumbs = (pathname, search, state) => {
   const segments = pathname.split('/').filter(Boolean);
   const crumbs = [];
 
@@ -48,6 +48,17 @@ const buildBreadcrumbs = (pathname, search) => {
   });
 
   let currentPath = '';
+
+  // Special Handling for Opportunities Detail Route (/opportunities/:id)
+  if (segments[0] === 'opportunities') {
+    crumbs.push({ label: 'Opportunities', path: '/opportunities' });
+    if (segments[1] && !isNaN(segments[1])) {
+      const dealId = segments[1];
+      const nameLabel = state?.opportunityName || state?.leadName || `Opportunity #${dealId}`;
+      crumbs.push({ label: nameLabel, path: `/opportunities/${dealId}` });
+    }
+    return crumbs;
+  }
 
   segments.forEach((seg, index) => {
     const isId = !isNaN(seg);
@@ -101,7 +112,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
   const bellButtonRef = useRef(null);
   const { unreadCount } = useNotificationBadge();
 
-  const crumbs = buildBreadcrumbs(location.pathname, location.search);
+  const crumbs = buildBreadcrumbs(location.pathname, location.search, location.state);
 
   const openPanel  = useCallback(() => setIsPanelOpen(true),  []);
   const closePanel = useCallback(() => setIsPanelOpen(false), []);

@@ -31,6 +31,8 @@ import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
 import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
+import OpportunitiesPage from '../../features/opportunities/pages/OpportunitiesPage';
+import { OpportunityDetailPage } from '../../features/opportunities/pages/OpportunityDetailPage';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
@@ -110,6 +112,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
             <LeadsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'opportunities',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <OpportunitiesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'opportunities/:id',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <OpportunityDetailPage />
           </ProtectedRoute>
         ),
       },
