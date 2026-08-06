@@ -99,6 +99,12 @@ const buildBreadcrumbs = (pathname, search, state) => {
       path: currentPath
     });
   });
+  const searchParams = new URLSearchParams(search);
+  const leadName = searchParams.get('leadName');
+
+  if (leadName) {
+    crumbs.push({ label: leadName, path: pathname + search });
+  }
 
   return crumbs.filter((c, idx, arr) => idx === 0 || c.path !== arr[idx - 1].path);
 };

@@ -10,7 +10,7 @@ import { isTerminalStage } from '../../pipelines/utils/stageRules';
  * Stage droppable: "stage-{id}"   Card sortable: "card-{id}"
  */
 const stageDropId = (id) => `stage-${id}`;
-const cardSortId  = (id) => `card-${id}`;
+const cardSortId = (id) => `card-${id}`;
 
 // Skeleton card — matches card proportions
 const SkeletonCard = () => (
@@ -29,7 +29,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick, canManage, onEditLead, onDeleteLead }) => {
+const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick, canManage, onEditLead, onDeleteLead, onQualifyLead }) => {
   // Prefixed droppable ID prevents collision with card IDs (lead.id and stage.id share numeric space)
   const droppableId = stageDropId(stage.id);
   const isTerminal = isTerminalStage(stage);
@@ -53,9 +53,8 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
         <div className="flex items-center gap-2 min-w-0">
           {/* Stage dot */}
           <span
-            className={`h-2.5 w-2.5 rounded-full flex-shrink-0 transition-all duration-300 ${
-              isRefetching ? 'bg-zinc-300 animate-pulse' : ''
-            }`}
+            className={`h-2.5 w-2.5 rounded-full flex-shrink-0 transition-all duration-300 ${isRefetching ? 'bg-zinc-300 animate-pulse' : ''
+              }`}
             style={{
               backgroundColor: !isRefetching ? (stage.colorCode || (stage.isDefault ? '#f86f03' : isClosureCol ? '#10b981' : '#a1a1aa')) : undefined,
               boxShadow: !isRefetching && (stage.colorCode || stage.isDefault || isClosureCol)
@@ -72,15 +71,14 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
         </div>
 
         {/* Lead count & Budget sum badge */}
-        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center transition-all duration-300 ${
-          isRefetching
+        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center transition-all duration-300 ${isRefetching
             ? 'text-zinc-300 bg-zinc-100 animate-pulse'
             : leads.length > 0
-            ? isTerminal
-              ? 'text-emerald-600 bg-emerald-50 border border-emerald-200/60'
-              : 'text-orange-600 bg-orange-50 border border-orange-200/60'
-            : 'text-zinc-400 bg-zinc-100'
-        }`}>
+              ? isTerminal
+                ? 'text-emerald-600 bg-emerald-50 border border-emerald-200/60'
+                : 'text-orange-600 bg-orange-50 border border-orange-200/60'
+              : 'text-zinc-400 bg-zinc-100'
+          }`}>
           {leads.length}{columnBudgetSum > 0 ? ` • ₹${columnBudgetSum.toLocaleString('en-IN')}` : ''}
         </span>
       </div>
@@ -88,13 +86,12 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-all duration-200 overflow-hidden relative ${
-          isOver && !isTerminal
+        className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-all duration-200 overflow-hidden relative ${isOver && !isTerminal
             ? 'bg-orange-50/80 ring-2 ring-orange-300/50 shadow-[inset_0_0_0_1px_rgba(248,111,3,0.12)]'
             : isTerminal
-            ? 'bg-emerald-50/30'
-            : 'bg-zinc-100/70'
-        }`}
+              ? 'bg-emerald-50/30'
+              : 'bg-zinc-100/70'
+          }`}
       >
         {/* Refetch overlay — subtle frosted glass */}
         {isRefetching && !loading && (
@@ -108,11 +105,10 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
           </div>
         ) : leads.length === 0 ? (
           /* Premium empty state */
-          <div className={`flex flex-col items-center justify-center flex-1 min-h-32 gap-2 m-2.5 rounded-xl border-2 border-dashed transition-all duration-200 ${
-            isOver
+          <div className={`flex flex-col items-center justify-center flex-1 min-h-32 gap-2 m-2.5 rounded-xl border-2 border-dashed transition-all duration-200 ${isOver
               ? 'border-orange-300/70 bg-orange-50/60 text-orange-500'
               : 'border-zinc-200/80 text-zinc-400'
-          }`}>
+            }`}>
             {isFiltered ? (
               <>
                 <SearchX size={18} className="opacity-50" />
@@ -142,6 +138,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
                   canManage={canManage}
                   onEdit={onEditLead}
                   onDelete={onDeleteLead}
+                  onQualify={onQualifyLead}
                 />
               ))}
             </SortableContext>

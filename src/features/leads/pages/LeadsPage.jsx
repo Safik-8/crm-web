@@ -743,7 +743,7 @@ export const LeadsPage = () => {
   ];
 
   return (
-    <div className=" max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className=" max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       {/* Page Header */}
       <PageHeader
         title="Leads Registry"

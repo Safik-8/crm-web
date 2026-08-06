@@ -105,18 +105,55 @@ export const CreateOpportunitySlideover = ({
     }
   };
 
+  const isLeadFixed = Boolean(initialValues?.leadId);
+
+  // Filter leads: Must be QUALIFIED, not CONVERTED, and without an active OPEN opportunity
+  const qualifiedLeads = React.useMemo(() => {
+    const list = leads.filter((l) => {
+      // If a lead is pre-selected, always include it
+      if (initialValues?.leadId && Number(l.id) === Number(initialValues.leadId)) return true;
+
+      // Must be QUALIFIED (status === 'QUALIFIED' or isQualified flag)
+      const isQualified = l.qualification?.status === 'QUALIFIED' || l.isQualified === true;
+      if (!isQualified) return false;
+
+      // Must not already be converted
+      if (l.status?.code === 'CONVERTED' || l.status?.name === 'CONVERTED' || l.isConverted) return false;
+
+      // Must not already have an OPEN opportunity
+      const hasOpenOpp = Array.isArray(l.opportunities) && l.opportunities.some((o) => o.status === 'OPEN');
+      if (hasOpenOpp) return false;
+
+      return true;
+    });
+
+    // Fallback item if preselected lead is not present in fetched list yet
+    if (initialValues?.leadId && !list.some((l) => Number(l.id) === Number(initialValues.leadId))) {
+      list.unshift({
+        id: Number(initialValues.leadId),
+        name: computedInitialValues.opportunityName?.replace(' Deal', '') || `Lead #${initialValues.leadId}`,
+        qualification: { score: 100 },
+      });
+    }
+
+    return list;
+  }, [leads, initialValues?.leadId, computedInitialValues.opportunityName]);
+
   // Field configuration: Select Lead at the very top (1st field), followed by auto-filled deal fields
   const fields = [
     {
       key: 'leadId',
       name: 'leadId',
-      label: 'Select Lead',
+      label: 'Select Lead (Qualified Only)',
       type: 'searchable-select',
       required: true,
-      placeholder: 'Search lead by Name, Mobile, or ID...',
-      options: leads.map((l) => ({
+      disabled: isLeadFixed,
+      placeholder: qualifiedLeads.length > 0 
+        ? 'Search qualified lead by Name, Mobile, or ID...' 
+        : 'No qualified leads available (Qualify a lead first in Lead Management)',
+      options: qualifiedLeads.map((l) => ({
         value: l.id,
-        label: `[#${l.id}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''}`,
+        label: `[#${l.id}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? 0}%)`,
       })),
       onCustomChange: handleLeadChange,
     },

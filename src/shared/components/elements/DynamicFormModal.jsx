@@ -118,12 +118,11 @@ export const DynamicFormModal = ({
           backgroundImage: 'none',
           boxShadow: '0 16px 48px rgba(0,0,0,0.12)',
           width: size === 'sm' ? '560px' : size === 'md' ? '760px' : 'auto',
-          maxWidth: '92%',
-          overflow: 'visible'
+          maxWidth: '92%'
         }
       }}
     >
-      <Box component={FormComponent} {...formProps} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'visible' }}>
+      <Box component={FormComponent} {...formProps} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header */}
         <DialogTitle sx={{ borderBottom: '1px solid #E2E8F0', py: 2.5, px: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
@@ -182,7 +181,7 @@ export const DynamicFormModal = ({
         </DialogTitle>
 
         {/* Content */}
-        <DialogContent sx={{ py: 4.5, px: 6, display: 'flex', flexDirection: 'column', gap: 3.5, overflow: 'visible' }}>
+        <DialogContent sx={{ py: 4.5, px: 6, display: 'flex', flexDirection: 'column', gap: 3.5 }}>
           {fields.length > 0 && (
             <DynamicFormFields
               fields={fields}

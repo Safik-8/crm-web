@@ -1,9 +1,9 @@
 import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Phone, Calendar, BookOpen, User, MoreVertical, Pencil, Trash2, Lock } from 'lucide-react';
+import { Phone, Calendar, BookOpen, User, MoreVertical, Pencil, Trash2, Lock, Target } from 'lucide-react';
 
-const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, canManage = false, onEdit, onDelete }) => {
+const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, canManage = false, onEdit, onDelete, onQualify }) => {
   const sortableId = `card-${lead.id}`;
 
   // Card is locked if user lacks edit/create permissions OR if the stage is terminal (WON/CLOSURE)
@@ -72,6 +72,12 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
     onDelete?.(lead);
   }, [lead, onDelete]);
 
+  const handleQualify = useCallback((e) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    onQualify?.(lead);
+  }, [lead, onQualify]);
+
   const maskedMobile = lead.mobile
     ? lead.mobile.toString().replace(/^(\d{2})(\d+)(\d{2})$/, '$1••••••$3')
     : '—';
@@ -133,7 +139,7 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
             className={`flex items-center justify-center w-6 h-6 rounded-md transition-all duration-100 outline-none
               ${menuOpen
                 ? 'bg-zinc-200 text-zinc-700'
-                : 'text-zinc-400 opacity-0 group-hover:opacity-100 hover:bg-zinc-100 hover:text-zinc-700 focus:opacity-100'
+                : 'text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700'
               }`}
             aria-label="Lead actions"
             aria-haspopup="true"
@@ -155,6 +161,14 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
               >
                 <Pencil size={11} className="text-zinc-400 shrink-0" />
                 Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleQualify}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors outline-none"
+              >
+                <Target size={11} className="text-zinc-400 shrink-0" />
+                Qualify Lead
               </button>
               <div className="h-px bg-zinc-100 mx-2 my-0.5" />
               <button
@@ -183,8 +197,8 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
           </p>
         </div>
 
-        {/* Badges container: Course badge, Priority badge & Converted badge */}
-        {(interest || priorityBadgeStyle || (lead.opportunities && lead.opportunities.length > 0) || lead.isConverted) && (
+        {/* Badges container: Qualification, Course, Priority & Converted */}
+        {(interest || priorityBadgeStyle || (lead.opportunities && lead.opportunities.length > 0) || lead.isConverted || lead.qualification) && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5 pointer-events-none">
             {((lead.opportunities && lead.opportunities.length > 0) || lead.isConverted) && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">
@@ -192,14 +206,20 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
                 CONVERTED
               </span>
             )}
+            {lead.qualification?.status === 'QUALIFIED' && !(lead.opportunities?.length > 0 || lead.isConverted) && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100 text-[9.5px] font-bold text-emerald-600 uppercase tracking-wide shrink-0">
+                <Target size={9} className="shrink-0 text-emerald-500" />
+                Qualified {lead.qualification.score ? `• ${lead.qualification.score}%` : ''}
+              </span>
+            )}
             {interest && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[11px] font-semibold text-orange-600 truncate max-w-full">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] font-semibold text-orange-600 truncate max-w-[130px]">
                 <BookOpen size={9} className="shrink-0 text-orange-400" />
-                {interest}
+                <span className="truncate">{interest}</span>
               </span>
             )}
             {priorityBadgeStyle && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[10px] font-bold tracking-wide uppercase ${priorityBadgeStyle}`}>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9.5px] font-bold tracking-wide uppercase shrink-0 ${priorityBadgeStyle}`}>
                 {priorityUpper}
               </span>
             )}
@@ -209,9 +229,8 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
         {/* Assigned user */}
         <div className="mt-2.5 flex items-center gap-1.5 pointer-events-none">
           <User size={11} className={lead.assignedTo ? 'text-zinc-400' : 'text-zinc-300'} />
-          <span className={`text-[11.5px] truncate ${
-            lead.assignedTo ? 'text-zinc-500 font-medium' : 'text-zinc-300 italic'
-          }`}>
+          <span className={`text-[11.5px] truncate ${lead.assignedTo ? 'text-zinc-500 font-medium' : 'text-zinc-300 italic'
+            }`}>
             {lead.assignedTo?.name || 'Unassigned'}
           </span>
         </div>
@@ -230,11 +249,10 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
 
           {formattedFollowUp && (
             <div
-              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium transition-colors ${
-                isFollowUpOverdue
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium transition-colors ${isFollowUpOverdue
                   ? 'bg-rose-50 text-rose-600 font-bold border border-rose-100'
                   : 'text-zinc-500'
-              }`}
+                }`}
               title={lead.nextFollowUpDate ? (isFollowUpOverdue ? 'Overdue Follow-up' : 'Next Follow-up Due') : 'Lead Date'}
             >
               <Calendar size={9} className={`shrink-0 ${isFollowUpOverdue ? 'text-rose-500' : 'text-zinc-400'}`} />
