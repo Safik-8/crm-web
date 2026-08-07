@@ -2,7 +2,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DollarSign, Calendar, User, TrendingUp } from 'lucide-react';
+import { IndianRupee, Calendar, User, TrendingUp } from 'lucide-react';
 
 /**
  * OpportunityCard — Presentational & sortable card for Kanban board
@@ -20,6 +20,7 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
   } = useSortable({
     id: cardId,
     data: { type: 'card', opportunity },
+    disabled: opportunity.status !== 'OPEN',
   });
 
   const style = {
@@ -30,8 +31,6 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
       maximumFractionDigits: 0,
     }).format(val || 0);
   };
@@ -82,7 +81,7 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
       {/* Revenue & Probability */}
       <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
         <div className="flex items-center gap-1 font-semibold text-slate-900">
-          <DollarSign className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+          <IndianRupee className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
           <span>{formatCurrency(opportunity.expectedRevenue)}</span>
         </div>
 

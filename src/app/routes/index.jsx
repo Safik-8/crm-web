@@ -33,6 +33,7 @@ import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
 import OpportunitiesPage from '../../features/opportunities/pages/OpportunitiesPage';
 import { OpportunityDetailPage } from '../../features/opportunities/pages/OpportunityDetailPage';
+import { OpportunityStageManagement } from '../../features/opportunities/pages/OpportunityStageManagement';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
@@ -132,6 +133,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'opportunities/stages',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_STAGES}>
+            <OpportunityStageManagement />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'customers',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_CUSTOMERS}>
@@ -220,6 +229,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+
 
       {
         path: 'roles',

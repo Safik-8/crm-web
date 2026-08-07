@@ -18,6 +18,7 @@ import {
   BookOpen,
   Compass,
   Tags,
+  Layers,
 } from 'lucide-react';
 import {
   PERMISSIONS } from '../constants/permissions';

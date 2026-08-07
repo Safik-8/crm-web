@@ -15,11 +15,14 @@ import { OpportunityCard } from './OpportunityCard';
 import { Layers } from 'lucide-react';
 
 const DEFAULT_STAGES = [
-  { id: 1, name: 'Qualification', colorCode: '#6366f1' },
-  { id: 2, name: 'Needs Analysis', colorCode: '#3b82f6' },
-  { id: 3, name: 'Proposal', colorCode: '#8b5cf6' },
-  { id: 4, name: 'Negotiation', colorCode: '#f59e0b' },
-  { id: 5, name: 'Final Review', colorCode: '#10b981' },
+  { id: 1, name: 'Qualification', colorCode: '#6366f1', stageType: 'QUALIFICATION', code: 'QUALIFICATION' },
+  { id: 2, name: 'Needs Analysis', colorCode: '#3b82f6', stageType: 'REGULAR', code: 'NEEDS_ANALYSIS' },
+  { id: 3, name: 'Proposal', colorCode: '#8b5cf6', stageType: 'REGULAR', code: 'PROPOSAL' },
+  { id: 4, name: 'Negotiation', colorCode: '#f59e0b', stageType: 'REGULAR', code: 'NEGOTIATION' },
+  { id: 5, name: 'Final Review', colorCode: '#10b981', stageType: 'REGULAR', code: 'FINAL_REVIEW' },
+  { id: 6, name: 'Won', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
+  { id: 7, name: 'Lost', colorCode: '#ef4444', stageType: 'LOST', code: 'LOST' },
+  { id: 8, name: 'Cancelled', colorCode: '#6b7280', stageType: 'CANCELLED', code: 'CANCELLED' },
 ];
 
 /**
@@ -283,28 +286,35 @@ export const OpportunityKanban = ({
       <div ref={scrollContainerRef} className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x">
         {activeStages.map((stage) => {
           const stageOpportunities = opportunities.filter((opp) => {
+            // 1. Primary match: numeric stageId
             if (Number(opp.stageId) === Number(stage.id) || Number(opp.stage?.id) === Number(stage.id)) {
               return true;
             }
+
+            // 2. For terminal stages (WON / LOST / CANCELLED), also match by opp.status
+            //    This catches cases where stageId hasn't been resolved yet (e.g. button-triggered close)
+            const stageTypeUpper = (stage.stageType || stage.code || '').toUpperCase();
+            const stageName = (stage.name || '').toLowerCase().trim();
+            if (
+              (stageTypeUpper === 'WON' || stageName === 'won') &&
+              opp.status === 'WON'
+            ) return true;
+            if (
+              (stageTypeUpper === 'LOST' || stageName === 'lost') &&
+              opp.status === 'LOST'
+            ) return true;
+            if (
+              (stageTypeUpper === 'CANCELLED' || stageName === 'cancelled') &&
+              opp.status === 'CANCELLED'
+            ) return true;
+
+            // 3. Name / code exact match
             const oppName = (opp.stage?.name || opp.stageName || '').toLowerCase().trim();
-            const colName = (stage.name || '').toLowerCase().trim();
+            const colName = stageName;
             const oppCode = (opp.stage?.code || '').toLowerCase().trim();
             const colCode = (stage.code || '').toLowerCase().trim();
 
-            if (oppName === colName || (oppCode && oppCode === colCode)) {
-              return true;
-            }
-
-            // Semantic stage root matching (e.g. Qualification <-> Qualified, Proposal <-> Proposal Sent)
-            if (
-              (oppName.includes('qualif') && colName.includes('qualif')) ||
-              (oppName.includes('propos') && colName.includes('propos')) ||
-              (oppName.includes('negotia') && colName.includes('negotia')) ||
-              (oppName.includes('meet') && colName.includes('meet')) ||
-              (oppName.includes('review') && colName.includes('review')) ||
-              (oppName.includes('won') && colName.includes('won')) ||
-              (oppName.includes('lost') && colName.includes('lost'))
-            ) {
+            if (oppName === colName || (oppCode && colCode && oppCode === colCode)) {
               return true;
             }
 

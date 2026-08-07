@@ -50,6 +50,49 @@ export const closeOpportunity = (id, data) => {
 /**
  * Fetch dynamic Opportunity deal stages
  */
-export const getOpportunityStages = () => {
-  return apiClient('/opportunities/stages', { method: 'GET' });
+export const getOpportunityStages = (params = {}) => {
+  return apiClient(`/opportunities/stages${buildQueryString(params)}`, { method: 'GET' });
 };
+
+/**
+ * Create a new opportunity stage
+ */
+export const createOpportunityStage = (data) => {
+  return apiClient('/opportunities/stages', { method: 'POST', body: data });
+};
+
+/**
+ * Update opportunity stage details
+ */
+export const updateOpportunityStage = (stageId, data) => {
+  return apiClient(`/opportunities/stages/${stageId}`, { method: 'PATCH', body: data });
+};
+
+/**
+ * Toggle opportunity stage status (ACTIVE / INACTIVE)
+ */
+export const toggleOpportunityStage = (stageId, status, params = {}) => {
+  return apiClient(`/opportunities/stages/${stageId}/toggle${buildQueryString(params)}`, { method: 'PATCH', body: { status } });
+};
+
+/**
+ * Delete opportunity stage
+ */
+export const deleteOpportunityStage = (stageId, params = {}) => {
+  return apiClient(`/opportunities/stages/${stageId}${buildQueryString(params)}`, { method: 'DELETE' });
+};
+
+/**
+ * Move opportunity to another stage
+ */
+export const moveOpportunityStage = (oppId, data) => {
+  return apiClient(`/opportunities/${oppId}/stage`, { method: 'PATCH', body: data });
+};
+
+/**
+ * Bulk update opportunity stages display order and status
+ */
+export const bulkUpdateOpportunityStages = (data) => {
+  return apiClient('/opportunities/stages/bulk', { method: 'PUT', body: data });
+};
+

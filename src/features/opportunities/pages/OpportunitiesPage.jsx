@@ -7,7 +7,7 @@ import {
   LayoutGrid,
   Table as TableIcon,
   Search,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Building2,
   GitBranch,
@@ -29,6 +29,7 @@ import {
   useCreateOpportunityMutation,
   useUpdateOpportunityMutation,
   useCloseOpportunityMutation,
+  useMoveOpportunityStageMutation,
 } from '../hooks/useOpportunities';
 
 import { OpportunityKanban } from '../components/OpportunityKanban';
@@ -39,13 +40,17 @@ import { useLeadsQuery } from '../../leads/hooks/useLeads';
 import { useCoursesQuery } from '../../courses/hooks/useCourses';
 
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { PERMISSIONS } from '../../../lib/constants/permissions';
 
 const DEFAULT_STAGES = [
-  { id: 1, name: 'Qualification', colorCode: '#6366f1' },
-  { id: 2, name: 'Needs Analysis', colorCode: '#3b82f6' },
-  { id: 3, name: 'Proposal', colorCode: '#8b5cf6' },
-  { id: 4, name: 'Negotiation', colorCode: '#f59e0b' },
-  { id: 5, name: 'Final Review', colorCode: '#10b981' },
+  { id: 1, name: 'Qualification', colorCode: '#6366f1', stageType: 'QUALIFICATION', code: 'QUALIFICATION' },
+  { id: 2, name: 'Needs Analysis', colorCode: '#3b82f6', stageType: 'REGULAR', code: 'NEEDS_ANALYSIS' },
+  { id: 3, name: 'Proposal', colorCode: '#8b5cf6', stageType: 'REGULAR', code: 'PROPOSAL' },
+  { id: 4, name: 'Negotiation', colorCode: '#f59e0b', stageType: 'REGULAR', code: 'NEGOTIATION' },
+  { id: 5, name: 'Final Review', colorCode: '#10b981', stageType: 'REGULAR', code: 'FINAL_REVIEW' },
+  { id: 6, name: 'Won', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
+  { id: 7, name: 'Lost', colorCode: '#ef4444', stageType: 'LOST', code: 'LOST' },
+  { id: 8, name: 'Cancelled', colorCode: '#6b7280', stageType: 'CANCELLED', code: 'CANCELLED' },
 ];
 
 // ── Metric Card Skeleton ────────────────────────────────────────────────────
@@ -123,7 +128,10 @@ export const OpportunitiesPage = () => {
 
   const [viewMode, setViewMode] = useState('kanban');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  // stageFilter: { type: 'status'|'stageId', value: string } | null
+  const [stageFilter, setStageFilter] = useState(null);
+  const [stageFilterOpen, setStageFilterOpen] = useState(false);
+  const stageFilterRef = useRef(null);
   const [companyFilter, setCompanyFilter] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
 
@@ -159,16 +167,33 @@ export const OpportunitiesPage = () => {
     setBranchFilter('');
   }, [companyFilter]);
 
+  // Close stage filter dropdown on outside click
+  useEffect(() => {
+    if (!stageFilterOpen) return;
+    const handler = (e) => {
+      if (stageFilterRef.current && !stageFilterRef.current.contains(e.target)) {
+        setStageFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, [stageFilterOpen]);
+
   // ── Stages ─────────────────────────────────────────────────────────────────
   const oppStagesQuery = useQuery({
-    queryKey: ['opportunity-stages'],
+    queryKey: ['opportunity-stages', companyFilter || user?.companyId],
     queryFn: async () => {
-      const res = await getOpportunityStages();
+      const scopeId = companyFilter || user?.companyId || null;
+      const res = await getOpportunityStages(scopeId ? { companyId: scopeId } : {});
       const raw = res?.data || res;
       return Array.isArray(raw) && raw.length > 0 ? raw : DEFAULT_STAGES;
     },
     placeholderData: DEFAULT_STAGES,
-    staleTime: 60000,
+    staleTime: 30000,
   });
   const stages = oppStagesQuery.data || DEFAULT_STAGES;
 
@@ -191,12 +216,16 @@ export const OpportunitiesPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
   const [closingOpportunity, setClosingOpportunity] = useState(null);
+  // pendingStageId stores the target stage when drag triggers the closure modal
+  const [pendingStageId, setPendingStageId] = useState(null);
   const [closeOutcome, setCloseOutcome] = useState('WON');
+  const [closeRemarks, setCloseRemarks] = useState('');
 
   // ── Main Data Query ────────────────────────────────────────────────────────
   const queryParams = {
     search: searchTerm,
-    status: statusFilter,
+    ...(stageFilter?.type === 'status' && { status: stageFilter.value }),
+    ...(stageFilter?.type === 'stageId' && { stageId: stageFilter.value }),
     ...(companyFilter && { companyId: companyFilter }),
     ...(branchFilter && { branchId: branchFilter }),
   };
@@ -205,6 +234,7 @@ export const OpportunitiesPage = () => {
   const createMutation = useCreateOpportunityMutation();
   const updateMutation = useUpdateOpportunityMutation();
   const closeMutation = useCloseOpportunityMutation();
+  const moveStageMutation = useMoveOpportunityStageMutation();
 
   const [localOpportunities, setLocalOpportunities] = useState([]);
   const snapshotRef = useRef(null);
@@ -220,9 +250,25 @@ export const OpportunitiesPage = () => {
 
   const handleStageChange = (opportunityId, newStageId) => {
     const targetStageId = Number(newStageId);
+    const targetStageObj = stages.find((s) => Number(s.id) === targetStageId);
+    console.log('[DEBUG] handleStageChange:', { opportunityId, newStageId, targetStageId, targetStageObj, stages });
+
+    const isWon = targetStageObj?.stageType === 'WON' || targetStageObj?.code === 'WON' || targetStageObj?.name?.toLowerCase() === 'won';
+    const isLost = targetStageObj?.stageType === 'LOST' || targetStageObj?.code === 'LOST' || targetStageObj?.name?.toLowerCase() === 'lost';
+    const isCancelled = targetStageObj?.stageType === 'CANCELLED' || targetStageObj?.code === 'CANCELLED' || targetStageObj?.name?.toLowerCase() === 'cancelled';
+
+    // Intercept drag and drop to system closure stages and trigger closure modal
+    if (isWon || isLost || isCancelled) {
+      const outcome = isWon ? 'WON' : isLost ? 'LOST' : 'CANCELLED';
+      const oppObj = opportunities.find((o) => Number(o.id) === Number(opportunityId));
+      setCloseOutcome(outcome);
+      setClosingOpportunity(oppObj);
+      setPendingStageId(targetStageId);
+      return;
+    }
+
     snapshotRef.current = [...localOpportunities];
     inFlightCountRef.current += 1;
-    const targetStageObj = stages.find((s) => Number(s.id) === targetStageId);
     setLocalOpportunities((prev) =>
       prev.map((opp) =>
         Number(opp.id) === Number(opportunityId)
@@ -230,10 +276,12 @@ export const OpportunitiesPage = () => {
           : opp
       )
     );
-    updateMutation.mutate(
-      { id: opportunityId, data: { stageId: targetStageId } },
+    moveStageMutation.mutate(
+      { id: opportunityId, data: { newStageId: targetStageId } },
       {
-        onSuccess: () => { inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1); },
+        onSuccess: () => {
+          inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1);
+        },
         onError: () => {
           inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1);
           if (snapshotRef.current) setLocalOpportunities(snapshotRef.current);
@@ -249,15 +297,65 @@ export const OpportunitiesPage = () => {
 
   const handleConfirmClose = async () => {
     if (!closingOpportunity) return;
-    await closeMutation.mutateAsync({ id: closingOpportunity.id, data: { outcome: closeOutcome } });
+
+    // Resolve the target stage by stageType (WON / LOST / CANCELLED) from the stages list.
+    // This works whether the close was triggered by drag (pendingStageId set) or by a button click.
+    const targetStageObj = stages.find(
+      (s) =>
+        s.stageType === closeOutcome ||
+        s.code === closeOutcome ||
+        s.name?.toUpperCase() === closeOutcome
+    ) || (pendingStageId ? stages.find((s) => Number(s.id) === Number(pendingStageId)) : null);
+
+    const targetStageId = targetStageObj?.id ?? pendingStageId ?? closingOpportunity.stageId;
+
+    // Optimistically move the card to the correct column immediately
+    setLocalOpportunities((prev) =>
+      prev.map((opp) =>
+        Number(opp.id) === Number(closingOpportunity.id)
+          ? {
+              ...opp,
+              status: closeOutcome,
+              stageId: targetStageId,
+              stage: targetStageObj || opp.stage,
+            }
+          : opp
+      )
+    );
+
+    // Capture before clearing state (state will be null after setClosingOpportunity(null))
+    const oppId = closingOpportunity.id;
+    const outcome = closeOutcome;
+    const remarks = closeRemarks;
+    const originalOpp = closingOpportunity;
+
+    // Dismiss modal so the user sees the card move instantly
     setClosingOpportunity(null);
+    setPendingStageId(null);
+    setCloseRemarks('');
+
+    try {
+      await closeMutation.mutateAsync({
+        id: oppId,
+        data: { outcome, remarks },
+      });
+    } catch {
+      // Roll back on error
+      setLocalOpportunities((prev) =>
+        prev.map((opp) =>
+          Number(opp.id) === Number(oppId)
+            ? { ...opp, status: originalOpp.status, stageId: originalOpp.stageId, stage: originalOpp.stage }
+            : opp
+        )
+      );
+    }
   };
 
   // ── Metrics ────────────────────────────────────────────────────────────────
   const totalPipelineRevenue = opportunities.reduce((acc, opp) => acc + Number(opp.expectedRevenue || 0), 0);
   const totalWonRevenue = opportunities.filter((opp) => opp.status === 'WON').reduce((acc, opp) => acc + Number(opp.expectedRevenue || 0), 0);
 
-  const hasActiveFilters = !!(searchTerm || statusFilter || companyFilter || branchFilter);
+  const hasActiveFilters = !!(searchTerm || stageFilter || companyFilter || branchFilter);
 
   const tableLoadingState = isLoading ? 'loading' : isError ? 'error' : opportunities.length === 0 ? 'empty' : 'success';
 
@@ -302,6 +400,27 @@ export const OpportunitiesPage = () => {
             </button>
           </div>
 
+          {hasPermission(PERMISSIONS.MANAGE_STAGES) && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<GitBranch className="w-4 h-4" />}
+              onClick={() => navigate('/opportunities/stages')}
+              sx={{
+                height: '36px',
+                borderRadius: '6px',
+                borderColor: '#cbd5e1',
+                color: '#475569',
+                fontSize: '12px',
+                fontWeight: 600,
+                textTransform: 'none',
+                '&:hover': { backgroundColor: '#f8fafc', borderColor: '#94a3b8' },
+              }}
+            >
+              Manage Stages
+            </Button>
+          )}
+
           {canCreateOpportunity && (
             <Button
               size="small"
@@ -314,6 +433,7 @@ export const OpportunitiesPage = () => {
                 backgroundColor: '#F86F03',
                 fontSize: '12px',
                 fontWeight: 600,
+                textTransform: 'none',
                 '&:hover': { backgroundColor: '#DE5D02' },
               }}
             >
@@ -340,7 +460,7 @@ export const OpportunitiesPage = () => {
               </span>
             </div>
             <div className="w-10 h-10 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600">
-              <DollarSign className="w-5 h-5" />
+              <IndianRupee className="w-5 h-5" />
             </div>
           </div>
 
@@ -381,20 +501,57 @@ export const OpportunitiesPage = () => {
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="w-44">
-            <SelectField
-              placeholder="All Statuses"
-              value={statusFilter}
-              onChange={(val) => setStatusFilter(val === undefined ? '' : val)}
-              allowEmptyOption
-              options={[
-                { value: 'OPEN', label: '🟢 Open Deals' },
-                { value: 'WON', label: '✅ Closed Won' },
-                { value: 'LOST', label: '❌ Closed Lost' },
-                { value: 'CANCELLED', label: '⛔ Cancelled' },
-              ]}
-            />
+          {/* Stage Filter — status dropdown */}
+          <div className="relative w-44" ref={stageFilterRef}>
+            <button
+              type="button"
+              onClick={() => setStageFilterOpen((v) => !v)}
+              className={`w-full h-9 flex items-center justify-between gap-2 px-3 text-xs font-medium rounded-lg border transition-all
+                ${stageFilter
+                  ? 'bg-orange-50 border-orange-300 text-orange-700'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                }`}
+            >
+              <span className="truncate">
+                {stageFilter ? stageFilter.label : 'All Statuses'}
+              </span>
+              <svg className={`w-3.5 h-3.5 shrink-0 transition-transform ${stageFilterOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {stageFilterOpen && (
+              <div className="absolute left-0 top-full mt-1 z-50 w-44 bg-white rounded-xl border border-slate-200 shadow-lg py-1.5 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => { setStageFilter(null); setStageFilterOpen(false); }}
+                  className={`w-full text-left px-3.5 py-2 text-xs font-semibold transition-colors
+                    ${!stageFilter ? 'bg-orange-50 text-orange-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  All Statuses
+                </button>
+                <div className="h-px bg-slate-100 mx-2 my-1" />
+                {[
+                  { label: 'Open', type: 'status', value: 'OPEN' },
+                  { label: 'Won', type: 'status', value: 'WON' },
+                  { label: 'Lost', type: 'status', value: 'LOST' },
+                  { label: 'Cancelled', type: 'status', value: 'CANCELLED' },
+                ].map((opt) => {
+                  const isActive = stageFilter?.type === opt.type && stageFilter?.value === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => { setStageFilter({ ...opt }); setStageFilterOpen(false); }}
+                      className={`w-full text-left px-3.5 py-2 text-xs transition-colors
+                        ${isActive ? 'bg-orange-50 text-orange-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Company Filter — Super Admin only */}
@@ -434,7 +591,7 @@ export const OpportunitiesPage = () => {
               type="button"
               onClick={() => {
                 setSearchTerm('');
-                setStatusFilter('');
+                setStageFilter(null);
                 setCompanyFilter('');
                 setBranchFilter('');
               }}
@@ -484,16 +641,28 @@ export const OpportunitiesPage = () => {
           </button>
         </div>
       ) : viewMode === 'kanban' ? (
-        <OpportunityKanban
-          opportunities={opportunities}
-          stages={stages}
-          onCardClick={(opp) =>
-            navigate(`/opportunities/${opp.id}`, {
-              state: { leadName: opp.lead?.name || opp.opportunityName, opportunityName: opp.opportunityName },
-            })
-          }
-          onStageChange={handleStageChange}
-        />
+        isSuperAdmin && !companyFilter ? (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-12 flex flex-col items-center gap-4 text-center">
+            <div className="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-base">Select a Company</p>
+              <p className="text-sm text-slate-500 mt-1">Opportunity pipelines and custom stages are managed per company. Select a company from the filters above to view the Kanban board.</p>
+            </div>
+          </div>
+        ) : (
+          <OpportunityKanban
+            opportunities={opportunities}
+            stages={stages}
+            onCardClick={(opp) =>
+              navigate(`/opportunities/${opp.id}`, {
+                state: { leadName: opp.lead?.name || opp.opportunityName, opportunityName: opp.opportunityName },
+              })
+            }
+            onStageChange={handleStageChange}
+          />
+        )
       ) : (
         <OpportunitySpreadsheet
           opportunities={opportunities}
@@ -532,34 +701,50 @@ export const OpportunitiesPage = () => {
       {/* ── Close Opportunity Confirm Modal ──────────────────────── */}
       <ConfirmModal
         isOpen={!!closingOpportunity}
-        onClose={() => setClosingOpportunity(null)}
+        onClose={() => {
+          setClosingOpportunity(null);
+          setPendingStageId(null);
+          setCloseRemarks('');
+        }}
         onConfirm={handleConfirmClose}
         title={`Close Opportunity: ${closingOpportunity?.opportunityName}`}
         description="Select the outcome status to close this sales opportunity."
         isLoading={closeMutation.isPending}
         confirmText="Confirm Outcome"
       >
-        <div className="py-3">
-          <label className="block text-xs font-semibold text-slate-700 mb-2">Outcome Selection</label>
-          <div className="grid grid-cols-3 gap-2">
-            {['WON', 'LOST', 'CANCELLED'].map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setCloseOutcome(status)}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
-                  closeOutcome === status
-                    ? status === 'WON'
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                      : status === 'LOST'
-                      ? 'bg-rose-50 border-rose-500 text-rose-700'
-                      : 'bg-slate-100 border-slate-400 text-slate-700'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
+        <div className="py-3 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">Outcome Selection</label>
+            <div className="grid grid-cols-3 gap-2">
+              {['WON', 'LOST', 'CANCELLED'].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setCloseOutcome(status)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    closeOutcome === status
+                      ? status === 'WON'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                        : status === 'LOST'
+                        ? 'bg-rose-50 border-rose-500 text-rose-700'
+                        : 'bg-slate-100 border-slate-400 text-slate-700'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">Closing Remarks / Notes</label>
+            <textarea
+              value={closeRemarks}
+              onChange={(e) => setCloseRemarks(e.target.value)}
+              placeholder="Enter closure details (e.g. Contract signed for ₹25,000 package or competitor selected)..."
+              className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 min-h-[80px]"
+            />
           </div>
         </div>
       </ConfirmModal>

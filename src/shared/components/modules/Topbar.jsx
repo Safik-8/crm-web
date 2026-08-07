@@ -52,7 +52,9 @@ const buildBreadcrumbs = (pathname, search, state) => {
   // Special Handling for Opportunities Detail Route (/opportunities/:id)
   if (segments[0] === 'opportunities') {
     crumbs.push({ label: 'Opportunities', path: '/opportunities' });
-    if (segments[1] && !isNaN(segments[1])) {
+    if (segments[1] === 'stages') {
+      crumbs.push({ label: 'Manage Stages', path: '/opportunities/stages' });
+    } else if (segments[1] && !isNaN(segments[1])) {
       const dealId = segments[1];
       const nameLabel = state?.opportunityName || state?.leadName || `Opportunity #${dealId}`;
       crumbs.push({ label: nameLabel, path: `/opportunities/${dealId}` });
