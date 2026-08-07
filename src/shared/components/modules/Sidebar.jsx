@@ -150,6 +150,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     const Icon = item.icon;
                     const hasChildren = item.children && item.children.length > 0;
                     const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
+                    const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
 
                 return (
                   <React.Fragment key={item.path}>
@@ -157,7 +158,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       to={item.path}
                       end={!hasChildren}
                       className={({ isActive }) => {
-                        const active = isActive && (!hasChildren || !isTabBranch);
+                        const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
                         return cn(
                           'group relative z-10 flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
                           active
@@ -167,7 +168,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       }}
                     >
                       {({ isActive }) => {
-                        const active = isActive && (!hasChildren || !isTabBranch);
+                        const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
                         return (
                           <>
                             <Icon

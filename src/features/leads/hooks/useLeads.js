@@ -21,12 +21,12 @@ import {
   deleteLeadCommunicationLog
 } from '../services/leadService';
 import { userProfileService } from '../../userprofile/services/userProfileService';
-import { toast } from '../../../shared/utils/toast';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 export const LEAD_KEYS = {
   all: ['leads'],
   lists: () => [...LEAD_KEYS.all, 'list'],
-  list: (params) => [...LEAD_KEYS.lists(), params],
+  list: (params, companyId) => [...LEAD_KEYS.lists(), companyId || 'global', params],
   details: () => [...LEAD_KEYS.all, 'detail'],
   detail: (id) => [...LEAD_KEYS.details(), id],
   formData: () => [...LEAD_KEYS.all, 'formData'],
@@ -39,8 +39,9 @@ export const LEAD_KEYS = {
  * @param {object} params - query options (filters, page, limit, search, sort)
  */
 export const useLeadsQuery = (params) => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: LEAD_KEYS.list(params),
+    queryKey: LEAD_KEYS.list(params, user?.companyId),
     queryFn: async () => {
       const res = await getLeads(params);
       return res;

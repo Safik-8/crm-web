@@ -31,6 +31,8 @@ import {
 } from '../hooks/useOpportunities';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 
+import { useAuth } from '../../../app/providers/AuthProvider';
+
 const DEFAULT_STAGES = [
   { id: 1, name: 'Qualification', colorCode: '#ea580c', defaultProbabilityPct: 10 },
   { id: 2, name: 'Needs Analysis', colorCode: '#f97316', defaultProbabilityPct: 25 },
@@ -42,7 +44,10 @@ const DEFAULT_STAGES = [
 export const OpportunityDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const opportunityId = Number(id);
+
+  const canEditOpp = hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit');
 
   const { data: opportunity, isLoading, isError } = useOpportunityDetailQuery(opportunityId);
   const updateMutation = useUpdateOpportunityMutation();
@@ -150,7 +155,7 @@ export const OpportunityDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-transparent pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+      <div className="max-w-7xl mx-auto   space-y-4">
         {/* ── Enterprise Sharp-Cornered Record Header Compartment ─────────────────────────────── */}
         <div className="bg-white rounded-md border border-slate-200 p-5 shadow-xs">
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -204,7 +209,7 @@ export const OpportunityDetailPage = () => {
 
             {/* Right: Primary Action Buttons */}
             <div className="flex items-center gap-3">
-              {opportunity.status === 'OPEN' && (
+              {opportunity.status === 'OPEN' && canEditOpp && (
                 <button
                   type="button"
                   onClick={() => setIsCloseModalOpen(true)}

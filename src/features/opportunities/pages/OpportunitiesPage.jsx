@@ -119,7 +119,7 @@ export const OpportunitiesPage = () => {
   const isCompanyAdmin = !isSuperAdmin && user?.primaryRoleRank >= 80;
   const canFilterByCompany = isSuperAdmin;
   const canFilterByBranch = isSuperAdmin || isCompanyAdmin;
-  const canCreateOpportunity = hasPermission('LEAD', 'canCreate') || (user?.rank && user.rank >= 40) || (user?.primaryRoleRank && user.primaryRoleRank >= 40);
+  const canCreateOpportunity = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
 
   const [viewMode, setViewMode] = useState('kanban');
   const [searchTerm, setSearchTerm] = useState('');

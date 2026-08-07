@@ -24,12 +24,14 @@ import { CreateOpportunitySlideover } from '../../opportunities/components/Creat
 import { useCreateOpportunityMutation } from '../../opportunities/hooks/useOpportunities';
 import { useCoursesQuery } from '../../courses/hooks/useCourses';
 import { getOpportunityStages } from '../../opportunities/services/opportunityService';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 /**
  * LeadDetailDrawer — Premium dashboard-style two-column view displaying lead metadata,
  * assigned user/branch scope, notes, activities, timeline logs, and stage history.
  */
 const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
+  const { hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState('comments');
   const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
@@ -44,6 +46,9 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
     coursesQuery.data?.courses ||
     (Array.isArray(coursesQuery.data?.data) ? coursesQuery.data.data : []) ||
     (Array.isArray(coursesQuery.data) ? coursesQuery.data : []);
+
+  const canCreateOpp = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
+  const canQualifyLead = hasPermission('edit:qualification') || hasPermission('QUALIFICATION', 'canEdit');
 
   const oppStagesQuery = useQuery({
     queryKey: ['opportunity-stages'],
@@ -196,7 +201,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
             </div>
 
             <div className="flex items-center gap-3">
-              {isQualified && !isConverted && (
+              {isQualified && !isConverted && canCreateOpp && (
                 <Button
                   variant="contained"
                   size="small"
@@ -212,7 +217,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                   Create Opportunity
                 </Button>
               )}
-              {!isConverted && (
+              {!isConverted && canQualifyLead && (
                 <Button
                   variant={isQualified ? 'outlined' : 'contained'}
                   size="small"

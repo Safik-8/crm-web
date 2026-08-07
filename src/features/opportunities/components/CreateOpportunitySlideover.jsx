@@ -107,9 +107,14 @@ export const CreateOpportunitySlideover = ({
 
   const isLeadFixed = Boolean(initialValues?.leadId);
 
-  // Filter leads: Must be QUALIFIED, not CONVERTED, and without an active OPEN opportunity
+  // Filter leads: Must be QUALIFIED, not CONVERTED, without an active OPEN opportunity, and in user's company
   const qualifiedLeads = React.useMemo(() => {
     const list = leads.filter((l) => {
+      // Multi-Tenant Safety Check: Must belong to current logged in company
+      if (user?.companyId && l.companyId && Number(l.companyId) !== Number(user.companyId)) {
+        return false;
+      }
+
       // If a lead is pre-selected, always include it
       if (initialValues?.leadId && Number(l.id) === Number(initialValues.leadId)) return true;
 

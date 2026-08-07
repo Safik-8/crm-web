@@ -45,9 +45,10 @@ const MODULES_LIST = [
   { value: "CUSTOMER", label: "Customers" },
   { value: "APPROVAL", label: "Approvals" },
   { value: "DASHBOARD", label: "Dashboard" },
-  { value: "REPORT", label: "Reports" },
   { value: "NOTIFICATION", label: "Notifications" },
-  { value: "AUDIT", label: "Audit Logs" }
+  { value: "AUDIT", label: "Audit Logs" },
+  { value: "QUALIFICATION", label: "Lead Qualification" },
+  { value: "OPPORTUNITY", label: "Opportunities Engine" }
 ];
 
 const ACTIONS = [
