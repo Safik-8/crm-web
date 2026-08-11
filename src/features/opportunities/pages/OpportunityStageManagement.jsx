@@ -45,9 +45,24 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+const isStartStage = (s) => 
+  s.stageType === 'QUALIFICATION' || 
+  s.code === 'QUALIFICATION' || 
+  s.name?.toLowerCase() === 'qualification' ||
+  s.stageType === 'PROSPECT' || 
+  s.code === 'PROSPECT' || 
+  s.name?.toLowerCase() === 'prospect';
+
+const isTerminalStage = (s) => {
+  const type = (s.stageType || s.code || '').toUpperCase();
+  const name = (s.name || '').toLowerCase();
+  return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled'].includes(name);
+};
+
 // ─── Sortable Row Component ──────────────────────────────────────────────────
 const SortableStageRow = ({ stage, onRemove, onEdit }) => {
   const isSystem = stage.isSystem;
+  const isLocked = isSystem || isStartStage(stage) || isTerminalStage(stage);
   const {
     attributes,
     listeners,
@@ -55,7 +70,7 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: stage.id, disabled: isSystem });
+  } = useSortable({ id: stage.id, disabled: isLocked });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -71,7 +86,7 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
       className={`group flex items-center justify-between bg-white border rounded-xl px-4 py-3 shadow-sm hover:shadow transition-all ${
         isDragging
           ? 'border-primary/40 shadow-md scale-[1.01] ring-2 ring-primary/5'
-          : isSystem
+          : isLocked
           ? 'border-slate-100 bg-slate-50/50'
           : 'border-slate-200 border-l-[3px] border-l-primary hover:border-slate-300'
       }`}
@@ -79,14 +94,14 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
       <div className="flex items-center gap-3">
         {/* Drag Handle or Lock */}
         <div
-          {...(isSystem ? {} : { ...attributes, ...listeners })}
+          {...(isLocked ? {} : { ...attributes, ...listeners })}
           className={`flex-shrink-0 flex items-center justify-center p-1 text-slate-300 ${
-            isSystem
+            isLocked
               ? 'cursor-not-allowed opacity-40'
               : 'cursor-grab hover:text-slate-500 active:cursor-grabbing touch-none'
           }`}
         >
-          {isSystem ? <Lock size={13} /> : <GripVertical size={14} />}
+          {isLocked ? <Lock size={13} /> : <GripVertical size={14} />}
         </div>
 
         {/* Color swatch */}
@@ -179,7 +194,7 @@ export const OpportunityStageManagement = () => {
       const active = masterStages
         .filter((s) => s.status === 'ACTIVE')
         .sort((a, b) => a.displayOrder - b.displayOrder);
-      setSelectedStages(active);
+      setSelectedStages(enforceOpportunityAnchorPositions(active));
     }
   }, [masterStages]);
 
@@ -198,19 +213,35 @@ export const OpportunityStageManagement = () => {
 
   // Anchor position helpers
   const enforceOpportunityAnchorPositions = (stages) => {
-    const first = stages.find(s => s.stageType === 'QUALIFICATION');
-    const lasts = stages.filter(s => ['WON', 'LOST', 'CANCELLED'].includes(s.stageType));
-    const middle = stages.filter(s => s.stageType !== 'QUALIFICATION' && !['WON', 'LOST', 'CANCELLED'].includes(s.stageType));
+    const first = stages.find(s => isStartStage(s));
+    const lasts = stages.filter(s => isTerminalStage(s));
+    const middle = stages.filter(s => !isStartStage(s) && !isTerminalStage(s));
 
     const result = [];
     if (first) result.push(first);
     result.push(...middle);
+    
+    // Sort lasts: Won first, then Lost, then Cancelled
+    const terminalOrder = ['WON', 'LOST', 'CANCELLED'];
+    const getTerminalWeight = (s) => {
+      const type = (s.stageType || s.code || '').toUpperCase();
+      const idx = terminalOrder.indexOf(type);
+      if (idx !== -1) return idx;
+      const name = (s.name || '').toLowerCase();
+      return terminalOrder.indexOf(name.toUpperCase());
+    };
+    lasts.sort((a, b) => getTerminalWeight(a) - getTerminalWeight(b));
+
     result.push(...lasts);
     return result;
   };
 
   const calculateDefaultProbability = () => {
-    const mainPathStages = selectedStages.filter(s => s.stageType !== 'LOST' && s.stageType !== 'CANCELLED');
+    const mainPathStages = selectedStages.filter(s => {
+      const type = (s.stageType || s.code || '').toUpperCase();
+      const name = (s.name || '').toLowerCase();
+      return type !== 'LOST' && type !== 'CANCELLED' && name !== 'lost' && name !== 'cancelled';
+    });
     const M = mainPathStages.length;
     if (M <= 1) return 50;
     return Math.round(((M - 1) / M) * 100);
@@ -226,15 +257,17 @@ export const OpportunityStageManagement = () => {
       if (oldIndex === -1 || newIndex === -1) return prev;
 
       const moving = prev[oldIndex];
-      // System stages cannot be dragged/moved directly
-      if (moving.isSystem) return prev;
+      const targetStage = prev[newIndex];
 
-      // Cannot drag into Qualification (index 0)
-      if (newIndex === 0) return prev;
+      // 1. Cannot drag/move the start stage or terminal stages
+      if (isStartStage(moving) || isTerminalStage(moving)) {
+        return prev;
+      }
 
-      // Cannot drag into terminal system stages (Won, Lost, Cancelled)
-      const firstLastIndex = prev.length - 3;
-      if (newIndex >= firstLastIndex) return prev;
+      // 2. Cannot drop over/into the start stage or terminal stages
+      if (isStartStage(targetStage) || isTerminalStage(targetStage)) {
+        return prev;
+      }
 
       const moved = arrayMove(prev, oldIndex, newIndex);
       return enforceOpportunityAnchorPositions(moved);
@@ -252,7 +285,7 @@ export const OpportunityStageManagement = () => {
     } else {
       // Add it before the terminal system stages
       setSelectedStages((prev) => {
-        const firstTerminalIdx = prev.findIndex((s) => ['WON', 'LOST', 'CANCELLED'].includes(s.stageType));
+        const firstTerminalIdx = prev.findIndex((s) => isTerminalStage(s));
         const next = [...prev];
         if (firstTerminalIdx === -1) {
           next.push(stage);
@@ -340,14 +373,35 @@ export const OpportunityStageManagement = () => {
 
   // Local filtering
   const displayStages = useMemo(() => {
-    if (!searchTerm.trim()) return masterStages;
-    return masterStages.filter((s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-      s.code?.toLowerCase().includes(searchTerm.toLowerCase().trim())
-    );
+    const list = !searchTerm.trim()
+      ? [...masterStages]
+      : masterStages.filter((s) =>
+          s.name.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+          s.code?.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        );
+    return enforceOpportunityAnchorPositions(list);
   }, [masterStages, searchTerm]);
 
   const selectedIdsSet = useMemo(() => new Set(selectedStages.map((s) => s.id)), [selectedStages]);
+
+  const { firstStage, middleStages, terminalStages } = useMemo(() => {
+    const first = selectedStages.find((s) => isStartStage(s));
+    const lasts = selectedStages.filter((s) => isTerminalStage(s));
+    const middle = selectedStages.filter((s) => !isStartStage(s) && !isTerminalStage(s));
+
+    // Sort lasts: Won first, then Lost, then Cancelled
+    const terminalOrder = ['WON', 'LOST', 'CANCELLED'];
+    const getTerminalWeight = (s) => {
+      const type = (s.stageType || s.code || '').toUpperCase();
+      const idx = terminalOrder.indexOf(type);
+      if (idx !== -1) return idx;
+      const name = (s.name || '').toLowerCase();
+      return terminalOrder.indexOf(name.toUpperCase());
+    };
+    lasts.sort((a, b) => getTerminalWeight(a) - getTerminalWeight(b));
+
+    return { firstStage: first, middleStages: middle, terminalStages: lasts };
+  }, [selectedStages]);
 
   if (stagesLoading) {
     return (
@@ -520,18 +574,41 @@ export const OpportunityStageManagement = () => {
           {/* DnD Area */}
           <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={selectedStages.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
-                  {selectedStages.map((stage) => (
-                    <SortableStageRow
-                      key={stage.id}
-                      stage={stage}
-                      onRemove={handleRemoveFromOrder}
-                      onEdit={handleEditClick}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
+              <div className="space-y-2">
+                {/* 1. Qualification Stage (Static, first) */}
+                {firstStage && (
+                  <SortableStageRow
+                    key={firstStage.id}
+                    stage={firstStage}
+                    onRemove={handleRemoveFromOrder}
+                    onEdit={handleEditClick}
+                  />
+                )}
+
+                {/* 2. Custom Middle Stages (Sortable) */}
+                <SortableContext items={middleStages.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {middleStages.map((stage) => (
+                      <SortableStageRow
+                        key={stage.id}
+                        stage={stage}
+                        onRemove={handleRemoveFromOrder}
+                        onEdit={handleEditClick}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+
+                {/* 3. Terminal Stages (Static, last) */}
+                {terminalStages.map((stage) => (
+                  <SortableStageRow
+                    key={stage.id}
+                    stage={stage}
+                    onRemove={handleRemoveFromOrder}
+                    onEdit={handleEditClick}
+                  />
+                ))}
+              </div>
             </DndContext>
           </div>
         </div>

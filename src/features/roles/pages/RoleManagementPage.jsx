@@ -44,6 +44,7 @@ const MODULES_LIST = [
   { value: "COURSE", label: "Courses" },
   { value: "TARGET", label: "Targets" },
   { value: "CUSTOMER", label: "Customers" },
+  { value: "DEAL", label: "Deals" },
   { value: "APPROVAL", label: "Approvals" },
   { value: "DASHBOARD", label: "Dashboard" },
   { value: "REPORT", label: "Reports" },

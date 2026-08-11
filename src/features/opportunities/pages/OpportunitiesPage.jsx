@@ -17,12 +17,13 @@ import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import WinLossReasonModal from '../components/WinLossReasonModal';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
-import { getOpportunityStages } from '../services/opportunityService';
+import { getOpportunityStages, getWinLossReasons } from '../services/opportunityService';
 
 import {
   useOpportunitiesQuery,
@@ -221,6 +222,19 @@ export const OpportunitiesPage = () => {
   const [closeOutcome, setCloseOutcome] = useState('WON');
   const [closeRemarks, setCloseRemarks] = useState('');
 
+  // Win/Loss reasons (fetched when needed)
+  const winLossReasonsQuery = useQuery({
+    queryKey: ['winLossReasons', companyFilter || user?.companyId],
+    queryFn: async () => {
+      const scopeId = companyFilter || user?.companyId || null;
+      const res = await getWinLossReasons(scopeId ? { companyId: scopeId } : {});
+      const raw = res?.data || res;
+      return Array.isArray(raw) ? raw : [];
+    },
+    enabled: !!closingOpportunity && closeOutcome === 'LOST',
+    staleTime: 60000,
+  });
+
   // ── Main Data Query ────────────────────────────────────────────────────────
   const queryParams = {
     search: searchTerm,
@@ -295,11 +309,10 @@ export const OpportunitiesPage = () => {
     setIsCreateOpen(false);
   };
 
-  const handleConfirmClose = async () => {
+  const handleConfirmClose = async (reasonId = null, extraRemarks = null) => {
     if (!closingOpportunity) return;
 
     // Resolve the target stage by stageType (WON / LOST / CANCELLED) from the stages list.
-    // This works whether the close was triggered by drag (pendingStageId set) or by a button click.
     const targetStageObj = stages.find(
       (s) =>
         s.stageType === closeOutcome ||
@@ -326,7 +339,7 @@ export const OpportunitiesPage = () => {
     // Capture before clearing state (state will be null after setClosingOpportunity(null))
     const oppId = closingOpportunity.id;
     const outcome = closeOutcome;
-    const remarks = closeRemarks;
+    const remarks = extraRemarks !== null ? extraRemarks : closeRemarks;
     const originalOpp = closingOpportunity;
 
     // Dismiss modal so the user sees the card move instantly
@@ -335,11 +348,13 @@ export const OpportunitiesPage = () => {
     setCloseRemarks('');
 
     try {
+      const payload = { outcome, remarks };
+      if (reasonId) payload.reasonId = reasonId;
       await closeMutation.mutateAsync({
         id: oppId,
-        data: { outcome, remarks },
+        data: payload,
       });
-    } catch {
+    } catch (err) {
       // Roll back on error
       setLocalOpportunities((prev) =>
         prev.map((opp) =>
@@ -698,56 +713,73 @@ export const OpportunitiesPage = () => {
         }}
       />
 
-      {/* ── Close Opportunity Confirm Modal ──────────────────────── */}
-      <ConfirmModal
-        isOpen={!!closingOpportunity}
-        onClose={() => {
-          setClosingOpportunity(null);
-          setPendingStageId(null);
-          setCloseRemarks('');
-        }}
-        onConfirm={handleConfirmClose}
-        title={`Close Opportunity: ${closingOpportunity?.opportunityName}`}
-        description="Select the outcome status to close this sales opportunity."
-        isLoading={closeMutation.isPending}
-        confirmText="Confirm Outcome"
-      >
-        <div className="py-3 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">Outcome Selection</label>
-            <div className="grid grid-cols-3 gap-2">
-              {['WON', 'LOST', 'CANCELLED'].map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setCloseOutcome(status)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
-                    closeOutcome === status
-                      ? status === 'WON'
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                        : status === 'LOST'
-                        ? 'bg-rose-50 border-rose-500 text-rose-700'
-                        : 'bg-slate-100 border-slate-400 text-slate-700'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+      {/* ── Close Opportunity Confirm / Reason Modal ──────────────────────── */}
+      {closeOutcome === 'LOST' ? (
+        <WinLossReasonModal
+          isOpen={!!closingOpportunity}
+          isLoading={closeMutation.isPending}
+          reasons={winLossReasonsQuery.data || []}
+          onConfirm={async (reasonId, remarks) => {
+            await handleConfirmClose(reasonId, remarks);
+          }}
+          onCancel={() => {
+            setClosingOpportunity(null);
+            setPendingStageId(null);
+            setCloseRemarks('');
+          }}
+          leadName={closingOpportunity?.opportunityName}
+        />
+      ) : (
+        <ConfirmModal
+          isOpen={!!closingOpportunity}
+          onClose={() => {
+            setClosingOpportunity(null);
+            setPendingStageId(null);
+            setCloseRemarks('');
+          }}
+          onConfirm={() => handleConfirmClose(null)}
+          title={`Close Opportunity: ${closingOpportunity?.opportunityName}`}
+          description="Select the outcome status to close this sales opportunity."
+          isLoading={closeMutation.isPending}
+          confirmText="Confirm Outcome"
+        >
+          <div className="py-3 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-2">Outcome Selection</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['WON', 'LOST', 'CANCELLED'].map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setCloseOutcome(status)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      closeOutcome === status
+                        ? status === 'WON'
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                          : status === 'LOST'
+                          ? 'bg-rose-50 border-rose-500 text-rose-700'
+                          : 'bg-slate-100 border-slate-400 text-slate-700'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-2">Closing Remarks / Notes</label>
+              <textarea
+                value={closeRemarks}
+                onChange={(e) => setCloseRemarks(e.target.value)}
+                placeholder="Enter closure details (e.g. Contract signed for ₹25,000 package or competitor selected)..."
+                className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 min-h-[80px]"
+              />
             </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">Closing Remarks / Notes</label>
-            <textarea
-              value={closeRemarks}
-              onChange={(e) => setCloseRemarks(e.target.value)}
-              placeholder="Enter closure details (e.g. Contract signed for ₹25,000 package or competitor selected)..."
-              className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 min-h-[80px]"
-            />
-          </div>
-        </div>
-      </ConfirmModal>
+        </ConfirmModal>
+      )}
     </div>
   );
 };

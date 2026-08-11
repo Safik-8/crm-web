@@ -96,3 +96,9 @@ export const bulkUpdateOpportunityStages = (data) => {
   return apiClient('/opportunities/stages/bulk', { method: 'PUT', body: data });
 };
 
+/**
+ * Fetch active win/loss reasons for the current company
+ */
+export const getWinLossReasons = (params = {}) => {
+  return apiClient(`/opportunities/reasons${buildQueryString(params)}`, { method: 'GET' });
+};

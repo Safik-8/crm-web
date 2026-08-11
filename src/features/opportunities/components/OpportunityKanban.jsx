@@ -286,31 +286,35 @@ export const OpportunityKanban = ({
       <div ref={scrollContainerRef} className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x">
         {activeStages.map((stage) => {
           const stageOpportunities = opportunities.filter((opp) => {
-            // 1. Primary match: numeric stageId
+            const colType = (stage.stageType || stage.code || '').toUpperCase();
+            const colName = (stage.name || '').toLowerCase().trim();
+            const isColWon = colType === 'WON' || colName === 'won';
+            const isColLost = colType === 'LOST' || colName === 'lost';
+            const isColCancelled = colType === 'CANCELLED' || colName === 'cancelled';
+            const isColTerminal = isColWon || isColLost || isColCancelled;
+
+            const oppStatus = (opp.status || 'OPEN').toUpperCase();
+            const isOppClosed = oppStatus === 'WON' || oppStatus === 'LOST' || oppStatus === 'CANCELLED';
+
+            // 1. Closed opportunities must only appear in their corresponding terminal column
+            if (isOppClosed) {
+              if (oppStatus === 'WON' && isColWon) return true;
+              if (oppStatus === 'LOST' && isColLost) return true;
+              if (oppStatus === 'CANCELLED' && isColCancelled) return true;
+              return false;
+            }
+
+            // 2. Open opportunities cannot appear in terminal columns
+            if (isColTerminal) {
+              return false;
+            }
+
+            // 3. Match open opportunities to the current active column
             if (Number(opp.stageId) === Number(stage.id) || Number(opp.stage?.id) === Number(stage.id)) {
               return true;
             }
 
-            // 2. For terminal stages (WON / LOST / CANCELLED), also match by opp.status
-            //    This catches cases where stageId hasn't been resolved yet (e.g. button-triggered close)
-            const stageTypeUpper = (stage.stageType || stage.code || '').toUpperCase();
-            const stageName = (stage.name || '').toLowerCase().trim();
-            if (
-              (stageTypeUpper === 'WON' || stageName === 'won') &&
-              opp.status === 'WON'
-            ) return true;
-            if (
-              (stageTypeUpper === 'LOST' || stageName === 'lost') &&
-              opp.status === 'LOST'
-            ) return true;
-            if (
-              (stageTypeUpper === 'CANCELLED' || stageName === 'cancelled') &&
-              opp.status === 'CANCELLED'
-            ) return true;
-
-            // 3. Name / code exact match
             const oppName = (opp.stage?.name || opp.stageName || '').toLowerCase().trim();
-            const colName = stageName;
             const oppCode = (opp.stage?.code || '').toLowerCase().trim();
             const colCode = (stage.code || '').toLowerCase().trim();
 
