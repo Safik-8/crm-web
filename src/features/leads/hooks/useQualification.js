@@ -8,8 +8,18 @@ export const useQualifyLeadMutation = () => {
   return useMutation({
     mutationFn: ({ leadId, data }) => qualifyLead(leadId, data),
     onSuccess: (res, variables) => {
-      // Invalidate both lists and detail queries
+      const leadId = variables?.leadId;
+      // Invalidate all related queries instantly (lists, kanban board, drawer, and history)
       queryClient.invalidateQueries({ queryKey: ['leads'] });
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
+        queryClient.invalidateQueries({ queryKey: ['leads', leadId] });
+        queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'qualification-history'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board'] });
+      queryClient.invalidateQueries({ queryKey: ['pipelines'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline'] });
+
       const status = res?.qualification?.status || res?.data?.qualification?.status || variables?.data?.status;
       let msg = 'Lead qualification evaluation saved';
       if (status === 'QUALIFIED') {

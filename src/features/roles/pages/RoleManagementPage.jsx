@@ -34,6 +34,7 @@ const MODULES_LIST = [
   { value: "USER", label: "User Management" },
   { value: "TEAM", label: "Team Coordination" },
   { value: "LEAD", label: "Leads Management" },
+  { value: "QUALIFICATION", label: "Lead Qualification" },
   { value: "LEAD_ASSIGNMENT", label: "Lead Assignment" },
   { value: "LEAD_SOURCE", label: "Lead Sources" },
   { value: "LEAD_STATUS", label: "Lead Statuses" },
@@ -47,7 +48,6 @@ const MODULES_LIST = [
   { value: "DASHBOARD", label: "Dashboard" },
   { value: "NOTIFICATION", label: "Notifications" },
   { value: "AUDIT", label: "Audit Logs" },
-  { value: "QUALIFICATION", label: "Lead Qualification" },
   { value: "OPPORTUNITY", label: "Opportunities Engine" }
 ];
 
@@ -368,7 +368,7 @@ const RoleManagementPage = () => {
             <>
               <button
                 onClick={() => handleEditClick(role)}
-                disabled={role.rank >= user?.primaryRoleRank || (role.isSystem && user?.primaryRole !== 'SUPER_ADMIN')}
+                disabled={role.rank >= (user?.primaryRoleRank || 0)}
                 className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all disabled:opacity-40"
                 title="Edit Role"
               >
@@ -630,12 +630,13 @@ const RoleManagementPage = () => {
                             </td>
                             {ACTIONS.map(act => {
                               const isChecked = !!formPermissions[mod.value]?.[act.key];
+                              const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
                               return (
                                 <td key={act.key} className="py-2 px-2 text-center">
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
-                                    disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                    disabled={isPermissionDisabled}
                                     onChange={(e) => handlePermissionChange(mod.value, act.key, e.target.checked)}
                                     className="h-3.5 w-3.5 accent-orange-500 rounded border-slate-300 text-orange-600 focus:ring-orange-500/30 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                   />
@@ -646,7 +647,7 @@ const RoleManagementPage = () => {
                               <div className="flex justify-center gap-2">
                                 <button
                                   type="button"
-                                  disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                  disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
                                   onClick={() => handleToggleRowPermissions(mod.value, true)}
                                   className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                                   title="Select All"
@@ -655,7 +656,7 @@ const RoleManagementPage = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                  disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
                                   onClick={() => handleToggleRowPermissions(mod.value, false)}
                                   className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                                   title="Deselect All"

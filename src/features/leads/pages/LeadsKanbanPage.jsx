@@ -184,6 +184,7 @@ const LeadsKanbanPage = () => {
   const handleLeadClick = useCallback((lead) => {
     setSelectedLead(lead);
     setSearchParams(prev => {
+      if (prev.get('lead') === String(lead.id)) return prev;
       const next = new URLSearchParams(prev);
       next.set('lead', lead.id);
       next.set('leadName', lead.name);

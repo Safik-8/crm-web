@@ -36,8 +36,13 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
   const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
   const tabSectionRef = useRef(null);
-  const { data: leadRes } = useLeadQuery(initialLead?.id);
-  const lead = leadRes?.data?.lead || leadRes?.lead || initialLead;
+  const { data: leadRes } = useLeadQuery(initialLead?.id, initialLead);
+
+  const lead = React.useMemo(() => {
+    const fetched = leadRes?.data?.lead || leadRes?.lead;
+    if (!fetched) return initialLead;
+    return { ...initialLead, ...fetched };
+  }, [leadRes, initialLead]);
 
   const createOppMutation = useCreateOpportunityMutation();
   const coursesQuery = useCoursesQuery();
@@ -61,13 +66,11 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
   });
   const stages = oppStagesQuery.data || [];
 
-  const isQualified = lead?.qualification?.status === 'QUALIFIED';
+  const isQualified = lead?.qualification?.status === 'QUALIFIED' || lead?.qualificationStatus === 'QUALIFIED' || lead?.isQualified === true;
 
-  const isConverted =
-    (Array.isArray(lead?.opportunities) && lead.opportunities.length > 0) ||
-    lead?.isConverted ||
-    lead?.status?.code === 'CONVERTED' ||
-    lead?.status?.name === 'CONVERTED';
+  const hasOpenOpp =
+    Array.isArray(lead?.opportunities) &&
+    lead.opportunities.some((o) => o.status === 'OPEN' || o.status === 'WON' || !o.status);
 
   const handleCreateOppSubmit = async (formData) => {
     await createOppMutation.mutateAsync(formData);
@@ -201,7 +204,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
             </div>
 
             <div className="flex items-center gap-3">
-              {isQualified && !isConverted && canCreateOpp && (
+              {isQualified && !hasOpenOpp && canCreateOpp && (
                 <Button
                   variant="contained"
                   size="small"
@@ -217,7 +220,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                   Create Opportunity
                 </Button>
               )}
-              {!isConverted && canQualifyLead && (
+              {canQualifyLead && (
                 <Button
                   variant={isQualified ? 'outlined' : 'contained'}
                   size="small"

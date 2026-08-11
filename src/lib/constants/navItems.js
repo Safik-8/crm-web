@@ -68,6 +68,7 @@ export const navGroups = [
       { name: 'Teams', path: '/teams', icon: Users, permission: PERMISSIONS.VIEW_TEAMS, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'] },
       { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
+      { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: PERMISSIONS.VIEW_SETTINGS },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
       { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
     ]

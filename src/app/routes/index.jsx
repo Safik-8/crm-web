@@ -34,6 +34,7 @@ import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
 import OpportunitiesPage from '../../features/opportunities/pages/OpportunitiesPage';
 import { OpportunityDetailPage } from '../../features/opportunities/pages/OpportunityDetailPage';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
+import QualificationCriteriaSettingsPage from '../../features/settings/pages/QualificationCriteriaSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
@@ -234,6 +235,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
             <AssignmentSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/qualification',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
+            <QualificationCriteriaSettingsPage />
           </ProtectedRoute>
         ),
       },

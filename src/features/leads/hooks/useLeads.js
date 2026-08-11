@@ -56,7 +56,7 @@ export const useLeadsQuery = (params) => {
  * 
  * @param {number|string} id
  */
-export const useLeadQuery = (id) => {
+export const useLeadQuery = (id, initialData) => {
   return useQuery({
     queryKey: LEAD_KEYS.detail(id),
     queryFn: async () => {
@@ -64,6 +64,8 @@ export const useLeadQuery = (id) => {
       return res;
     },
     enabled: !!id,
+    staleTime: 60000,
+    placeholderData: initialData ? (prev) => prev || { data: { lead: initialData } } : undefined,
   });
 };
 
