@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Calendar,
   User,
@@ -28,6 +28,7 @@ import {
   useOpportunityDetailQuery,
   useUpdateOpportunityMutation,
   useCloseOpportunityMutation,
+  useOpportunityStagesQuery,
 } from '../hooks/useOpportunities';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 
@@ -52,6 +53,13 @@ export const OpportunityDetailPage = () => {
   const { data: opportunity, isLoading, isError } = useOpportunityDetailQuery(opportunityId);
   const updateMutation = useUpdateOpportunityMutation();
   const closeMutation = useCloseOpportunityMutation();
+
+  const { data: stagesRaw } = useOpportunityStagesQuery({
+    companyId: opportunity?.companyId,
+    includeInactive: false
+  }, {
+    enabled: !!opportunity?.companyId
+  });
 
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState('WON');
@@ -81,6 +89,16 @@ export const OpportunityDetailPage = () => {
     if (!opportunity || opportunity.status !== 'OPEN') return;
     const activeId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
     if (st.id === activeId) return;
+
+    const isWon = st.stageType === 'WON' || st.code === 'WON' || st.name?.toLowerCase() === 'won';
+    const isLost = st.stageType === 'LOST' || st.code === 'LOST' || st.name?.toLowerCase() === 'lost';
+    const isCancelled = st.stageType === 'CANCELLED' || st.code === 'CANCELLED' || st.name?.toLowerCase() === 'cancelled';
+
+    if (isWon || isLost || isCancelled) {
+      setSelectedOutcome(isWon ? 'WON' : isLost ? 'LOST' : 'CANCELLED');
+      setIsCloseModalOpen(true);
+      return;
+    }
 
     setStageToMove(st);
     setIsMoveModalOpen(true);
@@ -148,7 +166,12 @@ export const OpportunityDetailPage = () => {
     );
   }
 
+  const stagesList = Array.isArray(stagesRaw) && stagesRaw.length > 0 
+    ? stagesRaw 
+    : DEFAULT_STAGES;
+
   const currentStageId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
+  const activeStageIndex = stagesList.findIndex((s) => s.id === currentStageId);
   const expectedRevNum = Number(opportunity.expectedRevenue || 0);
   const probNum = Number(opportunity.probabilityPercentage || 10);
   const weightedRev = Math.round((expectedRevNum * probNum) / 100);
@@ -239,10 +262,13 @@ export const OpportunityDetailPage = () => {
           </div>
 
           {/* Stepper Grid */}
-          <div className="grid grid-cols-5 gap-2.5">
-            {DEFAULT_STAGES.map((st) => {
+          <div 
+            className="grid gap-2.5"
+            style={{ gridTemplateColumns: `repeat(${stagesList.length}, minmax(0, 1fr))` }}
+          >
+            {stagesList.map((st, idx) => {
               const isActive = currentStageId === st.id;
-              const isPast = currentStageId > st.id;
+              const isPast = idx < activeStageIndex;
 
               return (
                 <button
@@ -287,7 +313,7 @@ export const OpportunityDetailPage = () => {
               </span>
             </div>
             <div className="w-10 h-10 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-              <DollarSign className="w-5 h-5" />
+              <IndianRupee className="w-5 h-5" />
             </div>
           </div>
 

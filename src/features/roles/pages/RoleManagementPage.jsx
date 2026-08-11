@@ -39,11 +39,13 @@ const MODULES_LIST = [
   { value: "LEAD_SOURCE", label: "Lead Sources" },
   { value: "LEAD_STATUS", label: "Lead Statuses" },
   { value: "PIPELINE", label: "Pipelines" },
+  { value: "OPPORTUNITY_PIPELINE", label: "Opportunity Pipelines" },
   { value: "TASK", label: "Tasks" },
   { value: "ACTIVITY", label: "Activities" },
   { value: "COURSE", label: "Courses" },
   { value: "TARGET", label: "Targets" },
   { value: "CUSTOMER", label: "Customers" },
+  { value: "DEAL", label: "Deals" },
   { value: "APPROVAL", label: "Approvals" },
   { value: "DASHBOARD", label: "Dashboard" },
   { value: "NOTIFICATION", label: "Notifications" },
@@ -65,7 +67,12 @@ const RoleManagementPage = () => {
   const didHideLoader = useRef(false);
 
   // TanStack Query Hooks
-  const { roles, loadingState, refetch, search, handleSearchChange } = useRoles();
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+
+  // Company filter — Super Admin only
+  const [companyFilter, setCompanyFilter] = useState('');
+
+  const { roles, loadingState, refetch, search, handleSearchChange } = useRoles(companyFilter);
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
@@ -92,7 +99,7 @@ const RoleManagementPage = () => {
   const { data: companiesData } = useQuery({
     queryKey: ['companies', 'list-raw'],
     queryFn: () => companyApi.getCompanies(),
-    enabled: user?.primaryRole === 'SUPER_ADMIN'
+    enabled: isSuperAdmin
   });
   const companiesList = Array.isArray(companiesData?.data) ? companiesData.data : [];
 
@@ -290,7 +297,7 @@ const RoleManagementPage = () => {
     }
   };
 
-  const isSuperOrCompanyAdmin = user?.primaryRole === 'SUPER_ADMIN' || user?.primaryRole === 'COMPANY_ADMIN';
+  const isSuperOrCompanyAdmin = isSuperAdmin || user?.primaryRole === 'COMPANY_ADMIN';
 
   const columns = [
     {
@@ -434,15 +441,35 @@ const RoleManagementPage = () => {
 
           {/* Top filter and action bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full bg-white border border-slate-200 p-3 mb-4">
-            <div className="w-full sm:w-72">
-              <input
-                type="text"
-                placeholder="Search roles..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
-              />
+            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+              <div className="w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Search roles..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Company filter — Super Admin only */}
+              {isSuperAdmin && (
+                <div className="w-52">
+                  <SelectField
+                    placeholder="All Companies"
+                    value={companyFilter}
+                    onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
+                    allowEmptyOption
+                    searchable
+                    options={companiesList.map((c) => ({
+                      value: String(c.id),
+                      label: c.name,
+                    }))}
+                  />
+                </div>
+              )}
             </div>
+
             {isSuperOrCompanyAdmin && (
               <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
                 <Button
@@ -590,7 +617,7 @@ const RoleManagementPage = () => {
                 placeholder="Describe role responsibilities..."
               />
 
-              {user?.primaryRole === 'SUPER_ADMIN' && !selectedRole && (
+              {isSuperAdmin && !selectedRole && (
                 <SelectField
                   id="assign-company"
                   label="Assign to Company"

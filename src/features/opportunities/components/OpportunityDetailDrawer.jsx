@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Drawer from '../../../shared/components/elements/Drawer';
 import {
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Calendar,
   User,
@@ -181,7 +181,7 @@ export const OpportunityDetailDrawer = ({
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-0.5">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
                 <span className="font-medium">Expected Rev</span>
               </div>
               <span className="font-bold text-slate-900 text-sm block truncate">

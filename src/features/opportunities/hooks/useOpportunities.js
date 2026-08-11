@@ -6,6 +6,13 @@ import {
   createOpportunity,
   updateOpportunity,
   closeOpportunity,
+  getOpportunityStages,
+  createOpportunityStage,
+  updateOpportunityStage,
+  toggleOpportunityStage,
+  deleteOpportunityStage,
+  moveOpportunityStage,
+  bulkUpdateOpportunityStages,
 } from '../services/opportunityService';
 import { toast } from '../../../shared/utils/toast';
 
@@ -169,3 +176,121 @@ export const useCloseOpportunityMutation = () => {
     },
   });
 };
+
+/**
+ * Hook to fetch opportunity stages
+ */
+export const useOpportunityStagesQuery = (params = {}, options = {}) => {
+  return useQuery({
+    queryKey: ['opportunityStages', params],
+    queryFn: async () => {
+      const res = await getOpportunityStages(params);
+      return res?.data || res || [];
+    },
+    ...options,
+  });
+};
+
+/**
+ * Hook to create a new Opportunity Stage
+ */
+export const useCreateOpportunityStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createOpportunityStage,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunityStages'] });
+      toast.success(res?.message || 'Opportunity stage created successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to create opportunity stage');
+    },
+  });
+};
+
+/**
+ * Hook to update an existing Opportunity Stage
+ */
+export const useUpdateOpportunityStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => updateOpportunityStage(id, data),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunityStages'] });
+      toast.success(res?.message || 'Opportunity stage updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to update opportunity stage');
+    },
+  });
+};
+
+/**
+ * Hook to toggle an Opportunity Stage status
+ */
+export const useToggleOpportunityStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status, companyId }) => toggleOpportunityStage(id, status, companyId ? { companyId } : {}),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunityStages'] });
+      toast.success(res?.message || `Opportunity stage status updated to ${variables.status}`);
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to toggle opportunity stage status');
+    },
+  });
+};
+
+/**
+ * Hook to delete an Opportunity Stage
+ */
+export const useDeleteOpportunityStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, companyId }) => deleteOpportunityStage(id, companyId ? { companyId } : {}),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunityStages'] });
+      toast.success(res?.message || 'Opportunity stage deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to delete opportunity stage');
+    },
+  });
+};
+
+/**
+ * Hook to move an Opportunity to a new Stage
+ */
+export const useMoveOpportunityStageMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => moveOpportunityStage(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.detail(variables.id) });
+      toast.success(res?.message || 'Opportunity stage updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to move opportunity stage');
+    },
+  });
+};
+
+/**
+ * Hook to bulk update Opportunity Stages display order and status
+ */
+export const useBulkUpdateOpportunityStagesMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: bulkUpdateOpportunityStages,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunityStages'] });
+      toast.success(res?.message || 'Opportunity stages saved successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to save opportunity stages');
+    },
+  });
+};
+
