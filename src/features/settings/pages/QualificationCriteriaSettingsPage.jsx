@@ -211,14 +211,14 @@ const QualificationCriteriaSettingsPage = () => {
     setEditingItem(item);
     const sanitizedOptions = Array.isArray(item.options)
       ? item.options.map((opt) => ({
-          ...opt,
-          label: (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim(),
-        }))
+        ...opt,
+        label: (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim(),
+      }))
       : [
-          { value: 'HIGH', label: 'High', points: 15 },
-          { value: 'MEDIUM', label: 'Medium', points: 10 },
-          { value: 'LOW', label: 'Low', points: 5 },
-        ];
+        { value: 'HIGH', label: 'High', points: 15 },
+        { value: 'MEDIUM', label: 'Medium', points: 10 },
+        { value: 'LOW', label: 'Low', points: 5 },
+      ];
     setFormData({
       label: item.label || '',
       key: item.key || '',
@@ -445,11 +445,10 @@ const QualificationCriteriaSettingsPage = () => {
                 </h2>
               </div>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
-                  isValidMatrix
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${isValidMatrix
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
+                  }`}
               >
                 {isValidMatrix ? (
                   <>
@@ -478,9 +477,8 @@ const QualificationCriteriaSettingsPage = () => {
                     onMouseLeave={() => setHoveredFactorId(null)}
                     style={{ width: `${Math.max(pct, 1)}%` }}
                     title={`${item.label}: ${item.maxPoints} pts (${Math.round(item.maxPoints)}%)`}
-                    className={`h-full transition-all duration-200 cursor-pointer rounded-xs ${colorClass} ${
-                      isHovered ? 'opacity-100 brightness-110 scale-y-110' : 'opacity-90 hover:opacity-100'
-                    }`}
+                    className={`h-full transition-all duration-200 cursor-pointer rounded-xs ${colorClass} ${isHovered ? 'opacity-100 brightness-110 scale-y-110' : 'opacity-90 hover:opacity-100'
+                      }`}
                   />
                 );
               })}
@@ -496,9 +494,8 @@ const QualificationCriteriaSettingsPage = () => {
                     key={item.id}
                     onMouseEnter={() => setHoveredFactorId(item.id)}
                     onMouseLeave={() => setHoveredFactorId(null)}
-                    className={`flex items-center gap-1.5 text-xs transition-all cursor-pointer ${
-                      isHovered ? 'text-slate-900 font-bold' : 'text-slate-600 font-medium'
-                    }`}
+                    className={`flex items-center gap-1.5 text-xs transition-all cursor-pointer ${isHovered ? 'text-slate-900 font-bold' : 'text-slate-600 font-medium'
+                      }`}
                   >
                     <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${colorClass}`} />
                     <span>{item.label}</span>
@@ -623,9 +620,8 @@ const QualificationCriteriaSettingsPage = () => {
                 key={item.id}
                 onMouseEnter={() => setHoveredFactorId(item.id)}
                 onMouseLeave={() => setHoveredFactorId(null)}
-                className={`px-6 py-4 grid grid-cols-12 items-center gap-4 transition-colors ${
-                  isHovered ? 'bg-slate-50/90' : 'hover:bg-slate-50/50'
-                }`}
+                className={`px-6 py-4 grid grid-cols-12 items-center gap-4 transition-colors ${isHovered ? 'bg-slate-50/90' : 'hover:bg-slate-50/50'
+                  }`}
               >
                 {/* Factor Details (Left) */}
                 <div className="col-span-12 md:col-span-6 lg:col-span-7 flex items-start gap-3.5">

@@ -37,6 +37,7 @@ import { OpportunityStageManagement } from '../../features/opportunities/pages/O
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import QualificationCriteriaSettingsPage from '../../features/settings/pages/QualificationCriteriaSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
+import ProposalsPage from '../../features/proposals/pages/ProposalsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 
@@ -154,6 +155,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DEALS}>
             <DealsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'proposals',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <ProposalsPage />
           </ProtectedRoute>
         ),
       },

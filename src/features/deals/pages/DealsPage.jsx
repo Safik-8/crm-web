@@ -108,155 +108,137 @@ const DealDetailModal = ({ dealId, onClose }) => {
   );
 
   return (
-    <Dialog open={!!dealId} onClose={onClose}
-      PaperProps={{ sx: { borderRadius: '24px', maxWidth: '580px', width: '100%', margin: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)' } }}>
-      <div className="bg-white overflow-hidden flex flex-col h-full">
-        {/* Colorful top banner representing the outcome */}
+    <Drawer
+      isOpen={!!dealId}
+      onClose={onClose}
+      title="Deal Profile"
+      subtitle={deal?.dealNumber || 'Deal Record'}
+    >
+      <div className="space-y-6 pb-20">
         {deal && (
-          <div className={`h-2.5 w-full ${
+          <div className={`h-2.5 w-full rounded-md ${
             deal.outcome === 'WON' ? 'bg-emerald-500' : deal.outcome === 'LOST' ? 'bg-rose-500' : 'bg-slate-400'
           }`} />
         )}
 
-        <div className="p-6 flex flex-col max-h-[85vh]">
-          {/* Header */}
-          <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-100 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl border ${
-                deal?.outcome === 'WON'
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                  : deal?.outcome === 'LOST'
-                    ? 'bg-rose-50 text-rose-600 border-rose-100'
-                    : 'bg-slate-50 text-slate-600 border-slate-100'
-              }`}>
-                <Handshake size={20} />
-              </div>
+        {isLoading ? (
+          <div className="space-y-4 py-4">
+            <Skeleton className="h-16 w-full rounded-2xl" />
+            <div className="grid grid-cols-2 gap-3">
+              {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            </div>
+          </div>
+        ) : !deal ? (
+          <div className="text-center py-10 space-y-2">
+            <XCircle className="w-12 h-12 text-slate-300 mx-auto" />
+            <p className="text-sm font-semibold text-slate-500">Deal record could not be loaded.</p>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {/* Premium Outcome & Value Banner */}
+            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+              deal.outcome === 'WON'
+                ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
+                : deal.outcome === 'LOST'
+                  ? 'bg-rose-50/50 border-rose-100 text-rose-800'
+                  : 'bg-slate-50/50 border-slate-100 text-slate-800'
+            }`}>
               <div>
-                <h3 className="font-black text-slate-900 text-lg leading-none">Deal Profile</h3>
-                {deal && <p className="text-[11px] font-mono text-slate-400 mt-1.5">{deal.dealNumber}</p>}
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Deal Outcome</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <OutcomeBadge outcome={deal.outcome} />
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Closing Value</span>
+                <span className="text-2xl font-black text-slate-900 block mt-0.5">₹{fmt(deal.finalAmount)}</span>
               </div>
             </div>
-            <button onClick={onClose} className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all active:scale-95 border border-slate-100">
-              <X size={16} />
-            </button>
-          </div>
 
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto pt-4 pr-1 space-y-5">
-            {isLoading ? (
-              <div className="space-y-4 py-4">
-                <Skeleton className="h-16 w-full rounded-2xl" />
-                <div className="grid grid-cols-2 gap-3">
-                  {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            {/* Core Information Grid */}
+            <div>
+              <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Core Details</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <Row label="Deal Number"       value={deal.dealNumber}        icon={Tag} />
+                <Row label="Closing Date"      value={fmtDate(deal.closingDate)} icon={Calendar} />
+                <Row label="Opportunity"       value={deal.opportunity?.opportunityName} icon={Briefcase} />
+                <Row label="Assigned Owner"    value={deal.closedBy?.name}    icon={User} />
+                <Row label="Customer Name"     value={deal.customer?.customerName || deal.lead?.name} icon={User} />
+                <Row label="Contact Info"      value={deal.lead?.mobile || deal.lead?.email} icon={Phone} />
+
+                {deal.outcome === 'LOST' && deal.reason && (
+                  <div className="col-span-2">
+                    <Row label="Loss Reason"   value={deal.reason.reasonName} icon={XCircle} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Linked Revenue (WON only) */}
+            {deal.outcome === 'WON' && deal.revenueLog && (
+              <div className="p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/60 space-y-3">
+                <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs uppercase tracking-wider">
+                  <TrendingUp size={14} />
+                  <span>Revenue Transaction Log</span>
                 </div>
-              </div>
-            ) : !deal ? (
-              <div className="text-center py-10 space-y-2">
-                <XCircle className="w-12 h-12 text-slate-300 mx-auto" />
-                <p className="text-sm font-semibold text-slate-500">Deal record could not be loaded.</p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {/* Premium Outcome & Value Banner */}
-                <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
-                  deal.outcome === 'WON'
-                    ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
-                    : deal.outcome === 'LOST'
-                      ? 'bg-rose-50/50 border-rose-100 text-rose-800'
-                      : 'bg-slate-50/50 border-slate-100 text-slate-800'
-                }`}>
+                <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-emerald-100/40 text-xs">
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Deal Outcome</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <OutcomeBadge outcome={deal.outcome} />
-                    </div>
+                    <span className="text-slate-400 font-medium block">Amount</span>
+                    <strong className="text-slate-800 text-[13px]">₹{fmt(deal.revenueLog.revenueAmount)}</strong>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Closing Value</span>
-                    <span className="text-2xl font-black text-slate-900 block mt-0.5">₹{fmt(deal.finalAmount)}</span>
+                  <div>
+                    <span className="text-slate-400 font-medium block">Status</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold mt-0.5">
+                      {deal.revenueLog.paymentStatus}
+                    </span>
                   </div>
-                </div>
-
-                {/* Core Information Grid */}
-                <div>
-                  <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Core Details</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Row label="Deal Number"       value={deal.dealNumber}        icon={Tag} />
-                    <Row label="Closing Date"      value={fmtDate(deal.closingDate)} icon={Calendar} />
-                    <Row label="Opportunity"       value={deal.opportunity?.opportunityName} icon={Briefcase} />
-                    <Row label="Assigned Owner"    value={deal.closedBy?.name}    icon={User} />
-                    <Row label="Customer Name"     value={deal.customer?.customerName || deal.lead?.name} icon={User} />
-                    <Row label="Contact Info"      value={deal.lead?.mobile || deal.lead?.email} icon={Phone} />
-
-                    {deal.outcome === 'LOST' && deal.reason && (
-                      <div className="col-span-2">
-                        <Row label="Loss Reason"   value={deal.reason.reasonName} icon={XCircle} />
-                      </div>
-                    )}
+                  <div>
+                    <span className="text-slate-400 font-medium block">Log Date</span>
+                    <strong className="text-slate-800 text-[13px]">{fmtDate(deal.revenueLog.revenueDate)}</strong>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Linked Revenue (WON only) */}
-                {deal.outcome === 'WON' && deal.revenueLog && (
-                  <div className="p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/60 space-y-3">
-                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs uppercase tracking-wider">
-                      <TrendingUp size={14} />
-                      <span>Revenue Transaction Log</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-emerald-100/40 text-xs">
-                      <div>
-                        <span className="text-slate-400 font-medium block">Amount</span>
-                        <strong className="text-slate-800 text-[13px]">₹{fmt(deal.revenueLog.revenueAmount)}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 font-medium block">Status</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold mt-0.5">
-                          {deal.revenueLog.paymentStatus}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 font-medium block">Log Date</span>
-                        <strong className="text-slate-800 text-[13px]">{fmtDate(deal.revenueLog.revenueDate)}</strong>
-                      </div>
-                    </div>
+            {/* Customer Account (WON only) */}
+            {deal.customer && (
+              <div className="p-4 bg-amber-50/30 rounded-2xl border border-amber-100/60 space-y-3">
+                <div className="flex items-center gap-2 text-amber-700 font-bold text-xs uppercase tracking-wider">
+                  <User size={14} />
+                  <span>Linked Customer Account</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl border border-amber-100/40 text-xs">
+                  <div>
+                    <span className="text-slate-400 font-medium block">Account Name</span>
+                    <strong className="text-slate-800 text-[13px] truncate block">{deal.customer.customerName}</strong>
                   </div>
-                )}
+                  <div>
+                    <span className="text-slate-400 font-medium block">Customer Code</span>
+                    <strong className="text-slate-800 text-[13px] font-mono">{deal.customer.customerCode}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                {/* Customer Account (WON only) */}
-                {deal.customer && (
-                  <div className="p-4 bg-amber-50/30 rounded-2xl border border-amber-100/60 space-y-3">
-                    <div className="flex items-center gap-2 text-amber-700 font-bold text-xs uppercase tracking-wider">
-                      <User size={14} />
-                      <span>Linked Customer Account</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl border border-amber-100/40 text-xs">
-                      <div>
-                        <span className="text-slate-400 font-medium block">Account Name</span>
-                        <strong className="text-slate-800 text-[13px] truncate block">{deal.customer.customerName}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 font-medium block">Customer Code</span>
-                        <strong className="text-slate-800 text-[13px] font-mono">{deal.customer.customerCode}</strong>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Remarks */}
-                {deal.remarks && (
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Remarks / Notes</span>
-                    <div className="p-3 bg-slate-50 text-xs font-medium text-slate-600 rounded-xl border border-slate-100 leading-relaxed">
-                      {deal.remarks}
-                    </div>
-                  </div>
-                )}
+            {/* Remarks */}
+            {deal.remarks && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Remarks / Notes</span>
+                <div className="p-3 bg-slate-50 text-xs font-medium text-slate-600 rounded-xl border border-slate-100 leading-relaxed">
+                  {deal.remarks}
+                </div>
               </div>
             )}
           </div>
+        )}
+
+        <div className="pt-4 border-t border-slate-100">
+          <Button onClick={onClose} variant="outlined" color="primary" className="w-full">
+            Close Profile
+          </Button>
         </div>
       </div>
-    </Dialog>
+    </Drawer>
   );
 };
 

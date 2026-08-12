@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../shared/components/elements/Modal';
+import Drawer from '../../../shared/components/elements/Drawer';
 import Button from '../../../shared/components/elements/Button';
 import { formatCurrency, formatDate } from '../utils/customerUtils';
 import { 
@@ -59,22 +59,14 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
   );
 
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title="Customer Profile"
       subtitle={customer.customerCode || 'Active Account'}
-      maxWidth="lg"
-      actions={
-        <div className="flex justify-end">
-          <Button onClick={onClose} variant="outlined" className="rounded-xl font-bold">
-            Close Profile
-          </Button>
-        </div>
-      }
     >
-      {/* Scrollable Container */}
-      <div className="max-h-[70vh] overflow-y-auto pr-1 -mr-1 space-y-6">
+      {/* Container */}
+      <div className="space-y-6 pb-20">
         
         {/* Top Header Card */}
         <div className="bg-slate-50/60 border border-slate-100 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -99,14 +91,14 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
         </div>
 
         {/* Core Stats Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <StatBadge label="Total Revenue" value={formatCurrency(customer.totalRevenue)} icon={IndianRupee} color="emerald" />
           <StatBadge label="Product" value={customer.purchasedProduct?.name} icon={ShoppingBag} color="blue" />
           <StatBadge label="Assigned Owner" value={customer.assignedOwner?.name} icon={Award} color="orange" />
         </div>
 
-        {/* Detailed Grid Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Detailed Info */}
+        <div className="space-y-4">
           {/* Customer Metadata Card */}
           <CardSection title="Customer Account Details" icon={User} accentColor="border-t-orange-400">
             <InfoRow label="Customer Code" value={customer.customerCode} icon={Tag} />
@@ -122,9 +114,7 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
             <InfoRow label="Probability Rate" value={customer.opportunity?.probabilityPercentage ? `${customer.opportunity.probabilityPercentage}%` : null} icon={TrendingUp} />
             <InfoRow label="Pipeline Stage" value={customer.opportunity?.stage?.name} icon={Tag} />
           </CardSection>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Closed Deal Card */}
           <CardSection title="Closed Deal Details" icon={Handshake} accentColor="border-t-emerald-400">
             <InfoRow label="Deal Reference" value={customer.deal?.dealNumber} icon={Tag} />
@@ -161,8 +151,14 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
             )}
           </CardSection>
         </div>
+
+        <div className="pt-4 border-t border-slate-100">
+          <Button onClick={onClose} variant="outlined" color="primary" className="w-full">
+            Close Profile
+          </Button>
+        </div>
       </div>
-    </Modal>
+    </Drawer>
   );
 };
 

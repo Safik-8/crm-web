@@ -23,6 +23,7 @@ import {
   Mail,
   Loader2,
   AlertCircle,
+  Plus,
 } from 'lucide-react';
 import {
   useOpportunityDetailQuery,
@@ -30,9 +31,19 @@ import {
   useCloseOpportunityMutation,
   useOpportunityStagesQuery,
 } from '../hooks/useOpportunities';
+import { useQueryClient } from '@tanstack/react-query';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
-
 import { useAuth } from '../../../app/providers/AuthProvider';
+import ProposalModal from '../../proposals/components/ProposalModal';
+import ProposalDetailDrawer from '../../proposals/components/ProposalDetailDrawer';
+import {
+  createProposal,
+  updateProposal,
+  updateProposalStatus,
+  deleteProposal
+} from '../../proposals/services/proposalService';
+import { apiClient } from '../../../lib/api/api';
+import { toast } from '../../../shared/utils/toast';
 
 const DEFAULT_STAGES = [
   { id: 1, name: 'Qualification', colorCode: '#ea580c', defaultProbabilityPct: 10 },
@@ -45,8 +56,9 @@ const DEFAULT_STAGES = [
 export const OpportunityDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const opportunityId = Number(id);
+  const rank = user?.primaryRoleRank ?? 0;
 
   const canEditOpp = hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit');
 
@@ -61,12 +73,88 @@ export const OpportunityDetailPage = () => {
     enabled: !!opportunity?.companyId
   });
 
+  const queryClient = useQueryClient();
+
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState('WON');
   const [closeRemarks, setCloseRemarks] = useState('');
   const [stageToMove, setStageToMove] = useState(null);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [optimisticStageId, setOptimisticStageId] = useState(null);
+
+  // Proposal States
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [editProposalData, setEditProposalData] = useState(null);
+
+  const refetchOpportunity = () => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities', 'detail', opportunityId] });
+  };
+
+  const handleProposalSubmit = async (payload) => {
+    try {
+      if (editProposalData) {
+        await updateProposal(editProposalData.id, payload);
+        toast.success('Proposal revised successfully');
+      } else {
+        await createProposal(payload);
+        toast.success('Proposal created successfully');
+      }
+      setIsProposalModalOpen(false);
+      setEditProposalData(null);
+      refetchOpportunity();
+      if (selectedProposal) {
+        const detailRes = await apiClient(`/proposals/${selectedProposal.id}`);
+        setSelectedProposal(detailRes.data);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit proposal');
+    }
+  };
+
+  const handleProposalStatusChange = async (id, nextStatus) => {
+    try {
+      await updateProposalStatus(id, nextStatus);
+      toast.success(`Proposal marked as ${nextStatus.toLowerCase()} successfully`);
+      refetchOpportunity();
+      if (selectedProposal && selectedProposal.id === id) {
+        const detailRes = await apiClient(`/proposals/${id}`);
+        setSelectedProposal(detailRes.data);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to update status');
+    }
+  };
+
+  const handleProposalEditRevision = (proposal) => {
+    setIsProposalDrawerOpen(false);
+    setEditProposalData(proposal);
+    setIsProposalModalOpen(true);
+  };
+
+  const handleProposalDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this proposal?')) return;
+    try {
+      await deleteProposal(id);
+      toast.success('Proposal deleted successfully');
+      setIsProposalDrawerOpen(false);
+      setSelectedProposal(null);
+      refetchOpportunity();
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete proposal');
+    }
+  };
+
+  const handleProposalRowClick = async (proposal) => {
+    try {
+      const res = await apiClient(`/proposals/${proposal.id}`);
+      setSelectedProposal(res.data);
+      setIsProposalDrawerOpen(true);
+    } catch (err) {
+      toast.error('Failed to load proposal details');
+    }
+  };
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-IN', {
@@ -166,8 +254,8 @@ export const OpportunityDetailPage = () => {
     );
   }
 
-  const stagesList = Array.isArray(stagesRaw) && stagesRaw.length > 0 
-    ? stagesRaw 
+  const stagesList = Array.isArray(stagesRaw) && stagesRaw.length > 0
+    ? stagesRaw
     : DEFAULT_STAGES;
 
   const currentStageId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
@@ -201,13 +289,12 @@ export const OpportunityDetailPage = () => {
 
                   {/* Status Badge */}
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider ${
-                      opportunity.status === 'WON'
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        : opportunity.status === 'LOST'
+                    className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider ${opportunity.status === 'WON'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : opportunity.status === 'LOST'
                         ? 'bg-rose-100 text-rose-800 border border-rose-300'
                         : 'bg-orange-100 text-orange-800 border border-orange-300'
-                    }`}
+                      }`}
                   >
                     {opportunity.status === 'WON' ? (
                       <CheckCircle2 className="w-3.5 h-3.5" />
@@ -262,7 +349,7 @@ export const OpportunityDetailPage = () => {
           </div>
 
           {/* Stepper Grid */}
-          <div 
+          <div
             className="grid gap-2.5"
             style={{ gridTemplateColumns: `repeat(${stagesList.length}, minmax(0, 1fr))` }}
           >
@@ -276,15 +363,13 @@ export const OpportunityDetailPage = () => {
                   type="button"
                   disabled={opportunity.status !== 'OPEN' || updateMutation.isPending}
                   onClick={() => handleStageClick(st)}
-                  className={`p-3.5 rounded-md border text-left transition-all text-xs cursor-pointer relative flex flex-col justify-between ${
-                    updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
-                  } ${
-                    isActive
+                  className={`p-3.5 rounded-md border text-left transition-all text-xs cursor-pointer relative flex flex-col justify-between ${updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
+                    } ${isActive
                       ? 'bg-orange-600 text-white border-orange-600 shadow-sm ring-2 ring-orange-200'
                       : isPast
-                      ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
+                        ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-xs truncate">{st.name}</span>
@@ -422,9 +507,23 @@ export const OpportunityDetailPage = () => {
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-orange-600" /> Commercial Proposals & Quotes
                 </h3>
-                <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
-                  {opportunity.proposals?.length || 0} Proposals
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
+                    {opportunity.proposals?.length || 0} Proposals
+                  </span>
+                  {opportunity.status === 'OPEN' && (
+                    <button
+                      onClick={() => {
+                        setEditProposalData(null);
+                        setIsProposalModalOpen(true);
+                      }}
+                      className="px-3 py-1 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <Plus size={12} />
+                      Generate
+                    </button>
+                  )}
+                </div>
               </div>
 
               {!opportunity.proposals || opportunity.proposals.length === 0 ? (
@@ -436,25 +535,85 @@ export const OpportunityDetailPage = () => {
                   {opportunity.proposals.map((prop) => (
                     <div
                       key={prop.id}
-                      className="p-4 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-between text-xs"
+                      onClick={() => handleProposalRowClick(prop)}
+                      className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm hover:shadow transition-all duration-200 active:scale-[0.99] cursor-pointer text-xs"
                     >
-                      <div className="space-y-1">
-                        <span className="font-bold text-slate-900 text-sm block">
-                          {prop.proposalNumber} (V{prop.currentVersion})
-                        </span>
-                        <span className="text-slate-400 block">
-                          Valid Till: {formatDate(prop.validTill)} · Created: {formatDate(prop.createdAt)}
-                        </span>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1.5 flex-1 min-w-0 pr-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-slate-800 text-sm truncate">
+                              {prop.proposalNumber} (V{prop.currentVersion})
+                            </span>
+
+                            {prop.currentVersion === 1 ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-bold border border-slate-200">
+                                Original
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-bold border border-slate-200">
+                                Revised
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 text-[11px] font-medium">
+                            {prop.product && (
+                              <span className="text-slate-700 font-bold">
+                                {prop.product.name}
+                              </span>
+                            )}
+                            {prop.createdBy && (
+                              <span>
+                                By: <strong>{prop.createdBy.name}</strong>
+                              </span>
+                            )}
+                            <span>
+                              Valid: {formatDate(prop.validTill)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right space-y-1.5 flex-shrink-0">
+                          <span className="font-black text-slate-900 text-sm block tabular-nums">
+                            {formatCurrency(prop.finalAmount)}
+                          </span>
+                          <span className={`inline-block text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border ${prop.status === 'ACCEPTED'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : prop.status === 'REJECTED'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : prop.status === 'SENT'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                            {prop.status}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="text-right space-y-1">
-                        <span className="font-extrabold text-slate-900 text-sm block">
-                          {formatCurrency(prop.finalAmount)}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-sm bg-slate-200 text-slate-700 font-bold uppercase tracking-wider">
-                          {prop.status}
-                        </span>
-                      </div>
+                      {/* Version Lineage Tree */}
+                      {prop.versions && prop.versions.length > 1 && (
+                        <div
+                          className="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5 pl-2 text-[10px] text-slate-500 font-medium"
+                          onClick={(e) => e.stopPropagation()} // Stop drawer opening when clicking tree elements
+                        >
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1">Revision Tree</span>
+                          {[...prop.versions].reverse().map((ver, vIdx, arr) => {
+                            const isLatest = ver.versionNumber === prop.currentVersion;
+                            const isLastItem = vIdx === arr.length - 1;
+                            const treeChar = isLastItem ? '└─' : '├─';
+                            return (
+                              <div key={ver.id} className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition-colors">
+                                <span className="font-mono text-slate-300 font-bold">{treeChar}</span>
+                                <span className={`px-1 py-0.2 rounded text-[9px] font-extrabold ${isLatest ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 border border-slate-200 text-slate-500'}`}>
+                                  V{ver.versionNumber}
+                                </span>
+                                <span className="font-bold text-slate-700">₹{Number(ver.finalAmount).toLocaleString('en-IN')}</span>
+                                {ver.versionNotes && <span className="italic text-slate-400">({ver.versionNotes})</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -478,11 +637,10 @@ export const OpportunityDetailPage = () => {
                 {opportunity.status !== 'OPEN' && (
                   <div className="relative">
                     <span
-                      className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 bg-white flex items-center justify-center ${
-                        opportunity.status === 'WON'
-                          ? 'border-emerald-500 text-emerald-600'
-                          : 'border-rose-500 text-rose-600'
-                      }`}
+                      className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 bg-white flex items-center justify-center ${opportunity.status === 'WON'
+                        ? 'border-emerald-500 text-emerald-600'
+                        : 'border-rose-500 text-rose-600'
+                        }`}
                     >
                       {opportunity.status === 'WON' ? (
                         <CheckCircle2 className="w-3.5 h-3.5" />
@@ -648,11 +806,10 @@ export const OpportunityDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedOutcome('WON')}
-                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${
-                    selectedOutcome === 'WON'
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-200'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'WON'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-200'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>CLOSED WON</span>
@@ -661,11 +818,10 @@ export const OpportunityDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedOutcome('LOST')}
-                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${
-                    selectedOutcome === 'LOST'
-                      ? 'bg-rose-600 text-white border-rose-600 shadow-sm ring-2 ring-rose-200'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'LOST'
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-sm ring-2 ring-rose-200'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                 >
                   <XCircle className="w-4 h-4" />
                   <span>CLOSED LOST</span>
@@ -674,11 +830,10 @@ export const OpportunityDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedOutcome('CANCELLED')}
-                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${
-                    selectedOutcome === 'CANCELLED'
-                      ? 'bg-slate-800 text-white border-slate-800 shadow-sm ring-2 ring-slate-300'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'CANCELLED'
+                    ? 'bg-slate-800 text-white border-slate-800 shadow-sm ring-2 ring-slate-300'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                 >
                   <Activity className="w-4 h-4" />
                   <span>CANCELLED</span>
@@ -712,13 +867,12 @@ export const OpportunityDetailPage = () => {
                 type="button"
                 disabled={closeMutation.isPending}
                 onClick={handleConfirmClose}
-                className={`px-4 py-2 text-xs font-bold text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60 ${
-                  selectedOutcome === 'WON'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : selectedOutcome === 'LOST'
+                className={`px-4 py-2 text-xs font-bold text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60 ${selectedOutcome === 'WON'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : selectedOutcome === 'LOST'
                     ? 'bg-rose-600 hover:bg-rose-700'
                     : 'bg-slate-800 hover:bg-slate-900'
-                }`}
+                  }`}
               >
                 {closeMutation.isPending ? (
                   <>
@@ -808,6 +962,31 @@ export const OpportunityDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Proposals Integration */}
+      <ProposalModal
+        isOpen={isProposalModalOpen}
+        onClose={() => {
+          setIsProposalModalOpen(false);
+          setEditProposalData(null);
+        }}
+        onSubmit={handleProposalSubmit}
+        initialData={editProposalData}
+        opportunityId={opportunityId}
+      />
+
+      <ProposalDetailDrawer
+        isOpen={isProposalDrawerOpen}
+        onClose={() => {
+          setIsProposalDrawerOpen(false);
+          setSelectedProposal(null);
+        }}
+        proposal={selectedProposal}
+        onStatusChange={handleProposalStatusChange}
+        onEditRevision={handleProposalEditRevision}
+        onDelete={handleProposalDelete}
+        currentUserRoleRank={rank}
+      />
     </div>
   );
 };
