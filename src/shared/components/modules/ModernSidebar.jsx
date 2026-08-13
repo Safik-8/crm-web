@@ -162,23 +162,27 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
 
             {activeGroup?.items.map((item) => {
               const ItemIcon = item.icon;
+              const isSubActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) => cn(
                     "relative z-10 flex items-center gap-3 px-4 py-2 rounded-md text-[13px] font-bold transition-colors duration-200",
-                    isActive 
+                    (isActive || isSubActive) 
                       ? "text-primary active-list-item" 
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   )}
                 >
-                  {({ isActive }) => (
-                    <>
-                      <ItemIcon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                      <span className="truncate">{item.name}</span>
-                    </>
-                  )}
+                  {({ isActive }) => {
+                    const active = isActive || isSubActive;
+                    return (
+                      <>
+                        <ItemIcon size={18} strokeWidth={active ? 2.5 : 2} />
+                        <span className="truncate">{item.name}</span>
+                      </>
+                    );
+                  }}
                 </NavLink>
               );
             })}

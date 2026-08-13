@@ -50,8 +50,8 @@ const RBAC_ADAPTER_MAP = {
   'create:pipeline':  { module: 'PIPELINE', action: 'canCreate' },
   'manage:pipelines': { module: 'PIPELINE', action: 'canEdit' },
   'delete:pipeline':  { module: 'PIPELINE', action: 'canDelete' },
-  'view:stages':      { module: 'PIPELINE', action: 'canView' },
-  'manage:stages':    { module: 'PIPELINE', action: 'canEdit' },
+  'view:stages':      { module: 'OPPORTUNITY_PIPELINE', action: 'canView' },
+  'manage:stages':    { module: 'OPPORTUNITY_PIPELINE', action: 'canEdit' },
 
   // Lead Permissions (Phase 1)
   'view:leads_kanban': { module: 'LEAD', action: 'canView' },
@@ -67,6 +67,16 @@ const RBAC_ADAPTER_MAP = {
   'create:followup':  { module: 'FOLLOWUP', action: 'canCreate' },
   'edit:followup':    { module: 'FOLLOWUP', action: 'canEdit' },
   'delete:followup':  { module: 'FOLLOWUP', action: 'canDelete' },
+
+  // Lead Qualification Permissions (Sprint 5 — Task 1)
+  'view:qualification': { module: 'QUALIFICATION', action: 'canView' },
+  'edit:qualification': { module: 'QUALIFICATION', action: 'canEdit' },
+
+  // Opportunities Engine Permissions (Sprint 5 — Task 2)
+  'view:opportunities':   { module: 'OPPORTUNITY', action: 'canView' },
+  'create:opportunity':  { module: 'OPPORTUNITY', action: 'canCreate' },
+  'edit:opportunity':    { module: 'OPPORTUNITY', action: 'canEdit' },
+  'delete:opportunity':  { module: 'OPPORTUNITY', action: 'canDelete' },
 
   // Daily Report (ISE)
   'view:daily_report': { module: 'NOTIFICATION', action: 'canView' }, // Workaround mapping for menu rendering
@@ -88,8 +98,8 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = useCallback((moduleOrPermissionStr, action = null) => {
     if (!user) return false;
 
-    // Super Admin & Company Admin have full administrative permissions over all modules
-    if (user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || (user.primaryRoleRank >= 80)) {
+    // Super Admin (System Owner) has full administrative permissions over all modules
+    if (user.primaryRole === 'SUPER_ADMIN') {
       return true;
     }
 

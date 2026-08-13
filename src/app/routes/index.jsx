@@ -31,8 +31,13 @@ import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
 import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
+import OpportunitiesPage from '../../features/opportunities/pages/OpportunitiesPage';
+import { OpportunityDetailPage } from '../../features/opportunities/pages/OpportunityDetailPage';
+import { OpportunityStageManagement } from '../../features/opportunities/pages/OpportunityStageManagement';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
+import QualificationCriteriaSettingsPage from '../../features/settings/pages/QualificationCriteriaSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
+import ProposalsPage from '../../features/proposals/pages/ProposalsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
 
 
@@ -114,6 +119,30 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'opportunities',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <OpportunitiesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'opportunities/:id',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <OpportunityDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'opportunities/stages',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_STAGES}>
+            <OpportunityStageManagement />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'customers',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_CUSTOMERS}>
@@ -126,6 +155,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DEALS}>
             <DealsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'proposals',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <ProposalsPage />
           </ProtectedRoute>
         ),
       },
@@ -203,6 +240,7 @@ export const router = createBrowserRouter([
         ),
       },
 
+
       {
         path: 'roles',
         element: (
@@ -216,6 +254,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
             <AssignmentSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/qualification',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
+            <QualificationCriteriaSettingsPage />
           </ProtectedRoute>
         ),
       },

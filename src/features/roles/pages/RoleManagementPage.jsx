@@ -34,20 +34,23 @@ const MODULES_LIST = [
   { value: "USER", label: "User Management" },
   { value: "TEAM", label: "Team Coordination" },
   { value: "LEAD", label: "Leads Management" },
+  { value: "QUALIFICATION", label: "Lead Qualification" },
   { value: "LEAD_ASSIGNMENT", label: "Lead Assignment" },
   { value: "LEAD_SOURCE", label: "Lead Sources" },
   { value: "LEAD_STATUS", label: "Lead Statuses" },
   { value: "PIPELINE", label: "Pipelines" },
+  { value: "OPPORTUNITY_PIPELINE", label: "Opportunity Pipelines" },
   { value: "TASK", label: "Tasks" },
   { value: "ACTIVITY", label: "Activities" },
   { value: "COURSE", label: "Courses" },
   { value: "TARGET", label: "Targets" },
   { value: "CUSTOMER", label: "Customers" },
+  { value: "DEAL", label: "Deals" },
   { value: "APPROVAL", label: "Approvals" },
   { value: "DASHBOARD", label: "Dashboard" },
-  { value: "REPORT", label: "Reports" },
   { value: "NOTIFICATION", label: "Notifications" },
-  { value: "AUDIT", label: "Audit Logs" }
+  { value: "AUDIT", label: "Audit Logs" },
+  { value: "OPPORTUNITY", label: "Opportunities Engine" }
 ];
 
 const ACTIONS = [
@@ -64,7 +67,12 @@ const RoleManagementPage = () => {
   const didHideLoader = useRef(false);
 
   // TanStack Query Hooks
-  const { roles, loadingState, refetch, search, handleSearchChange } = useRoles();
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+
+  // Company filter — Super Admin only
+  const [companyFilter, setCompanyFilter] = useState('');
+
+  const { roles, loadingState, refetch, search, handleSearchChange } = useRoles(companyFilter);
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
@@ -91,7 +99,7 @@ const RoleManagementPage = () => {
   const { data: companiesData } = useQuery({
     queryKey: ['companies', 'list-raw'],
     queryFn: () => companyApi.getCompanies(),
-    enabled: user?.primaryRole === 'SUPER_ADMIN'
+    enabled: isSuperAdmin
   });
   const companiesList = Array.isArray(companiesData?.data) ? companiesData.data : [];
 
@@ -289,7 +297,7 @@ const RoleManagementPage = () => {
     }
   };
 
-  const isSuperOrCompanyAdmin = user?.primaryRole === 'SUPER_ADMIN' || user?.primaryRole === 'COMPANY_ADMIN';
+  const isSuperOrCompanyAdmin = isSuperAdmin || user?.primaryRole === 'COMPANY_ADMIN';
 
   const columns = [
     {
@@ -367,7 +375,7 @@ const RoleManagementPage = () => {
             <>
               <button
                 onClick={() => handleEditClick(role)}
-                disabled={role.rank >= user?.primaryRoleRank || (role.isSystem && user?.primaryRole !== 'SUPER_ADMIN')}
+                disabled={role.rank >= (user?.primaryRoleRank || 0)}
                 className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all disabled:opacity-40"
                 title="Edit Role"
               >
@@ -433,15 +441,35 @@ const RoleManagementPage = () => {
 
           {/* Top filter and action bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full bg-white border border-slate-200 p-3 mb-4">
-            <div className="w-full sm:w-72">
-              <input
-                type="text"
-                placeholder="Search roles..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
-              />
+            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+              <div className="w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Search roles..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Company filter — Super Admin only */}
+              {isSuperAdmin && (
+                <div className="w-52">
+                  <SelectField
+                    placeholder="All Companies"
+                    value={companyFilter}
+                    onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
+                    allowEmptyOption
+                    searchable
+                    options={companiesList.map((c) => ({
+                      value: String(c.id),
+                      label: c.name,
+                    }))}
+                  />
+                </div>
+              )}
             </div>
+
             {isSuperOrCompanyAdmin && (
               <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
                 <Button
@@ -589,7 +617,7 @@ const RoleManagementPage = () => {
                 placeholder="Describe role responsibilities..."
               />
 
-              {user?.primaryRole === 'SUPER_ADMIN' && !selectedRole && (
+              {isSuperAdmin && !selectedRole && (
                 <SelectField
                   id="assign-company"
                   label="Assign to Company"
@@ -629,12 +657,13 @@ const RoleManagementPage = () => {
                             </td>
                             {ACTIONS.map(act => {
                               const isChecked = !!formPermissions[mod.value]?.[act.key];
+                              const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
                               return (
                                 <td key={act.key} className="py-2 px-2 text-center">
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
-                                    disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                    disabled={isPermissionDisabled}
                                     onChange={(e) => handlePermissionChange(mod.value, act.key, e.target.checked)}
                                     className="h-3.5 w-3.5 accent-orange-500 rounded border-slate-300 text-orange-600 focus:ring-orange-500/30 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                   />
@@ -645,7 +674,7 @@ const RoleManagementPage = () => {
                               <div className="flex justify-center gap-2">
                                 <button
                                   type="button"
-                                  disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                  disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
                                   onClick={() => handleToggleRowPermissions(mod.value, true)}
                                   className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                                   title="Select All"
@@ -654,7 +683,7 @@ const RoleManagementPage = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  disabled={selectedRole?.isSystem && user?.primaryRole !== 'SUPER_ADMIN'}
+                                  disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
                                   onClick={() => handleToggleRowPermissions(mod.value, false)}
                                   className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                                   title="Deselect All"

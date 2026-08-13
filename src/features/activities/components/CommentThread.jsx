@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getLeadComments, addLeadComment } from '../../leads/services/leadService';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
@@ -9,12 +9,10 @@ import { toast } from 'sonner';
 const CommentThread = ({ leadId }) => {
   const queryClient = useQueryClient();
   const { hasPermission, user } = useAuth();
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
   const bottomRef = useRef(null);
-  
+
   const canComment =
     hasPermission(PERMISSIONS.CREATE_ACTIVITY) ||
     hasPermission('LEAD', 'canEdit') ||
@@ -24,33 +22,29 @@ const CommentThread = ({ leadId }) => {
     user?.primaryRole === 'COMPANY_ADMIN' ||
     (user?.primaryRoleRank >= 40);
 
-  const fetchComments = () => {
-    if (!leadId) return;
-    setLoading(true);
-    getLeadComments(leadId)
-      .then(res => setComments(res?.data?.comments || res?.data || []))
-      .catch(() => toast.error('Failed to load comments'))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchComments();
-  }, [leadId]);
+  const { data: comments = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['lead-comments', leadId],
+    queryFn: async () => {
+      if (!leadId) return [];
+      const res = await getLeadComments(leadId);
+      return res?.data?.comments || res?.data || [];
+    },
+    enabled: !!leadId,
+    staleTime: 30000,
+  });
 
   const handleSend = async () => {
     const msg = text.trim();
     if (!msg) return;
     setPosting(true);
     try {
-      const res = await addLeadComment(leadId, msg);
-      const newComment = res?.data?.comment || { id: Date.now(), comment: msg, createdAt: new Date(), user: { id: user?.id, name: user?.name || 'You' } };
-      setComments(prev => [...prev, newComment]);
+      await addLeadComment(leadId, msg);
       setText('');
       
-      // Invalidate timeline so new comments reflect in the timeline logs tab immediately
+      // Invalidate comments and timeline queries for immediate UI sync
+      queryClient.invalidateQueries({ queryKey: ['lead-comments', leadId] });
       queryClient.invalidateQueries({ queryKey: ['leads', 'detail', leadId, 'timeline'] });
 
-      // Scroll to bottom only when sending a new comment
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 50);
@@ -74,7 +68,7 @@ const CommentThread = ({ leadId }) => {
           <MessageSquare size={14} className="text-primary" /> Activity & Comments
         </div>
         <button 
-          onClick={fetchComments}
+          onClick={() => refetch()}
           disabled={loading}
           className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center disabled:opacity-50"
           title="Refresh comments"

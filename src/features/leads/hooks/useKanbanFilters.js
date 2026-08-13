@@ -28,6 +28,7 @@ const EMPTY_FILTERS = {
   search: '',
   assignedToId: '',
   priority: '',
+  includeConverted: 'all',
   dateFrom: '',
   dateTo: '',
   allDates: true,
@@ -40,6 +41,7 @@ const parseAppliedFilters = (searchParams) => ({
   search: searchParams.get('search')?.trim() || '',
   assignedToId: searchParams.get('assignedToId') || '',
   priority: searchParams.get('priority') || '',
+  includeConverted: searchParams.get('includeConverted') || 'all',
   dateFrom: searchParams.get('dateFrom') || '',
   dateTo: searchParams.get('dateTo') || '',
   allDates: searchParams.has('allDates')
@@ -63,6 +65,10 @@ const buildApiParams = (filters) => {
 
   if (filters.priority && filters.priority !== 'ALL') {
     params.priority = filters.priority;
+  }
+
+  if (filters.includeConverted && filters.includeConverted !== 'false') {
+    params.includeConverted = filters.includeConverted;
   }
 
   if (filters.allDates) {

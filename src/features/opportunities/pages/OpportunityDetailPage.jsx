@@ -1,0 +1,1134 @@
+// src/features/opportunities/pages/OpportunityDetailPage.jsx
+import React, { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  IndianRupee,
+  TrendingUp,
+  Calendar,
+  User,
+  BookOpen,
+  FileText,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Building2,
+  ExternalLink,
+  History,
+  Activity,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Loader2,
+  AlertCircle,
+  Plus,
+  Send,
+} from 'lucide-react';
+import {
+  useOpportunityDetailQuery,
+  useUpdateOpportunityMutation,
+  useCloseOpportunityMutation,
+  useOpportunityStagesQuery,
+} from '../hooks/useOpportunities';
+import { useQueryClient } from '@tanstack/react-query';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import ProposalModal from '../../proposals/components/ProposalModal';
+import ProposalDetailDrawer from '../../proposals/components/ProposalDetailDrawer';
+import {
+  createProposal,
+  updateProposal,
+  updateProposalStatus,
+  deleteProposal
+} from '../../proposals/services/proposalService';
+import { apiClient } from '../../../lib/api/api';
+import { toast } from '../../../shared/utils/toast';
+
+const DEFAULT_STAGES = [
+  { id: 1, name: 'Qualification', colorCode: '#ea580c', defaultProbabilityPct: 10 },
+  { id: 2, name: 'Needs Analysis', colorCode: '#f97316', defaultProbabilityPct: 25 },
+  { id: 3, name: 'Proposal', colorCode: '#fb923c', defaultProbabilityPct: 50 },
+  { id: 4, name: 'Negotiation', colorCode: '#f59e0b', defaultProbabilityPct: 75 },
+  { id: 5, name: 'Final Review', colorCode: '#10b981', defaultProbabilityPct: 90 },
+];
+
+export const OpportunityDetailPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { hasPermission, user } = useAuth();
+  const opportunityId = Number(id);
+  const rank = user?.primaryRoleRank ?? 0;
+
+  const canEditOpp = hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit');
+
+  const { data: opportunity, isLoading, isError } = useOpportunityDetailQuery(opportunityId);
+  const updateMutation = useUpdateOpportunityMutation();
+  const closeMutation = useCloseOpportunityMutation();
+
+  const { data: stagesRaw } = useOpportunityStagesQuery({
+    companyId: opportunity?.companyId,
+    includeInactive: false
+  }, {
+    enabled: !!opportunity?.companyId
+  });
+
+  const queryClient = useQueryClient();
+
+  const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] = useState('WON');
+  const [closeRemarks, setCloseRemarks] = useState('');
+  const [stageToMove, setStageToMove] = useState(null);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [optimisticStageId, setOptimisticStageId] = useState(null);
+
+  // Proposal States
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [editProposalData, setEditProposalData] = useState(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [proposalToDeleteId, setProposalToDeleteId] = useState(null);
+  const [isDeletingProposal, setIsDeletingProposal] = useState(false);
+  const [loadingProposalId, setLoadingProposalId] = useState(null);
+
+  const refetchOpportunity = () => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities', 'detail', opportunityId] });
+  };
+
+  const handleProposalSubmit = async (payload) => {
+    try {
+      if (editProposalData) {
+        await updateProposal(editProposalData.id, payload);
+        toast.success('Proposal revised successfully');
+      } else {
+        await createProposal(payload);
+        toast.success('Proposal created successfully');
+      }
+      setIsProposalModalOpen(false);
+      setEditProposalData(null);
+      refetchOpportunity();
+      if (selectedProposal) {
+        const detailRes = await apiClient(`/proposals/${selectedProposal.id}`);
+        setSelectedProposal(detailRes.data);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit proposal');
+    }
+  };
+
+  const handleProposalStatusChange = async (id, nextStatus) => {
+    try {
+      await updateProposalStatus(id, nextStatus);
+      toast.success(`Proposal marked as ${nextStatus.toLowerCase()} successfully`);
+      refetchOpportunity();
+      if (selectedProposal && selectedProposal.id === id) {
+        const detailRes = await apiClient(`/proposals/${id}`);
+        setSelectedProposal(detailRes.data);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to update status');
+    }
+  };
+
+  const handleProposalEditRevision = (proposal) => {
+    setIsProposalDrawerOpen(false);
+    setEditProposalData(proposal);
+    setIsProposalModalOpen(true);
+  };
+
+  const handleProposalDelete = (id) => {
+    setProposalToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteProposal = async () => {
+    if (!proposalToDeleteId) return;
+    setIsDeletingProposal(true);
+    try {
+      await deleteProposal(proposalToDeleteId);
+      toast.success('Proposal deleted successfully');
+      setIsProposalDrawerOpen(false);
+      setSelectedProposal(null);
+      refetchOpportunity();
+      setIsDeleteConfirmOpen(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete proposal');
+    } finally {
+      setIsDeletingProposal(false);
+      setProposalToDeleteId(null);
+    }
+  };
+
+  const handleProposalRowClick = async (proposal) => {
+    setLoadingProposalId(proposal.id);
+    try {
+      const res = await apiClient(`/proposals/${proposal.id}`);
+      setSelectedProposal(res.data);
+      setIsProposalDrawerOpen(true);
+    } catch (err) {
+      toast.error('Failed to load proposal details');
+    } finally {
+      setLoadingProposalId(null);
+    }
+  };
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(val || 0);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const handleStageClick = (st) => {
+    if (!opportunity || opportunity.status !== 'OPEN') return;
+    const activeId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
+    if (st.id === activeId) return;
+
+    const isWon = st.stageType === 'WON' || st.code === 'WON' || st.name?.toLowerCase() === 'won';
+    const isLost = st.stageType === 'LOST' || st.code === 'LOST' || st.name?.toLowerCase() === 'lost';
+    const isCancelled = st.stageType === 'CANCELLED' || st.code === 'CANCELLED' || st.name?.toLowerCase() === 'cancelled';
+
+    if (isWon || isLost || isCancelled) {
+      setSelectedOutcome(isWon ? 'WON' : isLost ? 'LOST' : 'CANCELLED');
+      setIsCloseModalOpen(true);
+      return;
+    }
+
+    setStageToMove(st);
+    setIsMoveModalOpen(true);
+  };
+
+  const handleConfirmStageMove = async () => {
+    if (!stageToMove || !opportunity || opportunity.status !== 'OPEN') return;
+    const targetStage = stageToMove;
+    setOptimisticStageId(targetStage.id); // INSTANT 0ms visual update!
+    setIsMoveModalOpen(false);
+    setStageToMove(null);
+
+    try {
+      await updateMutation.mutateAsync({
+        id: opportunityId,
+        data: { stageId: targetStage.id },
+      });
+    } catch (err) {
+      setOptimisticStageId(null);
+    }
+  };
+
+  const handleConfirmClose = async () => {
+    if (!opportunity || opportunity.status !== 'OPEN') return;
+    try {
+      await closeMutation.mutateAsync({
+        id: opportunityId,
+        data: { outcome: selectedOutcome, remarks: closeRemarks },
+      });
+      setIsCloseModalOpen(false);
+      setCloseRemarks('');
+    } catch (err) {
+      // Handled by query mutation toast
+    }
+  };
+
+  // Build unified timeline events (Stage transitions + Proposal lifecycle)
+  const timelineEvents = [];
+  if (opportunity) {
+    // 1. Creation Event
+    timelineEvents.push({
+      id: 'create',
+      type: 'OPPORTUNITY_CREATED',
+      date: new Date(opportunity.createdAt),
+      title: 'Opportunity Created',
+      description: `Initial Expected Revenue: ${formatCurrency(opportunity.expectedRevenue)}`,
+      meta: `Created by ${opportunity.owner?.name || 'System'}`
+    });
+
+    // 2. Stage transitions
+    if (opportunity.stageHistory) {
+      opportunity.stageHistory.forEach(hist => {
+        timelineEvents.push({
+          id: `stage-${hist.id}`,
+          type: 'STAGE_CHANGE',
+          date: new Date(hist.changedAt),
+          title: 'Stage Transition',
+          description: (
+            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+              <span>{hist.previousStage?.name || 'Previous Stage'}</span>
+              <ArrowRight className="w-3 h-3 text-slate-400" />
+              <span className="text-orange-600">{hist.newStage?.name || 'New Stage'}</span>
+            </div>
+          ),
+          meta: `Changed by ${hist.changedBy?.name || 'System'}`
+        });
+      });
+    }
+
+    // 3. Closed Event
+    if (opportunity.status !== 'OPEN') {
+      timelineEvents.push({
+        id: 'close',
+        type: 'OPPORTUNITY_CLOSED',
+        date: new Date(opportunity.updatedAt),
+        title: `Opportunity Closed as ${opportunity.status}`,
+        description: opportunity.closeRemarks ? `Remarks: ${opportunity.closeRemarks}` : '',
+        meta: `Updated on ${formatDate(opportunity.updatedAt)}`
+      });
+    }
+
+    // 4. Proposals Events
+    if (opportunity.proposals) {
+      opportunity.proposals.forEach(prop => {
+        // A. Proposal Created (Initial V1)
+        timelineEvents.push({
+          id: `prop-create-${prop.id}`,
+          type: 'PROPOSAL_CREATED',
+          date: new Date(prop.createdAt),
+          title: `Proposal Generated: ${prop.proposalNumber} (V1)`,
+          description: `Base Price: ${formatCurrency(prop.basePrice)} · Discount: ${formatCurrency(prop.discount)} · Final: ${formatCurrency(prop.finalAmount)}`,
+          meta: `Prepared by ${prop.createdBy?.name || 'Unknown'}`
+        });
+
+        // B. Proposal Status Changed (e.g. Sent / Accepted / Rejected)
+        if (prop.status !== 'DRAFT') {
+          timelineEvents.push({
+            id: `prop-status-${prop.id}-${prop.status}`,
+            type: `PROPOSAL_${prop.status}`,
+            date: new Date(prop.updatedAt),
+            title: `Proposal ${prop.proposalNumber} Status: ${prop.status}`,
+            description: `Commercial terms marked as ${prop.status.toLowerCase()}`,
+            meta: `Updated on ${formatDate(prop.updatedAt)}`
+          });
+        }
+
+        // C. Revisions (V2, V3, etc.)
+        if (prop.versions) {
+          prop.versions.forEach(ver => {
+            if (ver.versionNumber > 1) {
+              timelineEvents.push({
+                id: `prop-revision-${ver.id}`,
+                type: 'PROPOSAL_REVISED',
+                date: new Date(ver.modifiedDate),
+                title: `Proposal Revised: ${prop.proposalNumber} (V${ver.versionNumber})`,
+                description: `New Final: ${formatCurrency(ver.finalAmount)} ${ver.versionNotes ? `· "${ver.versionNotes}"` : ''}`,
+                meta: `Revised by ${ver.modifiedBy?.name || 'Unknown'}`
+              });
+            }
+          });
+        }
+      });
+    }
+  }
+
+  // Sort by date descending
+  timelineEvents.sort((a, b) => b.date - a.date);
+
+  const getTimelineIcon = (type, status) => {
+    switch (type) {
+      case 'OPPORTUNITY_CLOSED':
+        return status === 'WON' ? (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          </span>
+        ) : (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-rose-500 bg-white flex items-center justify-center text-rose-600">
+            <XCircle className="w-3.5 h-3.5" />
+          </span>
+        );
+      case 'STAGE_CHANGE':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
+            <TrendingUp className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_CREATED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600">
+            <Plus className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_SENT':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-blue-500 bg-white flex items-center justify-center text-blue-600">
+            <Send className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_ACCEPTED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600">
+            <CheckCircle2 className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_REJECTED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-rose-500 bg-white flex items-center justify-center text-rose-600">
+            <XCircle className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_REVISED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-amber-500 bg-white flex items-center justify-center text-amber-600">
+            <History className="w-3 h-3" />
+          </span>
+        );
+      default:
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
+            <Activity className="w-3 h-3" />
+          </span>
+        );
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-slate-200 rounded-md" />
+        <div className="h-20 bg-white border border-slate-200 rounded-md p-4" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-white border border-slate-200 rounded-md" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !opportunity) {
+    return (
+      <div className="p-12 text-center max-w-lg mx-auto space-y-4">
+        <h2 className="text-xl font-bold text-slate-800">Opportunity Not Found</h2>
+        <p className="text-sm text-slate-500">
+          The requested opportunity record does not exist or you do not have permission to view it.
+        </p>
+        <Link
+          to="/opportunities"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Opportunities
+        </Link>
+      </div>
+    );
+  }
+
+  const stagesList = Array.isArray(stagesRaw) && stagesRaw.length > 0
+    ? stagesRaw
+    : DEFAULT_STAGES;
+
+  const currentStageId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
+  const activeStageIndex = stagesList.findIndex((s) => s.id === currentStageId);
+  const expectedRevNum = Number(opportunity.expectedRevenue || 0);
+  const probNum = Number(opportunity.probabilityPercentage || 10);
+  const weightedRev = Math.round((expectedRevNum * probNum) / 100);
+
+  return (
+    <div className="min-h-screen bg-transparent pb-16">
+      <div className="max-w-7xl mx-auto   space-y-4">
+        {/* ── Enterprise Sharp-Cornered Record Header Compartment ─────────────────────────────── */}
+        <div className="bg-white rounded-md border border-slate-200 p-5 shadow-xs">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Left: Back Button & Record Title */}
+            <div className="flex items-start gap-3.5">
+              <button
+                type="button"
+                onClick={() => navigate('/opportunities')}
+                className="mt-1 p-2 rounded-md text-slate-500 hover:text-orange-600 hover:bg-orange-50 border border-slate-200 transition-colors cursor-pointer shrink-0"
+                title="Back to Opportunities"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    {opportunity.opportunityName}
+                  </h1>
+
+                  {/* Status Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider ${opportunity.status === 'WON'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : opportunity.status === 'LOST'
+                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                        : 'bg-orange-100 text-orange-800 border border-orange-300'
+                      }`}
+                  >
+                    {opportunity.status === 'WON' ? (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    ) : opportunity.status === 'LOST' ? (
+                      <XCircle className="w-3.5 h-3.5" />
+                    ) : (
+                      <Clock className="w-3.5 h-3.5 text-orange-600" />
+                    )}
+                    {opportunity.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                  <span>Record ID: <strong className="text-slate-700 font-semibold">#{opportunity.id}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Lead: <strong className="text-slate-800 font-semibold">{opportunity.lead?.name || 'N/A'}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Owner: <strong className="text-slate-800 font-semibold">{opportunity.owner?.name || 'Unassigned'}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Primary Action Buttons */}
+            <div className="flex items-center gap-3">
+              {opportunity.status === 'OPEN' && canEditOpp && (
+                <button
+                  type="button"
+                  onClick={() => setIsCloseModalOpen(true)}
+                  className="px-4 py-2 text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Close Deal
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── 1. Pipeline Stage Stepper Banner (Sharp-Cornered Style) ──────────────── */}
+        <div className="bg-white rounded-md border border-slate-200 p-4 shadow-xs">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2">
+              <span className="p-1 bg-orange-50 text-orange-600 rounded-sm border border-orange-100">
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Sales Pipeline Progress
+              </span>
+            </div>
+            <span className="text-xs font-semibold text-slate-600">
+              Current Stage: <strong className="text-orange-600 font-extrabold">{opportunity.stage?.name || 'Qualification'}</strong> ({probNum}% Win Probability)
+            </span>
+          </div>
+
+          {/* Stepper Grid */}
+          <div
+            className="grid gap-2.5"
+            style={{ gridTemplateColumns: `repeat(${stagesList.length}, minmax(0, 1fr))` }}
+          >
+            {stagesList.map((st, idx) => {
+              const isActive = currentStageId === st.id;
+              const isPast = idx < activeStageIndex;
+
+              return (
+                <button
+                  key={st.id}
+                  type="button"
+                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending}
+                  onClick={() => handleStageClick(st)}
+                  className={`p-3.5 rounded-md border text-left transition-all text-xs cursor-pointer relative flex flex-col justify-between ${updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
+                    } ${isActive
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-sm ring-2 ring-orange-200'
+                      : isPast
+                        ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-xs truncate">{st.name}</span>
+                    {isPast ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : isActive ? (
+                      <span className="w-2 h-2 rounded-full bg-white shrink-0 animate-ping" />
+                    ) : null}
+                  </div>
+                  <span className={`text-[11px] font-medium block ${isActive ? 'text-orange-100' : 'text-slate-400'}`}>
+                    {st.defaultProbabilityPct}% Prob.
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── 2. Key Financial & Velocity Metrics Grid (4 Sharp Metric Tiles) ─────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-slate-500 font-medium block">Expected Revenue</span>
+              <span className="text-2xl font-extrabold text-slate-900 block truncate">
+                {formatCurrency(opportunity.expectedRevenue)}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <IndianRupee className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-slate-500 font-medium block">Win Probability</span>
+              <span className="text-2xl font-extrabold text-slate-900 block">{probNum}%</span>
+              <span className="text-[11px] text-slate-400 font-medium block">
+                Weighted: {formatCurrency(weightedRev)}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-slate-500 font-medium block">Target Closing Date</span>
+              <span className="text-base font-bold text-slate-900 block pt-1">
+                {formatDate(opportunity.closingDate)}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+              <Calendar className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-slate-500 font-medium block">Assigned Representative</span>
+              <span className="text-base font-bold text-slate-900 block truncate">
+                {opportunity.owner?.name || 'Unassigned'}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-md bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+              <User className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── 3. Enterprise Workspace Grid (70% Left / 30% Right) ────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Main Content Column (70% Width) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Card 1: Basic & Commercial Details */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
+              <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-orange-600" /> Basic & Commercial Details
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Opportunity Name</span>
+                  <span className="font-bold text-slate-900 text-sm block">
+                    {opportunity.opportunityName}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Related Lead Profile</span>
+                  <Link
+                    to={`/leads?detailId=${opportunity.lead?.id || ''}`}
+                    state={{ openLeadId: opportunity.lead?.id }}
+                    className="font-bold text-orange-600 hover:text-orange-800 hover:underline inline-flex items-center gap-1.5 text-sm group"
+                  >
+                    <span>{opportunity.lead?.name || 'N/A'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-orange-500 group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                  {opportunity.lead?.mobile && (
+                    <span className="text-slate-500 block text-xs mt-0.5">
+                      Mobile: {opportunity.lead.mobile}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Product / Course</span>
+                  <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                    <BookOpen className="w-4 h-4 text-orange-600" />
+                    <span>{opportunity.product?.name || 'General Course'}</span>
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Created Date</span>
+                  <span className="font-semibold text-slate-800 text-sm">
+                    {formatDate(opportunity.createdAt)}
+                  </span>
+                </div>
+              </div>
+
+              {opportunity.notes && (
+                <div className="pt-3 border-t border-slate-100 text-xs">
+                  <span className="text-slate-400 font-medium block mb-1">Internal Notes</span>
+                  <p className="text-slate-700 bg-slate-50 p-3 rounded-md border border-slate-200 text-sm leading-relaxed">
+                    {opportunity.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Card 2: Proposals & Quotation History */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-orange-600" /> Commercial Proposals & Quotes
+                </h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
+                    {opportunity.proposals?.length || 0} Proposals
+                  </span>
+                  {opportunity.status === 'OPEN' && (
+                    <button
+                      onClick={() => {
+                        setEditProposalData(null);
+                        setIsProposalModalOpen(true);
+                      }}
+                      className="px-3 py-1 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <Plus size={12} />
+                      Generate
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {!opportunity.proposals || opportunity.proposals.length === 0 ? (
+                <p className="text-xs text-slate-400 italic py-4 text-center">
+                  No commercial proposals generated for this opportunity yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {opportunity.proposals.map((prop) => (
+                    <div
+                      key={prop.id}
+                      onClick={() => handleProposalRowClick(prop)}
+                      className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm hover:shadow transition-all duration-200 active:scale-[0.99] cursor-pointer text-xs"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1.5 flex-1 min-w-0 pr-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-slate-800 text-sm truncate">
+                              {prop.proposalNumber} (V{prop.currentVersion})
+                            </span>
+                            {loadingProposalId === prop.id && (
+                              <Loader2 className="w-3.5 h-3.5 text-orange-600 animate-spin" />
+                            )}
+
+                            {prop.currentVersion === 1 ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-bold border border-slate-200">
+                                Original
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-bold border border-slate-200">
+                                Revised
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 text-[11px] font-medium">
+                            {prop.product && (
+                              <span className="text-slate-700 font-bold">
+                                {prop.product.name}
+                              </span>
+                            )}
+                            {prop.createdBy && (
+                              <span>
+                                By: <strong>{prop.createdBy.name}</strong>
+                              </span>
+                            )}
+                            <span>
+                              Valid: {formatDate(prop.validTill)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right space-y-1.5 flex-shrink-0">
+                          <span className="font-black text-slate-900 text-sm block tabular-nums">
+                            {formatCurrency(prop.finalAmount)}
+                          </span>
+                          <span className={`inline-block text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border ${prop.status === 'ACCEPTED'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : prop.status === 'REJECTED'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : prop.status === 'SENT'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                            {prop.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Version Lineage Tree */}
+                      {prop.versions && prop.versions.length > 1 && (
+                        <div
+                          className="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5 pl-2 text-[10px] text-slate-500 font-medium"
+                          onClick={(e) => e.stopPropagation()} // Stop drawer opening when clicking tree elements
+                        >
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block mb-1">Revision Tree</span>
+                          {[...prop.versions].reverse().map((ver, vIdx, arr) => {
+                            const isLatest = ver.versionNumber === prop.currentVersion;
+                            const isLastItem = vIdx === arr.length - 1;
+                            const treeChar = isLastItem ? '└─' : '├─';
+                            return (
+                              <div key={ver.id} className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition-colors">
+                                <span className="font-mono text-slate-300 font-bold">{treeChar}</span>
+                                <span className={`px-1 py-0.2 rounded text-[9px] font-extrabold ${isLatest ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 border border-slate-200 text-slate-500'}`}>
+                                  V{ver.versionNumber}
+                                </span>
+                                <span className="font-bold text-slate-700">₹{Number(ver.finalAmount).toLocaleString('en-IN')}</span>
+                                {ver.versionNotes && <span className="italic text-slate-400">({ver.versionNotes})</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+             {/* Card 3: Activity & Stage History Timeline (Fixed max-height & custom scrollbar) */}
+             <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
+               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                   <History className="w-5 h-5 text-orange-600" /> Activity & Stage History Timeline
+                 </h3>
+                 <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
+                   {timelineEvents.length} Events
+                 </span>
+               </div>
+ 
+               {/* Scrollable Timeline Container */}
+               <div className="max-h-[340px] overflow-y-auto pr-3 relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 text-xs">
+                 {timelineEvents.map((evt) => (
+                   <div key={evt.id} className="relative">
+                     {getTimelineIcon(evt.type, opportunity.status)}
+                     <div className="bg-slate-50 p-3 rounded-md border border-slate-200 space-y-1">
+                       <span className="font-bold text-slate-900 block text-sm">
+                         {evt.title}
+                       </span>
+                       {evt.description && (
+                         <div className="text-slate-600 text-xs block mt-0.5">
+                           {evt.description}
+                         </div>
+                       )}
+                       <span className="text-slate-400 text-[10px] block mt-0.5">
+                         {evt.meta}
+                       </span>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </div>
+
+          {/* Right Sidebar Column (30% Width - Sticky) */}
+          <div className="space-y-6">
+            {/* Linked Lead Info Card */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
+              <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <User className="w-5 h-5 text-orange-600" /> Linked Lead Profile
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="text-slate-400 block font-medium">Lead Name</span>
+                  <span className="font-bold text-slate-900 text-base block mt-0.5">
+                    {opportunity.lead?.name || 'N/A'}
+                  </span>
+                </div>
+
+                {opportunity.lead?.mobile && (
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{opportunity.lead.mobile}</span>
+                  </div>
+                )}
+
+                {opportunity.lead?.email && (
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{opportunity.lead.email}</span>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <Link
+                    to={`/leads?detailId=${opportunity.lead?.id || ''}`}
+                    state={{ openLeadId: opportunity.lead?.id }}
+                    className="w-full py-2.5 px-3 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <span>View Lead Profile</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Sales Owner & Metadata Card */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-3 text-xs">
+              <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <User className="w-5 h-5 text-orange-600" /> Record Assignment
+              </h3>
+
+              <div className="space-y-2">
+                <div>
+                  <span className="text-slate-400 font-medium block">Sales Representative</span>
+                  <span className="font-bold text-slate-900 text-sm block mt-0.5">
+                    {opportunity.owner?.name || 'Unassigned'}
+                  </span>
+                  <span className="text-slate-500 block text-[11px] truncate">
+                    {opportunity.owner?.email || ''}
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-400 space-y-1">
+                  <div>Created: {formatDate(opportunity.createdAt)}</div>
+                  <div>Last Updated: {formatDate(opportunity.updatedAt)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Close Deal Outcome Modal */}
+      {isCloseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-md border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">
+                    Close Opportunity Outcome
+                  </h3>
+                  <span className="text-xs text-slate-500 font-medium">
+                    Select final outcome for {opportunity.opportunityName}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCloseModalOpen(false)}
+                disabled={closeMutation.isPending}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Outcome Selection Buttons */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 block">Select Final Deal Outcome</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOutcome('WON')}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'WON'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-200'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>CLOSED WON</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOutcome('LOST')}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'LOST'
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-sm ring-2 ring-rose-200'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>CLOSED LOST</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOutcome('CANCELLED')}
+                  className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center gap-1 text-xs font-bold ${selectedOutcome === 'CANCELLED'
+                    ? 'bg-slate-800 text-white border-slate-800 shadow-sm ring-2 ring-slate-300'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>CANCELLED</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Remarks Textarea */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 block">Closing Remarks / Notes</label>
+              <textarea
+                rows={3}
+                value={closeRemarks}
+                onChange={(e) => setCloseRemarks(e.target.value)}
+                placeholder="Enter closure details (e.g. Contract signed for ₹25,000 package or competitor selected)..."
+                className="w-full p-2.5 rounded-md border border-slate-200 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all resize-none"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={closeMutation.isPending}
+                onClick={() => setIsCloseModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={closeMutation.isPending}
+                onClick={handleConfirmClose}
+                className={`px-4 py-2 text-xs font-bold text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60 ${selectedOutcome === 'WON'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : selectedOutcome === 'LOST'
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-slate-800 hover:bg-slate-900'
+                  }`}
+              >
+                {closeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Closing Deal...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Confirm Outcome</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stage Transition Confirmation Modal */}
+      {isMoveModalOpen && stageToMove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-md border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="w-9 h-9 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 leading-tight">
+                  Confirm Stage Transition
+                </h3>
+                <span className="text-xs text-slate-500 font-medium">
+                  Update sales pipeline stage
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600">
+              <p>
+                Are you sure you want to move <strong className="text-slate-900 font-bold">{opportunity.opportunityName}</strong> from{' '}
+                <span className="font-bold text-slate-800">{opportunity.stage?.name || 'Qualification'}</span> to{' '}
+                <span className="font-bold text-orange-600">{stageToMove.name}</span>?
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-md p-3 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Current Probability:</span>
+                  <span className="font-bold text-slate-700">{probNum}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">New Stage Probability:</span>
+                  <span className="font-bold text-orange-600">{stageToMove.defaultProbabilityPct}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={updateMutation.isPending}
+                onClick={() => {
+                  setIsMoveModalOpen(false);
+                  setStageToMove(null);
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={updateMutation.isPending}
+                onClick={handleConfirmStageMove}
+                className="px-4 py-2 text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Moving Stage...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Confirm Move</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Proposals Integration */}
+      <ProposalModal
+        isOpen={isProposalModalOpen}
+        onClose={() => {
+          setIsProposalModalOpen(false);
+          setEditProposalData(null);
+        }}
+        onSubmit={handleProposalSubmit}
+        initialData={editProposalData}
+        opportunityId={opportunityId}
+      />
+
+      <ProposalDetailDrawer
+        isOpen={isProposalDrawerOpen}
+        onClose={() => {
+          setIsProposalDrawerOpen(false);
+          setSelectedProposal(null);
+        }}
+        proposal={selectedProposal}
+        onStatusChange={handleProposalStatusChange}
+        onEditRevision={handleProposalEditRevision}
+        onDelete={handleProposalDelete}
+        currentUserRoleRank={rank}
+        currentUserId={user?.id}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setProposalToDeleteId(null);
+        }}
+        onConfirm={handleConfirmDeleteProposal}
+        title="Delete Proposal"
+        message="Are you sure you want to delete this proposal? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="error"
+        isLoading={isDeletingProposal}
+      />
+    </div>
+  );
+};
+
+export default OpportunityDetailPage;

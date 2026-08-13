@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
   DragOverlay,
@@ -25,6 +25,7 @@ import LeadDetailDrawer from '../components/LeadDetailDrawer';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDeleteModal from '../components/LeadDeleteModal';
 import LostReasonModal from '../components/LostReasonModal';
+import QualifyLeadModal from '../components/QualifyLeadModal';
 import { toast } from '../../../shared/utils/toast';
 import { isTerminalStage, requiresReason } from '../../pipelines/utils/stageRules';
 
@@ -163,10 +164,48 @@ const LeadsKanbanPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [showImport, setShowImport] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const leadIdParam = searchParams.get('lead');
+
+  // Auto-select lead on initial load if URL has ?lead=xxx
+  useEffect(() => {
+    if (leadIdParam && !loading && !selectedLead && columns) {
+      let found = null;
+      for (const col of Object.values(columns)) {
+        found = col.leads?.find(l => String(l.id) === leadIdParam);
+        if (found) break;
+      }
+      if (found) setSelectedLead(found);
+    } else if (!leadIdParam && selectedLead) {
+      setSelectedLead(null);
+    }
+  }, [leadIdParam, loading, columns, selectedLead]);
+
+  const handleLeadClick = useCallback((lead) => {
+    setSelectedLead(lead);
+    setSearchParams(prev => {
+      if (prev.get('lead') === String(lead.id)) return prev;
+      const next = new URLSearchParams(prev);
+      next.set('lead', lead.id);
+      next.set('leadName', lead.name);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const handleCloseDrawer = useCallback(() => {
+    setSelectedLead(null);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('lead');
+      next.delete('leadName');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Edit / Delete modal state
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
+  const [qualifyingLead, setQualifyingLead] = useState(null);
 
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
@@ -284,7 +323,6 @@ const LeadsKanbanPage = () => {
     [columns]
   );
 
-  const handleLeadClick = useCallback((lead) => setSelectedLead(lead), []);
 
   // Edit lead: open edit modal (permission already checked at render time)
   const handleEditLead = useCallback((lead) => {
@@ -309,6 +347,15 @@ const LeadsKanbanPage = () => {
     // Close detail drawer if it was showing the deleted lead
     setSelectedLead((prev) => prev?.id === leadId ? null : prev);
   }, [deleteLeadLocal]);
+
+  const handleQualifyLead = useCallback((lead) => {
+    setQualifyingLead(lead);
+  }, []);
+
+  const handleLeadQualified = useCallback(() => {
+    refetch();
+    setQualifyingLead(null);
+  }, [refetch]);
 
   // Real-time window pointer listener for auto-scrolling during drag
   const updatePointerPos = useCallback((e) => {
@@ -403,10 +450,10 @@ const LeadsKanbanPage = () => {
     )?.stage;
     if (requiresReason(toStageObj)) {
       setLostReasonModal({
-        leadId:          draggedCard.id,
-        fromStageId:     fromStage,
+        leadId: draggedCard.id,
+        fromStageId: fromStage,
         toStageId,
-        leadName:        draggedCard.name || 'this lead',
+        leadName: draggedCard.name || 'this lead',
         targetStageName: toStageObj?.name || 'Lost',
       });
       return; // do NOT call moveCard yet — modal will do it
@@ -539,8 +586,8 @@ const LeadsKanbanPage = () => {
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
               className={`lg:hidden flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all duration-150 shrink-0 text-[11px] sm:text-[12px] font-semibold ${hasActiveFilters
-                  ? 'border-orange-200 bg-orange-50 text-orange-600'
-                  : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300'
+                ? 'border-orange-200 bg-orange-50 text-orange-600'
+                : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300'
                 }`}
               aria-label="Open filters"
             >
@@ -668,6 +715,7 @@ const LeadsKanbanPage = () => {
                       canManage={canManage}
                       onEditLead={handleEditLead}
                       onDeleteLead={handleDeleteLead}
+                      onQualifyLead={handleQualifyLead}
                     />
                   ))
                 )}
@@ -723,8 +771,8 @@ const LeadsKanbanPage = () => {
       {selectedLead && (
         <LeadDetailDrawer
           lead={selectedLead}
-          stageName={stageForLead(selectedLead)}
-          onClose={() => setSelectedLead(null)}
+          stageName={selectedLead.stage?.name || orderedStages.find(s => s.id === selectedLead.stageId)?.name}
+          onClose={handleCloseDrawer}
         />
       )}
       {editingLead && canManage && (
@@ -738,10 +786,21 @@ const LeadsKanbanPage = () => {
       {deletingLead && canManage && (
         <LeadDeleteModal
           lead={deletingLead}
+          isOpen={!!deletingLead}
           onClose={() => setDeletingLead(null)}
           onDeleted={handleLeadDeleted}
         />
       )}
+
+      {qualifyingLead && (
+        <QualifyLeadModal
+          lead={qualifyingLead}
+          isOpen={!!qualifyingLead}
+          onClose={() => setQualifyingLead(null)}
+          onSuccess={handleLeadQualified}
+        />
+      )}
+
       {/* Lost Reason Modal (Sprint 4) */}
       <LostReasonModal
         isOpen={!!lostReasonModal}

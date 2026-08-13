@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Dialog, Checkbox, Menu, MenuItem } from '@mui/material';
 import {
   Plus,
@@ -161,6 +161,8 @@ const RowActionsMenu = ({
 
 export const LeadsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { user: currentUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
 
@@ -172,6 +174,17 @@ export const LeadsPage = () => {
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+
+  // Auto-open lead detail drawer if navigated from Opportunity or external link with detailId/leadId
+  useEffect(() => {
+    const targetLeadId = searchParams.get('detailId') || searchParams.get('leadId') || location.state?.openLeadId;
+    if (targetLeadId) {
+      const numericId = Number(targetLeadId);
+      if (!isNaN(numericId) && numericId > 0) {
+        setSelectedLeadForView((prev) => (prev?.id === numericId ? prev : { id: numericId }));
+      }
+    }
+  }, [searchParams, location.state]);
 
   // Lead assignment states
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
@@ -585,6 +598,14 @@ export const LeadsPage = () => {
     {
       header: 'Status',
       cell: (row) => {
+        if ((row.opportunities && row.opportunities.length > 0) || row.isConverted) {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              CONVERTED
+            </span>
+          );
+        }
         if (!row.status) return <span className="text-slate-400 text-[12px]">—</span>;
         return (
           <span
@@ -722,7 +743,7 @@ export const LeadsPage = () => {
   ];
 
   return (
-    <div className=" max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className=" max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       {/* Page Header */}
       <PageHeader
         title="Leads Registry"

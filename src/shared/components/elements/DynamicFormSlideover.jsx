@@ -60,14 +60,15 @@ export const DynamicFormSlideover = ({
 
     // 1. Perform field-level check (basic required check)
     fields.forEach((field) => {
-      const val = values[field.key];
-      if (field.required && (!val || (typeof val === 'string' && !val.trim()))) {
-        errs[field.key] = `${field.label} is required.`;
+      const fieldKey = field.key || field.name || field.id;
+      const val = values[fieldKey];
+      if (field.required && (val === undefined || val === null || (typeof val === 'string' && !val.trim()))) {
+        errs[fieldKey] = `${field.label} is required.`;
       }
       // If field-specific validator is present
-      if (field.validate && val) {
+      if (field.validate && val !== undefined && val !== null && val !== '') {
         const fieldErr = field.validate(val);
-        if (fieldErr) errs[field.key] = fieldErr;
+        if (fieldErr) errs[fieldKey] = fieldErr;
       }
     });
 
@@ -77,8 +78,27 @@ export const DynamicFormSlideover = ({
       errs = { ...errs, ...formErrs };
     }
 
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    const errorKeys = Object.keys(errs);
+    if (errorKeys.length > 0) {
+      // ONLY SHOW THE FIRST ERROR
+      const firstKey = errorKeys[0];
+      setErrors({ [firstKey]: errs[firstKey] });
+
+      // Auto-scroll & focus first invalid input
+      setTimeout(() => {
+        const firstErrorEl = document.querySelector('.Mui-error, [aria-invalid="true"]');
+        if (firstErrorEl) {
+          firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const inputEl = firstErrorEl.querySelector('input, select, textarea') || firstErrorEl;
+          if (inputEl.focus) inputEl.focus();
+        }
+      }, 100);
+
+      return false;
+    }
+
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e) => {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Box, InputAdornment, IconButton } from '@mui/material';
+import { Box, InputAdornment, IconButton, Typography } from '@mui/material';
 import { Eye, EyeOff } from 'lucide-react';
 import TextField from './TextField';
 import SelectField from './SelectField';
+import { SearchableSelect } from './SearchableSelect';
 
 /**
  * DynamicFormFields
@@ -19,8 +20,8 @@ export const DynamicFormFields = ({ fields = [], values = {}, onChange, errors =
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {fields.map((field) => {
+        const fieldKey = field.key || field.name || field.id;
         const {
-          key,
           label,
           type = 'text',
           placeholder,
@@ -32,14 +33,58 @@ export const DynamicFormFields = ({ fields = [], values = {}, onChange, errors =
         } = field;
 
         const isFieldDisabled = disabled || fieldDisabled;
-        const errorText = errors[key];
-        const value = values[key] !== undefined ? values[key] : '';
+        const errorText = errors[fieldKey];
+        const value = values[fieldKey] !== undefined ? values[fieldKey] : '';
 
         // Custom Render Slot
         if (render) {
           return (
-            <Box key={key} sx={{ width: '100%' }}>
+            <Box key={fieldKey} sx={{ width: '100%' }}>
               {render(value, onChange, values, errorText)}
+            </Box>
+          );
+        }
+
+        // Searchable Autocomplete Select Field
+        if (type === 'searchable-select') {
+          return (
+            <Box key={fieldKey} sx={{ width: '100%' }}>
+              {label && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mb: 0.8,
+                    fontWeight: 600,
+                    color: '#334155',
+                    fontSize: '12px',
+                  }}
+                >
+                  {label} {required && <span style={{ color: '#EF4444' }}>*</span>}
+                </Typography>
+              )}
+              <SearchableSelect
+                options={options.map((opt) => ({
+                  id: opt.value,
+                  name: opt.label,
+                }))}
+                value={value}
+                onChange={(val) =>
+                  field.onCustomChange ? field.onCustomChange(val, onChange) : onChange(fieldKey, val)
+                }
+                placeholder={placeholder}
+                disabled={isFieldDisabled}
+                hasError={!!errorText}
+                searchable={true}
+              />
+              {errorText && (
+                <Typography
+                  variant="caption"
+                  sx={{ color: '#EF4444', fontSize: '11px', mt: 0.5, display: 'block' }}
+                >
+                  {errorText}
+                </Typography>
+              )}
             </Box>
           );
         }
@@ -48,11 +93,11 @@ export const DynamicFormFields = ({ fields = [], values = {}, onChange, errors =
         if (type === 'select') {
           return (
             <SelectField
-              key={key}
-              id={`select-${key}`}
+              key={fieldKey}
+              id={`select-${fieldKey}`}
               label={label}
               value={value}
-              onChange={(val) => onChange(key, val)}
+              onChange={(val) => onChange(fieldKey, val)}
               options={options}
               placeholder={placeholder}
               errorText={errorText}
@@ -65,29 +110,29 @@ export const DynamicFormFields = ({ fields = [], values = {}, onChange, errors =
 
         // Standard Text/Numeric/Date/Password Fields
         const isPassword = type === 'password';
-        const inputType = isPassword ? (showPassword[key] ? 'text' : 'password') : type;
+        const inputType = isPassword ? (showPassword[fieldKey] ? 'text' : 'password') : type;
 
         const endIcon = isPassword ? (
           <InputAdornment position="end" sx={{ pr: 0.5 }}>
             <IconButton
-              onClick={() => togglePasswordVisibility(key)}
+              onClick={() => togglePasswordVisibility(fieldKey)}
               edge="end"
               size="small"
             >
-              {showPassword[key] ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword[fieldKey] ? <EyeOff size={16} /> : <Eye size={16} />}
             </IconButton>
           </InputAdornment>
         ) : null;
 
         return (
           <TextField
-            key={key}
-            id={`input-${key}`}
+            key={fieldKey}
+            id={`input-${fieldKey}`}
             label={label}
             type={inputType}
             placeholder={placeholder}
             value={value}
-            onChange={(val) => onChange(key, val)}
+            onChange={(val) => onChange(fieldKey, val)}
             disabled={isFieldDisabled}
             errorText={errorText}
             required={required}

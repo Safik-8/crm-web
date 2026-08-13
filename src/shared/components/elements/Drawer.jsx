@@ -12,19 +12,26 @@ function cn(...inputs) {
  */
 const Drawer = ({ isOpen, onClose, title, subtitle, children }) => {
   const [mounted, setMounted] = useState(false);
+  const [animateOpen, setAnimateOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
       document.body.style.overflow = 'hidden';
+      // Allow a brief frame delay so the browser registers the initial translate-x-full state before animating in
+      const timer = setTimeout(() => {
+        setAnimateOpen(true);
+      }, 10);
+      return () => clearTimeout(timer);
     } else {
+      setAnimateOpen(false);
       const timer = setTimeout(() => setMounted(false), 300);
       document.body.style.overflow = 'unset';
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  if (!mounted && !isOpen) return null;
+  if (!mounted) return null;
 
   return (
     <div className="fixed inset-0 z-[100] overflow-hidden">
@@ -32,7 +39,7 @@ const Drawer = ({ isOpen, onClose, title, subtitle, children }) => {
       <div 
         className={cn(
           "absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300 ease-in-out",
-          isOpen ? "opacity-100" : "opacity-0"
+          animateOpen ? "opacity-100" : "opacity-0"
         )}
         onClick={onClose}
       />
@@ -42,7 +49,7 @@ const Drawer = ({ isOpen, onClose, title, subtitle, children }) => {
         <div 
           className={cn(
             "w-screen max-w-full sm:max-w-md lg:max-w-lg transform bg-white shadow-2xl transition-transform duration-300 ease-in-out flex flex-col h-full",
-            isOpen ? "translate-x-0" : "translate-x-full"
+            animateOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
           {/* Header */}

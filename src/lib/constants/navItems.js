@@ -18,6 +18,7 @@ import {
   BookOpen,
   Compass,
   Tags,
+  Layers,
 } from 'lucide-react';
 import {
   PERMISSIONS } from '../constants/permissions';
@@ -34,6 +35,7 @@ export const navGroups = [
     items: [
       { name: 'Pipelines', path: '/pipelines', icon: Kanban, permission: PERMISSIONS.VIEW_PIPELINES },
       { name: 'Leads', path: '/leads', icon: ClipboardList, permission: PERMISSIONS.VIEW_LEADS },
+      { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_LEADS },
       { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
       { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
       { name: 'Prospects', path: '/prospects', icon: UserPlus, permission: PERMISSIONS.VIEW_PROSPECTS },
@@ -67,6 +69,7 @@ export const navGroups = [
       { name: 'Teams', path: '/teams', icon: Users, permission: PERMISSIONS.VIEW_TEAMS, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'] },
       { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
+      { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: PERMISSIONS.VIEW_SETTINGS },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
       { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
     ]
