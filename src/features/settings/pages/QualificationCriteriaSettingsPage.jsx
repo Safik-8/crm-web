@@ -211,14 +211,14 @@ const QualificationCriteriaSettingsPage = () => {
     setEditingItem(item);
     const sanitizedOptions = Array.isArray(item.options)
       ? item.options.map((opt) => ({
-          ...opt,
-          label: (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim(),
-        }))
+        ...opt,
+        label: (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim(),
+      }))
       : [
-          { value: 'HIGH', label: 'High', points: 15 },
-          { value: 'MEDIUM', label: 'Medium', points: 10 },
-          { value: 'LOW', label: 'Low', points: 5 },
-        ];
+        { value: 'HIGH', label: 'High', points: 15 },
+        { value: 'MEDIUM', label: 'Medium', points: 10 },
+        { value: 'LOW', label: 'Low', points: 5 },
+      ];
     setFormData({
       label: item.label || '',
       key: item.key || '',
@@ -349,7 +349,7 @@ const QualificationCriteriaSettingsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Level 1: Page Header ── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0 shadow-2xs">
             <Target size={24} className="text-orange-600" />
@@ -364,14 +364,28 @@ const QualificationCriteriaSettingsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-end md:self-auto">
-          <button
+        <div className="flex flex-row items-center justify-end gap-3 w-full lg:w-auto shrink-0 flex-wrap sm:flex-nowrap">
+          <Button
             onClick={fetchMatrix}
-            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors focus:outline-none"
+            variant="outlined"
+            size="medium"
+            sx={{
+              minWidth: '42px',
+              width: '42px',
+              height: '42px',
+              padding: 0,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              '&:hover': {
+                borderColor: 'text.disabled',
+                backgroundColor: 'background.default',
+                color: 'primary.main',
+              },
+            }}
             title="Refresh Data"
           >
             <RefreshCcw size={16} />
-          </button>
+          </Button>
 
           {canEdit && (
             <>
@@ -393,14 +407,6 @@ const QualificationCriteriaSettingsPage = () => {
                 variant="outlined"
                 size="medium"
                 startIcon={<Plus size={16} />}
-                sx={{
-                  borderColor: '#F86F03',
-                  color: '#F86F03',
-                  '&:hover': {
-                    borderColor: '#E06202',
-                    backgroundColor: 'rgba(248, 111, 3, 0.06)',
-                  },
-                }}
               >
                 Add Factor
               </Button>
@@ -412,12 +418,6 @@ const QualificationCriteriaSettingsPage = () => {
                 variant="contained"
                 size="medium"
                 startIcon={<Save size={16} />}
-                sx={{
-                  backgroundColor: '#F86F03',
-                  '&:hover': {
-                    backgroundColor: '#E06202',
-                  },
-                }}
               >
                 Save Matrix
               </Button>
@@ -445,11 +445,10 @@ const QualificationCriteriaSettingsPage = () => {
                 </h2>
               </div>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
-                  isValidMatrix
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${isValidMatrix
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
+                  }`}
               >
                 {isValidMatrix ? (
                   <>
@@ -478,9 +477,8 @@ const QualificationCriteriaSettingsPage = () => {
                     onMouseLeave={() => setHoveredFactorId(null)}
                     style={{ width: `${Math.max(pct, 1)}%` }}
                     title={`${item.label}: ${item.maxPoints} pts (${Math.round(item.maxPoints)}%)`}
-                    className={`h-full transition-all duration-200 cursor-pointer rounded-xs ${colorClass} ${
-                      isHovered ? 'opacity-100 brightness-110 scale-y-110' : 'opacity-90 hover:opacity-100'
-                    }`}
+                    className={`h-full transition-all duration-200 cursor-pointer rounded-xs ${colorClass} ${isHovered ? 'opacity-100 brightness-110 scale-y-110' : 'opacity-90 hover:opacity-100'
+                      }`}
                   />
                 );
               })}
@@ -496,9 +494,8 @@ const QualificationCriteriaSettingsPage = () => {
                     key={item.id}
                     onMouseEnter={() => setHoveredFactorId(item.id)}
                     onMouseLeave={() => setHoveredFactorId(null)}
-                    className={`flex items-center gap-1.5 text-xs transition-all cursor-pointer ${
-                      isHovered ? 'text-slate-900 font-bold' : 'text-slate-600 font-medium'
-                    }`}
+                    className={`flex items-center gap-1.5 text-xs transition-all cursor-pointer ${isHovered ? 'text-slate-900 font-bold' : 'text-slate-600 font-medium'
+                      }`}
                   >
                     <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${colorClass}`} />
                     <span>{item.label}</span>
@@ -551,7 +548,7 @@ const QualificationCriteriaSettingsPage = () => {
             </p>
           </div>
 
-          <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex items-center gap-4">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
             {/* Circular Progress Visual */}
             <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30 shadow-2xs">
               <span className="text-lg font-black text-slate-900 leading-none">
@@ -568,7 +565,7 @@ const QualificationCriteriaSettingsPage = () => {
               </p>
 
               {canEdit && (
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                   <span className="text-[11px] font-semibold text-slate-500">Threshold Pts:</span>
                   <div className="w-20">
                     <input
@@ -607,11 +604,11 @@ const QualificationCriteriaSettingsPage = () => {
         </div>
 
         {/* Table Column Headers */}
-        <div className="px-6 py-3 bg-slate-50/80 border-b border-slate-200 grid grid-cols-12 items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
-          <div className="col-span-12 md:col-span-6 lg:col-span-7">FACTOR</div>
-          <div className="col-span-4 md:col-span-2 lg:col-span-2 text-right md:text-center">REQUIRED</div>
-          <div className="col-span-4 md:col-span-2 lg:col-span-2 text-center md:text-right">WEIGHT (POINTS)</div>
-          <div className="col-span-4 md:col-span-2 lg:col-span-1 text-right">ACTIONS</div>
+        <div className="hidden md:grid px-6 py-3 bg-slate-50/80 border-b border-slate-200 grid grid-cols-12 items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+          <div className="md:col-span-6 lg:col-span-7">FACTOR</div>
+          <div className="md:col-span-2 lg:col-span-2 text-center">REQUIRED</div>
+          <div className="md:col-span-2 lg:col-span-2 text-right">WEIGHT (POINTS)</div>
+          <div className="md:col-span-2 lg:col-span-1 text-right">ACTIONS</div>
         </div>
 
         {/* Factors List */}
@@ -623,99 +620,198 @@ const QualificationCriteriaSettingsPage = () => {
                 key={item.id}
                 onMouseEnter={() => setHoveredFactorId(item.id)}
                 onMouseLeave={() => setHoveredFactorId(null)}
-                className={`px-6 py-4 grid grid-cols-12 items-center gap-4 transition-colors ${
+                className={`transition-colors ${
                   isHovered ? 'bg-slate-50/90' : 'hover:bg-slate-50/50'
                 }`}
               >
-                {/* Factor Details (Left) */}
-                <div className="col-span-12 md:col-span-6 lg:col-span-7 flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5 shadow-2xs">
-                    {getFieldIcon(item.fieldType)}
-                  </div>
-
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-slate-900">{item.label}</span>
-                      {getFieldBadge(item.fieldType)}
-                      {item.isRequired && (
-                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/60 uppercase tracking-wider">
-                          Required
-                        </span>
-                      )}
+                {/* ── Desktop Row Layout (>= md) ── */}
+                <div className="hidden md:grid grid-cols-12 items-center gap-4 px-6 py-4">
+                  {/* Factor Details */}
+                  <div className="md:col-span-6 lg:col-span-7 flex items-start gap-3.5">
+                    <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5 shadow-2xs">
+                      {getFieldIcon(item.fieldType)}
                     </div>
 
-                    {item.description && (
-                      <p className="text-xs text-slate-500 font-normal leading-relaxed">{item.description}</p>
-                    )}
-
-                    {/* Dropdown Options Pills */}
-                    {item.fieldType === 'select' && Array.isArray(item.options) && item.options.length > 0 && (
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {item.options.map((opt) => {
-                          const cleanLabel = (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim();
-                          return (
-                            <span
-                              key={opt.value}
-                              className="text-xs font-medium px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200/80"
-                            >
-                              {cleanLabel} <strong className="text-slate-900 font-semibold">(+{opt.points})</strong>
-                            </span>
-                          );
-                        })}
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-slate-900">{item.label}</span>
+                        {getFieldBadge(item.fieldType)}
+                        {item.isRequired && (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/60 uppercase tracking-wider">
+                            Required
+                          </span>
+                        )}
                       </div>
+
+                      {item.description && (
+                        <p className="text-xs text-slate-500 font-normal leading-relaxed">{item.description}</p>
+                      )}
+
+                      {/* Dropdown Options Pills */}
+                      {item.fieldType === 'select' && Array.isArray(item.options) && item.options.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          {item.options.map((opt) => {
+                            const cleanLabel = (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim();
+                            return (
+                              <span
+                                key={opt.value}
+                                className="text-xs font-medium px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200/80"
+                              >
+                                {cleanLabel} <strong className="text-slate-900 font-semibold">(+{opt.points})</strong>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Required Switch */}
+                  <div className="md:col-span-2 lg:col-span-2 flex items-center justify-center">
+                    <label className={`inline-flex items-center gap-2 select-none ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}>
+                      <input
+                        type="checkbox"
+                        disabled={!canEdit}
+                        checked={Boolean(item.isRequired)}
+                        onChange={() => canEdit && handleRequiredToggle(item.id)}
+                        className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <span className="text-xs font-semibold text-slate-700">Required</span>
+                    </label>
+                  </div>
+
+                  {/* Weight Input */}
+                  <div className="md:col-span-2 lg:col-span-2 flex items-center justify-end">
+                    <div className="w-20">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        disabled={!canEdit}
+                        value={item.maxPoints}
+                        onChange={(e) => canEdit && handlePointChange(item.id, e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="md:col-span-2 lg:col-span-1 flex items-center justify-end gap-1">
+                    {canEdit && (
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
+                        title="Edit Factor"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => promptDelete(item)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                        title="Deactivate Factor"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     )}
                   </div>
                 </div>
 
-                {/* Required Switch */}
-                <div className="col-span-4 md:col-span-2 lg:col-span-2 flex items-center justify-end md:justify-center">
-                  <label className={`inline-flex items-center gap-2 select-none ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}>
-                    <input
-                      type="checkbox"
-                      disabled={!canEdit}
-                      checked={Boolean(item.isRequired)}
-                      onChange={() => canEdit && handleRequiredToggle(item.id)}
-                      className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer disabled:cursor-not-allowed"
-                    />
-                    <span className="text-xs font-semibold text-slate-700">Required</span>
-                  </label>
-                </div>
-
-                {/* Weight Input */}
-                <div className="col-span-4 md:col-span-2 lg:col-span-2 flex items-center justify-center md:justify-end">
-                  <div className="w-20">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      disabled={!canEdit}
-                      value={item.maxPoints}
-                      onChange={(e) => canEdit && handlePointChange(item.id, e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all shadow-2xs"
-                    />
+                {/* ── Mobile Card Layout (< md) ── */}
+                <div className="md:hidden flex flex-col p-5 space-y-4">
+                  {/* Top Row: Icon + Title + Badges and Action buttons */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex gap-3">
+                      <div className="p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 shrink-0 shadow-2xs">
+                        {getFieldIcon(item.fieldType)}
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm leading-snug">{item.label}</div>
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                          {getFieldBadge(item.fieldType)}
+                          {item.isRequired && (
+                            <span className="text-[9px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200/60 uppercase tracking-wider">
+                              Required
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {canEdit && (
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                          title="Edit Factor"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => promptDelete(item)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                          title="Deactivate Factor"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="col-span-4 md:col-span-2 lg:col-span-1 flex items-center justify-end gap-1">
-                  {canEdit && (
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
-                      title="Edit Factor"
-                    >
-                      <Edit2 size={15} />
-                    </button>
+                  {/* Description */}
+                  {item.description && (
+                    <p className="text-xs text-slate-500 font-normal leading-relaxed">{item.description}</p>
                   )}
-                  {canDelete && (
-                    <button
-                      onClick={() => promptDelete(item)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                      title="Deactivate Factor"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+
+                  {/* Dropdown Options List */}
+                  {item.fieldType === 'select' && Array.isArray(item.options) && item.options.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {item.options.map((opt) => {
+                        const cleanLabel = (opt.label || '').replace(/\s*\(\+\d+\s*(pts)?\)$/i, '').trim();
+                        return (
+                          <span
+                            key={opt.value}
+                            className="text-xs font-semibold px-2.5 py-1 bg-slate-50 text-slate-700 rounded-md border border-slate-200"
+                          >
+                            {cleanLabel} <strong className="text-slate-900 font-bold">(+{opt.points})</strong>
+                          </span>
+                        );
+                      })}
+                    </div>
                   )}
+
+                  {/* Control Inputs Footer */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <label className={`inline-flex items-center gap-2 select-none ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}>
+                      <input
+                        type="checkbox"
+                        disabled={!canEdit}
+                        checked={Boolean(item.isRequired)}
+                        onChange={() => canEdit && handleRequiredToggle(item.id)}
+                        className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <span className="text-xs font-bold text-slate-600">Required field for forms</span>
+                    </label>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500">Weight:</span>
+                      <div className="w-16">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          disabled={!canEdit}
+                          value={item.maxPoints}
+                          onChange={(e) => canEdit && handlePointChange(item.id, e.target.value)}
+                          className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 text-center shadow-2xs"
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-slate-400">Pts</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -746,7 +842,7 @@ const QualificationCriteriaSettingsPage = () => {
               placeholder="e.g. Budget Available (₹)"
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <SelectField
                 id="factor-type"
                 label="Input Type"

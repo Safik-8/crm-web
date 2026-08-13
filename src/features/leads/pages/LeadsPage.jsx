@@ -805,7 +805,7 @@ export const LeadsPage = () => {
             )}
 
             {hasPermission('LEAD', 'canCreate') && (
-              <div className="flex gap-2">
+              <>
                 <Button
                   variant="outlined"
                   onClick={() => setIsImportOpen(true)}
@@ -829,7 +829,7 @@ export const LeadsPage = () => {
                 >
                   Add Lead
                 </Button>
-              </div>
+              </>
             )}
           </>
         }
@@ -840,48 +840,28 @@ export const LeadsPage = () => {
       <section className=''>
 
         {/* Toolbar Filter Panel */}
-        <div className="bg-white border-x border-t border-slate-200/60  p-4 ">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="bg-white border-x border-t border-slate-200/60 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <SearchInput
               value={search}
               onChange={handleSearchChange}
               placeholder="Search by name, mobile, email..."
-              className="flex-1 min-w-[280px]"
+              className="flex-1"
             />
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
               {savedFiltersList.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <div className="w-[160px]">
-                    <SelectField
-                      id="apply-saved-filter-select"
-                      placeholder="Saved Filters"
-                      allowEmptyOption
-                      value={activeSavedFilterId}
-                      onChange={(val) => {
-                        if (val) {
-                          const selected = savedFiltersList.find((sf) => String(sf.id) === String(val));
-                          if (selected) {
-                            const defaultEmptyFilters = {
-                              companyId: '',
-                              branchId: '',
-                              teamId: '',
-                              sourceId: '',
-                              courseId: '',
-                              statusId: '',
-                              priority: '',
-                              assignedToId: '',
-                              dateFrom: '',
-                              dateTo: ''
-                            };
-                            handleFilterChange({
-                              ...defaultEmptyFilters,
-                              ...selected.filters
-                            });
-                            toast.success(`Applied filter "${selected.name}"`);
-                          }
-                        } else {
-                          clearFilters({
+                <div className="w-full sm:w-[160px] shrink-0">
+                  <SelectField
+                    id="apply-saved-filter-select"
+                    placeholder="Saved Filters"
+                    allowEmptyOption
+                    value={activeSavedFilterId}
+                    onChange={(val) => {
+                      if (val) {
+                        const selected = savedFiltersList.find((sf) => String(sf.id) === String(val));
+                        if (selected) {
+                          const defaultEmptyFilters = {
                             companyId: '',
                             branchId: '',
                             teamId: '',
@@ -892,24 +872,42 @@ export const LeadsPage = () => {
                             assignedToId: '',
                             dateFrom: '',
                             dateTo: ''
+                          };
+                          handleFilterChange({
+                            ...defaultEmptyFilters,
+                            ...selected.filters
                           });
+                          toast.success(`Applied filter "${selected.name}"`);
                         }
-                      }}
-                      options={savedFiltersList.map((sf) => ({ value: sf.id, label: sf.name }))}
-                    />
-                  </div>
+                      } else {
+                        clearFilters({
+                          companyId: '',
+                          branchId: '',
+                          teamId: '',
+                          sourceId: '',
+                          courseId: '',
+                          statusId: '',
+                          priority: '',
+                          assignedToId: '',
+                          dateFrom: '',
+                          dateTo: ''
+                        });
+                      }
+                    }}
+                    options={savedFiltersList.map((sf) => ({ value: sf.id, label: sf.name }))}
+                  />
                 </div>
               )}
 
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${hasActiveFilters
+                className={`flex items-center justify-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer flex-1 sm:flex-none ${hasActiveFilters
                     ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
               >
                 <SlidersHorizontal size={15} />
-                Filters
+                <span>Filters</span>
                 {hasActiveFilters && (
                   <span className="flex items-center justify-center bg-orange-500 text-white text-[10px] font-black h-5 w-5 rounded-full">
                     {Object.values(filters).filter(Boolean).length}
@@ -918,15 +916,15 @@ export const LeadsPage = () => {
               </button>
 
               {hasActiveFilters && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
                   {!activeSavedFilterId && (
                     <button
                       onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
-                      className="flex items-center gap-1.5 px-3.5 h-11 bg-orange-50 hover:bg-orange-100/80 text-orange-600 font-semibold rounded-xl text-[12px] transition-all cursor-pointer border border-orange-200/50  active:scale-95"
+                      className="flex items-center justify-center gap-1.5 px-3.5 h-11 bg-orange-50 hover:bg-orange-100/80 text-orange-600 font-semibold rounded-xl text-[12px] transition-all cursor-pointer border border-orange-200/50 active:scale-95 flex-1 sm:flex-none"
                       title="Save current filters as preset"
                     >
                       <BookmarkPlus size={14} />
-                      Save Preset
+                      <span>Save Preset</span>
                     </button>
                   )}
                   <button
@@ -944,10 +942,10 @@ export const LeadsPage = () => {
                         dateTo: ''
                       })
                     }
-                    className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer  active:scale-95"
+                    className="flex items-center justify-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer active:scale-95 flex-1 sm:flex-none"
                   >
                     <SearchX size={14} />
-                    Clear
+                    <span>Clear</span>
                   </button>
                 </div>
               )}
@@ -955,7 +953,7 @@ export const LeadsPage = () => {
               <button
                 onClick={() => refetch()}
                 disabled={isLoading || isFetching}
-                className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50 shrink-0"
                 title="Refresh List"
               >
                 <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
@@ -993,14 +991,12 @@ export const LeadsPage = () => {
 
         {/* Pagination Footer */}
         {leads.length > 0 && (
-          <div className="flex justify-end mt-4">
-            <Pagination
-              pagination={pagination}
-              onPageChange={setPage}
-              isLoading={isLoading || isFetching}
-              entityName="leads"
-            />
-          </div>
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={isLoading || isFetching}
+            entityName="leads"
+          />
         )}
 
 

@@ -352,24 +352,24 @@ const CustomersPage = () => {
       </div>
 
       {/* Search & Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
         {/* Search Input */}
-        <div className="flex-1 min-w-[240px] max-w-sm">
+        <div className="w-full sm:max-w-sm">
           <SearchInput value={search} onChange={setSearch} placeholder="Search by name, phone or email" />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer flex-1 sm:flex-none ${
               hasActiveFilters
                 ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
             <SlidersHorizontal size={15} />
-            Filters
+            <span>Filters</span>
             {hasActiveFilters && (
               <span className="flex items-center justify-center bg-orange-500 text-white text-[10px] font-black h-5 w-5 rounded-full">
                 {[status, companyId, branchId, ownerId, dateRangePreset, dateFrom, dateTo].filter(Boolean).length}
@@ -380,7 +380,7 @@ const CustomersPage = () => {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer flex-1 sm:flex-none"
             >
               Clear
             </button>

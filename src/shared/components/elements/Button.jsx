@@ -63,6 +63,7 @@ const Button = ({
       sx={{
         textTransform: 'none',
         fontWeight: 600,
+        whiteSpace: 'nowrap',
         transition: 'all 0.15s ease-in-out',
         '&:active': {
           transform: 'translateY(0)',

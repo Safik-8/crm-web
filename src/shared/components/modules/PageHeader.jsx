@@ -27,7 +27,7 @@ const PageHeader = ({
       </div>
 
       {actions && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 justify-start md:justify-end w-full md:w-auto">
           {actions}
         </div>
       )}
