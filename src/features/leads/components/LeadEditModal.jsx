@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Drawer,
-  IconButton,
-  CircularProgress
-} from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { X, Pencil, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useUpdateLeadMutation, useLeadFormDataQuery } from '../hooks/useLeads';
@@ -14,6 +10,7 @@ import { getPipelines } from '../../pipelines/services/pipelineService';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
+import Drawer from '../../../shared/components/elements/Drawer';
 
 export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }) => {
   const { user: currentUser } = useAuth();
@@ -278,58 +275,13 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
 
   return (
     <Drawer
-      anchor="right"
-      open={true}
+      isOpen={Boolean(lead)}
       onClose={() => !updateLeadMutation.isPending && onClose()}
-      ModalProps={{
-        slotProps: {
-          backdrop: {
-            sx: {
-              backdropFilter: 'blur(4px)',
-              backgroundColor: 'rgba(15, 23, 42, 0.18)',
-            }
-          }
-        }
-      }}
-      sx={{
-        zIndex: 1300,
-        '& .MuiDrawer-paper': {
-          width: { xs: '100%', sm: 480, md: 520 },
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          borderRadius: '0px !important',
-          boxShadow: '-8px 0 24px rgba(15, 23, 42, 0.06)',
-          borderLeft: '1px solid #E2E8F0'
-        }
-      }}
+      title="Edit Lead Details"
+      subtitle={lead?.name ? `Modify details and assignees for ${lead.name}` : 'Modify lead details'}
+      width={{ xs: '100%', sm: 540, md: 620 }}
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-white">
-        {/* Header */}
-        <div className="px-4 py-2.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
-          <div>
-            <h2 className="font-extrabold text-slate-900 text-base font-heading">
-              Edit Lead Details
-            </h2>
-            <span className="text-slate-500 text-xs block mt-0.5 font-medium">
-              Modify details and assignees for {lead.name}
-            </span>
-          </div>
-          <IconButton
-            onClick={onClose}
-            disabled={updateLeadMutation.isPending}
-            sx={{
-              color: '#64748B',
-              bgcolor: 'transparent',
-              borderRadius: '8px',
-              width: 32,
-              height: 32,
-              '&:hover': { bgcolor: '#F1F5F9', color: '#0F172A' }
-            }}
-          >
-            <X size={16} />
-          </IconButton>
-        </div>
 
         {/* Scrollable Form Body */}
         <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5">

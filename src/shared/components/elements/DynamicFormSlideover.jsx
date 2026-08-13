@@ -33,7 +33,8 @@ export const DynamicFormSlideover = ({
   danger = false,
   showFooter = true,
   showSubmit = true,
-  customFooter = null
+  customFooter = null,
+  width = { xs: '100%', sm: 480, md: 540 }
 }) => {
   const [values, setValues] = useState({});
   const [errors, setErrors] = useState({});
@@ -140,7 +141,8 @@ export const DynamicFormSlideover = ({
       sx={{
         zIndex: 1300,
         '& .MuiDrawer-paper': {
-          width: { xs: '100%', sm: 480, md: 540 },
+          width: width,
+          maxWidth: '100vw',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
