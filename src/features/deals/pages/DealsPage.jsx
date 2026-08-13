@@ -14,6 +14,7 @@ import { companyApi } from '../../company/api/companyApi';
 import { apiClient } from '../../../lib/api/api';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
+import Pagination from '../../../shared/components/elements/Pagination';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Skeleton from '../../../shared/components/elements/Skeleton';
@@ -550,23 +551,12 @@ const DealsPage = () => {
       />
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-1">
-          <p className="text-xs text-slate-500">
-            Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} deals)
-          </p>
-          <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">
-              Previous
-            </button>
-            <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        pagination={pagination}
+        onPageChange={(nextPage) => setPage(nextPage)}
+        isLoading={isLoading}
+        entityName="deals"
+      />
 
       {/* Detail modal */}
       {selectedDealId && (
