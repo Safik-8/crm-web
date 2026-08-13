@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Filter, Plus, Search, Eye, Trash2, ShieldAlert, Award, FileSpreadsheet, RotateCcw } from 'lucide-react';
+import { FileText, Filter, Plus, Search, Eye, Trash2, ShieldAlert, Award, FileSpreadsheet, RotateCcw, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { apiClient } from '../../../lib/api/api';
 import Table from '../../../shared/components/elements/Table';
@@ -12,6 +12,7 @@ import ProposalModal from '../components/ProposalModal';
 import ProposalDetailDrawer from '../components/ProposalDetailDrawer';
 import { getProposals, createProposal, updateProposal, updateProposalStatus, deleteProposal } from '../services/proposalService';
 import { toast } from '../../../shared/utils/toast';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 
 const STATUS_META = {
   DRAFT: { label: 'Draft', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' },
@@ -43,6 +44,10 @@ export default function ProposalsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [editProposalData, setEditProposalData] = useState(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [proposalToDeleteId, setProposalToDeleteId] = useState(null);
+  const [isDeletingProposal, setIsDeletingProposal] = useState(false);
+  const [loadingProposalId, setLoadingProposalId] = useState(null);
 
   const fetchProposals = async () => {
     setLoading(true);
@@ -138,26 +143,39 @@ export default function ProposalsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this proposal?')) return;
+  const handleDelete = (id) => {
+    setProposalToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!proposalToDeleteId) return;
+    setIsDeletingProposal(true);
     try {
-      await deleteProposal(id);
+      await deleteProposal(proposalToDeleteId);
       toast.success('Proposal deleted successfully');
       setIsDrawerOpen(false);
       setSelectedProposal(null);
       fetchProposals();
+      setIsDeleteConfirmOpen(false);
     } catch (err) {
       toast.error(err.message || 'Failed to delete proposal');
+    } finally {
+      setIsDeletingProposal(false);
+      setProposalToDeleteId(null);
     }
   };
 
   const handleRowClick = async (proposal) => {
+    setLoadingProposalId(proposal.id);
     try {
       const res = await apiClient(`/proposals/${proposal.id}`);
       setSelectedProposal(res.data);
       setIsDrawerOpen(true);
     } catch (err) {
       toast.error('Failed to load proposal details');
+    } finally {
+      setLoadingProposalId(null);
     }
   };
 
@@ -166,7 +184,12 @@ export default function ProposalsPage() {
       header: 'Proposal Number',
       accessor: 'proposalNumber',
       render: (row) => (
-        <span className="font-bold text-slate-800">{row.proposalNumber}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-slate-800">{row.proposalNumber}</span>
+          {loadingProposalId === row.id && (
+            <Loader2 className="w-3.5 h-3.5 text-orange-600 animate-spin" />
+          )}
+        </div>
       )
     },
     {
@@ -335,7 +358,6 @@ export default function ProposalsPage() {
         initialData={editProposalData}
       />
 
-      {/* Detail Slideover Drawer */}
       <ProposalDetailDrawer
         isOpen={isDrawerOpen}
         onClose={() => {
@@ -347,6 +369,22 @@ export default function ProposalsPage() {
         onEditRevision={handleEditRevision}
         onDelete={handleDelete}
         currentUserRoleRank={rank}
+        currentUserId={user?.id}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setProposalToDeleteId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Proposal"
+        message="Are you sure you want to delete this proposal? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="error"
+        isLoading={isDeletingProposal}
       />
     </div>
   );

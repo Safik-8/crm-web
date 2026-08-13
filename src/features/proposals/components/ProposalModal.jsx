@@ -14,6 +14,7 @@ export default function ProposalModal({
   const [opportunities, setOpportunities] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedOppId, setSelectedOppId] = useState(opportunityId || '');
   const [productId, setProductId] = useState('');
@@ -49,11 +50,22 @@ export default function ProposalModal({
         .then(([opps, crs]) => {
           setOpportunities(opps);
           setCourses(crs);
+          
+          // Pre-fill product and price from linked opportunity if creating a new proposal
+          if (!initialData && opportunityId) {
+            const opp = opps.find(o => o.id === Number(opportunityId));
+            if (opp) {
+              if (opp.productId) setProductId(opp.productId.toString());
+              if (opp.expectedRevenue) {
+                setBasePrice(Number(opp.expectedRevenue).toString());
+              }
+            }
+          }
         })
         .catch(err => console.error('Failed to load form options:', err))
         .finally(() => setLoading(false));
     }
-  }, [isOpen]);
+  }, [isOpen, opportunityId, initialData]);
 
   // Set initial data for edits/revisions
   useEffect(() => {
@@ -93,8 +105,9 @@ export default function ProposalModal({
   const handleCourseChange = (e) => {
     const cid = e.target.value;
     setProductId(cid);
+    if (!cid) return;
     const selectedCourse = courses.find(c => c.id === Number(cid));
-    if (selectedCourse && selectedCourse.price) {
+    if (selectedCourse && (selectedCourse.price || selectedCourse.price === 0)) {
       setBasePrice(Number(selectedCourse.price).toString());
     }
   };
@@ -111,7 +124,7 @@ export default function ProposalModal({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -150,7 +163,14 @@ export default function ProposalModal({
       versionNotes: initialData ? versionNotes || `Revised version` : undefined
     };
 
-    onSubmit(payload);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(payload);
+    } catch (err) {
+      // Caught to reset loading state (error toast is handled by parent page)
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -271,13 +291,15 @@ export default function ProposalModal({
           <span className="text-lg font-bold text-slate-900">₹{finalAmount.toLocaleString()}</span>
         </div>
 
-        <TextField
-          label="Valid Till *"
-          type="date"
-          value={validTill}
-          onChange={(val) => setValidTill(val)}
-          required
-        />
+        <div>
+          <TextField
+            label="Valid Till *"
+            type="date"
+            value={validTill}
+            onChange={(val) => setValidTill(val)}
+            required
+          />
+        </div>
 
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1">
@@ -302,10 +324,10 @@ export default function ProposalModal({
         )}
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outlined" color="primary" type="button" onClick={onClose}>
+          <Button variant="outlined" color="primary" type="button" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button variant="contained" color="primary" type="submit" loading={loading}>
+          <Button variant="contained" color="primary" type="submit" isLoading={isSubmitting}>
             {initialData ? 'Save Revision' : 'Create Proposal'}
           </Button>
         </div>

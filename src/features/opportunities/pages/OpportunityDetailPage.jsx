@@ -24,6 +24,7 @@ import {
   Loader2,
   AlertCircle,
   Plus,
+  Send,
 } from 'lucide-react';
 import {
   useOpportunityDetailQuery,
@@ -87,6 +88,10 @@ export const OpportunityDetailPage = () => {
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [editProposalData, setEditProposalData] = useState(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [proposalToDeleteId, setProposalToDeleteId] = useState(null);
+  const [isDeletingProposal, setIsDeletingProposal] = useState(false);
+  const [loadingProposalId, setLoadingProposalId] = useState(null);
 
   const refetchOpportunity = () => {
     queryClient.invalidateQueries({ queryKey: ['opportunities', 'detail', opportunityId] });
@@ -133,26 +138,39 @@ export const OpportunityDetailPage = () => {
     setIsProposalModalOpen(true);
   };
 
-  const handleProposalDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this proposal?')) return;
+  const handleProposalDelete = (id) => {
+    setProposalToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteProposal = async () => {
+    if (!proposalToDeleteId) return;
+    setIsDeletingProposal(true);
     try {
-      await deleteProposal(id);
+      await deleteProposal(proposalToDeleteId);
       toast.success('Proposal deleted successfully');
       setIsProposalDrawerOpen(false);
       setSelectedProposal(null);
       refetchOpportunity();
+      setIsDeleteConfirmOpen(false);
     } catch (err) {
       toast.error(err.message || 'Failed to delete proposal');
+    } finally {
+      setIsDeletingProposal(false);
+      setProposalToDeleteId(null);
     }
   };
 
   const handleProposalRowClick = async (proposal) => {
+    setLoadingProposalId(proposal.id);
     try {
       const res = await apiClient(`/proposals/${proposal.id}`);
       setSelectedProposal(res.data);
       setIsProposalDrawerOpen(true);
     } catch (err) {
       toast.error('Failed to load proposal details');
+    } finally {
+      setLoadingProposalId(null);
     }
   };
 
@@ -220,6 +238,155 @@ export const OpportunityDetailPage = () => {
       setCloseRemarks('');
     } catch (err) {
       // Handled by query mutation toast
+    }
+  };
+
+  // Build unified timeline events (Stage transitions + Proposal lifecycle)
+  const timelineEvents = [];
+  if (opportunity) {
+    // 1. Creation Event
+    timelineEvents.push({
+      id: 'create',
+      type: 'OPPORTUNITY_CREATED',
+      date: new Date(opportunity.createdAt),
+      title: 'Opportunity Created',
+      description: `Initial Expected Revenue: ${formatCurrency(opportunity.expectedRevenue)}`,
+      meta: `Created by ${opportunity.owner?.name || 'System'}`
+    });
+
+    // 2. Stage transitions
+    if (opportunity.stageHistory) {
+      opportunity.stageHistory.forEach(hist => {
+        timelineEvents.push({
+          id: `stage-${hist.id}`,
+          type: 'STAGE_CHANGE',
+          date: new Date(hist.changedAt),
+          title: 'Stage Transition',
+          description: (
+            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+              <span>{hist.previousStage?.name || 'Previous Stage'}</span>
+              <ArrowRight className="w-3 h-3 text-slate-400" />
+              <span className="text-orange-600">{hist.newStage?.name || 'New Stage'}</span>
+            </div>
+          ),
+          meta: `Changed by ${hist.changedBy?.name || 'System'}`
+        });
+      });
+    }
+
+    // 3. Closed Event
+    if (opportunity.status !== 'OPEN') {
+      timelineEvents.push({
+        id: 'close',
+        type: 'OPPORTUNITY_CLOSED',
+        date: new Date(opportunity.updatedAt),
+        title: `Opportunity Closed as ${opportunity.status}`,
+        description: opportunity.closeRemarks ? `Remarks: ${opportunity.closeRemarks}` : '',
+        meta: `Updated on ${formatDate(opportunity.updatedAt)}`
+      });
+    }
+
+    // 4. Proposals Events
+    if (opportunity.proposals) {
+      opportunity.proposals.forEach(prop => {
+        // A. Proposal Created (Initial V1)
+        timelineEvents.push({
+          id: `prop-create-${prop.id}`,
+          type: 'PROPOSAL_CREATED',
+          date: new Date(prop.createdAt),
+          title: `Proposal Generated: ${prop.proposalNumber} (V1)`,
+          description: `Base Price: ${formatCurrency(prop.basePrice)} · Discount: ${formatCurrency(prop.discount)} · Final: ${formatCurrency(prop.finalAmount)}`,
+          meta: `Prepared by ${prop.createdBy?.name || 'Unknown'}`
+        });
+
+        // B. Proposal Status Changed (e.g. Sent / Accepted / Rejected)
+        if (prop.status !== 'DRAFT') {
+          timelineEvents.push({
+            id: `prop-status-${prop.id}-${prop.status}`,
+            type: `PROPOSAL_${prop.status}`,
+            date: new Date(prop.updatedAt),
+            title: `Proposal ${prop.proposalNumber} Status: ${prop.status}`,
+            description: `Commercial terms marked as ${prop.status.toLowerCase()}`,
+            meta: `Updated on ${formatDate(prop.updatedAt)}`
+          });
+        }
+
+        // C. Revisions (V2, V3, etc.)
+        if (prop.versions) {
+          prop.versions.forEach(ver => {
+            if (ver.versionNumber > 1) {
+              timelineEvents.push({
+                id: `prop-revision-${ver.id}`,
+                type: 'PROPOSAL_REVISED',
+                date: new Date(ver.modifiedDate),
+                title: `Proposal Revised: ${prop.proposalNumber} (V${ver.versionNumber})`,
+                description: `New Final: ${formatCurrency(ver.finalAmount)} ${ver.versionNotes ? `· "${ver.versionNotes}"` : ''}`,
+                meta: `Revised by ${ver.modifiedBy?.name || 'Unknown'}`
+              });
+            }
+          });
+        }
+      });
+    }
+  }
+
+  // Sort by date descending
+  timelineEvents.sort((a, b) => b.date - a.date);
+
+  const getTimelineIcon = (type, status) => {
+    switch (type) {
+      case 'OPPORTUNITY_CLOSED':
+        return status === 'WON' ? (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          </span>
+        ) : (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-rose-500 bg-white flex items-center justify-center text-rose-600">
+            <XCircle className="w-3.5 h-3.5" />
+          </span>
+        );
+      case 'STAGE_CHANGE':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
+            <TrendingUp className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_CREATED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600">
+            <Plus className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_SENT':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-blue-500 bg-white flex items-center justify-center text-blue-600">
+            <Send className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_ACCEPTED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600">
+            <CheckCircle2 className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_REJECTED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-rose-500 bg-white flex items-center justify-center text-rose-600">
+            <XCircle className="w-3 h-3" />
+          </span>
+        );
+      case 'PROPOSAL_REVISED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-amber-500 bg-white flex items-center justify-center text-amber-600">
+            <History className="w-3 h-3" />
+          </span>
+        );
+      default:
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
+            <Activity className="w-3 h-3" />
+          </span>
+        );
     }
   };
 
@@ -544,6 +711,9 @@ export const OpportunityDetailPage = () => {
                             <span className="font-extrabold text-slate-800 text-sm truncate">
                               {prop.proposalNumber} (V{prop.currentVersion})
                             </span>
+                            {loadingProposalId === prop.id && (
+                              <Loader2 className="w-3.5 h-3.5 text-orange-600 animate-spin" />
+                            )}
 
                             {prop.currentVersion === 1 ? (
                               <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-bold border border-slate-200">
@@ -620,86 +790,40 @@ export const OpportunityDetailPage = () => {
               )}
             </div>
 
-            {/* Card 3: Activity & Stage History Timeline (Fixed max-height & custom scrollbar) */}
-            <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <History className="w-5 h-5 text-orange-600" /> Activity & Stage History Timeline
-                </h3>
-                <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
-                  {1 + (opportunity.stageHistory?.length || 0)} Events
-                </span>
-              </div>
-
-              {/* Scrollable Timeline Container */}
-              <div className="max-h-[340px] overflow-y-auto pr-3 relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 text-xs">
-                {/* Closed Event */}
-                {opportunity.status !== 'OPEN' && (
-                  <div className="relative">
-                    <span
-                      className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 bg-white flex items-center justify-center ${opportunity.status === 'WON'
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-rose-500 text-rose-600'
-                        }`}
-                    >
-                      {opportunity.status === 'WON' ? (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5" />
-                      )}
-                    </span>
-                    <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
-                      <span className="font-bold text-slate-900 block text-sm">
-                        Opportunity Closed as {opportunity.status}
-                      </span>
-                      <span className="text-slate-400 text-xs block mt-0.5">
-                        Closed Date: {formatDate(opportunity.updatedAt)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Stage Transitions */}
-                {opportunity.stageHistory && opportunity.stageHistory.length > 0 && (
-                  opportunity.stageHistory.map((hist) => (
-                    <div key={hist.id} className="relative">
-                      <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
-                        <TrendingUp className="w-3 h-3" />
-                      </span>
-                      <div className="bg-slate-50 p-3 rounded-md border border-slate-200 space-y-1">
-                        <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
-                          <span>{hist.previousStage?.name || 'Previous Stage'}</span>
-                          <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="text-orange-600">{hist.newStage?.name || 'New Stage'}</span>
-                        </div>
-                        <span className="text-slate-400 text-[11px] block">
-                          Changed by {hist.changedBy?.name || 'System'} · {formatDate(hist.changedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-
-                {/* Creation Event */}
-                <div className="relative">
-                  <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-white flex items-center justify-center text-orange-600">
-                    <Activity className="w-3 h-3" />
-                  </span>
-                  <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
-                    <span className="font-bold text-slate-900 block text-sm">
-                      Opportunity Created
-                    </span>
-                    <span className="text-slate-600 text-xs block mt-0.5">
-                      Initial Expected Revenue: {formatCurrency(opportunity.expectedRevenue)}
-                    </span>
-                    <span className="text-slate-400 text-[11px] block mt-0.5">
-                      Created by {opportunity.owner?.name || 'System'} · {formatDate(opportunity.createdAt)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+             {/* Card 3: Activity & Stage History Timeline (Fixed max-height & custom scrollbar) */}
+             <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-4">
+               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                   <History className="w-5 h-5 text-orange-600" /> Activity & Stage History Timeline
+                 </h3>
+                 <span className="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-sm border border-orange-200">
+                   {timelineEvents.length} Events
+                 </span>
+               </div>
+ 
+               {/* Scrollable Timeline Container */}
+               <div className="max-h-[340px] overflow-y-auto pr-3 relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 text-xs">
+                 {timelineEvents.map((evt) => (
+                   <div key={evt.id} className="relative">
+                     {getTimelineIcon(evt.type, opportunity.status)}
+                     <div className="bg-slate-50 p-3 rounded-md border border-slate-200 space-y-1">
+                       <span className="font-bold text-slate-900 block text-sm">
+                         {evt.title}
+                       </span>
+                       {evt.description && (
+                         <div className="text-slate-600 text-xs block mt-0.5">
+                           {evt.description}
+                         </div>
+                       )}
+                       <span className="text-slate-400 text-[10px] block mt-0.5">
+                         {evt.meta}
+                       </span>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </div>
 
           {/* Right Sidebar Column (30% Width - Sticky) */}
           <div className="space-y-6">
@@ -986,6 +1110,22 @@ export const OpportunityDetailPage = () => {
         onEditRevision={handleProposalEditRevision}
         onDelete={handleProposalDelete}
         currentUserRoleRank={rank}
+        currentUserId={user?.id}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setProposalToDeleteId(null);
+        }}
+        onConfirm={handleConfirmDeleteProposal}
+        title="Delete Proposal"
+        message="Are you sure you want to delete this proposal? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="error"
+        isLoading={isDeletingProposal}
       />
     </div>
   );
