@@ -162,7 +162,8 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
 
             {activeGroup?.items.map((item) => {
               const ItemIcon = item.icon;
-              const isSubActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
+              const hasSpecificMatch = filteredNavGroups.some(g => g.items.some(other => other.path !== item.path && other.path.startsWith(`${item.path}/`) && (location.pathname === other.path || location.pathname.startsWith(`${other.path}/`))));
+              const isSubActive = item.path !== '/' && (location.pathname === item.path || (location.pathname.startsWith(`${item.path}/`) && !hasSpecificMatch));
               return (
                 <NavLink
                   key={item.path}

@@ -19,6 +19,7 @@ import {
   Compass,
   Tags,
   Layers,
+  TrendingUp,
 } from 'lucide-react';
 import {
   PERMISSIONS } from '../constants/permissions';
@@ -55,6 +56,7 @@ export const navGroups = [
     group: 'Analytics',
     items: [
       { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT },
+      { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_REPORTS },
       { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
     ]
   },

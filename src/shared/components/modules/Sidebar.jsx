@@ -150,7 +150,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     const Icon = item.icon;
                     const hasChildren = item.children && item.children.length > 0;
                     const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
-                    const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
+                    const hasSpecificMatch = filteredNavGroups.some(g => g.items.some(other => other.path !== item.path && other.path.startsWith(`${item.path}/`) && (location.pathname === other.path || location.pathname.startsWith(`${other.path}/`))));
+                    const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || (location.pathname.startsWith(`${item.path}/`) && !hasSpecificMatch));
 
                 return (
                   <React.Fragment key={item.path}>

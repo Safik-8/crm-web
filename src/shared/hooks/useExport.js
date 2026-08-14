@@ -83,6 +83,7 @@ export const useExport = () => {
     try {
       // 1. Map rows into formatted objects matching header labels
       const formattedRows = data.map((row) => {
+        if (!columns || columns.length === 0) return row;
         const item = {};
         columns.forEach((col) => {
           const rawVal = getNestedValue(row, col.accessorKey);
