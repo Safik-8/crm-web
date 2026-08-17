@@ -208,7 +208,7 @@ const Table = ({
                   return (
                     <td
                       key={colIndex}
-                      className={`py-4 px-6 ${alignmentClass} ${stickyClass} ${col.className || ''}`}
+                      className={`py-3.5 px-6 text-[13px] text-slate-600 font-sans ${alignmentClass} ${stickyClass} ${col.className || ''}`}
                     >
                       {col.cell ? col.cell(row, rowIndex) : cellValue ?? ''}
                     </td>
