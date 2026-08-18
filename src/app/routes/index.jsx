@@ -20,6 +20,7 @@ import ReportsPage from '../../features/reports/pages/ReportsPage';
 import UsersPage from '../../features/users/pages/UsersPage';
 import CoursesPage from '../../features/courses/pages/CoursesPage';
 import TeamsPage from '../../features/teams/pages/TeamsPage';
+import MyTeamPage from '../../features/teams/pages/MyTeamPage';
 import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
@@ -212,6 +213,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAMS}>
             <TeamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-team',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAMS}>
+            <MyTeamPage />
           </ProtectedRoute>
         ),
       },
