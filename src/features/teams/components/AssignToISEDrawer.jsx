@@ -1,116 +1,25 @@
 // src/features/teams/components/AssignToISEDrawer.jsx
 //
-// BDE-scoped assignment drawer reusing shared UI Drawer and Button elements.
+// Clean BDE assignment drawer. Selects ISE from built-in SelectField dropdown.
+// Daily limit is read dynamically from the branch settings (e.g. 30, 50, 100).
+// On Assign click, if the limit is reached, a dynamic toast alert is displayed.
 
 import React, { useState } from 'react';
 import {
   UserCheck,
   AlertTriangle,
-  CheckCircle2,
   Loader2,
   RefreshCw,
-  Users2,
   ClipboardList,
 } from 'lucide-react';
 import Drawer from '../../../shared/components/elements/Drawer';
 import Button from '../../../shared/components/elements/Button';
+import SelectField from '../../../shared/components/elements/SelectField';
+import { toast } from '../../../shared/utils/toast';
 import { useISEDailyStatsQuery, useBdeAssignLeadMutation } from '../hooks/useTeams';
 
-// ── Workload badge ────────────────────────────────────────────────────────────
-
-const WorkloadBadge = ({ todayCount, maxLimit }) => {
-  const pct = maxLimit > 0 ? todayCount / maxLimit : 0;
-  const isFull = pct >= 1;
-
-  let barColor = 'bg-emerald-500';
-  let textColor = 'text-emerald-700';
-  let bgColor = 'bg-emerald-50';
-  let borderColor = 'border-emerald-200';
-
-  if (isFull) {
-    barColor = 'bg-rose-500';
-    textColor = 'text-rose-700';
-    bgColor = 'bg-rose-50';
-    borderColor = 'border-rose-200';
-  } else if (pct >= 0.8) {
-    barColor = 'bg-amber-500';
-    textColor = 'text-amber-700';
-    bgColor = 'bg-amber-50';
-    borderColor = 'border-amber-200';
-  }
-
-  const widthPct = Math.min(pct * 100, 100);
-
-  return (
-    <div className={`flex flex-col gap-1 px-2.5 py-1.5 rounded-lg border ${bgColor} ${borderColor} min-w-[96px]`}>
-      <span className={`text-[11px] font-black ${textColor} text-center tabular-nums`}>
-        {todayCount}/{maxLimit}
-      </span>
-      <div className="w-full h-1.5 rounded-full bg-white/70 overflow-hidden border border-white/50">
-        <div
-          className={`h-full rounded-full transition-all ${barColor}`}
-          style={{ width: `${widthPct}%` }}
-        />
-      </div>
-      <span className={`text-[9px] font-black ${textColor} text-center uppercase tracking-wider`}>
-        {isFull ? 'FULL' : 'today'}
-      </span>
-    </div>
-  );
-};
-
-// ── ISE option row ────────────────────────────────────────────────────────────
-
-const ISEOptionRow = ({ member, isSelected, onSelect }) => {
-  const atLimit = member.isAtLimit;
-
-  return (
-    <button
-      type="button"
-      onClick={() => !atLimit && onSelect(member.userId)}
-      disabled={atLimit}
-      className={`
-        w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left
-        ${atLimit
-          ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
-          : isSelected
-            ? 'bg-orange-50 border-orange-300 shadow-sm ring-1 ring-orange-200'
-            : 'bg-white border-slate-200 hover:border-orange-200 hover:bg-orange-50/40 hover:shadow-sm'
-        }
-      `}
-    >
-      {/* Avatar */}
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0
-        ${isSelected ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
-        {member.name?.charAt(0)?.toUpperCase() || '?'}
-      </div>
-
-      {/* Name + role */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-bold truncate ${isSelected ? 'text-orange-700' : 'text-slate-800'}`}>
-          {member.name}
-        </p>
-        <p className="text-[11px] font-semibold text-slate-400 mt-0.5">ISE</p>
-      </div>
-
-      {/* Limit badge */}
-      <WorkloadBadge todayCount={member.todayCount} maxLimit={member.maxLimit} />
-
-      {/* Selection indicator */}
-      {isSelected && !atLimit && (
-        <CheckCircle2 size={18} className="text-orange-500 shrink-0" />
-      )}
-      {atLimit && (
-        <AlertTriangle size={16} className="text-rose-400 shrink-0" />
-      )}
-    </button>
-  );
-};
-
-// ── Main drawer ───────────────────────────────────────────────────────────────
-
 const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) => {
-  const [selectedISEId, setSelectedISEId] = useState(null);
+  const [selectedISEId, setSelectedISEId] = useState('');
   const [notes, setNotes] = useState('');
 
   const {
@@ -123,10 +32,11 @@ const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) =
   const assignMutation = useBdeAssignLeadMutation();
 
   const memberStats = statsData?.memberStats || [];
+  // Dynamic branch daily limit (e.g., 20, 30, 50, 100) — fallback to 50 if unconfigured
   const maxLimit = statsData?.maxLimit ?? 50;
 
   const handleClose = () => {
-    setSelectedISEId(null);
+    setSelectedISEId('');
     setNotes('');
     onClose();
   };
@@ -134,12 +44,22 @@ const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) =
   const handleAssign = async () => {
     if (!selectedISEId || leads.length === 0) return;
 
+    const selectedMember = memberStats.find(m => Number(m.userId) === Number(selectedISEId));
+
+    // Dynamic daily limit check on assign button click
+    if (selectedMember && selectedMember.todayCount >= maxLimit) {
+      toast.error(
+        `${selectedMember.name} has reached their daily limit (${selectedMember.todayCount}/${maxLimit}). Cannot assign lead to them.`
+      );
+      return;
+    }
+
     try {
       for (const lead of leads) {
         await assignMutation.mutateAsync({
           teamId,
           leadId: lead.id,
-          assignedToId: selectedISEId,
+          assignedToId: Number(selectedISEId),
           notes: notes.trim() || undefined,
         });
       }
@@ -147,16 +67,22 @@ const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) =
       onSuccess?.();
       handleClose();
     } catch (err) {
-      // Keep drawer open on rejection so user can retry or select another ISE
+      // Backend error toast handles rejection; drawer stays open for retry or alternative selection
     }
   };
 
-  const selectedMember = memberStats.find(m => m.userId === selectedISEId);
+  const selectedMember = memberStats.find(m => Number(m.userId) === Number(selectedISEId));
   const canSubmit = !!selectedISEId && !assignMutation.isPending && leads.length > 0;
 
   const drawerSubtitle = leads.length === 1
     ? leads[0]?.name || 'Selected lead'
     : `${leads.length} leads selected`;
+
+  // Clean dropdown options without cluttered numbers
+  const selectOptions = memberStats.map(m => ({
+    value: String(m.userId),
+    label: `${m.name} (${m.memberRole || 'ISE'})`
+  }));
 
   return (
     <Drawer
@@ -183,12 +109,12 @@ const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) =
           </div>
         )}
 
-        {/* ISE selection list */}
+        {/* Clean SelectField Dropdown for selecting ISE Member */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-              Select ISE Member
-            </p>
+            <label className="text-[12px] font-bold text-slate-700">
+              Select ISE Member <span className="text-orange-500">*</span>
+            </label>
             <button
               type="button"
               onClick={() => refetchStats()}
@@ -199,49 +125,28 @@ const AssignToISEDrawer = ({ isOpen, onClose, teamId, leads = [], onSuccess }) =
             </button>
           </div>
 
-          {statsLoading && (
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-[60px] rounded-xl bg-slate-100 animate-pulse" />
-              ))}
-            </div>
-          )}
+          <SelectField
+            id="iseMemberSelect"
+            value={selectedISEId}
+            onChange={(val) => setSelectedISEId(val)}
+            options={selectOptions}
+            placeholder="Choose an ISE team member..."
+            isLoading={statsLoading}
+            disabled={statsLoading || selectOptions.length === 0}
+            allowEmptyOption={true}
+          />
 
           {statsError && !statsLoading && (
             <div className="flex items-center gap-2 p-3 bg-rose-50 rounded-xl border border-rose-200 text-rose-700 text-[12px] font-semibold">
               <AlertTriangle size={14} />
-              Could not load ISE stats. Please refresh.
+              Could not load ISE member list. Please refresh.
             </div>
           )}
 
-          {!statsLoading && !statsError && memberStats.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <Users2 size={32} className="text-slate-300" />
-              <p className="text-[13px] font-bold text-slate-500">No active ISE members</p>
-              <p className="text-[11px] text-slate-400">Add ISE members to your team first.</p>
-            </div>
+          {!statsLoading && memberStats.length === 0 && (
+            <p className="text-xs text-amber-600 font-medium">No active ISE members found in your team.</p>
           )}
-
-          {!statsLoading && memberStats.map(member => (
-            <ISEOptionRow
-              key={member.userId}
-              member={member}
-              isSelected={selectedISEId === member.userId}
-              onSelect={setSelectedISEId}
-            />
-          ))}
         </div>
-
-        {/* Limit legend info */}
-        {!statsLoading && memberStats.length > 0 && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <AlertTriangle size={13} className="text-amber-500 mt-0.5 shrink-0" />
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-              Badge shows leads received <span className="font-bold text-slate-700">today / daily limit ({maxLimit})</span>.
-              ISEs at their limit are marked <span className="font-bold text-rose-600">FULL</span> and disabled — the limit cannot be overridden.
-            </p>
-          </div>
-        )}
 
         {/* Optional assignment note */}
         <div className="space-y-1.5">

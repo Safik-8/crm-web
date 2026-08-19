@@ -39,7 +39,7 @@ import TeamLeadAssignModal from '../components/TeamLeadAssignModal';
 
 const PAGE_SIZE = 10;
 
-// ── Stat Card Component (Straight non-curved border matching exact user preference) ─────
+// ── Stat Card Component (Straight non-curved border matching exact preference) ─────
 
 const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-900', loading }) => (
   <div className="bg-white p-4 border border-slate-200 shadow-xs flex items-center justify-between">
@@ -168,13 +168,18 @@ const MyTeamPage = () => {
   const [leadsToAssign, setLeadsToAssign]                 = useState([]);
   const [selectedLeads, setSelectedLeads]                 = useState([]);     // Bulk selection
 
-  // ── RBAC Checks ─────────────────────────────────────────────────────────────
-  const canViewTeam = hasPermission('TEAM', 'canView') || hasPermission('VIEW_TEAMS');
+  // ── RBAC & Ownership Checks ─────────────────────────────────────────────────
+  const canViewTeam = hasPermission('TEAM', 'canView') || hasPermission('VIEW_TEAMS') || !!activeTeamId;
+  
+  const isTeamOwner = activeTeamRes?.bdeId === currentUser?.id;
   const canEditTeam =
+    isTeamOwner ||
     hasPermission('TEAM', 'canEdit') ||
     hasPermission('EDIT_TEAMS') ||
     hasPermission('LEAD_ASSIGNMENT', 'canEdit') ||
-    hasPermission('LEAD_ASSIGNMENT', 'canCreate');
+    hasPermission('LEAD_ASSIGNMENT', 'canCreate') ||
+    hasPermission('LEAD', 'canEdit') ||
+    hasPermission('edit:lead');
 
   // ── Derived Data ─────────────────────────────────────────────────────────────
   const leads = leadsRes?.data?.leads || leadsRes?.leads || [];
@@ -552,7 +557,7 @@ const MyTeamPage = () => {
       ),
     });
 
-    // Checkbox column — rendered if TEAM.canEdit is true
+    // Checkbox column — rendered if canEditTeam is true
     if (canEditTeam && activeTab !== 'members') {
       cols.push({
         id: 'selection',
@@ -627,18 +632,16 @@ const MyTeamPage = () => {
               </Button>
             )}
 
-            {/* Sync / Refresh Button */}
+            {/* Refresh Button - Icon Only */}
             <Button
               variant="outlined"
               onClick={handleRefresh}
               disabled={isRefreshing}
               size="small"
-              sx={{ borderColor: '#e2e8f0', color: '#475569', '&:hover': { borderColor: '#94a3b8', backgroundColor: '#f8fafc' } }}
+              title="Refresh / Sync team data"
+              sx={{ borderColor: '#e2e8f0', color: '#475569', minWidth: '36px', px: '8px', '&:hover': { borderColor: '#94a3b8', backgroundColor: '#f8fafc' } }}
             >
-              <span className="flex items-center gap-1.5 font-bold">
-                <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
-                Sync
-              </span>
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
             </Button>
           </div>
         }
