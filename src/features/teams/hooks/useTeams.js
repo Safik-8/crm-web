@@ -36,6 +36,10 @@ export const useTeamQuery = (id) => {
   });
 };
 
+/**
+ * Hook to retrieve active team membership of the logged-in user.
+ * Short staleTime ensures immediate update when user is added, removed, or ownership changes.
+ */
 export const useActiveTeamQuery = () => {
   return useQuery({
     queryKey: TEAM_KEYS.active(),
@@ -43,7 +47,7 @@ export const useActiveTeamQuery = () => {
       const response = await teamService.getActiveTeam();
       return response.data?.team || null;
     },
-    staleTime: 60000
+    staleTime: 2000 // 2 seconds for real-time responsiveness
   });
 };
 
@@ -54,6 +58,7 @@ export const useCreateTeamMutation = () => {
     mutationFn: teamService.createTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team created successfully');
     },
     onError: (error) => {
@@ -73,6 +78,7 @@ export const useUpdateTeamMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team details updated successfully');
     },
     onError: (error) => {
@@ -90,17 +96,11 @@ export const useToggleTeamStatusMutation = () => {
     mutationKey: [...TEAM_KEYS.all, 'toggleStatus'],
     mutationFn: ({ id, status }) => teamService.toggleTeamStatus(id, status),
     onMutate: async ({ id, status }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: TEAM_KEYS.lists() });
-
-      // Snapshot previous value
       const previousTeamsPages = queryClient.getQueryData(TEAM_KEYS.lists());
 
-      // Optimistically update the status in lists cache
       queryClient.setQueriesData({ queryKey: TEAM_KEYS.lists() }, (old) => {
         if (!old) return old;
-        
-        // Handle paginated structure (e.g. { data: { teams: [...] } } or { teams: [...] })
         const updateTeamsList = (teams) => 
           teams.map((t) => (t.id === id ? { ...t, status } : t));
 
@@ -116,7 +116,6 @@ export const useToggleTeamStatusMutation = () => {
       return { previousTeamsPages };
     },
     onError: (err, variables, context) => {
-      // Rollback to snapshot
       if (context?.previousTeamsPages) {
         queryClient.setQueryData(TEAM_KEYS.lists(), context.previousTeamsPages);
       }
@@ -125,6 +124,7 @@ export const useToggleTeamStatusMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team status updated successfully');
     }
   });
@@ -137,6 +137,7 @@ export const useDeleteTeamMutation = () => {
     mutationFn: teamService.deleteTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team deleted successfully');
     },
     onError: (error) => {
@@ -153,6 +154,7 @@ export const useRemoveTeamMemberMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team member removed successfully');
     },
     onError: (error) => {
@@ -169,6 +171,7 @@ export const useReplaceTeamOwnerMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TEAM_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: TEAM_KEYS.active() });
       toast.success('Team owner replaced successfully');
     },
     onError: (error) => {
@@ -177,3 +180,45 @@ export const useReplaceTeamOwnerMutation = () => {
   });
 };
 
+/**
+ * Fetches today's assignment counts for each ISE in the team alongside
+ * the branch daily limit. Refreshed when the assign drawer opens.
+ */
+export const useISEDailyStatsQuery = (teamId, options = {}) => {
+  return useQuery({
+    queryKey: [...TEAM_KEYS.detail(teamId), 'ise-daily-stats'],
+    queryFn: async () => {
+      const res = await teamService.getISEDailyStats(teamId);
+      return res?.data || res;
+    },
+    enabled: !!teamId,
+    staleTime: 0,
+    ...options,
+  });
+};
+
+/**
+ * BDE assigns a lead from their team pool to one of their ISEs.
+ * Enforces daily limit server-side; on success invalidates the leads list
+ * and the ISE daily stats so the drawer badges refresh immediately.
+ */
+export const useBdeAssignLeadMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [...TEAM_KEYS.all, 'bdeAssign'],
+    mutationFn: ({ teamId, leadId, assignedToId, notes }) =>
+      teamService.bdeAssignLeadToISE(teamId, { leadId, assignedToId, notes }),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({
+        queryKey: [...TEAM_KEYS.detail(variables.teamId), 'ise-daily-stats'],
+      });
+      toast.success('Lead assigned to ISE successfully');
+    },
+    onError: (error) => {
+      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
+        toast.error(error?.message || 'Failed to assign lead');
+      }
+    },
+  });
+};

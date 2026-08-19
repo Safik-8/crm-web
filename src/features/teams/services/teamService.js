@@ -75,6 +75,23 @@ export const teamService = {
    */
   replaceTeamOwner: (id, bdeId) => {
     return axiosClient.put(`${BASE_PATH}/${id}/owner`, { bdeId });
+  },
+
+  /**
+   * Returns today's assignment count for each ISE in the team alongside the
+   * branch daily limit. Used to render the workload badges in the BDE assign drawer.
+   */
+  getISEDailyStats: (teamId) => {
+    return axiosClient.get(`${BASE_PATH}/${teamId}/ise-daily-stats`);
+  },
+
+  /**
+   * BDE assigns a lead (from the team pool) to one of their ISEs.
+   * Enforces: lead must be in the team, target must be an active ISE member,
+   * and the ISE's daily limit must not be exceeded.
+   */
+  bdeAssignLeadToISE: (teamId, data) => {
+    return axiosClient.post(`${BASE_PATH}/${teamId}/bde-assign`, data);
   }
 };
 
