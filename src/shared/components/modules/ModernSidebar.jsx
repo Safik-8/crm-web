@@ -6,6 +6,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { getFilteredNavGroups } from '../../../lib/constants/navItems';
+import { useActiveTeamQuery } from '../../../features/teams/hooks/useTeams';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -13,16 +14,17 @@ function cn(...inputs) {
 
 const ModernSidebar = ({ isOpen, toggleSidebar }) => {
   const { hasPermission, user, logout } = useAuth();
+  const { data: activeTeam } = useActiveTeamQuery();
   const location = useLocation();
 
   const filteredNavGroups = useMemo(
-    () => getFilteredNavGroups(user, hasPermission),
-    [user, hasPermission]
+    () => getFilteredNavGroups(user, hasPermission, !!activeTeam?.id),
+    [user, hasPermission, activeTeam?.id]
   );
 
   // Determine active group based on current location
   const [activeGroupName, setActiveGroupName] = useState('');
-  
+
   const listRef = React.useRef(null);
   const [listIndicatorStyle, setListIndicatorStyle] = React.useState({ top: 0, height: 0, opacity: 0 });
 
@@ -51,7 +53,7 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
           const listRect = listRef.current.getBoundingClientRect();
           const activeRect = activeEl.getBoundingClientRect();
           const scrollTop = listRef.current.scrollTop;
-          
+
           setListIndicatorStyle({
             top: activeRect.top - listRect.top + scrollTop,
             height: activeRect.height,
@@ -108,8 +110,8 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
                     onClick={() => setActiveGroupName(group.group)}
                     className={cn(
                       "relative z-10 w-[92%] py-3.5 flex flex-col items-center gap-1.5 rounded-l-2xl transition-colors",
-                      isActive 
-                        ? "text-primary font-extrabold" 
+                      isActive
+                        ? "text-primary font-extrabold"
                         : "text-slate-500 hover:text-primary hover:bg-white/40 font-semibold"
                     )}
                   >
@@ -127,7 +129,7 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
 
           {/* Bottom user / exit */}
           <div className="mt-auto pt-4 flex flex-col items-center gap-4">
-            <button 
+            <button
               onClick={logout}
               className="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-white hover:text-red-500 transition-colors shadow-sm"
               title="Logout"
@@ -151,7 +153,7 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
           {/* Items List */}
           <div ref={listRef} className="flex-1 relative overflow-y-auto px-3 pb-4 space-y-1">
             {/* Floating indicator */}
-            <div 
+            <div
               className="absolute left-3 right-3 bg-primary/10 shadow-sm rounded-md transition-all duration-300 ease-in-out pointer-events-none z-0"
               style={{
                 top: listIndicatorStyle.top,
@@ -169,8 +171,8 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
                   to={item.path}
                   className={({ isActive }) => cn(
                     "relative z-10 flex items-center gap-3 px-4 py-2 rounded-md text-[13px] font-bold transition-colors duration-200",
-                    (isActive || isSubActive) 
-                      ? "text-primary active-list-item" 
+                    (isActive || isSubActive)
+                      ? "text-primary active-list-item"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   )}
                 >

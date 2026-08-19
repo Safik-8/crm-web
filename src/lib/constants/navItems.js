@@ -21,7 +21,8 @@ import {
   Layers,
 } from 'lucide-react';
 import {
-  PERMISSIONS } from '../constants/permissions';
+  PERMISSIONS
+} from '../constants/permissions';
 
 export const navGroups = [
   {
@@ -79,7 +80,7 @@ export const navGroups = [
 
 export const navItems = navGroups.flatMap(group => group.items);
 
-export const getFilteredNavItems = (user, hasPermission) => {
+export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) => {
   if (!user) return [];
 
   let items = [...navItems];
@@ -89,17 +90,22 @@ export const getFilteredNavItems = (user, hasPermission) => {
     if (item.roles && !item.roles.includes(user.primaryRole)) {
       return false;
     }
+    // Hide 'My Team' if user has no active team
+    if (item.path === '/my-team' && !hasActiveTeam) {
+      return false;
+    }
     // Check Permission constraint
     return !item.permission || hasPermission(item.permission);
   });
 };
 
-export const getFilteredNavGroups = (user, hasPermission) => {
+export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) => {
   if (!user) return [];
 
   return navGroups.map(group => {
     const filteredItems = group.items.filter(item => {
       if (item.roles && !item.roles.includes(user.primaryRole)) return false;
+      if (item.path === '/my-team' && !hasActiveTeam) return false;
       return !item.permission || hasPermission(item.permission);
     });
     return { ...group, items: filteredItems };

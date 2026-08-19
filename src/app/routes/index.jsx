@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
+import MyTeamRouteGuard from './MyTeamRouteGuard';
 import RootRedirect from './RootRedirect';
 import LoginPage from '../../features/auth/pages/LoginPage';
 import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
@@ -219,9 +220,9 @@ export const router = createBrowserRouter([
       {
         path: 'my-team',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAMS}>
+          <MyTeamRouteGuard>
             <MyTeamPage />
-          </ProtectedRoute>
+          </MyTeamRouteGuard>
         ),
       },
       {

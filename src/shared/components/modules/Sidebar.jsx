@@ -6,6 +6,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { getFilteredNavGroups } from '../../../lib/constants/navItems';
+import { useActiveTeamQuery } from '../../../features/teams/hooks/useTeams';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -13,10 +14,11 @@ function cn(...inputs) {
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { hasPermission, user } = useAuth();
+  const { data: activeTeam } = useActiveTeamQuery();
 
   const filteredNavGroups = React.useMemo(
-    () => getFilteredNavGroups(user, hasPermission),
-    [user, hasPermission]
+    () => getFilteredNavGroups(user, hasPermission, !!activeTeam?.id),
+    [user, hasPermission, activeTeam?.id]
   );
 
   const location = useLocation();
@@ -24,7 +26,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [indicatorStyle, setIndicatorStyle] = React.useState({ top: 0, left: 0, width: 0, height: 0, opacity: 0, isChild: false });
 
   const [expandedGroups, setExpandedGroups] = React.useState({});
-  
+
   const toggleGroup = (groupName) => {
     if (!groupName) return;
     setExpandedGroups(prev => ({
@@ -41,7 +43,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           const navRect = navRef.current.getBoundingClientRect();
           const activeRect = activeEl.getBoundingClientRect();
           const scrollTop = navRef.current.scrollTop;
-          
+
           setIndicatorStyle({
             top: activeRect.top - navRect.top + scrollTop,
             left: activeRect.left - navRect.left,
@@ -98,14 +100,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* ── Navigation ── */}
         <nav ref={navRef} className="flex-1 relative overflow-y-auto h-0 px-2.5 py-3 space-y-4 scrollbar-hide">
           {/* Floating Active Indicator */}
-          <div 
+          <div
             className="absolute bg-orange-50 shadow rounded-lg transition-all duration-300 ease-in-out pointer-events-none z-0"
-            style={{ 
-              top: indicatorStyle.top, 
+            style={{
+              top: indicatorStyle.top,
               left: indicatorStyle.left,
               width: indicatorStyle.width,
-              height: indicatorStyle.height, 
-              opacity: indicatorStyle.opacity 
+              height: indicatorStyle.height,
+              opacity: indicatorStyle.opacity
             }}
           >
             {!indicatorStyle.isChild && (
@@ -120,108 +122,109 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             const expanded = expandedGroups[group.group] !== false;
 
             return (
-            <div key={groupIdx} className="flex flex-col">
-              {group.group && (
-                <div 
-                  onClick={() => toggleGroup(group.group)}
-                  className="px-3 mb-1.5 flex items-center justify-between cursor-pointer group/header"
-                >
-                  <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover/header:text-slate-500 transition-colors">
-                    {group.group}
-                  </h3>
-                  <ChevronDown 
-                    size={12} 
-                    className={cn(
-                      "text-slate-400 transition-transform duration-300", 
-                      !expanded && "-rotate-90"
-                    )} 
-                  />
-                </div>
-              )}
-              
-              <div 
-                className={cn(
-                  "grid transition-all duration-300 ease-in-out",
-                  expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              <div key={groupIdx} className="flex flex-col">
+                {group.group && (
+                  <div
+                    onClick={() => toggleGroup(group.group)}
+                    className="px-3 mb-1.5 flex items-center justify-between cursor-pointer group/header"
+                  >
+                    <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover/header:text-slate-500 transition-colors">
+                      {group.group}
+                    </h3>
+                    <ChevronDown
+                      size={12}
+                      className={cn(
+                        "text-slate-400 transition-transform duration-300",
+                        !expanded && "-rotate-90"
+                      )}
+                    />
+                  </div>
                 )}
-              >
-                <div className="overflow-hidden space-y-0.5">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const hasChildren = item.children && item.children.length > 0;
-                    const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
-                    const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
 
-                return (
-                  <React.Fragment key={item.path}>
-                    <NavLink
-                      to={item.path}
-                      end={!hasChildren}
-                      className={({ isActive }) => {
-                        const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
-                        return cn(
-                          'group relative z-10 flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
-                          active
-                            ? 'text-orange-600 font-semibold active-nav-link'
-                            : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
-                        );
-                      }}
-                    >
-                      {({ isActive }) => {
-                        const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
-                        return (
-                          <>
-                            <Icon
-                              size={16}
-                              strokeWidth={active ? 2.2 : 1.8}
-                              className={cn(
-                                'shrink-0 transition-colors duration-150',
-                                active ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
-                              )}
-                            />
-                            <span className="truncate font-bold">{item.name}</span>
-                          </>
-                        );
-                      }}
-                    </NavLink>
-
-                    {hasChildren && item.children.map((child) => {
-                      const ChildIcon = child.icon;
-                      const isChildActive = location.pathname === item.path && isTabBranch;
+                <div
+                  className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  )}
+                >
+                  <div className="overflow-hidden space-y-0.5">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const hasChildren = item.children && item.children.length > 0;
+                      const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
+                      const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
 
                       return (
-                        <NavLink
-                          key={child.path}
-                          to={child.path}
-                          className={({ isActive }) => {
+                        <React.Fragment key={item.path}>
+                          <NavLink
+                            to={item.path}
+                            end={!hasChildren}
+                            className={({ isActive }) => {
+                              const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
+                              return cn(
+                                'group relative z-10 flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+                                active
+                                  ? 'text-orange-600 font-semibold active-nav-link'
+                                  : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                              );
+                            }}
+                          >
+                            {({ isActive }) => {
+                              const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
+                              return (
+                                <>
+                                  <Icon
+                                    size={16}
+                                    strokeWidth={active ? 2.2 : 1.8}
+                                    className={cn(
+                                      'shrink-0 transition-colors duration-150',
+                                      active ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                                    )}
+                                  />
+                                  <span className="truncate font-bold">{item.name}</span>
+                                </>
+                              );
+                            }}
+                          </NavLink>
+
+                          {hasChildren && item.children.map((child) => {
+                            const ChildIcon = child.icon;
                             const isChildActive = location.pathname === item.path && isTabBranch;
-                            return cn(
-                              'group relative z-10 flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 border-l-2',
-                              isChildActive
-                                ? 'text-orange-600 font-semibold active-nav-link is-child-link border-transparent'
-                                : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
+
+                            return (
+                              <NavLink
+                                key={child.path}
+                                to={child.path}
+                                className={({ isActive }) => {
+                                  const isChildActive = location.pathname === item.path && isTabBranch;
+                                  return cn(
+                                    'group relative z-10 flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 border-l-2',
+                                    isChildActive
+                                      ? 'text-orange-600 font-semibold active-nav-link is-child-link border-transparent'
+                                      : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
+                                  );
+                                }}
+                              >
+                                <ChildIcon
+                                  size={14}
+                                  strokeWidth={isChildActive ? 2.2 : 1.8}
+                                  className={cn(
+                                    'shrink-0 transition-colors duration-150',
+                                    isChildActive ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                                  )}
+                                />
+                                <span className="truncate font-bold">{child.name}</span>
+                              </NavLink>
                             );
-                          }}
-                        >
-                          <ChildIcon
-                            size={14}
-                            strokeWidth={isChildActive ? 2.2 : 1.8}
-                            className={cn(
-                              'shrink-0 transition-colors duration-150',
-                              isChildActive ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
-                            )}
-                          />
-                          <span className="truncate font-bold">{child.name}</span>
-                        </NavLink>
+                          })}
+                        </React.Fragment>
                       );
                     })}
-                  </React.Fragment>
-                );
-              })}
+                  </div>
                 </div>
               </div>
-            </div>
-          )})}
+            )
+          })}
         </nav>
 
         {/* ── Footer ── */}
