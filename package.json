@@ -21,6 +21,7 @@
     "axios": "^1.18.1",
     "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
+    "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.7.0",
     "react": "^19.0.0",
     "react-countup": "^6.5.3",

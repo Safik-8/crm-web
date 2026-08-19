@@ -17,6 +17,7 @@ import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
 import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 import SalesPerformancePage from '../../features/salesPerformance/pages/SalesPerformancePage';
+import RevenueReportPage from '../../features/revenueReport/pages/RevenueReportPage';
 
 import UsersPage from '../../features/users/pages/UsersPage';
 import CoursesPage from '../../features/courses/pages/CoursesPage';
@@ -197,6 +198,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
             <SalesPerformancePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'reports/revenue',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+            <RevenueReportPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'revenue-reports',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+            <RevenueReportPage />
           </ProtectedRoute>
         ),
       },

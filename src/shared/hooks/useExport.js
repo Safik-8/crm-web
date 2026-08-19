@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from '../utils/toast';
+import { apiClient } from '../../lib/api/api';
 
 /**
  * Helper to safely extract nested values from an object using a dot-notation path.
@@ -11,7 +12,8 @@ const getNestedValue = (obj, path) => {
 };
 
 /**
- * Reusable Custom Hook to export datasets to CSV and Excel (XLSX).
+ * Reusable Custom Hook to export datasets to CSV, Excel (.xlsx), and PDF (.pdf).
+ * Supports automatic server-side export logging and audit trail generation.
  *
  * @returns {object} Export states and trigger functions
  */
@@ -19,10 +21,10 @@ export const useExport = () => {
   const [isExporting, setIsExporting] = useState(false);
 
   /**
-   * Export data as a CSV file.
+   * Export data as a CSV file with optional export audit logging.
    */
-  const exportCSV = useCallback((data = [], columns = [], fileName = 'export') => {
-    if (data.length === 0) {
+  const exportCSV = useCallback(async (data = [], columns = [], fileName = 'export', logOptions = null) => {
+    if (!data || data.length === 0) {
       toast.error('No records available to export.');
       return;
     }
@@ -53,12 +55,27 @@ export const useExport = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 
+      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.csv`;
       link.setAttribute('href', url);
-      link.setAttribute('download', `${fileName}_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', fullFileName);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // 4. Log Export Action to Server
+      if (logOptions?.reportName) {
+        try {
+          await apiClient.post('/reports/revenue/export-log', {
+            reportName: logOptions.reportName,
+            exportType: 'CSV',
+            fileName: fullFileName,
+            filtersUsed: logOptions.filtersUsed || {}
+          });
+        } catch (auditErr) {
+          console.warn('Export log recording failed:', auditErr);
+        }
+      }
 
       toast.success('CSV exported successfully.');
     } catch (err) {
@@ -70,11 +87,10 @@ export const useExport = () => {
   }, []);
 
   /**
-   * Export data as a premium Excel (.xlsx) file.
-   * Utilizes dynamic import of 'xlsx' library to preserve bundle performance.
+   * Export data as a premium Excel (.xlsx) file with optional export audit logging.
    */
-  const exportExcel = useCallback(async (data = [], columns = [], fileName = 'export') => {
-    if (data.length === 0) {
+  const exportExcel = useCallback(async (data = [], columns = [], fileName = 'export', logOptions = null) => {
+    if (!data || data.length === 0) {
       toast.error('No records available to export.');
       return;
     }
@@ -92,7 +108,7 @@ export const useExport = () => {
         return item;
       });
 
-      // 2. Dynamically import xlsx package to keep main chunk lightweight
+      // 2. Dynamically import xlsx package
       const XLSX = await import('xlsx');
 
       // 3. Create worksheet and workbook
@@ -101,7 +117,23 @@ export const useExport = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Data List');
 
       // 4. Trigger download
-      XLSX.writeFile(workbook, `${fileName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(workbook, fullFileName);
+
+      // 5. Log Export Action to Server
+      if (logOptions?.reportName) {
+        try {
+          await apiClient.post('/reports/revenue/export-log', {
+            reportName: logOptions.reportName,
+            exportType: 'EXCEL',
+            fileName: fullFileName,
+            filtersUsed: logOptions.filtersUsed || {}
+          });
+        } catch (auditErr) {
+          console.warn('Export log recording failed:', auditErr);
+        }
+      }
+
       toast.success('Excel exported successfully.');
     } catch (err) {
       console.error('Excel Export Error:', err);
@@ -111,9 +143,60 @@ export const useExport = () => {
     }
   }, []);
 
+  /**
+   * Export DOM element or page component to PDF (.pdf) using html2pdf.js
+   */
+  const exportPDF = useCallback(async (elementOrId, fileName = 'export', logOptions = null) => {
+    setIsExporting(true);
+    try {
+      const element = typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
+      if (!element) {
+        toast.error('Target printable element not found for PDF generation.');
+        setIsExporting(false);
+        return;
+      }
+
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const opt = {
+        margin: 8,
+        filename: fullFileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+
+      // Log Export Action to Server
+      if (logOptions?.reportName) {
+        try {
+          await apiClient.post('/reports/revenue/export-log', {
+            reportName: logOptions.reportName,
+            exportType: 'PDF',
+            fileName: fullFileName,
+            filtersUsed: logOptions.filtersUsed || {}
+          });
+        } catch (auditErr) {
+          console.warn('Export log recording failed:', auditErr);
+        }
+      }
+
+      toast.success('PDF exported successfully.');
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+      toast.error('Failed to export PDF document.');
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
   return {
     exportCSV,
     exportExcel,
+    exportPDF,
     isExporting
   };
 };

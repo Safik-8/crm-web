@@ -20,6 +20,7 @@ import {
   Tags,
   Layers,
   TrendingUp,
+  DollarSign,
 } from 'lucide-react';
 import {
   PERMISSIONS } from '../constants/permissions';
@@ -57,6 +58,7 @@ export const navGroups = [
     items: [
       { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT },
       { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_REPORTS },
+      { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REPORTS },
       { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
     ]
   },
