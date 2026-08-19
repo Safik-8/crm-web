@@ -9,7 +9,8 @@ export const TEAM_KEYS = {
   lists: () => [...TEAM_KEYS.all, 'list'],
   list: (params) => [...TEAM_KEYS.lists(), params],
   details: () => [...TEAM_KEYS.all, 'detail'],
-  detail: (id) => [...TEAM_KEYS.details(), id]
+  detail: (id) => [...TEAM_KEYS.details(), id],
+  active: () => [...TEAM_KEYS.all, 'active']
 };
 
 export const useTeamsQuery = (params) => {
@@ -32,6 +33,17 @@ export const useTeamQuery = (id) => {
       return response.data?.team || null;
     },
     enabled: !!id
+  });
+};
+
+export const useActiveTeamQuery = () => {
+  return useQuery({
+    queryKey: TEAM_KEYS.active(),
+    queryFn: async () => {
+      const response = await teamService.getActiveTeam();
+      return response.data?.team || null;
+    },
+    staleTime: 60000
   });
 };
 

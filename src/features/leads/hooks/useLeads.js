@@ -38,7 +38,7 @@ export const LEAD_KEYS = {
  * 
  * @param {object} params - query options (filters, page, limit, search, sort)
  */
-export const useLeadsQuery = (params) => {
+export const useLeadsQuery = (params, options = {}) => {
   const { user } = useAuth();
   return useQuery({
     queryKey: LEAD_KEYS.list(params, user?.companyId),
@@ -48,6 +48,7 @@ export const useLeadsQuery = (params) => {
     },
     placeholderData: (prev) => prev, // smooth pagination transitions
     staleTime: 5000,
+    ...options,
   });
 };
 

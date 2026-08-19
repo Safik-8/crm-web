@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
+import MyTeamRouteGuard from './MyTeamRouteGuard';
 import RootRedirect from './RootRedirect';
 import LoginPage from '../../features/auth/pages/LoginPage';
 import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
@@ -22,6 +23,7 @@ import RevenueReportPage from '../../features/revenueReport/pages/RevenueReportP
 import UsersPage from '../../features/users/pages/UsersPage';
 import CoursesPage from '../../features/courses/pages/CoursesPage';
 import TeamsPage from '../../features/teams/pages/TeamsPage';
+import MyTeamPage from '../../features/teams/pages/MyTeamPage';
 import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
 import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
@@ -247,6 +249,14 @@ export const router = createBrowserRouter([
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAMS}>
             <TeamsPage />
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-team',
+        element: (
+          <MyTeamRouteGuard>
+            <MyTeamPage />
+          </MyTeamRouteGuard>
         ),
       },
       {

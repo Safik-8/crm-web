@@ -50,7 +50,8 @@ const MODULES_LIST = [
   { value: "DASHBOARD", label: "Dashboard" },
   { value: "NOTIFICATION", label: "Notifications" },
   { value: "AUDIT", label: "Audit Logs" },
-  { value: "OPPORTUNITY", label: "Opportunities Engine" }
+  { value: "OPPORTUNITY", label: "Opportunities Engine" },
+  { value: "REPORT", label: "Reports" }
 ];
 
 const ACTIONS = [

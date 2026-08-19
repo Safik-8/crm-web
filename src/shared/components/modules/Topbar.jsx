@@ -103,9 +103,22 @@ const buildBreadcrumbs = (pathname, search, state) => {
   });
   const searchParams = new URLSearchParams(search);
   const leadName = searchParams.get('leadName');
+  const reportType = searchParams.get('type');
 
   if (leadName) {
     crumbs.push({ label: leadName, path: pathname + search });
+  }
+
+  if (reportType) {
+    const reportLabels = {
+      LEAD_REPORT: 'Leads Summary & Distribution',
+      OPPORTUNITY_REPORT: 'Opportunities Pipeline Analysis',
+      DEAL_REPORT: 'Deals & Conversions',
+      REVENUE_REPORT: 'Revenue Breakdown & Payments',
+      CUSTOMER_REPORT: 'Customers Summary & Acquisition',
+      TEAM_PERFORMANCE_REPORT: 'Team Conversions & KPI Metrics'
+    };
+    crumbs.push({ label: reportLabels[reportType] || 'Report Details', path: pathname + search });
   }
 
   return crumbs.filter((c, idx, arr) => idx === 0 || c.path !== arr[idx - 1].path);

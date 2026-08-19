@@ -6,6 +6,13 @@ const BASE_PATH = '/teams';
 
 export const teamService = {
   /**
+   * Fetches active team of the logged in user
+   */
+  getActiveTeam: () => {
+    return axiosClient.get(`${BASE_PATH}/membership/active`);
+  },
+
+  /**
    * Fetches paginated, filtered, and searched teams list.
    */
   getTeams: (params = {}) => {
