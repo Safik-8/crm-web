@@ -22,9 +22,11 @@ import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
 import { SYSTEM_REPORTS_METADATA } from '../constants/reportConstants';
 import { apiClient } from '../../../lib/api/api';
+import { useExport } from '../../../shared/hooks/useExport';
 
 const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, error, toast }) => {
   const { user } = useAuth();
+  const { exportPDFFromData } = useExport();
   const reportPerms = user?.permissions?.REPORT || {};
   const canExport = reportPerms.canExport ?? true;
   const canEdit = reportPerms.canEdit ?? true;
@@ -35,6 +37,29 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
   const [saving, setSaving] = useState(false);
   const [printItems, setPrintItems] = useState(null);
   const [printing, setPrinting] = useState(false);
+
+  // Ref flag: when true, the print-only container has been rendered and we should trigger print
+  const printReadyRef = useRef(false);
+
+  // This effect fires AFTER React commits the printItems state to the DOM.
+  // Only then do we call window.print(), guaranteeing all rows are rendered.
+  useEffect(() => {
+    if (printItems !== null && printReadyRef.current) {
+      printReadyRef.current = false;
+      // requestAnimationFrame ensures the browser has painted before opening the print dialog
+      const frameId = requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          // Clean up after the print dialog closes
+          document.body.classList.remove('is-printing-report');
+          setPrintItems(null);
+          setPrinting(false);
+        }, 150);
+      });
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [printItems]);
+
 
   const metadata = SYSTEM_REPORTS_METADATA[reportType] || {};
   const columns = metadata.columns || [];
@@ -86,7 +111,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
 
   const fetchFullDataset = async (formatLabel) => {
     if (pagination.total === 0) return [];
-    
+
     let exportItems = items;
     if (pagination.total > items.length) {
       toast?.info(`Preparing full report dataset for ${formatLabel} export...`);
@@ -106,7 +131,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
         throw new Error('Failed to load complete report dataset from server');
       }
     }
-    
+
     // Client-side deduplication to prevent repeated records in PDF
     const uniqueItems = [];
     const seenKeys = new Set();
@@ -117,14 +142,31 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
         uniqueItems.push(item);
       }
     });
-    
+
     return uniqueItems;
+  };
+
+  const logReportExportAction = async (exportType, fileName, rowCount) => {
+    try {
+      await apiClient('/reports/revenue/export-log', {
+        method: 'POST',
+        body: {
+          reportName: metadata.title || reportType,
+          exportType: exportType,
+          fileName: fileName,
+          filtersUsed: filters || {},
+          rowCount: rowCount || 0
+        }
+      });
+    } catch (auditErr) {
+      console.warn('Failed to record AuditLog entry:', auditErr);
+    }
   };
 
   const handleExportExcel = async () => {
     try {
       const exportItems = await fetchFullDataset('Excel');
-      
+
       // Sheet 1: Report Data
       const dataRows = [columns.map(c => c.header)];
       if (exportItems.length === 0) {
@@ -149,7 +191,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       const companyName = getScopeName('companies', filters?.companyId) || 'Your Company';
       const teamName = getScopeName('teams', filters?.teamId) || 'All Teams';
       const empName = getScopeName('employees', filters?.employeeId) || 'All Employees';
-      
+
       const scopeStr = `${companyName} -> ${branchName} -> ${teamName} -> ${empName}`;
       const dateRangeStr = `${filters?.startDate || 'All Time'} to ${filters?.endDate || 'All Time'}`;
 
@@ -216,14 +258,17 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       // Generate Workbook
       const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
-      
+
       const wsData = XLSX.utils.aoa_to_sheet(dataRows);
       XLSX.utils.book_append_sheet(wb, wsData, 'Report Data');
 
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
-      XLSX.writeFile(wb, `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      const exportFileName = `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, exportFileName);
+
+      await logReportExportAction('EXCEL', exportFileName, exportItems.length);
       toast?.success('Report exported to Excel successfully');
     } catch (err) {
       console.error(err);
@@ -235,7 +280,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     try {
       const exportItems = await fetchFullDataset('CSV');
 
-      // BUG FIX: Quote headers the same way as data values to handle commas in column names
+      // Quote headers the same way as data values to handle commas in column names
       const headers = columns.map(c => `"${String(c.header ?? '').replace(/"/g, '""')}"`).join(',');
       const rows = exportItems.map(item => {
         return columns.map(c => {
@@ -250,15 +295,18 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       });
 
       const csvContent = [headers, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
+      const exportFileName = `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.csv`;
       link.setAttribute('href', url);
-      link.setAttribute('download', `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute('download', exportFileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      await logReportExportAction('CSV', exportFileName, exportItems.length);
       toast?.success('Report exported to CSV successfully');
     } catch (err) {
       console.error(err);
@@ -266,43 +314,60 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     }
   };
 
-  // Ref flag: when true, the print-only container has been rendered and we should trigger print
-  const printReadyRef = useRef(false);
 
-  // This effect fires AFTER React commits the printItems state to the DOM.
-  // Only then do we call window.print(), guaranteeing all rows are rendered.
-  useEffect(() => {
-    if (printItems !== null && printReadyRef.current) {
-      printReadyRef.current = false;
-      // requestAnimationFrame ensures the browser has painted before opening the print dialog
-      const frameId = requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.print();
-          // Clean up after the print dialog closes
-          document.body.classList.remove('is-printing-report');
-          setPrintItems(null);
-          setPrinting(false);
-        }, 150);
-      });
-      return () => cancelAnimationFrame(frameId);
-    }
-  }, [printItems]);
-
-  const handlePrintPDF = async () => {
-    setPrinting(true);
+  const handleExportPDF = async () => {
     try {
       const exportItems = await fetchFullDataset('PDF');
-      // Add class to body so CSS can target it cleanly
-      document.body.classList.add('is-printing-report');
-      printReadyRef.current = true;
-      setPrintItems(exportItems);
+
+      const companyName = user?.company?.name || user?.companyName || getScopeName('companies', filters?.companyId) || 'ClassDesk';
+      const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
+
+      const pdfOptions = {
+        userName: user?.name || user?.email || 'Authorized User',
+        companyName,
+        companySubtitle: `${companyName} • Enterprise Analytics & Reporting`,
+        logoUrl,
+        filtersSummary: {
+          Scope: `${companyName} -> ${getScopeName('branches', filters?.branchId) || 'All Branches'} -> ${getScopeName('teams', filters?.teamId) || 'All Teams'}`,
+          'Date Range': filters?.startDate && filters?.endDate ? `${filters.startDate} to ${filters.endDate}` : 'All Time',
+          Status: filters?.status || filters?.statusId || filters?.paymentStatus || null,
+          Course: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
+        },
+        summaryCards: [
+          { label: 'Total Records', value: `${exportItems.length} Rows` },
+          { label: 'Total Revenue', value: summary?.totalRevenue ? currency(summary.totalRevenue) : null }
+        ].filter(card => card.value !== null)
+      };
+
+      const pdfColumns = columns.map(c => ({
+        header: c.header,
+        accessorKey: c.accessorKey,
+        align: c.accessorKey?.toLowerCase().includes('revenue') || c.accessorKey?.toLowerCase().includes('amount') || c.accessorKey?.toLowerCase().includes('rate') ? 'right' : (c.accessorKey?.toLowerCase().includes('id') || c.accessorKey?.toLowerCase().includes('code') || c.accessorKey?.toLowerCase().includes('count') ? 'center' : 'left'),
+        formatter: (val, item) => (c.cell ? c.cell(item) : (val !== null && val !== undefined ? String(val) : ''))
+      }));
+
+      const exportFileName = `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      await exportPDFFromData(
+        exportItems,
+        pdfColumns,
+        metadata.title || reportType,
+        exportFileName,
+        pdfOptions,
+        {
+          rawFileName: true,
+          onSuccess: async (fmt, fileName, rowCount) => {
+            await logReportExportAction('PDF', fileName, rowCount);
+          }
+        }
+      );
     } catch (err) {
-      printReadyRef.current = false;
-      document.body.classList.remove('is-printing-report');
-      toast?.error('Error preparing PDF print: ' + err.message);
-      setPrinting(false);
+      console.error('PDF Export Error:', err);
+      toast?.error('Failed to export report to PDF: ' + err.message);
     }
   };
+
+
 
   const handleSaveConfig = (e) => {
     e.preventDefault();
@@ -671,10 +736,11 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
                 CSV
               </button>
               <button
-                onClick={handlePrintPDF}
+                onClick={handleExportPDF}
                 className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all"
               >
-                PDF/Print
+                <Download className="w-4 h-4 text-slate-500" />
+                PDF
               </button>
             </>
           )}
@@ -762,104 +828,121 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       {/* Print-Only portal: rendered directly into document.body via createPortal.
            This makes it a sibling of #root, not a descendant, so @media print CSS
            can cleanly hide #root and show only this div — enabling proper multi-page output. */}
-      {printItems && ReactDOM.createPortal(
-        <div id="report-print-portal" style={{ padding: '0', backgroundColor: '#fff', color: '#0f172a' }}>
-          {/* Page 1 Only Content */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xs">
-                    CD
-                  </div>
-                  <h2 className="text-lg font-black tracking-widest text-slate-900 uppercase">ClassDesk <span className="text-slate-500 font-normal">CRM Analytics</span></h2>
-                </div>
-                <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">{metadata.title}</h1>
-              </div>
-              <div className="text-right text-xs font-semibold text-slate-500 space-y-1">
-                <div><span className="text-slate-400">Report Period:</span> {filters?.startDate || 'All Time'} – {filters?.endDate || 'All Time'}</div>
-                <div><span className="text-slate-400">Generated:</span> {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-              </div>
-            </div>
+      {printItems && (() => {
+        const tenantCompanyName = user?.company?.name || user?.companyName || getScopeName('companies', filters?.companyId) || 'ClassDesk';
+        const tenantCompanyLogo = user?.company?.logo || '/src/assets/logos/logo-official.png';
+        const companyInitials = tenantCompanyName
+          .split(' ')
+          .map(n => (n ? n[0] : ''))
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || 'CD';
 
+        return ReactDOM.createPortal(
+          <div id="report-print-portal" style={{ padding: '0', backgroundColor: '#fff', color: '#0f172a' }}>
+            {/* Page 1 Only Content */}
             <div className="mb-6">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">Applied Filters & Scope</h3>
-              <div className="grid grid-cols-4 gap-x-4 gap-y-2 text-[10px] font-semibold text-slate-600">
-                <div><span className="text-slate-400 block mb-0.5">Company</span> <span className="text-slate-800">{getScopeName('companies', filters?.companyId) || 'All Companies'}</span></div>
-                <div><span className="text-slate-400 block mb-0.5">Branch</span> <span className="text-slate-800">{getScopeName('branches', filters?.branchId) || 'All Branches'}</span></div>
-                <div><span className="text-slate-400 block mb-0.5">Team</span> <span className="text-slate-800">{getScopeName('teams', filters?.teamId) || 'All Teams'}</span></div>
-                <div><span className="text-slate-400 block mb-0.5">Employee</span> <span className="text-slate-800">{getScopeName('employees', filters?.employeeId) || 'All Employees'}</span></div>
-                
-                {filters?.status && <div><span className="text-slate-400 block mb-0.5">Status</span> <span className="text-slate-800">{filters.status}</span></div>}
-                {filters?.paymentStatus && <div><span className="text-slate-400 block mb-0.5">Payment Status</span> <span className="text-slate-800">{filters.paymentStatus}</span></div>}
-                {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Product / Course</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Courses'}</span></div>}
-                {filters?.outcome && <div><span className="text-slate-400 block mb-0.5">Outcome</span> <span className="text-slate-800">{filters.outcome}</span></div>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {renderSummaryCards()}
-            </div>
-          </div>
-
-          {/* Table Content (Flows across pages with repeating headers) */}
-          <div>
-            {printItems.length === 0 ? (
-              <div className="border border-slate-200 bg-slate-50 rounded-xl p-8 text-center text-sm font-medium text-slate-500">
-                <h4 className="text-slate-800 font-bold mb-1">No records found</h4>
-                <p>There are no records matching the selected filters and date range.</p>
-              </div>
-            ) : (
-              <table className="w-full border-collapse border border-slate-200 text-[10px]">
-                <thead>
-                  <tr className="no-print-border">
-                    <td colSpan={columns.length} className="border-0 p-0 pb-2">
-                      <div className="flex justify-between items-end border-b border-slate-300 pb-1 mb-1 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                        <span>ClassDesk CRM — {metadata.title}</span>
+              <div className="flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-4">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {tenantCompanyLogo ? (
+                      <img src={tenantCompanyLogo} alt="Logo" className="h-8 w-auto object-contain" />
+                    ) : (
+                      <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                        {companyInitials}
                       </div>
-                    </td>
-                  </tr>
-                  <tr className="bg-slate-50 border-b-2 border-slate-300">
-                    {columns.map((col, i) => (
-                      <th key={i} className="p-2 text-left font-bold text-slate-800 border-b border-slate-300 uppercase tracking-wider">{col.header}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {printItems.map((item, rowIdx) => (
-                    <tr key={rowIdx} className="border-b border-slate-200 hover:bg-slate-50/50">
-                      {columns.map((col, colIdx) => {
-                        let val = '';
-                        if (col.cell) {
-                          val = col.cell(item);
-                        } else if (col.accessorKey) {
-                          val = item[col.accessorKey];
-                        }
-                        return (
-                          <td key={colIdx} className="p-2 text-slate-700 border-b border-slate-200 align-top">
-                            {String(val ?? '')}
-                          </td>
-                        );
-                      })}
+                    )}
+                    <h2 className="text-lg font-black tracking-widest text-slate-900 uppercase">{tenantCompanyName} <span className="text-slate-500 font-normal">CRM Analytics</span></h2>
+                  </div>
+                  <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">{metadata.title}</h1>
+                </div>
+                <div className="text-right text-xs font-semibold text-slate-500 space-y-1">
+                  <div><span className="text-slate-400">Report Period:</span> {filters?.startDate || 'All Time'} – {filters?.endDate || 'All Time'}</div>
+                  <div><span className="text-slate-400">Generated:</span> {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div><span className="text-slate-400">Generated By:</span> {user?.name || user?.email || 'Authorized User'}</div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">Applied Filters & Scope</h3>
+                <div className="grid grid-cols-4 gap-x-4 gap-y-2 text-[10px] font-semibold text-slate-600">
+                  <div><span className="text-slate-400 block mb-0.5">Company</span> <span className="text-slate-800">{getScopeName('companies', filters?.companyId) || 'All Companies'}</span></div>
+                  <div><span className="text-slate-400 block mb-0.5">Branch</span> <span className="text-slate-800">{getScopeName('branches', filters?.branchId) || 'All Branches'}</span></div>
+                  <div><span className="text-slate-400 block mb-0.5">Team</span> <span className="text-slate-800">{getScopeName('teams', filters?.teamId) || 'All Teams'}</span></div>
+                  <div><span className="text-slate-400 block mb-0.5">Employee</span> <span className="text-slate-800">{getScopeName('employees', filters?.employeeId) || 'All Employees'}</span></div>
+
+                  {filters?.status && <div><span className="text-slate-400 block mb-0.5">Status</span> <span className="text-slate-800">{filters.status}</span></div>}
+                  {filters?.paymentStatus && <div><span className="text-slate-400 block mb-0.5">Payment Status</span> <span className="text-slate-800">{filters.paymentStatus}</span></div>}
+                  {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Product / Course</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Courses'}</span></div>}
+                  {filters?.outcome && <div><span className="text-slate-400 block mb-0.5">Outcome</span> <span className="text-slate-800">{filters.outcome}</span></div>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                {renderSummaryCards()}
+              </div>
+            </div>
+
+            {/* Table Content (Flows across pages with repeating headers) */}
+            <div>
+              {printItems.length === 0 ? (
+                <div className="border border-slate-200 bg-slate-50 rounded-xl p-8 text-center text-sm font-medium text-slate-500">
+                  <h4 className="text-slate-800 font-bold mb-1">No records found</h4>
+                  <p>There are no records matching the selected filters and date range.</p>
+                </div>
+              ) : (
+                <table className="w-full border-collapse border border-slate-200 text-[10px]">
+                  <thead>
+                    <tr className="no-print-border">
+                      <td colSpan={columns.length} className="border-0 p-0 pb-2">
+                        <div className="flex justify-between items-end border-b border-slate-300 pb-1 mb-1 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                          <span>{tenantCompanyName} CRM — {metadata.title}</span>
+                        </div>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="no-print-border">
-                    <td colSpan={columns.length} className="border-0 pt-4">
-                      <div className="flex justify-between items-center border-t border-slate-300 pt-2 text-[9px] text-slate-400 font-bold">
-                        <span>Confidential — ClassDesk CRM</span>
-                        <span>Generated: {new Date().toLocaleDateString('en-GB')}</span>
-                      </div>
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+                    <tr className="bg-slate-50 border-b-2 border-slate-300">
+                      {columns.map((col, i) => (
+                        <th key={i} className="p-2 text-left font-bold text-slate-800 border-b border-slate-300 uppercase tracking-wider">{col.header}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {printItems.map((item, rowIdx) => (
+                      <tr key={rowIdx} className="border-b border-slate-200 hover:bg-slate-50/50">
+                        {columns.map((col, colIdx) => {
+                          let val = '';
+                          if (col.cell) {
+                            val = col.cell(item);
+                          } else if (col.accessorKey) {
+                            val = item[col.accessorKey];
+                          }
+                          return (
+                            <td key={colIdx} className="p-2 text-slate-700 border-b border-slate-200 align-top">
+                              {String(val ?? '')}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="no-print-border">
+                      <td colSpan={columns.length} className="border-0 pt-4">
+                        <div className="flex justify-between items-center border-t border-slate-300 pt-2 text-[9px] text-slate-400 font-bold">
+                          <span>Confidential — {tenantCompanyName} CRM</span>
+                          <span>Generated by: {user?.name || user?.email || 'User'} &nbsp;|&nbsp; {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              )}
+            </div>
+          </div>,
+          document.body
+        );
+      })()}
+
     </div>
   );
 };

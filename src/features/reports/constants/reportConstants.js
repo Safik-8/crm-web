@@ -44,7 +44,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Lead', accessorKey: 'lead', cell: (row) => row.lead?.name || 'N/A' },
       { header: 'Product/Course', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
       { header: 'Stage', accessorKey: 'stage', cell: (row) => row.stage?.name || 'N/A' },
-      { header: 'Expected Revenue', accessorKey: 'expectedRevenue', cell: (row) => `$${Number(row.expectedRevenue).toLocaleString()}` },
+      { header: 'Expected Revenue', accessorKey: 'expectedRevenue', cell: (row) => `₹${Number(row.expectedRevenue || 0).toLocaleString('en-IN')}` },
       { header: 'Probability', accessorKey: 'probabilityPercentage', cell: (row) => `${row.probabilityPercentage}%` },
       { header: 'Status', accessorKey: 'status' },
       { header: 'Closing Date', accessorKey: 'closingDate', cell: (row) => new Date(row.closingDate).toLocaleDateString() }
@@ -58,7 +58,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Deal Number', accessorKey: 'dealNumber' },
       { header: 'Opportunity', accessorKey: 'opportunity', cell: (row) => row.opportunity?.opportunityName || 'N/A' },
       { header: 'Customer/Lead', accessorKey: 'lead', cell: (row) => row.lead?.name || 'N/A' },
-      { header: 'Final Amount', accessorKey: 'finalAmount', cell: (row) => `$${Number(row.finalAmount).toLocaleString()}` },
+      { header: 'Final Amount', accessorKey: 'finalAmount', cell: (row) => `₹${Number(row.finalAmount || 0).toLocaleString('en-IN')}` },
       { header: 'Outcome', accessorKey: 'outcome' },
       { header: 'Closed By', accessorKey: 'closedBy', cell: (row) => row.closedBy?.name || 'N/A' },
       { header: 'Closing Date', accessorKey: 'closingDate', cell: (row) => new Date(row.closingDate).toLocaleDateString() }
@@ -72,7 +72,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Deal Number', accessorKey: 'deal', cell: (row) => row.deal?.dealNumber || 'N/A' },
       { header: 'Customer', accessorKey: 'customer', cell: (row) => row.customer?.customerName || 'N/A' },
       { header: 'Course/Product', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
-      { header: 'Revenue Amount', accessorKey: 'revenueAmount', cell: (row) => `$${Number(row.revenueAmount).toLocaleString()}` },
+      { header: 'Revenue Amount', accessorKey: 'revenueAmount', cell: (row) => `₹${Number(row.revenueAmount || 0).toLocaleString('en-IN')}` },
       { header: 'Payment Status', accessorKey: 'paymentStatus' },
       { header: 'Revenue Date', accessorKey: 'revenueDate', cell: (row) => new Date(row.revenueDate).toLocaleDateString() }
     ]
@@ -87,7 +87,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Team', accessorKey: 'teamName' },
       { header: 'Leads Assigned', accessorKey: 'leadsAssigned' },
       { header: 'Deals Closed', accessorKey: 'dealsClosed' },
-      { header: 'Total Revenue', accessorKey: 'totalRevenue', cell: (row) => `$${Number(row.totalRevenue).toLocaleString()}` },
+      { header: 'Total Revenue', accessorKey: 'totalRevenue', cell: (row) => `₹${Number(row.totalRevenue || 0).toLocaleString('en-IN')}` },
       { header: 'Conversion Rate', accessorKey: 'conversionRate', cell: (row) => `${row.conversionRate}%` }
     ]
   },
@@ -102,7 +102,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Email', accessorKey: 'email', cell: (row) => row.email || 'N/A' },
       { header: 'Status', accessorKey: 'status' },
       { header: 'Product Purchased', accessorKey: 'purchasedProduct', cell: (row) => row.purchasedProduct?.name || 'N/A' },
-      { header: 'Total Revenue', accessorKey: 'totalRevenue', cell: (row) => `$${Number(row.totalRevenue).toLocaleString()}` },
+      { header: 'Total Revenue', accessorKey: 'totalRevenue', cell: (row) => `₹${Number(row.totalRevenue || 0).toLocaleString('en-IN')}` },
       { header: 'Purchase Date', accessorKey: 'purchaseDate', cell: (row) => new Date(row.purchaseDate).toLocaleDateString() }
     ]
   }

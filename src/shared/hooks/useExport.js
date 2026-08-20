@@ -289,9 +289,9 @@ export const useExport = () => {
       // 3. Format Filter Badges
       const filterBadgesHtml = pdfOptions.filtersSummary
         ? Object.entries(pdfOptions.filtersSummary)
-            .filter(([_, val]) => Boolean(val))
-            .map(([key, val]) => `<span style="background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 500; border: 1px solid #e2e8f0;"><strong>${key}:</strong> ${val}</span>`)
-            .join('')
+          .filter(([_, val]) => Boolean(val))
+          .map(([key, val]) => `<span style="background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 500; border: 1px solid #e2e8f0;"><strong>${key}:</strong> ${val}</span>`)
+          .join('')
         : '';
 
       // 4. Format Summary KPI Cards
@@ -309,7 +309,7 @@ export const useExport = () => {
         const align = c.align || 'left';
         return `<th style="border: 1px solid #cbd5e1; padding: 8px 10px; background: #f8fafc; color: #1e293b; font-size: 10.5px; font-weight: 700; text-align: ${align};">${c.header}</th>`;
       }).join('');
-      
+
       const tableRowsHtml = data.map((row, idx) => {
         const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
         const cellsHtml = columns.map(col => {
