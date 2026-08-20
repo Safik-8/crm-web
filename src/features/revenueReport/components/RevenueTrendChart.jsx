@@ -29,7 +29,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-6 animate-pulse">
+      <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="h-64 bg-slate-100 rounded"></div>
       </div>
@@ -41,7 +41,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
   const xKey = viewMode === 'monthly' ? 'monthName' : 'quarter';
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-6">
+    <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">Revenue Trend Analysis</h2>
@@ -82,7 +82,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('area')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'area' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'area' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Area Chart"
             >
@@ -91,7 +91,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('bar')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'bar' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'bar' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Bar Chart"
             >
@@ -107,8 +107,8 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="currentRevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                  <stop offset="5%" stopColor="#F86F03" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#F86F03" stopOpacity={0.0} />
                 </linearGradient>
                 <linearGradient id="prevRevGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#64748b" stopOpacity={0.3} />
@@ -133,7 +133,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
                 type="monotone"
                 dataKey="revenue"
                 name={`${year} Revenue`}
-                stroke="#10b981"
+                stroke="#F86F03"
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#currentRevGrad)"
@@ -166,7 +166,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
                 contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }}
               />
               <Legend verticalAlign="top" align="right" height={36} iconType="square" />
-              <Bar dataKey="revenue" name={`${year} Revenue`} fill="#059669" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="revenue" name={`${year} Revenue`} fill="#DE5D02" radius={[6, 6, 0, 0]} />
               {viewMode === 'monthly' && (
                 <Bar dataKey="previousYearRevenue" name={`${year - 1} YoY Revenue`} fill="#cbd5e1" radius={[6, 6, 0, 0]} />
               )}

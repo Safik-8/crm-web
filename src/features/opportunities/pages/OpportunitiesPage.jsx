@@ -526,10 +526,10 @@ export const OpportunitiesPage = () => {
             <button
               type="button"
               onClick={() => setStageFilterOpen((v) => !v)}
-              className={`w-full h-9 flex items-center justify-between gap-2 px-3 text-xs font-medium rounded-lg border transition-all
+              className={`w-full flex items-center justify-between gap-2 px-3.5 py-[10px] text-[13px] font-medium rounded-[10px] border transition-all
                 ${stageFilter
                   ? 'bg-orange-50 border-orange-300 text-orange-700'
-                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                  : 'bg-[#F8FAFC] border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-[#F1F5F9]'
                 }`}
             >
               <span className="truncate">
@@ -615,7 +615,7 @@ export const OpportunitiesPage = () => {
                 setCompanyFilter('');
                 setBranchFilter('');
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-md border border-slate-200 hover:border-red-200 transition-all whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3.5 py-[10px] text-[13px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-[10px] border border-slate-200 hover:border-red-200 transition-all whitespace-nowrap"
             >
               <Filter className="w-3.5 h-3.5" />
               Clear Filters

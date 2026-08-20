@@ -17,7 +17,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm animate-pulse">
+          <div key={i} className="bg-white p-5 border border-slate-200/80 shadow-sm animate-pulse">
             <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
             <div className="h-8 bg-slate-200 rounded w-3/4 mb-2"></div>
             <div className="h-4 bg-slate-200 rounded w-1/3"></div>
@@ -48,7 +48,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
           growth: revenueGrowthPct,
           growthLabel: 'vs prev period',
           icon: DollarSign,
-          iconBg: 'bg-emerald-50 text-emerald-600'
+          iconBg: 'bg-orange-50 text-orange-600'
         },
         {
           title: 'Deals Won',
@@ -79,7 +79,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
           growth: revenueGrowthPct,
           growthLabel: 'vs prev period',
           icon: DollarSign,
-          iconBg: 'bg-emerald-50 text-emerald-600'
+          iconBg: 'bg-orange-50 text-orange-600'
         },
         {
           title: 'Monthly Revenue',
@@ -114,7 +114,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
         return (
           <div
             key={idx}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
+            className="bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -137,12 +137,12 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       isPositive
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
                         : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}
                   >
                     {isPositive ? (
-                      <TrendingUp className="w-3 h-3 mr-1 text-emerald-600" />
+                      <TrendingUp className="w-3 h-3 mr-1 text-orange-600" />
                     ) : (
                       <TrendingDown className="w-3 h-3 mr-1 text-rose-600" />
                     )}
