@@ -91,8 +91,8 @@ export default function CrmLineChart({
             {isArea && (
               <defs>
                 <linearGradient id={currentGradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                  <stop offset="5%" stopColor="#F86F03" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#F86F03" stopOpacity={0.0} />
                 </linearGradient>
                 <linearGradient id={prevGradId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#64748b" stopOpacity={0.3} />
@@ -102,8 +102,8 @@ export default function CrmLineChart({
                   (l, idx) =>
                     l.gradientId && (
                       <linearGradient key={l.gradientId || idx} id={`${l.gradientId}_${instanceId}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={l.stroke || '#10b981'} stopOpacity={0.4} />
-                        <stop offset="95%" stopColor={l.stroke || '#10b981'} stopOpacity={0.0} />
+                        <stop offset="5%" stopColor={l.stroke || '#F86F03'} stopOpacity={0.4} />
+                        <stop offset="95%" stopColor={l.stroke || '#F86F03'} stopOpacity={0.0} />
                       </linearGradient>
                     )
                 )}
@@ -162,7 +162,7 @@ export default function CrmLineChart({
                       type={l.type || 'monotone'}
                       dataKey={l.dataKey}
                       name={l.name || l.dataKey}
-                      stroke={l.stroke || '#10b981'}
+                      stroke={l.stroke || '#F86F03'}
                       strokeWidth={l.strokeWidth || 3}
                       strokeDasharray={l.strokeDasharray}
                       fillOpacity={1}
