@@ -2,37 +2,25 @@
 
 import React from 'react';
 import { BarChart3, Layers } from 'lucide-react';
+import { CrmFunnelChart, CrmBarChart } from '../../../shared/components/charts';
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Cell
-} from 'recharts';
+  toPipelineFunnelData,
+  toTeamRevenueBarData,
+} from '../../../shared/utils/chartDataTransformers';
 
 export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = [] }) {
-  // Aggregate sales funnel metrics
-  const totalLeads = bdeData.reduce((acc, curr) => acc + (curr.leadsAssigned || 0), 0);
-  const qualified = bdeData.reduce((acc, curr) => acc + (curr.qualifiedLeads || 0), 0);
-  const opportunities = bdeData.reduce((acc, curr) => acc + (curr.opportunitiesCreated || 0), 0);
-  const dealsWon = bdeData.reduce((acc, curr) => acc + (curr.dealsWon || 0), 0);
+  const funnelData = toPipelineFunnelData(bdeData);
+  const teamRevenueData = toTeamRevenueBarData(teamData);
 
-  const funnelData = [
-    { stage: 'Assigned Leads', count: totalLeads, color: '#6366f1' },
-    { stage: 'Qualified Leads', count: qualified, color: '#3b82f6' },
-    { stage: 'Opportunities', count: opportunities, color: '#f59e0b' },
-    { stage: 'Deals Won', count: dealsWon, color: '#10b981' }
+  const teamBarSeries = [
+    {
+      dataKey: 'revenue',
+      name: 'Revenue',
+      fill: '#f97316',
+      radius: [6, 6, 0, 0],
+      barSize: 36,
+    },
   ];
-
-  // Team revenue dataset
-  const teamRevenueData = teamData.map((t) => ({
-    name: t.teamName || t.teamCode || 'Team',
-    revenue: t.totalRevenue || 0,
-    deals: t.dealsWon || 0
-  }));
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -40,7 +28,7 @@ export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = []
         <div className="bg-white text-slate-900 p-3 rounded-xl shadow-md text-xs border border-slate-200">
           <p className="font-bold text-slate-700 mb-1">{label}</p>
           <p className="font-extrabold text-orange-600">
-            {payload[0].name === 'revenue' 
+            {payload[0].name === 'Revenue' || payload[0].dataKey === 'revenue'
               ? `₹${Number(payload[0].value).toLocaleString('en-IN')}`
               : `${payload[0].value} count`}
           </p>
@@ -49,6 +37,9 @@ export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = []
     }
     return null;
   };
+
+  const totalLeads = bdeData.reduce((acc, curr) => acc + (curr.leadsAssigned || 0), 0);
+  const dealsWon = bdeData.reduce((acc, curr) => acc + (curr.dealsWon || 0), 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -69,21 +60,13 @@ export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = []
           </span>
         </div>
 
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={funnelData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-              <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
-              <YAxis type="category" dataKey="stage" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }} width={110} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={26}>
-                {funnelData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <CrmFunnelChart
+          data={funnelData}
+          height={256}
+          barSize={26}
+          showConversionBadge={false}
+          emptyMessage="No sales funnel data available for period."
+        />
       </div>
 
       {/* 2. Team Revenue Contribution */}
@@ -104,21 +87,16 @@ export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = []
         </div>
 
         <div className="h-64 w-full">
-          {teamRevenueData.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-xs text-slate-400">
-              No team revenue metrics available for period.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={teamRevenueData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `₹${val / 1000}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="revenue" fill="#f97316" radius={[6, 6, 0, 0]} barSize={36} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+          <CrmBarChart
+            data={teamRevenueData}
+            xKey="name"
+            bars={teamBarSeries}
+            layout="horizontal"
+            height="100%"
+            formatYAxis={(val) => `₹${val / 1000}k`}
+            customTooltip={<CustomTooltip />}
+            emptyMessage="No team revenue metrics available for period."
+          />
         </div>
       </div>
     </div>

@@ -4,11 +4,7 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import ReminderWidget from '../components/ReminderWidget';
 import { toast } from 'sonner';
 import CountUp from 'react-countup';
-import {
-  BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { CrmBarChart, CrmPieChart } from '../../../shared/components/charts';
 import {
   LayoutDashboard,
   Phone,
@@ -648,7 +644,6 @@ const StageBarChart = ({ cards }) => {
     return () => ro.disconnect();
   }, []);
 
-  // Adaptive Y-axis width: narrower on small containers
   const yAxisWidth = containerWidth < 400 ? 120 : containerWidth < 600 ? 150 : 180;
   const data = useMemo(() =>
     cards.map(c => ({
@@ -663,14 +658,18 @@ const StageBarChart = ({ cards }) => {
 
   const maxCount = Math.max(...data.map(d => d.count), 1);
   const hasData  = data.some(d => d.count > 0);
-  // Fixed chart height — consistent regardless of data count
-  const chartH   = 280;
+
+  const barSeries = [
+    {
+      dataKey: 'count',
+      radius: [0, 5, 5, 0],
+      maxBarSize: 22,
+      label: <BarValueLabel />,
+    },
+  ];
 
   return (
-    <div
-      className="bg-white  border border-slate-200/70 p-4 sm:p-5 flex flex-col"
-    >
-      {/* ── Header: title ── */}
+    <div className="bg-white border border-slate-200/70 p-4 sm:p-5 flex flex-col">
       <div className="mb-3 shrink-0">
         <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.18em] leading-none mb-1">
           Stage Activity
@@ -680,10 +679,8 @@ const StageBarChart = ({ cards }) => {
         </p>
       </div>
 
-      {/* ── Divider ── */}
       <div className="h-px bg-slate-100 mb-3 shrink-0" />
 
-      {/* ── Chart body ── */}
       {!hasData ? (
         <div className="flex flex-col items-center justify-center gap-2 text-center rounded-xl bg-slate-50 border border-slate-100 flex-1">
           <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-300">
@@ -693,50 +690,21 @@ const StageBarChart = ({ cards }) => {
         </div>
       ) : (
         <div className="flex-1 min-h-0" ref={containerRef}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <CrmBarChart
             data={data}
+            xKey="label"
+            bars={barSeries}
             layout="vertical"
-            margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
-            barCategoryGap="32%"
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-            <XAxis
-              type="number"
-              domain={[0, maxCount]}
-              tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
-              axisLine={false}
-              tickLine={false}
-              allowDecimals={false}
-              tickCount={Math.min(maxCount + 1, 6)}
-            />
-            <YAxis
-              type="category"
-              dataKey="label"
-              width={yAxisWidth}
-              tick={<BarYAxisTick />}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              content={<BarTooltip />}
-              cursor={{ fill: 'rgba(241,245,249,0.6)', rx: 4 }}
-            />
-            <Bar dataKey="count" radius={[0, 5, 5, 0]} maxBarSize={22} label={<BarValueLabel />}>
-              {data.map((entry) => (
-                <Cell
-                  key={entry.key}
-                  fill={entry.color}
-                  fillOpacity={entry.count === 0 ? 0.15 : 0.82}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+            height={260}
+            yAxisWidth={yAxisWidth}
+            customYTick={<BarYAxisTick />}
+            customTooltip={<BarTooltip />}
+            showGrid={true}
+            showLegend={false}
+          />
         </div>
       )}
 
-      {/* ── Bottom legend row ── */}
       {hasData && (
         <div className="flex flex-wrap justify-center gap-x-3 sm:gap-x-5 gap-y-1.5 mt-3 pt-3 border-t border-slate-100 shrink-0">
           {data.map(d => (
@@ -782,11 +750,10 @@ const StageDonutChart = ({ cards }) => {
     [cards, total]
   );
 
-  const hasData = pieData.length > 0;
+  const colors = pieData.map((entry, i) => CHART_COLORS[entry.key] ?? PIE_COLORS[i % PIE_COLORS.length]);
 
   return (
-    <div className="bg-white  border border-slate-200/70 p-5" >
-      {/* Header */}
+    <div className="bg-white border border-slate-200/70 p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.18em] leading-none mb-1">Distribution</p>
@@ -797,61 +764,19 @@ const StageDonutChart = ({ cards }) => {
         </div>
       </div>
 
-      {/* Divider */}
       <div className="h-px bg-slate-100 mb-4" />
 
-      {!hasData ? (
-        <div className="h-[200px] flex flex-col items-center justify-center gap-2 text-center">
-          <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300">
-            <PieIcon size={18} />
-          </div>
-          <p className="text-xs font-semibold text-slate-500">No data to distribute</p>
-        </div>
-      ) : (
-        <>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={54}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {pieData.map((entry, i) => (
-                  <Cell
-                    key={entry.key}
-                    fill={CHART_COLORS[entry.key] ?? PIE_COLORS[i % PIE_COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<PieTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-
-          {/* Legend rows */}
-          <div className="mt-1 space-y-2.5">
-            {pieData.map((entry, i) => (
-              <div key={entry.key} className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div
-                    className="h-2 w-2 rounded-full shrink-0"
-                    style={{ backgroundColor: CHART_COLORS[entry.key] ?? PIE_COLORS[i % PIE_COLORS.length] }}
-                  />
-                  <span className="text-[11px] font-semibold text-slate-600 truncate">{entry.name}</span>
-                </div>
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <span className="text-[12px] font-black text-slate-800">{entry.value.toLocaleString()}</span>
-                  <span className="text-[10px] font-bold text-slate-500 w-8 text-right tabular-nums">{entry.pct}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      <CrmPieChart
+        data={pieData}
+        colors={colors}
+        innerRadius={54}
+        outerRadius={80}
+        height={180}
+        showLegend={true}
+        showPercentage={true}
+        customTooltip={<PieTooltip />}
+        emptyMessage="No data to distribute"
+      />
     </div>
   );
 };
