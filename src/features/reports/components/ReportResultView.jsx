@@ -3,19 +3,11 @@ import ReactDOM from 'react-dom';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { Download, Save, TrendingUp, DollarSign, Award, Target, Folder, AlertCircle } from 'lucide-react';
 import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  LineChart,
-  Line
-} from 'recharts';
+  CrmPieChart,
+  CrmLineChart,
+  CrmBarChart,
+  CrmFunnelChart
+} from '../../../shared/components/charts';
 import Table from '../../../shared/components/elements/Table';
 import Pagination from '../../../shared/components/elements/Pagination';
 import Button from '../../../shared/components/elements/Button';
@@ -412,26 +404,14 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Distribution</h4>
-        <div className="h-52">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={chartData} dataKey="value" innerRadius={42} outerRadius={76} paddingAngle={4}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`${entry.name}-${index}`} fill={palette[index % palette.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [value, 'Count']} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="space-y-2 mt-2">
-          {chartData.map((item, index) => (
-            <div key={item.name} className="flex items-center justify-between text-[11px] text-slate-600">
-              <span className="flex items-center gap-2"><span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: palette[index % palette.length] }}></span>{item.name}</span>
-              <span className="font-bold text-slate-700">{item.value}</span>
-            </div>
-          ))}
-        </div>
+        <CrmPieChart
+          data={chartData}
+          colors={palette}
+          innerRadius={42}
+          outerRadius={76}
+          height={208}
+          showLegend={true}
+        />
       </div>
     );
   };
@@ -444,17 +424,15 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Revenue Trend</h4>
-        <div className="h-52">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} />
-              <Tooltip formatter={(value) => [currency(value), 'Revenue']} />
-              <Line type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} dot={{ r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <CrmLineChart
+          data={chartData}
+          xKey="name"
+          lines={[{ dataKey: 'value', name: 'Revenue', stroke: '#4F46E5', strokeWidth: 3 }]}
+          chartType="line"
+          height={208}
+          formatYAxis={currency}
+          showLegend={false}
+        />
       </div>
     );
   };
@@ -469,42 +447,34 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Won vs Lost Deals</h4>
-        <div className="h-52">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} />
-              <Tooltip formatter={(value) => [value, 'Deals']} />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#8B5CF6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <CrmBarChart
+          data={chartData}
+          xKey="name"
+          bars={[{ dataKey: 'value', name: 'Deals', fill: '#8B5CF6', radius: [6, 6, 0, 0] }]}
+          layout="horizontal"
+          height={208}
+          showLegend={false}
+        />
       </div>
     );
   };
 
   const renderFunnelChart = () => {
     const dist = summary.stageDistribution || summary.statusDistribution || {};
-    const chartData = Object.entries(dist).map(([name, value]) => ({ name, value: Number(value || 0) })).sort((a, b) => b.value - a.value);
+    const chartData = Object.entries(dist).map(([name, value]) => ({ stage: name, count: Number(value || 0) })).sort((a, b) => b.count - a.count);
     if (chartData.length === 0) return null;
 
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Pipeline Stage Distribution</h4>
-        <div className="space-y-3">
-          {chartData.map((item) => (
-            <div key={item.name}>
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
-                <span>{item.name}</span>
-                <span>{item.value}</span>
-              </div>
-              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400" style={{ width: `${Math.max((item.value / Math.max(...chartData.map(x => x.value), 1)) * 100, 8)}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <CrmFunnelChart
+          data={chartData}
+          stageKey="stage"
+          countKey="count"
+          height={220}
+          barSize={24}
+          showConversionBadge={false}
+        />
       </div>
     );
   };

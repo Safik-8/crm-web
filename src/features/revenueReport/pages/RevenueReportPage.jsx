@@ -16,6 +16,9 @@ import {
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
+import PageHeader from '../../../shared/components/modules/PageHeader';
+import Button from '../../../shared/components/elements/Button';
+
 import { RevenueFilterBar } from '../components/RevenueFilterBar';
 import { RevenueSummaryCards } from '../components/RevenueSummaryCards';
 import { RevenueTrendChart } from '../components/RevenueTrendChart';
@@ -364,27 +367,39 @@ export default function RevenueReportPage() {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className=" max-w-7xl mx-auto space-y-4">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-3 mb-1">
-            <div className="p-2 bg-emerald-50 text-white rounded-xl shadow-sm">
-              <DollarSign className="w-6 h-6 text-emerald-500" />
+      <PageHeader
+        icon={DollarSign}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="Revenue & Financial Reports"
+        description="Real-time financial analytics, earnings attribution, growth trends, and multi-format exports"
+        className=""
+        actions={
+          <>
+            <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-md text-xs font-medium text-slate-700 h-[36px]">
+              <span className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span>
+              Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Revenue & Financial Reports</h1>
-          </div>
-          <p className="text-sm text-slate-500">
-            Real-time financial analytics, earnings attribution, growth trends, and multi-format exports
-          </p>
-        </div>
 
-        {/* Role Badge & Multi-Format Export Dropdown */}
-        <div className="flex items-center space-x-3">
-          <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-            Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
-          </div>
+            <div className="relative">
+              <Button
+                variant="contained"
+                startIcon={<Download className="w-4 h-4" />}
+                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                disabled={isExporting}
+                sx={{
+                  backgroundColor: '#DE5D02',
+                  '&:hover': { backgroundColor: '#C24102' },
+                  height: '36px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                }}
+              >
+                {isExporting ? 'Exporting...' : 'Export Report'}
+              </Button>
 
           <div>
             <button
@@ -457,11 +472,10 @@ export default function RevenueReportPage() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center space-x-2 px-4 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
-                isActive
-                  ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-xl'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}
+              className={`flex items-center space-x-2 px-4 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${isActive
+                ? 'border-orange-600 text-orange-600 bg-orange-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                }`}
             >
               <Icon className="w-4 h-4" />
               <span>{t.label}</span>

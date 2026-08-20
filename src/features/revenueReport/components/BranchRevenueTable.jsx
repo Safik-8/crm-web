@@ -14,7 +14,7 @@ const formatCurrency = (val) => {
 export const BranchRevenueTable = ({ data = [], isLoading = false }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 animate-pulse">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -27,14 +27,14 @@ export const BranchRevenueTable = ({ data = [], isLoading = false }) => {
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
         No branch revenue comparison data found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+    <div className="bg-white  border border-slate-200/80 shadow-sm overflow-hidden mb-6">
       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 className="text-base font-bold text-slate-900 tracking-tight">Cross-Branch Financial Comparison</h3>
@@ -61,7 +61,7 @@ export const BranchRevenueTable = ({ data = [], isLoading = false }) => {
               <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
                 <td className="py-3.5 px-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                    <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                       <GitBranch className="w-4 h-4" />
                     </div>
                     <div>
