@@ -14,7 +14,7 @@ const formatCurrency = (val) => {
 export const QuarterlyRevenueTable = ({ data = [], isLoading = false }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 animate-pulse">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
@@ -27,14 +27,14 @@ export const QuarterlyRevenueTable = ({ data = [], isLoading = false }) => {
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
         No quarterly financial breakdown available for the selected filters.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+    <div className="bg-white  border border-slate-200/80 shadow-sm overflow-hidden mb-6">
       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 className="text-base font-bold text-slate-900 tracking-tight">Quarterly Revenue Breakdown</h3>
@@ -81,12 +81,12 @@ export const QuarterlyRevenueTable = ({ data = [], isLoading = false }) => {
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                         isPositive
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-orange-50 text-orange-700 border border-orange-200'
                           : 'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}
                     >
                       {isPositive ? (
-                        <TrendingUp className="w-3 h-3 mr-1 text-emerald-600" />
+                        <TrendingUp className="w-3 h-3 mr-1 text-orange-600" />
                       ) : (
                         <TrendingDown className="w-3 h-3 mr-1 text-rose-600" />
                       )}

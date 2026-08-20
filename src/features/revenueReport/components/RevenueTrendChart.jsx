@@ -11,7 +11,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-6 animate-pulse">
+      <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="h-64 bg-slate-100 rounded"></div>
       </div>
@@ -26,7 +26,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
     {
       dataKey: 'revenue',
       name: `${year} Revenue`,
-      stroke: '#10b981',
+      stroke: '#F86F03',
       strokeWidth: 3,
       gradientId: 'currentRevGrad',
     },
@@ -48,7 +48,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
     {
       dataKey: 'revenue',
       name: `${year} Revenue`,
-      fill: '#059669',
+      fill: '#F86F03',
       radius: [6, 6, 0, 0],
     },
     ...(viewMode === 'monthly'
@@ -80,7 +80,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-6">
+    <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">Revenue Trend Analysis</h2>
@@ -121,7 +121,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('area')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'area' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'area' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Area Chart"
             >
@@ -130,7 +130,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('bar')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'bar' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'bar' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Bar Chart"
             >

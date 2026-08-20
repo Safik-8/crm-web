@@ -14,7 +14,7 @@ const formatCurrency = (val) => {
 export const TeamRevenueTable = ({ data = [], isLoading = false }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 animate-pulse">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -27,14 +27,14 @@ export const TeamRevenueTable = ({ data = [], isLoading = false }) => {
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
+      <div className="bg-white  border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
         No team revenue attribution data found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+    <div className="bg-white  border border-slate-200/80 shadow-sm overflow-hidden mb-6">
       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 className="text-base font-bold text-slate-900 tracking-tight">Revenue Contribution by Team</h3>
