@@ -11,6 +11,7 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 import { toast } from '../../../shared/utils/toast';
 import { useQuery } from '@tanstack/react-query';
 import { companyApi } from '../../company/api/companyApi';
@@ -454,7 +455,7 @@ const RoleManagementPage = () => {
 
               {/* Company filter — Super Admin only */}
               {isSuperAdmin && (
-                <div className="w-52">
+                <div className="w-full sm:w-52">
                   <SelectField
                     placeholder="All Companies"
                     value={companyFilter}
@@ -660,12 +661,12 @@ const RoleManagementPage = () => {
                               const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
                               return (
                                 <td key={act.key} className="py-2 px-2 text-center">
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
+                                    id={`permission-${mod.value}-${act.key}`}
                                     checked={isChecked}
                                     disabled={isPermissionDisabled}
-                                    onChange={(e) => handlePermissionChange(mod.value, act.key, e.target.checked)}
-                                    className="h-3.5 w-3.5 accent-orange-500 rounded border-slate-300 text-orange-600 focus:ring-orange-500/30 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                    onChange={(checked) => handlePermissionChange(mod.value, act.key, checked)}
+                                    sx={{ p: 0, width: 'auto' }}
                                   />
                                 </td>
                               );

@@ -94,8 +94,8 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     Array.isArray(companiesRes)
       ? companiesRes
       : Array.isArray(companiesRes?.data)
-      ? companiesRes.data
-      : []
+        ? companiesRes.data
+        : []
   ).map((c) => ({ id: c.id, name: c.name }));
 
   // 2. Fetch Branches list (for Super Admin & Company Admin)
@@ -108,10 +108,10 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     Array.isArray(branchesRes)
       ? branchesRes
       : Array.isArray(branchesRes?.data)
-      ? branchesRes.data
-      : Array.isArray(branchesRes?.data?.branches)
-      ? branchesRes.data.branches
-      : []
+        ? branchesRes.data
+        : Array.isArray(branchesRes?.data?.branches)
+          ? branchesRes.data.branches
+          : []
   ).map((b) => ({ id: b.id, name: b.name }));
 
   // 3. Fetch Pipelines list (for all roles)
@@ -124,12 +124,12 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     Array.isArray(pipelinesRes)
       ? pipelinesRes
       : Array.isArray(pipelinesRes?.data)
-      ? pipelinesRes.data
-      : Array.isArray(pipelinesRes?.data?.pipelines)
-      ? pipelinesRes.data.pipelines
-      : Array.isArray(pipelinesRes?.pipelines)
-      ? pipelinesRes.pipelines
-      : []
+        ? pipelinesRes.data
+        : Array.isArray(pipelinesRes?.data?.pipelines)
+          ? pipelinesRes.data.pipelines
+          : Array.isArray(pipelinesRes?.pipelines)
+            ? pipelinesRes.pipelines
+            : []
   ).map((p) => ({ id: p.id, name: p.name }));
 
   // 4. Fetch dropdown options (Sources, Courses, Statuses, Users) for selected Company/Branch
@@ -267,25 +267,57 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     { id: 'LOW', name: 'Low' }
   ];
 
+  const getCustomFooter = () => {
+    return (
+      <div className="flex w-full items-center justify-end gap-2">
+        <Button
+          variant="text"
+          onClick={onClose}
+          disabled={createLeadMutation.isPending}
+          sx={{
+            color: '#475569',
+            fontWeight: 600,
+            fontSize: '13px',
+            '&:hover': { bgcolor: 'transparent', color: '#0F172A' }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="lead-create-form"
+          variant="contained"
+          color="primary"
+          startIcon={<Plus size={15} />}
+          isLoading={createLeadMutation.isPending}
+          disabled={isError}
+        >
+          Create Lead
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Drawer
       isOpen={isOpen}
       onClose={() => !createLeadMutation.isPending && onClose()}
       title="Create New Lead"
       subtitle="Add a new prospect to your sales registry."
-      width={{ xs: '100%', sm: 540, md: 620 }}
+      width={{ xs: '100%', sm: 480, md: 520 }}
+      icon={User}
+      showFooter={true}
+      customFooter={getCustomFooter()}
     >
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-white">
+      <form id="lead-create-form" onSubmit={handleSubmit} noValidate className="space-y-6">
+        {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
+        {(isSuperAdmin || isCompanyAdmin) && (
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+              Territory Scope
+            </h3>
 
-        {/* Scrollable Form Body */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5">
-          {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
-          {(isSuperAdmin || isCompanyAdmin) && (
-            <div className="space-y-3.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-                Territory Scope
-              </span>
-
+            <div className={isSuperAdmin ? "grid grid-cols-1 sm:grid-cols-2 gap-4" : "space-y-3.5"}>
               {isSuperAdmin && (
                 <SelectField
                   id="lead-company"
@@ -331,14 +363,16 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
                 searchable={true}
               />
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Section 1: Contact Details */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Contact Details
-            </span>
-            
+        {/* Section 1: Contact Details */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Contact Details
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-name"
               label="Lead Name"
@@ -360,7 +394,9 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               errorText={errors.mobile}
               startIcon={Phone}
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-email"
               label="Email Address"
@@ -381,13 +417,15 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               startIcon={Phone}
             />
           </div>
+        </div>
 
-          {/* Section 2: Engagement parameters */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Engagement & Routing
-            </span>
+        {/* Section 2: Engagement parameters */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Engagement & Routing
+          </h3>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               id="lead-source"
               label="Lead Source"
@@ -417,7 +455,9 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               isLoading={isLoadingFormData}
               disabled={!targetCompanyId}
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               id="lead-status"
               label="Status"
@@ -443,7 +483,9 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               errorText={errors.priority}
               searchable={false}
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-budget"
               label="Budget"
@@ -470,101 +512,74 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               startIcon={GitMerge}
               searchable={true}
             />
-
-            <SelectField
-              id="lead-assignee"
-              label="Assign To"
-              placeholder="Select Representative..."
-              allowEmptyOption
-              value={values.assignedToId}
-              onChange={(val) => handleFieldChange('assignedToId', val)}
-              options={usersOptions}
-              errorText={errors.assignedToId}
-              startIcon={UserCheck}
-              searchable={true}
-              isLoading={isLoadingFormData}
-              disabled={!targetCompanyId || !targetBranchId}
-            />
           </div>
 
-          {/* Section 3: Geographic info */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Location Info
-            </span>
+          <SelectField
+            id="lead-assignee"
+            label="Assign To"
+            placeholder="Select Representative..."
+            allowEmptyOption
+            value={values.assignedToId}
+            onChange={(val) => handleFieldChange('assignedToId', val)}
+            options={usersOptions}
+            errorText={errors.assignedToId}
+            startIcon={UserCheck}
+            searchable={true}
+            isLoading={isLoadingFormData}
+            disabled={!targetCompanyId || !targetBranchId}
+          />
+        </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <TextField
-                id="lead-city"
-                label="City"
-                placeholder="Delhi"
-                value={values.city}
-                onChange={(val) => handleFieldChange('city', val)}
-                startIcon={MapPin}
-              />
-              <TextField
-                id="lead-state"
-                label="State"
-                placeholder="Delhi"
-                value={values.state}
-                onChange={(val) => handleFieldChange('state', val)}
-                startIcon={MapPin}
-              />
-              <TextField
-                id="lead-country"
-                label="Country"
-                placeholder="India"
-                value={values.country}
-                onChange={(val) => handleFieldChange('country', val)}
-                startIcon={MapPin}
-              />
-            </div>
-          </div>
+        {/* Section 3: Geographic info */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Location Info
+          </h3>
 
-          {/* Section 4: Notes */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Remarks / Notes
-            </span>
-
+          <div className="grid grid-cols-3 gap-3">
             <TextField
-              id="lead-notes"
-              label="Notes"
-              placeholder="Enter initial lead notes or summary..."
-              multiline
-              rows={4}
-              value={values.notes}
-              onChange={(val) => handleFieldChange('notes', val)}
-              startIcon={FileText}
+              id="lead-city"
+              label="City"
+              placeholder="Delhi"
+              value={values.city}
+              onChange={(val) => handleFieldChange('city', val)}
+              startIcon={MapPin}
+            />
+            <TextField
+              id="lead-state"
+              label="State"
+              placeholder="Delhi"
+              value={values.state}
+              onChange={(val) => handleFieldChange('state', val)}
+              startIcon={MapPin}
+            />
+            <TextField
+              id="lead-country"
+              label="Country"
+              placeholder="India"
+              value={values.country}
+              onChange={(val) => handleFieldChange('country', val)}
+              startIcon={MapPin}
             />
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-4 py-2.5 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
-          <Button
-            variant="text"
-            onClick={onClose}
-            disabled={createLeadMutation.isPending}
-            sx={{
-              color: '#475569',
-              fontWeight: 600,
-              fontSize: '13px',
-              '&:hover': { bgcolor: 'transparent', color: '#0F172A' }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            startIcon={<Plus size={15} />}
-            isLoading={createLeadMutation.isPending}
-            disabled={isError}
-          >
-            Create Lead
-          </Button>
+        {/* Section 4: Notes */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Remarks / Notes
+          </h3>
+
+          <TextField
+            id="lead-notes"
+            label="Notes"
+            placeholder="Enter initial lead notes or summary..."
+            multiline
+            rows={3}
+            value={values.notes}
+            onChange={(val) => handleFieldChange('notes', val)}
+            startIcon={FileText}
+          />
         </div>
       </form>
 
@@ -580,7 +595,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               <p className="text-sm text-slate-600 leading-relaxed mb-5">
                 A lead with this contact information already exists in your company registry:
               </p>
-              
+
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs space-y-2 mb-6">
                 <div className="flex justify-between"><span className="text-slate-400 font-medium">Lead Name:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.name}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400 font-medium">Current Owner:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.owner}</span></div>

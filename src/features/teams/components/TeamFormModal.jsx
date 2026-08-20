@@ -8,6 +8,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 import Button from '../../../shared/components/elements/Button';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 import { useCreateTeamMutation, useUpdateTeamMutation } from '../hooks/useTeams';
 import { teamService } from '../services/teamService';
 import { userService } from '../../users/services/userService';
@@ -341,27 +342,29 @@ const TeamFormModal = ({
           ) : iseOptions.length === 0 ? (
             <p className="text-xs italic text-slate-400">No active ISEs found in this branch.</p>
           ) : (
-            <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2.5">
+            <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-xl p-2 bg-slate-50/50 space-y-1">
               {iseOptions.map(ise => {
                 const isChecked = iseIds.includes(ise.id);
                 return (
-                  <label key={ise.id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-100">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
-                      checked={isChecked}
-                      onChange={() => {
-                        if (isChecked) {
-                          setIseIds(prev => prev.filter(id => id !== ise.id));
-                        } else {
-                          setIseIds(prev => [...prev, ise.id]);
-                        }
-                      }}
-                    />
-                    <div className="text-left">
-                      <span className="text-[13px] font-bold text-slate-700 block leading-tight">{ise.name}</span>
-                    </div>
-                  </label>
+                  <Checkbox
+                    key={ise.id}
+                    id={`ise-${ise.id}`}
+                    label={ise.name}
+                    checked={isChecked}
+                    onChange={(checked) => {
+                      if (!checked) {
+                        setIseIds(prev => prev.filter(id => id !== ise.id));
+                      } else {
+                        setIseIds(prev => [...prev, ise.id]);
+                      }
+                    }}
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '8px',
+                      '&:hover': { bgcolor: 'white' }
+                    }}
+                  />
                 );
               })}
             </div>

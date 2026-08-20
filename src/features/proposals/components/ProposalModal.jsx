@@ -2,7 +2,21 @@ import React, { useState, useEffect } from 'react';
 import Drawer from '../../../shared/components/elements/Drawer';
 import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
+import SelectField from '../../../shared/components/elements/SelectField';
 import { apiClient } from '../../../lib/api/api';
+import {
+  Building,
+  Award,
+  DollarSign,
+  Tag,
+  Percent,
+  Calendar,
+  FileText,
+  Edit3,
+  FileCheck,
+  Receipt,
+  Layers
+} from 'lucide-react';
 
 export default function ProposalModal({
   isOpen,
@@ -19,7 +33,7 @@ export default function ProposalModal({
   const [selectedOppId, setSelectedOppId] = useState(opportunityId || '');
   const [productId, setProductId] = useState('');
   const [basePrice, setBasePrice] = useState('');
-  
+
   // Discount states
   const [discountType, setDiscountType] = useState('flat'); // 'flat' | 'percent'
   const [discountValue, setDiscountValue] = useState('0');
@@ -32,7 +46,7 @@ export default function ProposalModal({
   // Auto-calculated discount amount & final amount
   const numericBase = Number(basePrice) || 0;
   const numericDiscountVal = Number(discountValue) || 0;
-  
+
   const discountAmount = discountType === 'percent'
     ? (numericBase * numericDiscountVal) / 100
     : numericDiscountVal;
@@ -50,7 +64,7 @@ export default function ProposalModal({
         .then(([opps, crs]) => {
           setOpportunities(opps);
           setCourses(crs);
-          
+
           // Pre-fill product and price from linked opportunity if creating a new proposal
           if (!initialData && opportunityId) {
             const opp = opps.find(o => o.id === Number(opportunityId));
@@ -73,11 +87,11 @@ export default function ProposalModal({
       if (initialData) {
         setSelectedOppId(initialData.opportunityId || '');
         setProductId(initialData.productId || '');
-        
+
         // Convert decimal values safely to plain numeric strings
         const bp = initialData.basePrice ? Number(initialData.basePrice).toString() : '';
         const ds = initialData.discount ? Number(initialData.discount).toString() : '0';
-        
+
         setBasePrice(bp);
         setDiscountType('flat'); // Default to flat representation
         setDiscountValue(ds);
@@ -102,8 +116,7 @@ export default function ProposalModal({
   }, [isOpen, initialData, opportunityId]);
 
   // Auto-fill course price when course changes
-  const handleCourseChange = (e) => {
-    const cid = e.target.value;
+  const handleCourseChange = (cid) => {
     setProductId(cid);
     if (!cid) return;
     const selectedCourse = courses.find(c => c.id === Number(cid));
@@ -112,8 +125,7 @@ export default function ProposalModal({
     }
   };
 
-  const handleOppChange = (e) => {
-    const oppIdVal = e.target.value;
+  const handleOppChange = (oppIdVal) => {
     setSelectedOppId(oppIdVal);
     const opp = opportunities.find(o => o.id === Number(oppIdVal));
     if (opp) {
@@ -173,69 +185,122 @@ export default function ProposalModal({
     }
   };
 
+  const oppsOptions = opportunities.map(opp => ({
+    id: opp.id.toString(),
+    name: `${opp.opportunityName} (${opp.lead?.name || 'No Lead'})`
+  }));
+
+  const courseOptions = courses.map(course => ({
+    id: course.id.toString(),
+    name: `${course.name} - ₹${Number(course.price).toLocaleString()}`
+  }));
+
+  const discountTypeOptions = [
+    { id: 'flat', name: 'Flat Amount (₹)' },
+    { id: 'percent', name: 'Percentage (%)' }
+  ];
+
+  const getCustomFooter = () => {
+    return (
+      <div className="flex w-full items-center justify-end gap-2">
+        <Button
+          variant="text"
+          onClick={onClose}
+          disabled={isSubmitting}
+          sx={{
+            color: '#475569',
+            fontWeight: 600,
+            fontSize: '13px',
+            '&:hover': { bgcolor: 'transparent', color: '#0F172A' }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          form="proposal-form"
+          isLoading={isSubmitting}
+          startIcon={<FileCheck size={15} />}
+        >
+          {initialData ? 'Save Revision' : 'Create Proposal'}
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title={initialData ? `Revise Proposal (Current V${initialData.currentVersion})` : 'Generate Proposal'}
+      subtitle={initialData ? 'Update commercial parameters and create a new version revision.' : 'Generate a premium commercial proposal for your prospect.'}
+      icon={Receipt}
+      showFooter={true}
+      customFooter={getCustomFooter()}
+      width={{ xs: '100%', sm: 480, md: 540 }}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 pb-20">
+      <form id="proposal-form" onSubmit={handleSubmit} noValidate className="space-y-6">
         {error && (
-          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">
-            {error}
+          <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-lg border border-rose-100 flex items-center gap-2">
+            <span className="font-semibold">Error:</span> {error}
           </div>
         )}
 
-        {opportunityId || initialData ? (
-          <div>
-            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              Linked Opportunity
-            </label>
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm font-bold text-slate-700">
-              {opportunities.find(o => o.id === Number(selectedOppId))?.opportunityName || 'Active Opportunity'}
+        {/* Section 1: Scope */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Engagement Scope
+          </h3>
+
+          {opportunityId || initialData ? (
+            <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl flex items-center gap-3">
+              <Building className="w-5 h-5 text-orange-500 flex-shrink-0" />
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Linked Opportunity</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {opportunities.find(o => o.id === Number(selectedOppId))?.opportunityName || 'Active Opportunity'}
+                </span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Linked Opportunity *
-            </label>
-            <select
+          ) : (
+            <SelectField
+              id="proposal-opp"
+              label="Linked Opportunity"
+              placeholder="Select Opportunity..."
+              required
               value={selectedOppId}
               onChange={handleOppChange}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              required
-            >
-              <option value="">-- Select Opportunity --</option>
-              {opportunities.map(opp => (
-                <option key={opp.id} value={opp.id}>
-                  {opp.opportunityName} ({opp.lead?.name || 'No Lead'})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+              options={oppsOptions}
+              isLoading={loading}
+              startIcon={Building}
+              searchable={true}
+            />
+          )}
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
-            Product / Course
-          </label>
-          <select
+          <SelectField
+            id="proposal-product"
+            label="Product / Course"
+            placeholder="Select Product (Optional)..."
+            allowEmptyOption
             value={productId}
             onChange={handleCourseChange}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-          >
-            <option value="">-- Select Product (Optional) --</option>
-            {courses.map(course => (
-              <option key={course.id} value={course.id}>
-                {course.name} - ₹{course.price}
-              </option>
-            ))}
-          </select>
+            options={courseOptions}
+            isLoading={loading}
+            startIcon={Award}
+            searchable={true}
+          />
         </div>
 
-        <div>
+        {/* Section 2: Pricing Details */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Pricing Details
+          </h3>
+
           <TextField
+            id="proposal-base-price"
             label="Base Price (₹) *"
             type="number"
             value={basePrice}
@@ -245,93 +310,109 @@ export default function ProposalModal({
             }}
             placeholder="e.g. 50000"
             required
+            startIcon={DollarSign}
             inputProps={{ min: 0 }}
           />
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Discount Type
-            </label>
-            <select
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <SelectField
+              id="proposal-discount-type"
+              label="Discount Type"
+              placeholder="Select Type..."
               value={discountType}
-              onChange={(e) => {
-                setDiscountType(e.target.value);
-                setDiscountValue('');
+              onChange={(val) => {
+                setDiscountType(val);
+                setDiscountValue('0');
               }}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-            >
-              <option value="flat">Flat Amount (₹)</option>
-              <option value="percent">Percentage (%)</option>
-            </select>
+              options={discountTypeOptions}
+              startIcon={Layers}
+            />
+
+            <TextField
+              id="proposal-discount-value"
+              label={discountType === 'percent' ? 'Discount (%)' : 'Discount (₹)'}
+              type="number"
+              value={discountValue}
+              onChange={(val) => {
+                if (val !== '' && Number(val) < 0) return;
+                setDiscountValue(val);
+              }}
+              placeholder={discountType === 'percent' ? 'e.g. 10' : 'e.g. 5000'}
+              startIcon={discountType === 'percent' ? Percent : Tag}
+              inputProps={{ min: 0 }}
+            />
           </div>
 
-          <TextField
-            label={discountType === 'percent' ? 'Discount (%)' : 'Discount (₹)'}
-            type="number"
-            value={discountValue}
-            onChange={(val) => {
-              if (val !== '' && Number(val) < 0) return;
-              setDiscountValue(val);
-            }}
-            placeholder={discountType === 'percent' ? 'e.g. 10' : 'e.g. 5000'}
-            inputProps={{ min: 0 }}
-          />
-        </div>
+          {discountType === 'percent' && numericDiscountVal > 0 && (
+            <div className="text-xs text-slate-500 italic pl-1 flex items-center gap-1.5">
+              <Tag size={12} className="text-slate-400" />
+              Equivalent flat discount: ₹{discountAmount.toLocaleString()}
+            </div>
+          )}
 
-        {discountType === 'percent' && numericDiscountVal > 0 && (
-          <div className="text-xs text-slate-500 italic">
-            Equivalent flat discount: ₹{discountAmount.toLocaleString()}
+          {/* Calculated Pricing Card */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 space-y-3 shadow-sm">
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span>Base Price:</span>
+              <span className="font-semibold text-slate-700">₹{numericBase.toLocaleString()}</span>
+            </div>
+            
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <span>Applied Discount:</span>
+                <span className="font-semibold text-rose-600">- ₹{discountAmount.toLocaleString()}</span>
+              </div>
+            )}
+            
+            <div className="border-t border-slate-200/80 my-2 pt-2.5 flex justify-between items-center">
+              <span className="text-sm font-bold text-slate-600">Calculated Final Amount:</span>
+              <span className="text-xl font-black text-slate-900 font-display">₹{finalAmount.toLocaleString()}</span>
+            </div>
           </div>
-        )}
-
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex justify-between items-center">
-          <span className="text-sm font-semibold text-slate-600">Calculated Final Amount:</span>
-          <span className="text-lg font-bold text-slate-900">₹{finalAmount.toLocaleString()}</span>
         </div>
 
-        <div>
+        {/* Section 3: Validity & Conditions */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Validity & Conditions
+          </h3>
+
           <TextField
+            id="proposal-validity"
             label="Valid Till *"
             type="date"
             value={validTill}
             onChange={(val) => setValidTill(val)}
             required
+            startIcon={Calendar}
           />
-        </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
-            Terms & Conditions
-          </label>
-          <textarea
-            value={terms}
-            onChange={(e) => setTerms(e.target.value)}
-            placeholder="Enter proposal terms and payment conditions..."
-            rows={3}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-          />
-        </div>
-
-        {initialData && (
           <TextField
-            label="Version Revision Notes"
-            value={versionNotes}
-            onChange={(val) => setVersionNotes(val)}
-            placeholder="Describe what changed in this version..."
+            id="proposal-terms"
+            label="Terms & Conditions"
+            placeholder="Enter proposal terms and payment conditions..."
+            multiline
+            rows={3}
+            value={terms}
+            onChange={(val) => setTerms(val)}
+            startIcon={FileText}
           />
-        )}
 
-        <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outlined" color="primary" type="button" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button variant="contained" color="primary" type="submit" isLoading={isSubmitting}>
-            {initialData ? 'Save Revision' : 'Create Proposal'}
-          </Button>
+          {initialData && (
+            <TextField
+              id="proposal-version-notes"
+              label="Version Revision Notes"
+              placeholder="Describe what changed in this version..."
+              multiline
+              rows={2}
+              value={versionNotes}
+              onChange={(val) => setVersionNotes(val)}
+              startIcon={Edit3}
+            />
+          )}
         </div>
       </form>
     </Drawer>
   );
 }
+

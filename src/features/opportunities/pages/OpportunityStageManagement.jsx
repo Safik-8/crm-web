@@ -23,6 +23,7 @@ import {
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { DynamicFormModal } from '../../../shared/components/elements/DynamicFormModal';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
@@ -509,14 +510,12 @@ export const OpportunityStageManagement = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
+                        id={`stage-${stage.id}`}
                         checked={isSelected}
                         disabled={stage.isSystem}
                         onChange={() => toggleStageInSelection(stage)}
-                        className={`h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary ${
-                          stage.isSystem ? 'cursor-not-allowed opacity-55' : 'cursor-pointer'
-                        }`}
+                        sx={{ width: 'auto', p: 0 }}
                       />
                       <div
                         className="h-3 w-3 rounded-full border border-slate-200"

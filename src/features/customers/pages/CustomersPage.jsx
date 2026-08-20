@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, RefreshCw, Users2, SlidersHorizontal, UserCheck, UserX, IndianRupee } from 'lucide-react';
+import { Eye, RefreshCw, Users2, SlidersHorizontal, UserCheck, UserX, IndianRupee, TrendingUp } from 'lucide-react';
+import { 
+  BarChart, Bar, PieChart, Pie, Cell, 
+  XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import PageHeader from '../../../shared/components/modules/PageHeader';
@@ -86,6 +91,30 @@ const CustomersPage = () => {
   const [branches, setBranches] = useState([]);
   const [owners, setOwners] = useState([]);
   const [stats, setStats] = useState(null);
+  const [showInsights, setShowInsights] = useState(false);
+
+  const productData = useMemo(() => {
+    const counts = {};
+    customers.forEach(c => {
+      const pName = c.purchasedProduct?.name || 'Other Course';
+      const rev = Number(c.totalRevenue || 0);
+      counts[pName] = (counts[pName] || 0) + rev;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [customers]);
+
+  const statusData = useMemo(() => {
+    let active = 0;
+    let inactive = 0;
+    customers.forEach(c => {
+      if (c.status === 'ACTIVE') active++;
+      else inactive++;
+    });
+    return [
+      { name: 'Active', value: active, color: '#10B981' },
+      { name: 'Inactive', value: inactive, color: '#F59E0B' }
+    ];
+  }, [customers]);
 
   const actorRank = user?.primaryRoleRank ?? 0;
   const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
@@ -351,6 +380,77 @@ const CustomersPage = () => {
         <StatCard label="Total Revenue" value={stats?.totalRevenue !== undefined && stats?.totalRevenue !== null ? formatCurrency(stats.totalRevenue) : '—'} icon={IndianRupee} iconBg="bg-indigo-50 text-indigo-600" loading={loadingState === 'loading'} valueClass="text-indigo-700" />
       </div>
 
+      {/* Insights Row */}
+      {showInsights && customers.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          {/* Revenue by Product Chart */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Revenue Contribution by Product</h3>
+            <div className="h-60">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={productData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#64748B', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: '#64748B', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1E293B', borderRadius: '12px', border: 'none', color: '#FFF' }}
+                    labelStyle={{ fontWeight: 'bold', fontSize: '11px', color: '#FFF' }}
+                    itemStyle={{ fontSize: '11px', color: '#10B981' }}
+                    formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
+                  />
+                  <Bar dataKey="value" fill="#F86F03" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Customer Status Ratio */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex-1 w-full">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Account Segmentations</h3>
+              <div className="space-y-3 mt-4">
+                {statusData.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                    <span className="text-xs text-slate-500 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                      {item.name} Customers
+                    </span>
+                    <span className="text-xs font-black text-slate-800">{item.value} ({stats?.total ? Math.round((item.value / stats.total) * 100) : 0}%)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="w-40 h-40 flex-shrink-0 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={65}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1E293B', borderRadius: '12px', border: 'none', color: '#FFF' }}
+                    itemStyle={{ fontSize: '11px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Total</span>
+                <span className="text-base font-black text-slate-800">{stats?.total ?? 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search & Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
         {/* Search Input */}
@@ -360,6 +460,18 @@ const CustomersPage = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setShowInsights(!showInsights)}
+            className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              showInsights
+                ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <TrendingUp size={15} />
+            {showInsights ? 'Hide Insights' : 'Customer Insights'}
+          </button>
+
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
             className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
