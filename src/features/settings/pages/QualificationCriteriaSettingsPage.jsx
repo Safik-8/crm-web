@@ -32,6 +32,7 @@ import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 import { DynamicFormModal } from '../../../shared/components/elements/DynamicFormModal';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -364,7 +365,7 @@ const QualificationCriteriaSettingsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-end md:self-auto">
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto w-full md:w-auto justify-start md:justify-end">
           <button
             onClick={fetchMatrix}
             className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors focus:outline-none"
@@ -665,16 +666,14 @@ const QualificationCriteriaSettingsPage = () => {
 
                 {/* Required Switch */}
                 <div className="col-span-4 md:col-span-2 lg:col-span-2 flex items-center justify-end md:justify-center">
-                  <label className={`inline-flex items-center gap-2 select-none ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}>
-                    <input
-                      type="checkbox"
-                      disabled={!canEdit}
-                      checked={Boolean(item.isRequired)}
-                      onChange={() => canEdit && handleRequiredToggle(item.id)}
-                      className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer disabled:cursor-not-allowed"
-                    />
-                    <span className="text-xs font-semibold text-slate-700">Required</span>
-                  </label>
+                  <Checkbox
+                    id={`required-${item.id}`}
+                    label="Required"
+                    checked={Boolean(item.isRequired)}
+                    onChange={() => canEdit && handleRequiredToggle(item.id)}
+                    disabled={!canEdit}
+                    sx={{ width: 'auto' }}
+                  />
                 </div>
 
                 {/* Weight Input */}
@@ -769,15 +768,12 @@ const QualificationCriteriaSettingsPage = () => {
               placeholder="Help text for sales reps..."
             />
 
-            <label className="flex items-center gap-2 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                checked={formData.isRequired}
-                onChange={(e) => setFormData({ ...formData, isRequired: e.target.checked })}
-                className="rounded border-slate-300 text-orange-500 focus:ring-orange-500 w-4 h-4 cursor-pointer"
-              />
-              <span className="text-xs font-bold text-slate-700">Mandatory field for qualification</span>
-            </label>
+            <Checkbox
+              id="factor-mandatory"
+              label="Mandatory field for qualification"
+              checked={formData.isRequired}
+              onChange={(checked) => setFormData({ ...formData, isRequired: checked })}
+            />
 
             {/* Options Builder */}
             {formData.fieldType === 'select' && (

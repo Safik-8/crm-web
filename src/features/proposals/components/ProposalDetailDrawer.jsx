@@ -1,7 +1,22 @@
 import React, { useState } from 'react';
 import Drawer from '../../../shared/components/elements/Drawer';
 import Button from '../../../shared/components/elements/Button';
-import { Calendar, FileText, CheckCircle2, XCircle, Send, ShieldAlert, Award, FileSpreadsheet, Printer } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Send,
+  ShieldAlert,
+  Award,
+  FileSpreadsheet,
+  Printer,
+  UserCheck,
+  Layers,
+  Receipt,
+  Edit3,
+  Trash2
+} from 'lucide-react';
 
 export default function ProposalDetailDrawer({
   isOpen,
@@ -34,6 +49,8 @@ export default function ProposalDetailDrawer({
   const isAccepted = proposal.status === 'ACCEPTED';
   const isRejected = proposal.status === 'REJECTED';
   const isLocked = isAccepted || isRejected;
+
+  const canDelete = (currentUserRoleRank >= 60 || proposal.createdById === currentUserId || proposal.opportunity?.ownerId === currentUserId) && !isAccepted;
 
   const handlePrint = () => {
     const htmlContent = `
@@ -191,199 +208,270 @@ export default function ProposalDetailDrawer({
     window.open(url, '_blank', 'noopener');
   };
 
+  const getCustomFooter = () => {
+    return (
+      <div className="flex flex-wrap w-full items-center justify-end gap-2">
+        <Button
+          variant="text"
+          onClick={onClose}
+          sx={{ color: '#475569', fontWeight: 600, fontSize: '12px', mr: 'auto' }}
+        >
+          Close
+        </Button>
+        
+        {canDelete && (
+          <Button
+            variant="outlined"
+            danger
+            onClick={() => onDelete(proposal.id)}
+            disabled={isStatusChanging}
+            sx={{ py: 1, px: 2.5, fontSize: '12px', height: '32px' }}
+          >
+            Delete
+          </Button>
+        )}
+
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handlePrint}
+          disabled={isStatusChanging}
+          startIcon={<Printer size={13} />}
+          sx={{ py: 1, px: 2.5, fontSize: '12px', height: '32px', borderColor: '#E2E8F0', color: '#475569', '&:hover': { bgcolor: '#F8FAFC', borderColor: '#CBD5E1', color: '#0F172A' } }}
+        >
+          Print
+        </Button>
+
+        {!isLocked && (
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => onEditRevision(proposal)}
+            disabled={isStatusChanging}
+            sx={{ py: 1, px: 2.5, fontSize: '12px', height: '32px', borderColor: '#E2E8F0', color: '#475569', '&:hover': { bgcolor: '#F8FAFC', borderColor: '#CBD5E1', color: '#0F172A' } }}
+          >
+            Revise
+          </Button>
+        )}
+
+        {!isLocked && isDraft && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleStatusChangeClick('SENT')}
+            isLoading={isStatusChanging && statusAction === 'SENT'}
+            disabled={isStatusChanging}
+            startIcon={<Send size={13} />}
+            sx={{ py: 1, px: 3, fontSize: '12px', height: '32px' }}
+          >
+            Send to Client
+          </Button>
+        )}
+
+        {!isLocked && isSent && (
+          <>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleStatusChangeClick('ACCEPTED')}
+              isLoading={isStatusChanging && statusAction === 'ACCEPTED'}
+              disabled={isStatusChanging}
+              startIcon={<CheckCircle2 size={13} />}
+              sx={{ py: 1, px: 3, fontSize: '12px', height: '32px', bgcolor: '#10B981', '&:hover': { bgcolor: '#059669' } }}
+            >
+              Accept
+            </Button>
+            <Button
+              variant="contained"
+              danger
+              onClick={() => handleStatusChangeClick('REJECTED')}
+              isLoading={isStatusChanging && statusAction === 'REJECTED'}
+              disabled={isStatusChanging}
+              startIcon={<XCircle size={13} />}
+              sx={{ py: 1, px: 3, fontSize: '12px', height: '32px' }}
+            >
+              Reject
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title={proposal.proposalNumber}
       subtitle={`Linked to: ${proposal.opportunity?.opportunityName || '—'}`}
+      icon={Receipt}
+      showFooter={true}
+      customFooter={getCustomFooter()}
+      width={{ xs: '100%', sm: 480, md: 540 }}
     >
-      <div className="space-y-6 text-sm">
+      <div className="space-y-6 text-sm pb-10">
         {/* Status & Key Figures Header */}
-        <div className="border-b border-slate-100 pb-5">
+        <div className="border-b border-slate-100 pb-5 space-y-4">
           <div className="flex items-center justify-between">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${
               isAccepted 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' 
                 : isRejected 
-                ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                ? 'bg-rose-50 text-rose-700 border-rose-200/80' 
                 : isSent 
-                ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                : 'bg-slate-100 text-slate-700 border-slate-200'
+                ? 'bg-blue-50 text-blue-700 border-blue-200/80' 
+                : 'bg-slate-100 text-slate-700 border-slate-200/80'
             }`}>
+              {isAccepted && <CheckCircle2 size={12} className="text-emerald-500" />}
+              {isRejected && <XCircle size={12} className="text-rose-500" />}
+              {isSent && <Send size={12} className="text-blue-500" />}
+              {isDraft && <Edit3 size={12} className="text-slate-500" />}
               {proposal.status}
             </span>
             {proposal.isExpired && !isLocked && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
                 Expired
               </span>
             )}
           </div>
           
-          <div className="mt-4">
-            <span className="text-xs text-slate-500 font-medium">Final Amount</span>
-            <div className="text-3xl font-bold text-slate-900 tracking-tight mt-0.5">
+          <div>
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Final Amount</span>
+            <div className="text-3xl font-black text-slate-900 tracking-tight mt-0.5 font-display">
               ₹{Number(proposal.finalAmount).toLocaleString('en-IN')}
             </div>
           </div>
         </div>
 
         {/* Pricing Summary */}
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-2.5">
-          <div className="flex justify-between text-xs text-slate-600 font-medium">
-            <span>Base Price</span>
-            <span>₹{Number(proposal.basePrice).toLocaleString('en-IN')}</span>
+        <div className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-4.5 space-y-3.5 shadow-xs">
+          <div className="flex justify-between items-center text-xs text-slate-500">
+            <span>Base Price:</span>
+            <span className="font-semibold text-slate-700">₹{Number(proposal.basePrice).toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-600 font-medium">
-            <span>Discount Applied</span>
-            <span className="text-rose-600">- ₹{Number(proposal.discount).toLocaleString('en-IN')}</span>
-          </div>
-          <div className="border-t border-slate-200 pt-2.5 flex justify-between text-xs font-bold text-slate-900">
-            <span>Total Proposal Value</span>
-            <span>₹{Number(proposal.finalAmount).toLocaleString('en-IN')}</span>
+          
+          {Number(proposal.discount) > 0 && (
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span>Applied Discount:</span>
+              <span className="font-semibold text-rose-600">- ₹{Number(proposal.discount).toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          
+          <div className="border-t border-slate-200/80 my-2 pt-2.5 flex justify-between items-center">
+            <span className="text-sm font-bold text-slate-600 font-display">Total Proposal Value:</span>
+            <span className="text-xl font-black text-slate-900 font-display">₹{Number(proposal.finalAmount).toLocaleString('en-IN')}</span>
           </div>
         </div>
 
         {/* Proposal Details */}
         <div className="space-y-4">
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Details</h4>
-          <div className="grid grid-cols-2 gap-4 border border-slate-100 rounded-xl p-4 bg-white shadow-2xs">
-            <div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Product / Service</span>
-              <span className="font-semibold text-slate-800">{proposal.product?.name || '—'}</span>
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-orange-500" />
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Proposal Details</h4>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Product / Service */}
+            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
+              <Award className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Product / Course</span>
+                <span className="font-semibold text-xs text-slate-700 leading-tight block mt-0.5">{proposal.product?.name || '—'}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Created By</span>
-              <span className="font-semibold text-slate-800">{proposal.createdBy?.name || '—'}</span>
+            
+            {/* Created By */}
+            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
+              <UserCheck className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Created By</span>
+                <span className="font-semibold text-xs text-slate-700 leading-tight block mt-0.5">{proposal.createdBy?.name || '—'}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Created Date</span>
-              <span className="font-semibold text-slate-700">{new Date(proposal.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            
+            {/* Created Date */}
+            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Created Date</span>
+                <span className="font-semibold text-xs text-slate-700 leading-tight block mt-0.5 font-display">
+                  {new Date(proposal.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Valid Until</span>
-              <span className="font-semibold text-slate-700">{new Date(proposal.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            
+            {/* Valid Until */}
+            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Valid Until</span>
+                <span className="font-semibold text-xs text-slate-700 leading-tight block mt-0.5 font-display">
+                  {new Date(proposal.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
             </div>
           </div>
 
+          {/* Terms & Conditions */}
           {proposal.terms && (
-            <div className="border border-slate-100 rounded-xl p-4 bg-white space-y-1.5 shadow-2xs">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Terms & Conditions</span>
-              <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-medium">{proposal.terms}</p>
+            <div className="bg-orange-50/20 border border-orange-100/50 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4.5 h-4.5 text-orange-500/80" />
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Terms & Conditions</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-medium pl-6">
+                {proposal.terms}
+              </p>
             </div>
           )}
         </div>
 
-        {/* Action Controls */}
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          <div className="grid grid-cols-2 gap-3">
-            {/* Mark as Sent */}
-            {!isLocked && isDraft && (
-              <Button
-                variant="contained"
-                color="primary"
-                className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg shadow-sm"
-                onClick={() => handleStatusChangeClick('SENT')}
-                isLoading={isStatusChanging && statusAction === 'SENT'}
-                disabled={isStatusChanging}
-              >
-                <Send size={14} />
-                Send to Client
-              </Button>
-            )}
-
-            {/* Accept / Reject */}
-            {!isLocked && isSent && (
-              <>
-                <Button
-                  variant="contained"
-                  color="success"
-                  className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg shadow-sm"
-                  onClick={() => handleStatusChangeClick('ACCEPTED')}
-                  isLoading={isStatusChanging && statusAction === 'ACCEPTED'}
-                  disabled={isStatusChanging}
-                >
-                  <CheckCircle2 size={14} />
-                  Accept
-                </Button>
-                <Button
-                  variant="contained"
-                  danger
-                  className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg shadow-sm"
-                  onClick={() => handleStatusChangeClick('REJECTED')}
-                  isLoading={isStatusChanging && statusAction === 'REJECTED'}
-                  disabled={isStatusChanging}
-                >
-                  <XCircle size={14} />
-                  Reject
-                </Button>
-              </>
-            )}
-
-            {/* Create Revision */}
-            {!isLocked && (
-              <Button
-                variant="outlined"
-                color="primary"
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-                onClick={() => onEditRevision(proposal)}
-                disabled={isStatusChanging}
-              >
-                Create Revision
-              </Button>
-            )}
-
-            {/* Print / PDF */}
-            <Button
-              variant="outlined"
-              color="primary"
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-              onClick={handlePrint}
-              disabled={isStatusChanging}
-            >
-              <Printer size={14} />
-              Print / PDF
-            </Button>
-
-            {/* Delete Proposal */}
-            {(currentUserRoleRank >= 60 || proposal.createdById === currentUserId || proposal.opportunity?.ownerId === currentUserId) && !isAccepted && (
-              <Button
-                variant="outlined"
-                danger
-                className={`w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition-colors ${
-                  isSent ? 'col-span-2' : ''
-                }`}
-                onClick={() => onDelete(proposal.id)}
-                disabled={isStatusChanging}
-              >
-                Delete Proposal
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* Version History */}
         <div className="space-y-4 border-t border-slate-100 pt-5">
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Version History</h4>
-          <div className="relative border-l border-slate-200 ml-2.5 space-y-4 pl-4 text-xs">
-            {(proposal.versions || []).map((ver, idx) => (
-              <div key={ver.id} className="relative">
-                <div className={`absolute left-[-21px] top-1.5 w-2 h-2 rounded-full border border-white ${
-                  idx === 0 ? 'bg-primary ring-2 ring-orange-50' : 'bg-slate-300'
-                }`} />
-                <div className="flex justify-between text-[11px] text-slate-500 font-semibold">
-                  <span className={idx === 0 ? 'text-primary' : ''}>V{ver.versionNumber}</span>
-                  <span>{new Date(ver.modifiedDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+          <div className="flex items-center gap-2 mb-2">
+            <Layers className="w-4 h-4 text-orange-500" />
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Version History</h4>
+          </div>
+          <div className="relative border-l border-slate-200 ml-3.5 space-y-5 pl-5 text-xs">
+            {(proposal.versions || []).map((ver, idx) => {
+              const isCurrent = idx === 0;
+              return (
+                <div key={ver.id} className="relative group">
+                  {/* Timeline Node */}
+                  <div className={`absolute left-[-25px] top-1.5 w-3 h-3 rounded-full border-2 border-white transition-all ${
+                    isCurrent 
+                      ? 'bg-orange-500 ring-4 ring-orange-100' 
+                      : 'bg-slate-300 group-hover:bg-slate-400'
+                  }`} />
+                  
+                  <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3.5 space-y-2.5 transition-all">
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      <span className={isCurrent ? 'text-orange-500 font-bold' : 'text-slate-500'}>
+                        Version V{ver.versionNumber} {isCurrent && '(Active)'}
+                      </span>
+                      <span>
+                        {new Date(ver.modifiedDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                    
+                    <div className="font-extrabold text-sm text-slate-900 font-display">
+                      ₹{Number(ver.finalAmount).toLocaleString('en-IN')}
+                    </div>
+                    
+                    {ver.versionNotes && (
+                      <p className="text-[11px] text-slate-600 bg-white/70 border border-slate-100/80 rounded-lg p-2 italic leading-relaxed">
+                        "{ver.versionNotes}"
+                      </p>
+                    )}
+                    
+                    <div className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
+                      <span>Modified by:</span>
+                      <span className="font-semibold text-slate-500">{ver.modifiedBy?.name || 'Unknown'}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="font-bold text-slate-900 mt-0.5">
-                  ₹{Number(ver.finalAmount).toLocaleString('en-IN')}
-                </div>
-                {ver.versionNotes && (
-                  <p className="text-slate-600 mt-1 italic leading-relaxed">"{ver.versionNotes}"</p>
-                )}
-                <p className="text-[10px] text-slate-400 mt-0.5 font-medium">By {ver.modifiedBy?.name || 'Unknown'}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Dialog, Checkbox, Menu, MenuItem } from '@mui/material';
+import { Dialog, Menu, MenuItem } from '@mui/material';
 import {
   Plus,
   RefreshCw,
@@ -45,6 +45,7 @@ import { teamService } from '../../teams/services/teamService';
 
 // Shared UI elements
 import Button from '../../../shared/components/elements/Button';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Table from '../../../shared/components/elements/Table';
@@ -692,14 +693,14 @@ export const LeadsPage = () => {
           <Checkbox
             checked={isAllSelected}
             indeterminate={isSomeSelected}
-            onChange={(e) => {
-              if (e.target.checked) {
+            onChange={(checked) => {
+              if (checked) {
                 setSelectedLeadIds(unassignedLeads.map(l => l.id));
               } else {
                 setSelectedLeadIds([]);
               }
             }}
-            size="small"
+            sx={{ p: 0.5, width: 'auto' }}
           />
         );
       })(),
@@ -707,16 +708,17 @@ export const LeadsPage = () => {
         const isAssigned = !!row.assignedToId || !!row.teamId;
         return (
           <Checkbox
+            id={`lead-select-${row.id}`}
             checked={selectedLeadIds.includes(row.id)}
             disabled={isAssigned}
-            onChange={(e) => {
-              if (e.target.checked) {
+            onChange={(checked) => {
+              if (checked) {
                 setSelectedLeadIds(prev => [...prev, row.id]);
               } else {
                 setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
               }
             }}
-            size="small"
+            sx={{ p: 0.5, width: 'auto' }}
           />
         );
       }
@@ -840,16 +842,18 @@ export const LeadsPage = () => {
       <section className=''>
 
         {/* Toolbar Filter Panel */}
-        <div className="bg-white border-x border-t border-slate-200/60  p-4 ">
-          <div className="flex flex-wrap items-center gap-3">
-            <SearchInput
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search by name, mobile, email..."
-              className="flex-1 min-w-[280px]"
-            />
+        <div className="bg-white border-x border-t border-slate-200/60 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1 min-w-[280px] w-full sm:w-auto">
+              <SearchInput
+                value={search}
+                onChange={handleSearchChange}
+                placeholder="Search by name, mobile, email..."
+                className="w-full"
+              />
+            </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {savedFiltersList.length > 0 && (
                 <div className="flex items-center gap-1">
                   <div className="w-[160px]">
@@ -993,14 +997,12 @@ export const LeadsPage = () => {
 
         {/* Pagination Footer */}
         {leads.length > 0 && (
-          <div className="flex justify-end mt-4">
-            <Pagination
-              pagination={pagination}
-              onPageChange={setPage}
-              isLoading={isLoading || isFetching}
-              entityName="leads"
-            />
-          </div>
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={isLoading || isFetching}
+            entityName="leads"
+          />
         )}
 
 

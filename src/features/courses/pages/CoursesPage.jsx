@@ -181,7 +181,7 @@ const CoursesPage = () => {
               className="w-full lg:max-w-md"
             />
 
-            <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 justify-start lg:justify-end">
               <Button
                 variant="secondary"
                 onClick={() => refetch()}

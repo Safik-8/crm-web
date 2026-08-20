@@ -5,6 +5,7 @@ import DynamicFormModal from '../../../shared/components/elements/DynamicFormMod
 import { Target, Calculator, Check, AlertCircle, BarChart3, ListChecks, Sparkles, AlertTriangle } from 'lucide-react';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 import { toast } from '../../../shared/utils/toast';
 
 const QualifyLeadModal = ({ lead, isOpen, onClose, onQualified }) => {
@@ -311,25 +312,19 @@ const QualifyLeadModal = ({ lead, isOpen, onClose, onQualified }) => {
                     }
                   `}
                   >
-                    <div
-                      className={`
-                      flex-shrink-0 flex items-center justify-center w-4 h-4 rounded-md border transition-all duration-200
-                      ${
-                        formData[item.key]
-                          ? 'bg-orange-500 border-orange-500 text-white'
-                          : 'border-slate-300 bg-white text-transparent group-hover:border-orange-300'
-                      }
-                    `}
-                    >
-                      <Check size={10} strokeWidth={4} className={formData[item.key] ? 'opacity-100' : 'opacity-0'} />
-                    </div>
-                    <input
-                      type="checkbox"
-                      name={item.key}
+                    <Checkbox
+                      id={`criteria-${item.key}`}
                       checked={Boolean(formData[item.key])}
-                      onChange={handleChange}
+                      onChange={(checked) => {
+                        if (!isFormDisabled) {
+                          setFormData((prev) => ({ ...prev, [item.key]: checked }));
+                          if (errors[item.key]) {
+                            setErrors((prev) => ({ ...prev, [item.key]: null }));
+                          }
+                        }
+                      }}
                       disabled={isFormDisabled}
-                      className="sr-only"
+                      sx={{ p: 0, width: 'auto' }}
                     />
 
                     <div className="flex-1 flex justify-between items-center z-10">

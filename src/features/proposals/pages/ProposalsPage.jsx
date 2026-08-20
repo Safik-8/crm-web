@@ -292,22 +292,22 @@ export default function ProposalsPage() {
             />
           </div>
 
-          <div className="w-[180px]">
+          <div className="w-full sm:w-[180px]">
             <SelectField
               placeholder="All Statuses"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(val) => setStatus(val)}
               options={[
-                { value: '', label: 'All Statuses' },
-                { value: 'DRAFT', label: 'Draft' },
-                { value: 'SENT', label: 'Sent' },
-                { value: 'ACCEPTED', label: 'Accepted' },
-                { value: 'REJECTED', label: 'Rejected' },
+                { id: '', name: 'All Statuses' },
+                { id: 'DRAFT', name: 'Draft' },
+                { id: 'SENT', name: 'Sent' },
+                { id: 'ACCEPTED', name: 'Accepted' },
+                { id: 'REJECTED', name: 'Rejected' },
               ]}
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button variant="contained" color="primary" type="submit">
               Search
             </Button>

@@ -5,7 +5,7 @@ import { useAssignUserToBranch } from '../hooks/useBranches';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useRoles } from '../../roles/hooks/useRoles';
 import DynamicFormModal from '../../../shared/components/elements/DynamicFormModal';
-import { Checkbox } from '@mui/material';
+import Checkbox from '../../../shared/components/elements/Checkbox';
 
 /**
  * AssignUserModal Component
@@ -129,11 +129,10 @@ const AssignUserModal = ({ isOpen, onClose, branch, onSuccess }) => {
                     }`}
                   >
                     <Checkbox
+                      id={`role-${role.id}`}
                       checked={isChecked}
                       onChange={() => handleToggle(role.name)}
-                      size="small"
-                      color="primary"
-                      sx={{ p: 0.5, mr: 1 }}
+                      sx={{ p: 0.5, mr: 1, width: 'auto' }}
                     />
                     <span className="text-sm font-medium text-slate-700">
                       {roleLabel}
