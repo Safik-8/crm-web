@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from '../utils/toast';
 import { apiClient } from '../../lib/api/api';
+import logoOfficial from '../../assets/logos/logo-official.png';
 
 /**
  * Helper to safely extract nested values from an object using a dot-notation path.
@@ -193,10 +194,159 @@ export const useExport = () => {
     }
   }, []);
 
+  /**
+   * Export dataset to formatted PDF (.pdf) using html2pdf.js with full company branding.
+   */
+  const exportPDFFromData = useCallback(async (data = [], columns = [], title = 'Report', fileName = 'export', pdfOptions = {}, logOptions = null) => {
+    if (!data || data.length === 0) {
+      toast.error('No records available to export.');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const container = document.createElement('div');
+      container.style.padding = '24px';
+      container.style.fontFamily = 'Inter, Helvetica, Arial, sans-serif';
+      container.style.color = '#0f172a';
+      container.style.backgroundColor = '#ffffff';
+
+      const companyName = pdfOptions.companyName || 'ClassDesk CRM';
+      const companySubtitle = pdfOptions.companySubtitle || `${companyName} • Enterprise Analytics & Reporting`;
+      const userName = pdfOptions.userName || 'Authorized User';
+      const nowStr = new Date().toLocaleString();
+
+      const companyInitials = companyName
+        .split(' ')
+        .map(n => (n ? n[0] : ''))
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || 'CD';
+
+      const logoUrlToUse = pdfOptions.logoUrl || logoOfficial;
+      const logoHtml = logoUrlToUse
+        ? `<img src="${logoUrlToUse}" alt="Logo" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" />`
+        : `<div style="width: 38px; height: 38px; background: linear-gradient(135deg, #f86f03 0%, #ea580c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 15px; box-shadow: 0 2px 4px rgba(248,111,3,0.25); border: 1px solid rgba(255,255,255,0.2);">${companyInitials}</div>`;
+
+      const filterBadgesHtml = pdfOptions.filtersSummary
+        ? Object.entries(pdfOptions.filtersSummary)
+          .filter(([_, val]) => Boolean(val))
+          .map(([key, val]) => `<span style="background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 500; border: 1px solid #e2e8f0;"><strong>${key}:</strong> ${val}</span>`)
+          .join('')
+        : '';
+
+      const summaryCardsHtml = Array.isArray(pdfOptions.summaryCards) && pdfOptions.summaryCards.length > 0
+        ? pdfOptions.summaryCards.map(card => `
+            <div style="flex: 1; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; border-left: 3.5px solid #f86f03;">
+              <div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${card.label}</div>
+              <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px;">${card.value}</div>
+            </div>
+          `).join('')
+        : '';
+
+      const tableHeadersHtml = columns.map(c => {
+        const align = c.align || 'left';
+        return `<th style="border: 1px solid #cbd5e1; padding: 8px 10px; background: #f8fafc; color: #1e293b; font-size: 10.5px; font-weight: 700; text-align: ${align};">${c.header}</th>`;
+      }).join('');
+
+      const tableRowsHtml = data.map((row, idx) => {
+        const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+        const cellsHtml = columns.map(col => {
+          const rawVal = getNestedValue(row, col.accessorKey);
+          let strVal = '';
+          if (col.formatter && typeof col.formatter === 'function') {
+            strVal = col.formatter(rawVal, row);
+          } else if (rawVal !== null && rawVal !== undefined) {
+            strVal = String(rawVal);
+          }
+          const align = col.align || 'left';
+          return `<td style="border: 1px solid #e2e8f0; padding: 7.5px 10px; font-size: 10.5px; color: #334155; text-align: ${align};">${strVal}</td>`;
+        }).join('');
+        return `<tr style="background-color: ${bg};">${cellsHtml}</tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #f86f03; padding-bottom: 12px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            ${logoHtml}
+            <div>
+              <div style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">${companyName}</div>
+              <div style="font-size: 10.5px; color: #64748b; font-weight: 500;">${companySubtitle}</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <h1 style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px;">${title}</h1>
+            <div style="font-size: 10.5px; color: #f86f03; font-weight: 600; margin-top: 2px;">Official Performance Export</div>
+          </div>
+        </div>
+
+        ${filterBadgesHtml ? `<div style="margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+          <span style="font-size: 10.5px; font-weight: 700; color: #475569; margin-right: 2px;">Active Scope Filters:</span>
+          ${filterBadgesHtml}
+        </div>` : ''}
+
+        ${summaryCardsHtml ? `<div style="display: flex; gap: 12px; margin-bottom: 16px;">
+          ${summaryCardsHtml}
+        </div>` : ''}
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: inherit;">
+          <thead>
+            <tr>${tableHeadersHtml}</tr>
+          </thead>
+          <tbody>
+            ${tableRowsHtml}
+          </tbody>
+        </table>
+
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
+          <div>Generated by: <strong>${userName}</strong></div>
+          <div>Generated on: <strong>${nowStr}</strong> &nbsp;|&nbsp; ${companyName} Confidential</div>
+        </div>
+      `;
+
+      const fullFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: fullFileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 1.5, useCORS: true, allowTaint: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      document.body.appendChild(container);
+      await html2pdf().set(opt).from(container).save();
+      document.body.removeChild(container);
+
+      if (logOptions?.reportName) {
+        try {
+          await apiClient.post('/reports/revenue/export-log', {
+            reportName: logOptions.reportName,
+            exportType: 'PDF',
+            fileName: fullFileName,
+            filtersUsed: logOptions.filtersUsed || {}
+          });
+        } catch (auditErr) {
+          console.warn('Export log recording failed:', auditErr);
+        }
+      }
+
+      toast.success('PDF exported successfully.');
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+      toast.error('Failed to export PDF document: ' + err.message);
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
   return {
     exportCSV,
     exportExcel,
     exportPDF,
+    exportPDFFromData,
     isExporting
   };
 };

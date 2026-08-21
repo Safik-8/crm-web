@@ -438,7 +438,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
     : "All Employees";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-slate-50/50 backdrop-blur-md border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-slate-50/50 backdrop-blur-md border border-slate-200/80 rounded-none p-6 shadow-sm">
       {/* 1. View Mode Section */}
       {(!isSales || (isSales && userTeam)) && (
         <div>
@@ -512,7 +512,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 searchable={true}
               />
             ) : (
-              <div className="flex flex-col justify-center bg-white border border-slate-200/60 rounded-xl px-4 py-2 text-xs font-semibold text-slate-600">
+              <div className="flex flex-col justify-center bg-white border border-slate-200/60 rounded-none px-4 py-2 text-xs font-semibold text-slate-600">
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider">Assigned Branch</span>
                 <span className="text-slate-800 font-bold mt-0.5">{user?.branch?.name || 'Auto Assigned'}</span>
               </div>
@@ -745,7 +745,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
       </div>
 
       {/* 5. Live Preview Panel */}
-      <div className="flex items-start gap-2 p-3 bg-slate-100 border border-slate-200/80 rounded-xl">
+      <div className="flex items-start gap-2 p-3 bg-slate-100 border border-slate-200/80 rounded-none">
         <Eye className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
         <p className="text-slate-600 text-xs font-semibold leading-normal">{compilePreviewText()}</p>
       </div>
@@ -755,7 +755,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
         <button
           type="button"
           onClick={handleReset}
-          className="flex items-center gap-1.5 px-4 py-2 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-bold transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 hover:bg-slate-100 text-slate-500 rounded-none text-xs font-bold transition-all"
         >
           <RotateCcw className="w-4 h-4" />
           Reset Filters
@@ -764,7 +764,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
           type="submit"
           disabled={!isFormValid || !canCreate || loading}
           isLoading={loading}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-none text-sm font-bold shadow-2xs hover:bg-primary/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {!loading && <Play className="w-4 h-4" />}
           {loading ? 'Generating...' : 'Generate Report'}

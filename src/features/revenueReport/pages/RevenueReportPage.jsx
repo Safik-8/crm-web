@@ -44,7 +44,7 @@ import { useExport } from '../../../shared/hooks/useExport';
 
 export default function RevenueReportPage() {
   const { user } = useAuth();
-  const { exportCSV, exportExcel, exportPDF, isExporting } = useExport();
+  const { exportCSV, exportExcel, exportPDF, exportPDFFromData, isExporting } = useExport();
   const [activeTab, setActiveTab] = useState('overview');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
@@ -134,7 +134,7 @@ export default function RevenueReportPage() {
   const branchQuery = useBranchRevenue(filters);
 
   // Multi-Format Export Handler
-  const handleExport = (type) => {
+  const handleExport = async (type) => {
     setIsExportMenuOpen(false);
     const logOpts = {
       reportName: `Revenue Report - ${activeTab.toUpperCase()}`,
@@ -144,6 +144,7 @@ export default function RevenueReportPage() {
     let exportData = [];
     let exportCols = [];
     let filePrefix = `revenue_report_${activeTab}`;
+    let reportTitle = `Revenue Report (${activeTab.toUpperCase()})`;
 
     if (activeTab === 'monthly') {
       exportData = monthlyQuery.data?.data || [];
@@ -213,7 +214,25 @@ export default function RevenueReportPage() {
     } else if (type === 'csv') {
       exportCSV(exportData, exportCols, filePrefix, logOpts);
     } else if (type === 'pdf') {
-      exportPDF('revenue-report-printable', filePrefix, logOpts);
+      if (exportPDFFromData && exportData.length > 0) {
+        const companyName = user?.company?.name || 'ClassDesk CRM';
+        const pdfOptions = {
+          companyName,
+          companySubtitle: 'Revenue & Financial Analytics Report',
+          userName: user?.name || user?.email || 'Authorized User',
+          filtersSummary: {
+            Period: filters.rankingPeriod,
+            Scope: `${companies.find(c => c.id === filters.companyId)?.name || 'All Companies'} -> ${branches.find(b => b.id === filters.branchId)?.name || 'All Branches'}`
+          },
+          summaryCards: [
+            { label: 'Total Revenue', value: summaryQuery.data?.metrics?.totalRevenue ? `₹${Number(summaryQuery.data.metrics.totalRevenue).toLocaleString('en-IN')}` : null },
+            { label: 'Total Records', value: `${exportData.length} Rows` }
+          ].filter(c => c.value !== null)
+        };
+        await exportPDFFromData(exportData, exportCols, reportTitle, `${filePrefix}.pdf`, pdfOptions);
+      } else {
+        exportPDF('revenue-report-printable', filePrefix, logOpts);
+      }
     }
   };
 
@@ -284,7 +303,7 @@ export default function RevenueReportPage() {
                     className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
                   >
                     <Printer className="w-4 h-4 text-rose-600" />
-                    <span>Export Printable PDF (.pdf)</span>
+                    <span>Export PDF (.pdf)</span>
                   </button>
                 </div>
               )}

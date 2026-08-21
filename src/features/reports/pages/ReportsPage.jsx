@@ -343,7 +343,7 @@ const ReportsPage = () => {
         description="You do not have permission to view this report."
         icon={BarChart3}
       >
-        <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-8 bg-white border border-slate-200/60 rounded-2xl space-y-3">
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-8 bg-white border border-slate-200/60 rounded-none space-y-3">
           <h3 className="text-base font-bold text-slate-800">You do not have permission to access this report</h3>
           <p className="text-xs text-slate-400 font-medium max-w-sm leading-normal">
             Please contact your system administrator to request access to this specific report.
@@ -364,7 +364,7 @@ const ReportsPage = () => {
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Saved Configurations Dropdown */}
           {savedConfigs.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-white border border-slate-200/60 rounded-2xl p-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-white border border-slate-200/60 rounded-none p-4 shadow-2xs">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-500">Saved Configurations:</span>
                 <div className="w-52">
@@ -385,7 +385,7 @@ const ReportsPage = () => {
                       <button
                         onClick={(e) => handleSetDefaultConfig(selectedConfigId, e)}
                         title="Set as Default"
-                        className="p-1.5 hover:bg-slate-100 rounded-lg text-primary transition-all"
+                        className="p-1.5 hover:bg-slate-100 rounded-none text-primary transition-all"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
@@ -394,7 +394,7 @@ const ReportsPage = () => {
                       <button
                         onClick={(e) => handleDeleteConfig(selectedConfigId, e)}
                         title="Delete saved configuration"
-                        className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition-all"
+                        className="p-1.5 hover:bg-red-50 text-red-500 rounded-none transition-all"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -433,7 +433,7 @@ const ReportsPage = () => {
             const statusLabel = getOptionName('leadStatuses', currentFilters.statusId) || currentFilters.status || currentFilters.paymentStatus || '';
 
             return (
-              <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 shadow-sm text-xs font-semibold text-slate-600 flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-200">
+              <div className="bg-slate-50 border border-slate-200/60 rounded-none p-4 shadow-2xs text-xs font-semibold text-slate-600 flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-200">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-slate-800 font-extrabold">{viewDesc}</span>
                   <span className="text-slate-300 font-normal">|</span>
@@ -488,8 +488,8 @@ const ReportsPage = () => {
           />
 
           {!reportData ? (
-            <div className="flex flex-col items-center justify-center text-center p-12 bg-white border border-dashed border-slate-200 rounded-2xl space-y-4 shadow-sm animate-in fade-in duration-200">
-              <div className="bg-primary/5 p-4 rounded-full text-primary">
+            <div className="flex flex-col items-center justify-center text-center p-12 bg-white border border-dashed border-slate-200 rounded-none space-y-4 shadow-2xs animate-in fade-in duration-200">
+              <div className="bg-primary/5 p-4 rounded-none text-primary">
                 <Filter className="w-8 h-8" />
               </div>
               <div className="max-w-md">
@@ -518,7 +518,7 @@ const ReportsPage = () => {
         <div className="space-y-6">
           {/* Favorites Bar (rendered if any exists) */}
           {favorites.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-500/5 to-amber-500/10 border border-amber-500/20 rounded-2xl p-5">
+            <div className="bg-gradient-to-r from-amber-500/5 to-amber-500/10 border border-amber-500/20 rounded-none p-5">
               <div className="flex items-center gap-2 mb-3 text-amber-600">
                 <Star className="w-5 h-5 fill-current" />
                 <h3 className="font-heading font-extrabold text-sm uppercase tracking-wider">Favorite Reports</h3>
@@ -530,7 +530,7 @@ const ReportsPage = () => {
                     <div
                       key={report.reportType}
                       onClick={() => handleOpenReport(report.reportType)}
-                      className="bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-md rounded-2xl p-4 cursor-pointer transition-all flex items-center justify-between"
+                      className="bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-md rounded-none p-4 cursor-pointer transition-all flex items-center justify-between"
                     >
                       <div>
                         <span className="text-xs font-bold text-amber-600 block mb-0.5">{REPORT_CATEGORIES[report.category]?.label}</span>
@@ -562,7 +562,7 @@ const ReportsPage = () => {
                   <button
                     key={rType}
                     onClick={() => handleOpenReport(rType)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all"
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-none transition-all"
                   >
                     {rep.reportName}
                   </button>
@@ -596,16 +596,16 @@ const ReportsPage = () => {
                   <div
                     key={report.reportType}
                     onClick={() => handleOpenReport(report.reportType)}
-                    className="group bg-white border border-slate-200 hover:border-primary/45 hover:shadow-xl rounded-2xl p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between"
+                    className="group bg-white border border-slate-200 hover:border-primary/45 hover:shadow-xl rounded-none p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-none bg-primary/10 text-primary uppercase tracking-wider">
                           {REPORT_CATEGORIES[report.category]?.label || report.category}
                         </span>
                         <button
                           onClick={(e) => handleToggleFavorite(report.reportType, e)}
-                          className={`p-1.5 rounded-xl hover:bg-slate-100 transition-colors ${isFav ? 'text-amber-500' : 'text-slate-300 hover:text-slate-500'}`}
+                          className={`p-1.5 rounded-none hover:bg-slate-100 transition-colors ${isFav ? 'text-amber-500' : 'text-slate-300 hover:text-slate-500'}`}
                         >
                           <Star className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
                         </button>
@@ -621,7 +621,7 @@ const ReportsPage = () => {
                     <div className="flex justify-end border-t border-slate-100 pt-3">
                       <Button
                         type="button"
-                        className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
+                        className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-none group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
                       >
                         Open Builder
                       </Button>
@@ -631,7 +631,7 @@ const ReportsPage = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl">
+            <div className="text-center py-20 bg-white border border-slate-200 rounded-none">
               <BarChart3 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <h3 className="font-heading font-bold text-slate-700 text-base">No Reports Found</h3>
               <p className="text-slate-500 text-xs mt-1">Try adjusting your filters or search term.</p>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { Download, Save, TrendingUp, DollarSign, Award, Target, Folder, AlertCircle } from 'lucide-react';
+import { Download, Save, TrendingUp, DollarSign, Award, Target, Folder, AlertCircle, ChevronDown, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 import {
   CrmPieChart,
   CrmLineChart,
@@ -14,13 +14,17 @@ import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
 import { SYSTEM_REPORTS_METADATA } from '../constants/reportConstants';
 import { apiClient } from '../../../lib/api/api';
+import { useExport } from '../../../shared/hooks/useExport';
 
 const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, error, toast }) => {
   const { user } = useAuth();
+  const { exportPDFFromData } = useExport();
   const reportPerms = user?.permissions?.REPORT || {};
   const canExport = reportPerms.canExport ?? true;
   const canEdit = reportPerms.canEdit ?? true;
 
+  const [activeViewTab, setActiveViewTab] = useState('summary');
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [configName, setConfigName] = useState('');
   const [isDefaultConfig, setIsDefaultConfig] = useState(false);
@@ -37,14 +41,14 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, idx) => (
-            <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 animate-pulse h-24" />
+            <div key={idx} className="bg-slate-50 border border-slate-200 rounded-none p-5 animate-pulse h-24" />
           ))}
         </div>
         <Table
           columns={columns}
           data={[]}
           loadingState="loading"
-          className="rounded-2xl"
+          className="rounded-none"
         />
       </div>
     );
@@ -53,8 +57,8 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
   // 2. Error State (Issue 4)
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center max-w-md mx-auto space-y-4">
-        <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto">
+      <div className="bg-red-50 border border-red-200 rounded-none p-8 text-center max-w-md mx-auto space-y-4">
+        <div className="h-12 w-12 bg-red-100 rounded-none flex items-center justify-center text-red-600 mx-auto">
           <AlertCircle className="w-6 h-6" />
         </div>
         <div>
@@ -296,6 +300,52 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      const exportItems = await fetchFullDataset('PDF');
+
+      const companyName = user?.company?.name || user?.companyName || getScopeName('companies', filters?.companyId) || 'ClassDesk';
+      const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
+
+      const pdfOptions = {
+        userName: user?.name || user?.email || 'Authorized User',
+        companyName,
+        companySubtitle: `${companyName} • Enterprise Analytics & Reporting`,
+        logoUrl,
+        filtersSummary: {
+          Scope: `${companyName} -> ${getScopeName('branches', filters?.branchId) || 'All Branches'} -> ${getScopeName('teams', filters?.teamId) || 'All Teams'}`,
+          'Date Range': filters?.startDate && filters?.endDate ? `${filters.startDate} to ${filters.endDate}` : 'All Time',
+          Status: filters?.status || filters?.statusId || filters?.paymentStatus || null,
+          Course: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
+        },
+        summaryCards: [
+          { label: 'Total Records', value: `${exportItems.length} Rows` },
+          { label: 'Total Revenue', value: summary?.totalRevenue ? currency(summary.totalRevenue) : null }
+        ].filter(card => card.value !== null)
+      };
+
+      const pdfColumns = columns.map(c => ({
+        header: c.header,
+        accessorKey: c.accessorKey,
+        align: c.accessorKey?.toLowerCase().includes('revenue') || c.accessorKey?.toLowerCase().includes('amount') || c.accessorKey?.toLowerCase().includes('rate') ? 'right' : (c.accessorKey?.toLowerCase().includes('id') || c.accessorKey?.toLowerCase().includes('code') || c.accessorKey?.toLowerCase().includes('count') ? 'center' : 'left'),
+        formatter: (val, item) => (c.cell ? c.cell(item) : (val !== null && val !== undefined ? String(val) : ''))
+      }));
+
+      const exportFileName = `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      await exportPDFFromData(
+        exportItems,
+        pdfColumns,
+        metadata.title || reportType,
+        exportFileName,
+        pdfOptions
+      );
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+      toast?.error('Failed to export report to PDF: ' + err.message);
+    }
+  };
+
   const handleSaveConfig = (e) => {
     e.preventDefault();
     if (!configName.trim()) return;
@@ -337,7 +387,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     const palette = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
 
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Distribution</h4>
         <CrmPieChart
           data={chartData}
@@ -357,7 +407,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     if (chartData.length === 0) return null;
 
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Revenue Trend</h4>
         <CrmLineChart
           data={chartData}
@@ -380,7 +430,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     if (chartData.every(item => item.value === 0)) return null;
 
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Won vs Lost Deals</h4>
         <CrmBarChart
           data={chartData}
@@ -400,7 +450,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     if (chartData.length === 0) return null;
 
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs">
         <h4 className="font-heading font-bold text-slate-800 text-sm mb-4">Pipeline Stage Distribution</h4>
         <CrmFunnelChart
           data={chartData}
@@ -419,20 +469,20 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       case 'LEAD_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4">
+              <div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div>
               <div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Leads</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div>
             </div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Target className="w-6 h-6" /></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4">
+              <div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><Target className="w-6 h-6" /></div>
               <div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Qualified</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.qualifiedCount || 0}</span></div>
             </div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4">
+              <div className="h-12 w-12 rounded-none bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div>
               <div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Lost</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.lostCount || 0}</span></div>
             </div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4">
+              <div className="h-12 w-12 rounded-none bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div>
               <div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Conversion</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.conversionRate || 0}%</span></div>
             </div>
           </>
@@ -440,46 +490,46 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
       case 'OPPORTUNITY_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Opportunities</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Expected Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Won</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.wonCount || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Avg Prob.</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.averageProbability || 0}%</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Opportunities</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Expected Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-violet-50 text-violet-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Won</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.wonCount || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Avg Prob.</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.averageProbability || 0}%</span></div></div>
           </>
         );
       case 'DEAL_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Deals Closed</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Won Value</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Win Rate</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.winRate || 0}%</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Lost</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.lostCount || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Deals Closed</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Won Value</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-violet-50 text-violet-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Win Rate</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.winRate || 0}%</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Lost</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.lostCount || 0}</span></div></div>
           </>
         );
       case 'REVENUE_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Completed</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.completedRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Pending</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.pendingRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Transactions</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Completed</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.completedRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Pending</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.pendingRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-violet-50 text-violet-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Transactions</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
           </>
         );
       case 'CUSTOMER_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Customers</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Active</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.activeCount || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Inactive</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.inactiveCount || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><Folder className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Customers</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Total Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-violet-50 text-violet-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Active</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.activeCount || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-rose-50 text-rose-600 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Inactive</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.inactiveCount || 0}</span></div></div>
           </>
         );
       case 'TEAM_PERFORMANCE_REPORT':
         return (
           <>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Employees</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Deals Won</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalDeals || 0}</span></div></div>
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Avg. Conv.</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.averageConversionRate || 0}%</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-indigo-50 text-indigo-600 flex items-center justify-center"><Award className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Employees</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalRecords || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Revenue</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{currency(summary.totalRevenue)}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-violet-50 text-violet-600 flex items-center justify-center"><Target className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Deals Won</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.totalDeals || 0}</span></div></div>
+            <div className="bg-white border border-slate-200 rounded-none p-5 shadow-2xs flex items-center gap-4"><div className="h-12 w-12 rounded-none bg-amber-50 text-amber-600 flex items-center justify-center"><TrendingUp className="w-6 h-6" /></div><div><span className="block text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Avg. Conv.</span><span className="block text-slate-800 font-extrabold text-2xl mt-0.5">{summary.averageConversionRate || 0}%</span></div></div>
           </>
         );
       default:
@@ -625,63 +675,107 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
             </button>
           )}
           {canExport && (
-            <>
+            <div className="relative">
               <button
-                onClick={handleExportExcel}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all"
+                onClick={() => setIsExportMenuOpen(prev => !prev)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-2xs"
               >
                 <Download className="w-4 h-4 text-slate-500" />
-                Excel
+                <span>Export Report</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all"
-              >
-                <Download className="w-4 h-4 text-slate-500" />
-                CSV
-              </button>
-              <button
-                onClick={handlePrintPDF}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all"
-              >
-                PDF/Print
-              </button>
-            </>
+
+              {isExportMenuOpen && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                  <button
+                    onClick={() => { setIsExportMenuOpen(false); handleExportExcel(); }}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Export Excel (.xlsx)</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsExportMenuOpen(false); handleExportCSV(); }}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                  >
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span>Export CSV (.csv)</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsExportMenuOpen(false); handleExportPDF(); }}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                  >
+                    <Printer className="w-4 h-4 text-rose-600" />
+                    <span>Export PDF (.pdf)</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {renderSummaryCards()}
+      {/* View Mode Tabs (Curved Pill Styling) */}
+      <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200/40">
+        <button
+          type="button"
+          onClick={() => setActiveViewTab('summary')}
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+            activeViewTab === 'summary'
+              ? 'bg-white text-slate-800 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Summary & Distribution
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveViewTab('table')}
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+            activeViewTab === 'table'
+              ? 'bg-white text-slate-800 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Data Table {pagination.total ? `(${pagination.total})` : items.length > 0 ? `(${items.length})` : ''}
+        </button>
       </div>
 
-      {/* Report-specific charts */}
-      {renderReportCharts()}
-
-      {/* Data Table */}
-      <div className="space-y-4">
-        <Table
-          columns={columns}
-          data={items}
-          loadingState="success"
-          className="rounded-2xl"
-        />
-
-        {pagination.pages > 1 && (
-          <div className="flex justify-end bg-white border border-slate-200 rounded-2xl p-4">
-            <Pagination
-              pagination={{
-                page: pagination.page,
-                totalPages: pagination.pages,
-                total: pagination.total,
-                limit: pagination.limit
-              }}
-              onPageChange={onPageChange}
-            />
+      {activeViewTab === 'summary' ? (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Summary Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {renderSummaryCards()}
           </div>
-        )}
-      </div>
+
+          {/* Report-specific charts */}
+          {renderReportCharts()}
+        </div>
+      ) : (
+        /* Data Table Section */
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <Table
+            columns={columns}
+            data={items}
+            loadingState="success"
+            className="rounded-none"
+          />
+
+          {pagination.pages > 1 && (
+            <div className="flex justify-end bg-white border border-slate-200 rounded-none p-4 shadow-2xs">
+              <Pagination
+                pagination={{
+                  page: pagination.page,
+                  totalPages: pagination.pages,
+                  total: pagination.total,
+                  limit: pagination.limit
+                }}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Save Config Modal */}
       {saveModalOpen && (
