@@ -45,6 +45,7 @@ const MODULES_LIST = [
   { value: "ACTIVITY", label: "Activities" },
   { value: "COURSE", label: "Courses" },
   { value: "TARGET", label: "Targets" },
+  { value: "KPI", label: "KPI & Performance" },
   { value: "CUSTOMER", label: "Customers" },
   { value: "DEAL", label: "Deals" },
   { value: "APPROVAL", label: "Approvals" },

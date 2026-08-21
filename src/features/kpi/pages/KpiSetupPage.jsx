@@ -187,6 +187,7 @@ export default function KpiSetupPage() {
     enabled: assignmentType === 'INDIVIDUAL',
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.set('limit', '1000');
       if (!isSuperAdmin && user?.companyId) params.set('companyId', user.companyId);
       if (isBranchManager && user?.branchId) params.set('branchId', user.branchId);
 
@@ -207,6 +208,7 @@ export default function KpiSetupPage() {
     enabled: assignmentType === 'TEAM',
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.set('limit', '1000');
       if (!isSuperAdmin && user?.companyId) params.set('companyId', user.companyId);
       if (isBranchManager && user?.branchId) params.set('branchId', user.branchId);
 
