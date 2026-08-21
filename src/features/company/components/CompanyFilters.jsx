@@ -44,7 +44,7 @@ const CompanyFilters = ({
         />
 
         {/* ── Filter Controls ─────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-3 w-full xl:w-auto shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -62,7 +62,7 @@ const CompanyFilters = ({
             <span>{hasActiveFilters ? 'Clear Filters' : 'Filters'}</span>
           </button>
 
-          <div className="flex-1 sm:flex-none w-full sm:w-auto relative">
+          <div className="w-full relative">
             <SelectField
               id="company-status-filter"
               value={status}
@@ -95,7 +95,7 @@ const CompanyFilters = ({
             )}
           </div>
 
-          <div className="flex-1 sm:flex-none w-full sm:w-auto">
+          <div className="w-full">
             <SelectField
               id="company-sort"
               value={currentSort}

@@ -365,13 +365,14 @@ const QualificationCriteriaSettingsPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto w-full md:w-auto justify-start md:justify-end">
+        <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
           <button
             onClick={fetchMatrix}
-            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors focus:outline-none"
+            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
             title="Refresh Data"
           >
-            <RefreshCcw size={16} />
+            <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+            <span className="ml-1.5 sm:hidden">Refresh</span>
           </button>
 
           {canEdit && (
@@ -394,6 +395,7 @@ const QualificationCriteriaSettingsPage = () => {
                 variant="outlined"
                 size="medium"
                 startIcon={<Plus size={16} />}
+                className="w-full sm:w-auto whitespace-nowrap"
                 sx={{
                   borderColor: '#F86F03',
                   color: '#F86F03',
@@ -413,6 +415,7 @@ const QualificationCriteriaSettingsPage = () => {
                 variant="contained"
                 size="medium"
                 startIcon={<Save size={16} />}
+                className="w-full sm:w-auto whitespace-nowrap"
                 sx={{
                   backgroundColor: '#F86F03',
                   '&:hover': {

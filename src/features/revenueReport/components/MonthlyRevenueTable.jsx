@@ -35,12 +35,12 @@ export const MonthlyRevenueTable = ({ data = [], isLoading = false }) => {
 
   return (
     <div className="bg-white  border border-slate-200/80 shadow-sm overflow-hidden mb-6">
-      <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-bold text-slate-900 tracking-tight">Month-by-Month Revenue Statement</h3>
           <p className="text-xs text-slate-500">Historical monthly earnings, closed deal volume, and MoM growth rate</p>
         </div>
-        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">
+        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold whitespace-nowrap">
           {data.length} Months Recorded
         </span>
       </div>

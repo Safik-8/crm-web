@@ -122,11 +122,11 @@ const CompanySettingsPage = () => {
           icon={Building2}
           className="bg-white px-5 py-4 border border-slate-200"
           actions={
-            <>
+            <div className="grid grid-cols-[auto_1fr] gap-2 w-full sm:flex sm:w-auto">
               <button
                 onClick={refetch}
                 disabled={isLoading}
-                className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+                className="h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50"
                 title="Refresh"
               >
                 <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
@@ -135,12 +135,13 @@ const CompanySettingsPage = () => {
                 <Button
                   onClick={handleAddCompany}
                   variant="contained"
+                  className="w-full sm:w-auto"
                   startIcon={<Plus size={15} />}
                 >
                   Add Company
                 </Button>
               )}
-            </>
+            </div>
           }
         />
 

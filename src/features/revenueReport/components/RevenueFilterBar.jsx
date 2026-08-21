@@ -66,7 +66,6 @@ export const RevenueFilterBar = ({
         {/* Period Selector */}
         <div>
           <SelectField
-            label="Time Period"
             placeholder="Time Period"
             value={filters.rankingPeriod || 'ALL'}
             onChange={(val) => handleChange('rankingPeriod', val === undefined ? 'ALL' : val)}
@@ -84,7 +83,6 @@ export const RevenueFilterBar = ({
         {isSuperAdmin && (
           <div>
             <SelectField
-              label="Company"
               placeholder="All Companies"
               value={filters.companyId || ''}
               onChange={(val) => handleChange('companyId', val === undefined ? '' : val)}
@@ -99,7 +97,6 @@ export const RevenueFilterBar = ({
         {(isSuperAdmin || isCompanyAdmin) && (
           <div>
             <SelectField
-              label="Branch"
               placeholder={isSuperAdmin && !filters.companyId ? 'Select company first' : 'All Branches'}
               value={filters.branchId || ''}
               onChange={(val) => handleChange('branchId', val === undefined ? '' : val)}
@@ -115,7 +112,6 @@ export const RevenueFilterBar = ({
         {(isSuperAdmin || isCompanyAdmin || isBranchManager) && (
           <div>
             <SelectField
-              label="Team"
               placeholder="All Teams"
               value={filters.teamId || ''}
               onChange={(val) => handleChange('teamId', val === undefined ? '' : val)}
@@ -129,7 +125,6 @@ export const RevenueFilterBar = ({
         {/* Course / Product Selector */}
         <div>
           <SelectField
-            label="Course / Product"
             placeholder="All Courses"
             value={filters.courseId || ''}
             onChange={(val) => handleChange('courseId', val === undefined ? '' : val)}

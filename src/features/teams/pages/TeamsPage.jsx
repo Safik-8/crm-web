@@ -259,7 +259,7 @@ const TeamsPage = () => {
         <section>
           {/* Filter and Search Bar */}
           <div className="bg-white border-x border-t border-slate-200/60 p-4 ">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-start gap-3">
 
               {/* Search Input */}
               <div className="relative flex-1 min-w-[240px]">

@@ -249,29 +249,32 @@ const UsersPage = () => {
                     className="w-full lg:max-w-md"
                   />
 
-                  <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-end">
-                    <Button
-                      variant="secondary"
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+                    <button
+                      type="button"
                       onClick={() => refetch()}
-                      className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 h-[42px] px-5 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-[10px] text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap"
                       title="Refresh List"
                     >
-                      <RefreshCw size={14} />
+                      <RefreshCw size={16} className={loadingState === 'loading' ? 'animate-spin' : ''} />
                       <span>Refresh</span>
-                    </Button>
+                    </button>
 
-                    <ExportMenu
-                      data={users}
-                      columns={exportColumns}
-                      fileName="users"
-                    />
+                    <div className="w-full sm:w-auto [&>div]:w-full [&>button]:w-full [&>button]:justify-center [&>button]:whitespace-nowrap">
+                      <ExportMenu
+                        data={users}
+                        columns={exportColumns}
+                        fileName="users"
+                      />
+                    </div>
 
                     {canCreate && (
                       <Button
                         onClick={handleOpenCreateForm}
-                        className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                        className="col-span-2 w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                        variant="contained"
                       >
-                        <Plus size={14} />
+                        <Plus size={16} />
                         <span>Onboard User</span>
                       </Button>
                     )}
