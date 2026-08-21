@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import SuperAdminDashboardView    from './SuperAdminDashboardView';
 import CompanyAdminDashboardView  from './CompanyAdminDashboardView';
+import BranchDashboardView        from './BranchDashboardView';
 import BdeDashboardView           from './BdeDashboardView';
 import IseDashboardView           from './IseDashboardView';
 
@@ -13,14 +14,13 @@ const DashboardPage = () => {
 
   const role = user.primaryRole;
 
-  // BRANCH_MANAGER redirects to existing /dashboard/branch (BranchDashboardPage.jsx untouched)
-  if (role === 'BRANCH_MANAGER') return <Navigate to="/dashboard/branch" replace />;
+  if (role === 'BRANCH_MANAGER') return <BranchDashboardView />;
   if (role === 'SUPER_ADMIN')    return <SuperAdminDashboardView />;
   if (role === 'COMPANY_ADMIN')  return <CompanyAdminDashboardView />;
   if (role === 'BDE')            return <BdeDashboardView />;
   if (role === 'ISE')            return <IseDashboardView />;
 
-  return <Navigate to="/dashboard/branch" replace />;
+  return <BranchDashboardView />;
 };
 
 export default DashboardPage;

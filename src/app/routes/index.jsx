@@ -6,7 +6,7 @@ import LoginPage from '../../features/auth/pages/LoginPage';
 import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
 import BaseLayout from '../../shared/layouts/BaseLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
-import BranchDashboardPage from '../../features/dashboard/pages/BranchDashboardPage';
+import BranchDashboardView from '../../features/dashboard/pages/BranchDashboardView';
 import SuperAdminDashboardView from '../../features/dashboard/pages/SuperAdminDashboardView';
 import CompanyAdminDashboardView from '../../features/dashboard/pages/CompanyAdminDashboardView';
 import BdeDashboardView from '../../features/dashboard/pages/BdeDashboardView';
@@ -114,7 +114,7 @@ export const router = createBrowserRouter([
         path: 'dashboard/branch',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_DASHBOARD}>
-            <BranchDashboardPage />
+            <BranchDashboardView />
           </ProtectedRoute>
         ),
       },

@@ -113,7 +113,7 @@ const CompanyAdminDashboardView = () => {
       {/* Activity Feed & Reminders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ActivityFeedWidget activities={activities} isLoading={activitiesLoading} />
-        <ReminderWidget onViewFollowups={() => navigate('/leads')} />
+        <ReminderWidget />
       </div>
     </div>
   );

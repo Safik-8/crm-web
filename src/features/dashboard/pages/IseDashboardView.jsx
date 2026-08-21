@@ -82,7 +82,7 @@ const IseDashboardView = () => {
         </div>
       )}
 
-      <ReminderWidget onViewFollowups={() => navigate('/leads')} />
+      <ReminderWidget />
     </div>
   );
 };

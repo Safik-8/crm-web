@@ -123,13 +123,17 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
             onClick={onClick}
             startIcon={<Icon size={14} />}
             sx={{
+              height: '38px',
               borderColor: '#E2E8F0',
               color: '#334155',
               backgroundColor: '#FFFFFF',
               borderRadius: '10px',
               fontWeight: 600,
               fontSize: '12px',
-              padding: '6px 14px',
+              padding: '0 14px',
+              textTransform: 'none',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
               '&:hover': {
                 borderColor: '#CBD5E1',
                 backgroundColor: '#F8FAFC',

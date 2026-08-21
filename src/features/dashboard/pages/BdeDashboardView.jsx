@@ -58,7 +58,7 @@ const BdeDashboardView = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <LeadAgingWidget data={aging} isLoading={al} />
-        <ReminderWidget onViewFollowups={() => navigate('/leads')} />
+        <ReminderWidget />
       </div>
     </div>
   );
