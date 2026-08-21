@@ -38,6 +38,8 @@ const RBAC_ADAPTER_MAP = {
   'view:teams': { module: 'TEAM', action: 'canView' },
   'view:lead_statuses': { module: 'LEAD_STATUS', action: 'canView' },
   'view:lead_assignment': { module: 'LEAD_ASSIGNMENT', action: 'canView' },
+  'view:kpi': { module: 'KPI', action: 'canView' },
+  'manage:kpi': { module: 'KPI', action: 'canManage' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH
@@ -117,6 +119,35 @@ export const AuthProvider = ({ children }) => {
       ) {
         return true;
       }
+    }
+
+    // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage)
+    if (
+      moduleOrPermissionStr === 'KPI' ||
+      moduleOrPermissionStr.startsWith('create:kpi') ||
+      moduleOrPermissionStr.startsWith('view:kpi') ||
+      moduleOrPermissionStr.startsWith('manage:kpi')
+    ) {
+      let actionKey = action;
+      if (!actionKey) {
+        if (moduleOrPermissionStr === 'create:kpi') actionKey = 'canCreate';
+        else if (moduleOrPermissionStr === 'view:kpi_own') actionKey = 'canViewOwn';
+        else if (moduleOrPermissionStr === 'view:kpi_analytics') actionKey = 'canViewAll';
+        else if (moduleOrPermissionStr === 'manage:kpi') actionKey = 'canManage';
+        else actionKey = 'canView';
+      }
+
+      const dbValue = user.permissions?.KPI?.[actionKey] ?? user.permissions?.KPI?.[actionKey === 'canViewOwn' || actionKey === 'canViewAll' ? 'canView' : actionKey];
+      if (dbValue !== undefined) return Boolean(dbValue);
+
+      // System role fallback
+      const rank = Number(user.primaryRoleRank || 0);
+      const isManagerOrAdmin = user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || user.primaryRole === 'BRANCH_MANAGER' || rank >= 60;
+      const isBdeOrLeader = isManagerOrAdmin || user.primaryRole === 'BDE' || rank >= 40 || Boolean(user.isTeamLeader);
+
+      if (actionKey === 'canCreate' || actionKey === 'canManage') return isManagerOrAdmin;
+      if (actionKey === 'canViewAll') return isBdeOrLeader;
+      return true; // canViewOwn / canView is true for all authenticated users
     }
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')

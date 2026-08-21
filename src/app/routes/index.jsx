@@ -19,6 +19,10 @@ import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 import SalesPerformancePage from '../../features/salesPerformance/pages/SalesPerformancePage';
 import RevenueReportPage from '../../features/revenueReport/pages/RevenueReportPage';
+import MyPerformancePage from '../../features/kpi/pages/MyPerformancePage';
+import KpiAnalyticsPage from '../../features/kpi/pages/KpiAnalyticsPage';
+import KpiSetupPage from '../../features/kpi/pages/KpiSetupPage';
+import KpiDetailPage from '../../features/kpi/pages/KpiDetailPage';
 
 import UsersPage from '../../features/users/pages/UsersPage';
 import CoursesPage from '../../features/courses/pages/CoursesPage';
@@ -216,6 +220,38 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
             <RevenueReportPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-performance',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_KPI_OWN}>
+            <MyPerformancePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'kpi-analytics',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_KPI_ALL}>
+            <KpiAnalyticsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'kpi-management',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.CREATE_KPI}>
+            <KpiSetupPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'kpi/:id',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_KPI_OWN}>
+            <KpiDetailPage />
           </ProtectedRoute>
         ),
       },
