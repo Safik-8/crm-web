@@ -29,14 +29,14 @@ import TeamDetailModal from '../components/TeamDetailModal';
 const PAGE_SIZE = 10;
 
 const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-900', loading }) => (
-  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+  <div className="bg-white p-4 rounded-none border border-slate-200 shadow-2xs flex items-center justify-between">
     <div>
       <span className="text-xs text-slate-500 font-medium block mb-1">{label}</span>
       {loading
-        ? <Skeleton className="h-7 w-16 rounded-md" />
+        ? <Skeleton className="h-7 w-16 rounded-none" />
         : <span className={`text-xl font-bold block ${valueClass}`}>{value}</span>}
     </div>
-    <div className={`w-10 h-10 rounded-md flex items-center justify-center ${iconBg}`}>
+    <div className={`w-10 h-10 rounded-none flex items-center justify-center ${iconBg}`}>
       <Icon className="w-5 h-5" />
     </div>
   </div>
@@ -167,11 +167,11 @@ const MyTeamPage = () => {
   if (loadingActiveTeam || (activeTeamId && loadingTeamDetails)) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-[88px] rounded-lg" />
+        <Skeleton className="h-[88px] rounded-none" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] rounded-lg" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] rounded-none" />)}
         </div>
-        <Skeleton className="h-[300px] rounded-lg" />
+        <Skeleton className="h-[300px] rounded-none" />
       </div>
     );
   }
@@ -465,7 +465,7 @@ const MyTeamPage = () => {
       {/* Single section — toggle Members / Leads */}
       <section>
         {/* Section header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-t-lg shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-none shadow-2xs">
           <div>
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
               <span>{teamDetails.name}</span>
@@ -496,7 +496,7 @@ const MyTeamPage = () => {
                 onClick={() => setActiveTab('members')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   activeTab === 'members'
-                    ? 'bg-white text-slate-800 shadow-sm'
+                    ? 'bg-white text-slate-800 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -509,7 +509,7 @@ const MyTeamPage = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white text-slate-800 shadow-sm'
+                      ? 'bg-white text-slate-800 shadow-2xs'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
