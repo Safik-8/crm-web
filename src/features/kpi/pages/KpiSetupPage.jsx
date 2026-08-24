@@ -183,19 +183,39 @@ export default function KpiSetupPage() {
 
   // Auto-scoped Fetch Employees Options
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['usersOptionsKpiScoped', user?.companyId, user?.branchId],
+    queryKey: ['usersOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin],
     enabled: assignmentType === 'INDIVIDUAL',
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', '1000');
-      if (!isSuperAdmin && user?.companyId) params.set('companyId', user.companyId);
-      if (isBranchManager && user?.branchId) params.set('branchId', user.branchId);
+      if (!isSuperAdmin && user?.companyId) params.set('companyId', String(user.companyId));
+      if (!isSuperAdmin && !isCompanyAdmin && user?.branchId) params.set('branchId', String(user.branchId));
 
       const res = await axiosClient.get(`/users?${params.toString()}`);
       const list = Array.isArray(res)
         ? res
         : res.users || res.data?.users || (Array.isArray(res.data) ? res.data : []);
-      return list.map((u) => ({
+
+      const actorRank = Number(user?.primaryRoleRank ?? (isSuperAdmin ? 100 : isCompanyAdmin ? 80 : isBranchManager ? 60 : 40));
+
+      const assignableUsers = list.filter((u) => {
+        if (isSuperAdmin) return true;
+        const uRole = u.primaryRole || u.userRoles?.[0]?.role?.name || u.role || '';
+        const uRank = Number(
+          u.primaryRoleRank ??
+          u.userRoles?.[0]?.role?.rank ??
+          (uRole === 'SUPER_ADMIN' ? 100 : uRole === 'COMPANY_ADMIN' ? 80 : uRole === 'BRANCH_MANAGER' ? 60 : uRole === 'BDE' ? 40 : uRole === 'ISE' ? 20 : 0)
+        );
+
+        // Branch Managers cannot assign targets to Super Admins or Company Admins
+        if (!isCompanyAdmin && (uRole === 'SUPER_ADMIN' || uRole === 'COMPANY_ADMIN')) return false;
+        // Company Admins cannot assign targets to Super Admins
+        if (!isSuperAdmin && uRole === 'SUPER_ADMIN') return false;
+
+        return uRank <= actorRank;
+      });
+
+      return assignableUsers.map((u) => ({
         value: String(u.id),
         label: `${u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email} (${u.employeeId || u.employeeCode || 'User'})`,
       }));
@@ -204,13 +224,13 @@ export default function KpiSetupPage() {
 
   // Auto-scoped Fetch Teams Options
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
-    queryKey: ['teamsOptionsKpiScoped', user?.companyId, user?.branchId],
+    queryKey: ['teamsOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin],
     enabled: assignmentType === 'TEAM',
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', '1000');
-      if (!isSuperAdmin && user?.companyId) params.set('companyId', user.companyId);
-      if (isBranchManager && user?.branchId) params.set('branchId', user.branchId);
+      if (!isSuperAdmin && user?.companyId) params.set('companyId', String(user.companyId));
+      if (!isSuperAdmin && !isCompanyAdmin && user?.branchId) params.set('branchId', String(user.branchId));
 
       const res = await axiosClient.get(`/teams?${params.toString()}`);
       const list = Array.isArray(res)
