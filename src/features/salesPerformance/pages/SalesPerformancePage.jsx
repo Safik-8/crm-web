@@ -26,7 +26,7 @@ import { useExport } from '../../../shared/hooks/useExport';
 import { salesPerformanceService } from '../services/salesPerformanceService';
 
 export default function SalesPerformancePage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState('bde');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const { exportCSV, exportExcel, exportPDFFromData, isExporting } = useExport();
@@ -39,6 +39,10 @@ export default function SalesPerformancePage() {
   const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || primaryRoleRank === 80;
   const isBranchManager = primaryRole === 'BRANCH_MANAGER' || primaryRoleRank === 60;
   const isBdeOrIse = !isSuperAdmin && !isCompanyAdmin && !isBranchManager;
+
+  // RBAC Permission Checks (Direct Module check with general REPORT fallback)
+  const canViewPerformance = hasPermission('SALES_PERFORMANCE', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager || isBdeOrIse;
+  const canExportPerformance = hasPermission('SALES_PERFORMANCE', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBdeOrIse };
 
@@ -282,8 +286,6 @@ export default function SalesPerformancePage() {
 
       await exportPDFFromData(currentDataSet, columns, reportTitle, `${fileName}_${filters.rankingPeriod}.pdf`, pdfOptions);
     }
-
-    }
   };
 
 
@@ -301,44 +303,45 @@ export default function SalesPerformancePage() {
           </p>
         </div>
 
-        <div className="relative">
-                   <button
-            onClick={() => setIsExportMenuOpen(prev => !prev)}
-            disabled={!isQueryEnabled || isExporting}
-            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-          >
-            <Download size={14} className={isExporting ? 'animate-bounce text-orange-500' : 'text-slate-500'} />
-            <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
-            <ChevronDown size={14} className="text-slate-400" />
-          </button>
+        {canExportPerformance && (
+          <div className="relative">
+            <button
+              onClick={() => setIsExportMenuOpen(prev => !prev)}
+              disabled={!isQueryEnabled || isExporting}
+              className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <Download size={14} className={isExporting ? 'animate-bounce text-orange-500' : 'text-slate-500'} />
+              <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
+              <ChevronDown size={14} className="text-slate-400" />
+            </button>
 
-          {isExportMenuOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
-              <button
-                onClick={() => handleExport('excel')}
-                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>Export as Excel (.xlsx)</span>
-              </button>
-              <button
-                onClick={() => handleExport('csv')}
-                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-              >
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span>Export as CSV (.csv)</span>
-              </button>
-              <button
-                onClick={() => handleExport('pdf')}
-                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-              >
-                <Printer className="w-4 h-4 text-rose-600" />
-                <span>Export as PDF (.pdf)</span>
-              </button>
-            </div>
-          )}
-
-        </div>
+            {isExportMenuOpen && (
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                <button
+                  onClick={() => handleExport('excel')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>Export as Excel (.xlsx)</span>
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                >
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span>Export as CSV (.csv)</span>
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                >
+                  <Printer className="w-4 h-4 text-rose-600" />
+                  <span>Export as PDF (.pdf)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Role-Aware Filter Bar */}

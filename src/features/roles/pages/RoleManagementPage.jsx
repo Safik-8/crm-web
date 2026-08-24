@@ -53,7 +53,9 @@ const MODULES_LIST = [
   { value: "NOTIFICATION", label: "Notifications" },
   { value: "AUDIT", label: "Audit Logs" },
   { value: "OPPORTUNITY", label: "Opportunities Engine" },
-  { value: "REPORT", label: "Reports" }
+  { value: "REPORT", label: "Reports" },
+  { value: "REVENUE_REPORT", label: "Revenue & Financial Reports" },
+  { value: "SALES_PERFORMANCE", label: "Sales Performance Reports" }
 ];
 
 const ACTIONS = [

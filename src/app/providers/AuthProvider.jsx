@@ -165,7 +165,13 @@ export const AuthProvider = ({ children }) => {
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
     if (action) {
-      return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);
+      const dbVal = user.permissions?.[moduleOrPermissionStr]?.[action];
+      if (dbVal !== undefined) return Boolean(dbVal);
+
+      if (moduleOrPermissionStr === 'REVENUE_REPORT' || moduleOrPermissionStr === 'SALES_PERFORMANCE') {
+        return !!(user.permissions?.REPORT?.[action]);
+      }
+      return false;
     }
 
     // Special logic for settings organization path: allowed if they can view COMPANY OR BRANCH

@@ -361,52 +361,6 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
     }
   };
 
-  const handleExportPDF = async () => {
-    try {
-      const exportItems = await fetchFullDataset('PDF');
-
-      const companyName = user?.company?.name || user?.companyName || getScopeName('companies', filters?.companyId) || 'ClassDesk';
-      const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
-
-      const pdfOptions = {
-        userName: user?.name || user?.email || 'Authorized User',
-        companyName,
-        companySubtitle: `${companyName} • Enterprise Analytics & Reporting`,
-        logoUrl,
-        filtersSummary: {
-          Scope: `${companyName} -> ${getScopeName('branches', filters?.branchId) || 'All Branches'} -> ${getScopeName('teams', filters?.teamId) || 'All Teams'}`,
-          'Date Range': filters?.startDate && filters?.endDate ? `${filters.startDate} to ${filters.endDate}` : 'All Time',
-          Status: filters?.status || filters?.statusId || filters?.paymentStatus || null,
-          Course: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
-        },
-        summaryCards: [
-          { label: 'Total Records', value: `${exportItems.length} Rows` },
-          { label: 'Total Revenue', value: summary?.totalRevenue ? currency(summary.totalRevenue) : null }
-        ].filter(card => card.value !== null)
-      };
-
-      const pdfColumns = columns.map(c => ({
-        header: c.header,
-        accessorKey: c.accessorKey,
-        align: c.accessorKey?.toLowerCase().includes('revenue') || c.accessorKey?.toLowerCase().includes('amount') || c.accessorKey?.toLowerCase().includes('rate') ? 'right' : (c.accessorKey?.toLowerCase().includes('id') || c.accessorKey?.toLowerCase().includes('code') || c.accessorKey?.toLowerCase().includes('count') ? 'center' : 'left'),
-        formatter: (val, item) => (c.cell ? c.cell(item) : (val !== null && val !== undefined ? String(val) : ''))
-      }));
-
-      const exportFileName = `${reportType.toLowerCase()}_export_${new Date().toISOString().slice(0, 10)}.pdf`;
-
-      await exportPDFFromData(
-        exportItems,
-        pdfColumns,
-        metadata.title || reportType,
-        exportFileName,
-        pdfOptions
-      );
-    } catch (err) {
-      console.error('PDF Export Error:', err);
-      toast?.error('Failed to export report to PDF: ' + err.message);
-    }
-  };
-
   const handleSaveConfig = (e) => {
     e.preventDefault();
     if (!configName.trim()) return;

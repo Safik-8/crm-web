@@ -45,7 +45,7 @@ import { useExport } from '../../../shared/hooks/useExport';
 import { revenueReportService } from '../services/revenueReportService';
 
 export default function RevenueReportPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { exportCSV, exportExcel, exportPDF, exportPDFFromData, isExporting } = useExport();
   const [activeTab, setActiveTab] = useState('overview');
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
@@ -60,6 +60,10 @@ export default function RevenueReportPage() {
   const isBranchManager = primaryRole === 'BRANCH_MANAGER' || primaryRoleRank === 60;
   const isBDE = primaryRole === 'BDE' || primaryRoleRank === 40;
   const isISE = primaryRole === 'ISE' || primaryRoleRank === 20;
+
+  // RBAC Permission Checks (Direct Module check with general REPORT fallback)
+  const canViewReport = hasPermission('REVENUE_REPORT', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager || isBDE || isISE;
+  const canExportReport = hasPermission('REVENUE_REPORT', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBDE, isISE };
 
@@ -136,24 +140,27 @@ export default function RevenueReportPage() {
   const teamQuery = useTeamRevenue(filters);
   const branchQuery = useBranchRevenue(filters);
 
+  const handleCloseExportMenu = () => {
+    setExportMenuAnchorEl(null);
+  };
+
+  const handleExportFormat = async (formatKey) => {
+    handleCloseExportMenu();
+    await handleExport(formatKey.toLowerCase());
+  };
+
   // Multi-Format Export Handler
   const handleExport = async (type) => {
-    setIsExportMenuOpen(false);
+    handleCloseExportMenu();
     const logOpts = {
       reportName: `Revenue Report - ${activeTab.toUpperCase()}`,
       filtersUsed: filters
     };
 
-  const handleCloseExportMenu = () => {
-    setExportMenuAnchorEl(null);
-  };
-
-  const getExportDataSetAndColumns = () => {
     let exportData = [];
     let exportCols = [];
-   let filePrefix = `revenue_report_${activeTab}_${filters.rankingPeriod || 'ALL'}`;
+    let filePrefix = `revenue_report_${activeTab}_${filters.rankingPeriod || 'ALL'}`;
     let reportTitle = `Revenue Report (${activeTab.toUpperCase()})`;
-
 
     if (activeTab === 'monthly') {
       exportData = monthlyQuery.data?.data || [];
@@ -295,7 +302,7 @@ export default function RevenueReportPage() {
       ];
     }
 
-    if (type === 'excel') {
+    if (type === 'excel' || type === 'xlsx') {
       exportExcel(exportData, exportCols, filePrefix, logOpts);
     } else if (type === 'csv') {
       exportCSV(exportData, exportCols, filePrefix, logOpts);
@@ -334,8 +341,6 @@ export default function RevenueReportPage() {
         exportPDF('revenue-report-printable', filePrefix, logOpts);
       }
     }
-
-    }
   };
 
   const tabs = [
@@ -365,52 +370,54 @@ export default function RevenueReportPage() {
               Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
             </div>
 
-            <div>
-              <Button
-                variant="contained"
-                startIcon={<Download className="w-4 h-4" />}
-                endIcon={<ChevronDown className="w-3.5 h-3.5" />}
-                onClick={handleOpenExportMenu}
-                disabled={isExporting}
-                sx={{
-                  backgroundColor: '#10B981',
-                  '&:hover': { backgroundColor: '#059669' },
-                  height: '36px',
-                  borderRadius: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  textTransform: 'none',
-                }}
-              >
-                {isExporting ? 'Exporting...' : 'Export Report'}
-              </Button>
+            {canExportReport && (
+              <div>
+                <Button
+                  variant="contained"
+                  startIcon={<Download className="w-4 h-4" />}
+                  endIcon={<ChevronDown className="w-3.5 h-3.5" />}
+                  onClick={handleOpenExportMenu}
+                  disabled={isExporting}
+                  sx={{
+                    backgroundColor: '#10B981',
+                    '&:hover': { backgroundColor: '#059669' },
+                    height: '36px',
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                  }}
+                >
+                  {isExporting ? 'Exporting...' : 'Export Report'}
+                </Button>
 
-              {isExportMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                  <button
-                    onClick={() => handleExport('excel')}
-                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                  >
-                    <FileSpreadsheet className="w-4 h-4 text-orange-600" />
-                    <span>Export Excel (.xlsx)</span>
-                  </button>
-                  <button
-                    onClick={() => handleExport('csv')}
-                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                  >
-                    <FileText className="w-4 h-4 text-blue-600" />
-                    <span>Export CSV (.csv)</span>
-                  </button>
-                  <button
-                    onClick={() => handleExport('pdf')}
-                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                  >
-                    <Printer className="w-4 h-4 text-rose-600" />
-                    <span>Export PDF (.pdf)</span>
-                  </button>
-                </div>
-              )}
-            </div>
+                {isExportMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    <button
+                      onClick={() => handleExport('excel')}
+                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-orange-600" />
+                      <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <span>Export CSV (.csv)</span>
+                    </button>
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                    >
+                      <Printer className="w-4 h-4 text-rose-600" />
+                      <span>Export PDF (.pdf)</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         }
       />
