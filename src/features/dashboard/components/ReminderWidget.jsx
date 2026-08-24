@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CountUp from 'react-countup';
 import { Clock, Calendar, AlertTriangle, ChevronRight, RefreshCw } from 'lucide-react';
+import Button from '../../../shared/components/elements/Button';
 import { fetchReminderSummary } from '../../notifications/services/notificationService';
 import FollowupsDrawer from './FollowupsDrawer';
 
@@ -42,7 +43,7 @@ const COLOR_MAP = {
 const ReminderWidget = ({ onViewFollowups }) => {
   const [selectedFilter, setSelectedFilter] = useState(null);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey:  ['reminder-summary'],
     queryFn:   () => fetchReminderSummary(),
     staleTime: 5 * 60 * 1000,
@@ -67,14 +68,22 @@ const ReminderWidget = ({ onViewFollowups }) => {
             <Clock size={14} className="text-primary" aria-hidden="true" />
             Follow-up Reminders
           </h3>
-          <button
-            type="button"
+          <Button
+            variant="text"
+            size="small"
             onClick={() => refetch()}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            disabled={isFetching}
             aria-label="Refresh reminders"
+            sx={{
+              minWidth: 0,
+              p: '4px',
+              height: 'auto',
+              color: '#94A3B8',
+              '&:hover': { color: '#475569', backgroundColor: 'transparent' },
+            }}
           >
-            <RefreshCw size={13} />
-          </button>
+            <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -111,15 +120,28 @@ const ReminderWidget = ({ onViewFollowups }) => {
                   <p className="text-[11px] text-slate-400 mt-0.5">{helpText}</p>
                 </div>
 
-                <button
-                  type="button"
+                <Button
+                  variant="text"
+                  size="small"
                   onClick={() => setSelectedFilter(filter)}
-                  className={`mt-auto flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer ${
-                    isUrgent ? 'text-red-600 hover:text-red-700' : 'text-slate-500 hover:text-slate-700'
-                  }`}
+                  danger={isUrgent}
+                  sx={{
+                    mt: 'auto',
+                    justifyContent: 'flex-start',
+                    p: 0,
+                    height: 'auto',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    color: isUrgent ? '#DC2626' : '#64748B',
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                      color: isUrgent ? '#B91C1C' : '#334155',
+                    },
+                  }}
                 >
-                  View {label} <ChevronRight size={12} />
-                </button>
+                  View {label} <ChevronRight size={12} className="ml-1" />
+                </Button>
               </div>
             );
           })}

@@ -34,16 +34,21 @@ const BranchDashboardView = () => {
     branchId: user?.branchId,
   };
 
-  const { data: metrics = {}, isLoading, refetch } = useDashboardMetrics(params);
+  const { data: metrics = {}, isLoading, isFetching, refetch } = useDashboardMetrics(params);
   const { data: aging   = {}, isLoading: al }      = useLeadAging(params);
   const { data: activities = [], isLoading: actl } = useActivityFeed(params);
+
+  const revenueTitle =
+    period === 'QUARTERLY' ? 'Quarterly Revenue' :
+    period === 'YEARLY'    ? 'Yearly Revenue' :
+                             'Monthly Revenue';
 
   const KPI_CARDS = [
     { icon: Layers,      title: 'Branch Leads',       value: metrics.totalLeads,         color: 'blue'    },
     { icon: CheckSquare, title: 'Qualified Leads',     value: metrics.qualifiedLeads,      color: 'emerald' },
     { icon: Target,      title: 'Opportunities',       value: metrics.activeOpportunities, color: 'purple'  },
     { icon: Handshake,   title: 'Won Deals',          value: metrics.wonDeals,            color: 'rose'    },
-    { icon: TrendingUp,  title: 'Revenue',            value: metrics.revenue,             prefix: '₹', color: 'blue' },
+    { icon: TrendingUp,  title: revenueTitle,         value: metrics.revenue,             prefix: '₹', color: 'blue' },
     { icon: Clock,       title: "Today's Follow-ups", value: metrics.followupsToday,      color: 'sky'     },
     { icon: Users,       title: 'Active BDEs',        value: metrics.bdeCount,            color: 'orange'  },
     { icon: UserCheck,   title: 'Active ISEs',        value: metrics.iseCount,            color: 'emerald' },
@@ -80,7 +85,8 @@ const BranchDashboardView = () => {
             variant="outlined"
             size="small"
             onClick={() => refetch()}
-            startIcon={<RefreshCw size={13} />}
+            disabled={isFetching}
+            startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
             sx={{
               height: '38px',
               borderColor: '#E2E8F0',
@@ -89,7 +95,7 @@ const BranchDashboardView = () => {
               borderRadius: '10px',
               fontSize: '12px',
               fontWeight: 600,
-              padding: '0 14px',
+              padding: '0 16px',
               textTransform: 'none',
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 2px rgba(0,0,0,0.02)',

@@ -253,10 +253,11 @@ const UsersPage = () => {
                     <Button
                       variant="secondary"
                       onClick={() => refetch()}
+                      disabled={loadingState === 'loading'}
                       className="flex items-center gap-1.5 h-9 px-3 text-xs"
                       title="Refresh List"
                     >
-                      <RefreshCw size={14} />
+                      <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
                       <span>Refresh</span>
                     </Button>
 

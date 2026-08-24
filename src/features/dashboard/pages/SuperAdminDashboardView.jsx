@@ -9,6 +9,7 @@ import LeadAgingWidget    from '../components/LeadAgingWidget';
 import ActivityFeedWidget from '../components/ActivityFeedWidget';
 import ReminderWidget     from '../components/ReminderWidget';
 import Button             from '../../../shared/components/elements/Button';
+import SelectField        from '../../../shared/components/elements/SelectField';
 import { CrmBarChart }    from '../../../shared/components/charts';
 import { useDashboardMetrics, useLeadAging, useActivityFeed } from '../hooks/useRoleDashboard';
 import { useNavigate }    from 'react-router-dom';
@@ -18,9 +19,14 @@ const SuperAdminDashboardView = () => {
   const [period, setPeriod] = useState('MONTHLY');
 
   const params = { rankingPeriod: period };
-  const { data: metrics = {}, isLoading, refetch } = useDashboardMetrics(params);
+  const { data: metrics = {}, isLoading, isFetching, refetch } = useDashboardMetrics(params);
   const { data: aging   = {}, isLoading: agingLoading } = useLeadAging(params);
   const { data: activities = [], isLoading: activitiesLoading } = useActivityFeed(params);
+
+  const revenueTitle =
+    period === 'QUARTERLY' ? 'Quarterly Revenue' :
+    period === 'YEARLY'    ? 'Yearly Revenue' :
+                             'Monthly Revenue';
 
   const KPI_CARDS = [
     { icon: Building2,      title: 'Total Companies',     value: metrics.totalCompanies,    color: 'blue'    },
@@ -29,7 +35,7 @@ const SuperAdminDashboardView = () => {
     { icon: Layers,         title: 'Total Leads',         value: metrics.totalLeads,        color: 'orange'  },
     { icon: Target,         title: 'Active Opportunities',value: metrics.activeOpportunities, color: 'emerald' },
     { icon: Handshake,      title: 'Deals Won',           value: metrics.dealsWon,          color: 'rose'    },
-    { icon: TrendingUp,     title: 'Monthly Revenue',     value: metrics.monthlyRevenue,    prefix: '₹', color: 'blue' },
+    { icon: TrendingUp,     title: revenueTitle,          value: metrics.monthlyRevenue,    prefix: '₹', color: 'blue' },
     { icon: UserCheck,      title: 'Active Customers',    value: metrics.activeCustomers,   color: 'purple'  },
   ];
 
@@ -50,26 +56,36 @@ const SuperAdminDashboardView = () => {
           <p className="text-sm text-slate-500 mt-0.5">Global business overview — all companies</p>
         </div>
         <div className="flex items-center gap-3">
-          <select
-            value={period}
-            onChange={e => setPeriod(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 bg-white"
-          >
-            <option value="MONTHLY">This Month</option>
-            <option value="QUARTERLY">This Quarter</option>
-            <option value="YEARLY">This Year</option>
-          </select>
+          <div className="w-36">
+            <SelectField
+              value={period}
+              onChange={(val) => setPeriod(val)}
+              searchable={false}
+              options={[
+                { value: 'MONTHLY', label: 'This Month' },
+                { value: 'QUARTERLY', label: 'This Quarter' },
+                { value: 'YEARLY', label: 'This Year' },
+              ]}
+            />
+          </div>
           <Button
             variant="outlined"
             size="small"
             onClick={() => refetch()}
-            startIcon={<RefreshCw size={13} />}
+            disabled={isFetching}
+            startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
             sx={{
+              height: '38px',
               borderColor: '#E2E8F0',
               color: '#475569',
               backgroundColor: '#FFFFFF',
-              borderRadius: '8px',
+              borderRadius: '10px',
               fontSize: '12px',
+              fontWeight: 600,
+              padding: '0 16px',
+              textTransform: 'none',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
               '&:hover': {
                 borderColor: '#CBD5E1',
                 backgroundColor: '#F8FAFC',
