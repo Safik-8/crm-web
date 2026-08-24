@@ -123,13 +123,14 @@ const RoleManagementPage = () => {
 
         // Map permissions list to object map
         const permMap = {};
-        selectedRole.rolePermissions?.forEach(p => {
+        const rawPerms = selectedRole.rolePermissions || selectedRole.permissions || [];
+        rawPerms.forEach(p => {
           permMap[p.module] = {
-            canView: p.canView,
-            canCreate: p.canCreate,
-            canEdit: p.canEdit,
-            canDelete: p.canDelete,
-            canArchive: p.canArchive
+            canView: Boolean(p.canView),
+            canCreate: Boolean(p.canCreate),
+            canEdit: Boolean(p.canEdit),
+            canDelete: Boolean(p.canDelete),
+            canArchive: Boolean(p.canArchive)
           };
         });
         setFormPermissions(permMap);

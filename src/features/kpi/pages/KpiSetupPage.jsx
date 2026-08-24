@@ -181,10 +181,36 @@ export default function KpiSetupPage() {
     return null;
   };
 
+  // Dynamic Team Leadership Query to check if user leads any teams
+  const { data: userLedTeams = [] } = useQuery({
+    queryKey: ['userLedTeamsKpi', user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const res = await axiosClient.get(`/teams?limit=1000`);
+      const list = Array.isArray(res)
+        ? res
+        : res.teams || res.data?.teams || (Array.isArray(res.data) ? res.data : []);
+
+      return list.filter((t) => {
+        if (t.bdeId === user?.id || t.bde?.id === user?.id) return true;
+        if (Array.isArray(t.members)) {
+          return t.members.some(
+            (m) => m.userId === user?.id && ['LEADER', 'BDE_LEADER', 'TEAM_LEADER'].includes(m.memberRole)
+          );
+        }
+        return false;
+      });
+    },
+  });
+
+  const isTeamLeader = userLedTeams.length > 0;
+  const canAssignTeam = isSuperAdmin || isCompanyAdmin || isBranchManager || (hasPermission('assign:kpi:team') && isTeamLeader);
+  const canAssignIndividual = isSuperAdmin || isCompanyAdmin || isBranchManager || hasPermission('assign:kpi:individual') || canCreate;
+
   // Auto-scoped Fetch Employees Options
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['usersOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin],
-    enabled: assignmentType === 'INDIVIDUAL',
+    queryKey: ['usersOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin, isBranchManager, isTeamLeader],
+    enabled: assignmentType === 'INDIVIDUAL' && canAssignIndividual,
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', '1000');
@@ -207,25 +233,38 @@ export default function KpiSetupPage() {
           (uRole === 'SUPER_ADMIN' ? 100 : uRole === 'COMPANY_ADMIN' ? 80 : uRole === 'BRANCH_MANAGER' ? 60 : uRole === 'BDE' ? 40 : uRole === 'ISE' ? 20 : 0)
         );
 
-        // Branch Managers cannot assign targets to Super Admins or Company Admins
         if (!isCompanyAdmin && (uRole === 'SUPER_ADMIN' || uRole === 'COMPANY_ADMIN')) return false;
-        // Company Admins cannot assign targets to Super Admins
         if (!isSuperAdmin && uRole === 'SUPER_ADMIN') return false;
+
+        // If team leader (not branch manager/admin), restrict strictly to led team members or self
+        if (!isBranchManager && !isCompanyAdmin && isTeamLeader) {
+          const ledTeamUserIds = new Set();
+          userLedTeams.forEach((t) => {
+            if (t.bdeId) ledTeamUserIds.add(t.bdeId);
+            if (t.bde?.id) ledTeamUserIds.add(t.bde.id);
+            if (Array.isArray(t.members)) {
+              t.members.forEach((m) => { if (m.userId) ledTeamUserIds.add(m.userId); });
+            }
+          });
+          if (u.id !== user.id && !ledTeamUserIds.has(u.id)) return false;
+        }
 
         return uRank <= actorRank;
       });
 
-      return assignableUsers.map((u) => ({
+      const options = assignableUsers.map((u) => ({
         value: String(u.id),
         label: `${u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email} (${u.employeeId || u.employeeCode || 'User'})`,
       }));
+
+      return options.length > 0 ? options : [{ value: '', label: 'No Data Available' }];
     },
   });
 
   // Auto-scoped Fetch Teams Options
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
-    queryKey: ['teamsOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin],
-    enabled: assignmentType === 'TEAM',
+    queryKey: ['teamsOptionsKpiScoped', user?.companyId, user?.branchId, isSuperAdmin, isCompanyAdmin, isBranchManager, isTeamLeader],
+    enabled: assignmentType === 'TEAM' && canAssignTeam,
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', '1000');
@@ -233,20 +272,29 @@ export default function KpiSetupPage() {
       if (!isSuperAdmin && !isCompanyAdmin && user?.branchId) params.set('branchId', String(user.branchId));
 
       const res = await axiosClient.get(`/teams?${params.toString()}`);
-      const list = Array.isArray(res)
+      let list = Array.isArray(res)
         ? res
         : res.teams || res.data?.teams || (Array.isArray(res.data) ? res.data : []);
-      return list.map((t) => ({
+
+      // For Team Leaders without branch/company admin rights, filter strictly to led teams
+      if (!isBranchManager && !isCompanyAdmin && isTeamLeader) {
+        const ledIds = new Set(userLedTeams.map((t) => t.id));
+        list = list.filter((t) => ledIds.has(t.id));
+      }
+
+      const options = list.map((t) => ({
         value: String(t.id),
         label: `${t.name} (${t.teamCode || 'Team'})`,
       }));
+
+      return options.length > 0 ? options : [{ value: '', label: 'No Data Available' }];
     },
   });
 
-  // Assignment Type dropdown options
+  // Dynamic Assignment Type dropdown options
   const assignmentTypeOptions = [
     { value: 'INDIVIDUAL', label: 'Individual Employee' },
-    { value: 'TEAM', label: 'Sales Team' },
+    ...(canAssignTeam ? [{ value: 'TEAM', label: 'Sales Team' }] : []),
   ];
 
   // KPI Type dropdown options

@@ -121,16 +121,34 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage)
+    // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage, assign:kpi:*, view:kpi:*)
     if (
       moduleOrPermissionStr === 'KPI' ||
-      moduleOrPermissionStr.startsWith('create:kpi') ||
-      moduleOrPermissionStr.startsWith('view:kpi') ||
-      moduleOrPermissionStr.startsWith('manage:kpi')
+      moduleOrPermissionStr.includes('kpi')
     ) {
+      const rank = Number(user.primaryRoleRank || 0);
+      const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;
+      const isCompanyAdmin = isSuperAdmin || user.primaryRole === 'COMPANY_ADMIN' || rank >= 80;
+      const isManagerOrAdmin = isCompanyAdmin || user.primaryRole === 'BRANCH_MANAGER' || rank >= 60;
+      const isBdeOrLeader = isManagerOrAdmin || user.primaryRole === 'BDE' || rank >= 40 || Boolean(user.isTeamLeader);
+
+      if (moduleOrPermissionStr === 'view:kpi:company') return isCompanyAdmin;
+      if (moduleOrPermissionStr === 'view:kpi:branch') return isManagerOrAdmin;
+      if (moduleOrPermissionStr === 'view:kpi:team') return isBdeOrLeader;
+      if (moduleOrPermissionStr === 'assign:kpi:team') {
+        const dbPerm = user.permissions?.KPI?.canManage || user.permissions?.KPI?.canCreate;
+        if (dbPerm !== undefined) return Boolean(dbPerm) && isBdeOrLeader;
+        return isBdeOrLeader;
+      }
+      if (moduleOrPermissionStr === 'assign:kpi:individual') {
+        const dbPerm = user.permissions?.KPI?.canManage || user.permissions?.KPI?.canCreate;
+        if (dbPerm !== undefined) return Boolean(dbPerm);
+        return isBdeOrLeader;
+      }
+
       let actionKey = action;
       if (!actionKey) {
-        if (moduleOrPermissionStr === 'create:kpi') actionKey = 'canCreate';
+        if (moduleOrPermissionStr === 'create:kpi' || moduleOrPermissionStr === 'create:kpi:target') actionKey = 'canCreate';
         else if (moduleOrPermissionStr === 'view:kpi_own') actionKey = 'canViewOwn';
         else if (moduleOrPermissionStr === 'view:kpi_analytics') actionKey = 'canViewAll';
         else if (moduleOrPermissionStr === 'manage:kpi') actionKey = 'canManage';
@@ -139,11 +157,6 @@ export const AuthProvider = ({ children }) => {
 
       const dbValue = user.permissions?.KPI?.[actionKey] ?? user.permissions?.KPI?.[actionKey === 'canViewOwn' || actionKey === 'canViewAll' ? 'canView' : actionKey];
       if (dbValue !== undefined) return Boolean(dbValue);
-
-      // System role fallback
-      const rank = Number(user.primaryRoleRank || 0);
-      const isManagerOrAdmin = user.primaryRole === 'SUPER_ADMIN' || user.primaryRole === 'COMPANY_ADMIN' || user.primaryRole === 'BRANCH_MANAGER' || rank >= 60;
-      const isBdeOrLeader = isManagerOrAdmin || user.primaryRole === 'BDE' || rank >= 40 || Boolean(user.isTeamLeader);
 
       if (actionKey === 'canCreate' || actionKey === 'canManage') return isManagerOrAdmin;
       if (actionKey === 'canViewAll') return isBdeOrLeader;
