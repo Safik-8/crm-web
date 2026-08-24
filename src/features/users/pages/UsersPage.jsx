@@ -253,10 +253,11 @@ const UsersPage = () => {
                     <button
                       type="button"
                       onClick={() => refetch()}
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 h-[42px] px-5 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-[10px] text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap"
+                      disabled={loadingState === 'loading'}
+                      className="flex items-center gap-1.5 h-9 px-3 text-xs"
                       title="Refresh List"
                     >
-                      <RefreshCw size={16} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+                      <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
                       <span>Refresh</span>
                     </button>
 

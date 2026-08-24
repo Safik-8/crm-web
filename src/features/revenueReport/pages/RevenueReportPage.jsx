@@ -382,35 +382,25 @@ export default function RevenueReportPage() {
               Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
             </div>
 
-            <div className="relative">
+            <div>
               <Button
                 variant="contained"
                 startIcon={<Download className="w-4 h-4" />}
-                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                endIcon={<ChevronDown className="w-3.5 h-3.5" />}
+                onClick={handleOpenExportMenu}
                 disabled={isExporting}
                 sx={{
-                  backgroundColor: '#DE5D02',
-                  '&:hover': { backgroundColor: '#C24102' },
+                  backgroundColor: '#10B981',
+                  '&:hover': { backgroundColor: '#059669' },
                   height: '36px',
-                  borderRadius: '6px',
+                  borderRadius: '10px',
                   fontSize: '12px',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textTransform: 'none',
                 }}
               >
                 {isExporting ? 'Exporting...' : 'Export Report'}
               </Button>
-
-          <div>
-            <button
-              onClick={handleOpenExportMenu}
-              disabled={isExporting}
-              className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors disabled:opacity-50"
-            >
-              <Download className="w-4 h-4" />
-              <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
-              <ChevronDown className="w-3.5 h-3.5 ml-1" />
-            </button>
 
             <Menu
               anchorEl={exportMenuAnchorEl}
@@ -447,9 +437,10 @@ export default function RevenueReportPage() {
                 <span>Export as PDF (.pdf)</span>
               </MenuItem>
             </Menu>
-          </div>
-        </div>
-      </div>
+            </div>
+          </>
+        }
+      />
 
 
       {/* Filter Bar */}

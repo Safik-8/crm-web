@@ -30,7 +30,7 @@ export const navGroups = [
   {
     group: 'Overview',
     items: [
-      { name: 'Dashboard', path: '/dashboard/branch', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_BRANCH_DASHBOARD },
+      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
     ]
   },
   {
