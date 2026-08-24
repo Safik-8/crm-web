@@ -390,11 +390,15 @@ const MyTeamPage = () => {
   return (
     <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
       <PageHeader
-        title="My Team"
-        description={`${teamDetails.name} · ${teamDetails.code} · ${teamDetails.branch?.name || 'No branch'}`}
+        title={`My Team — ${teamDetails.name}`}
+        description={`Code: ${teamDetails.code} · Branch: ${teamDetails.branch?.name || 'No branch'} · ${activeMembers.length} Active Member(s)`}
         icon={Users2}
         actions={
           <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-orange-50 text-orange-700 border border-orange-200/80 shadow-2xs">
+              <Users2 size={13} className="text-orange-500" />
+              {teamDetails.name}
+            </span>
             {/* Bulk Assign — only when on a leads tab with rows selected AND canAssignLeads */}
             {activeTab !== 'members' && canAssignLeads && selectedLeads.length > 0 && (
               <Button
@@ -463,13 +467,17 @@ const MyTeamPage = () => {
         {/* Section header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-t-lg shadow-sm">
           <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {activeTab === 'members' ? 'Active Team Members' : 'Team Leads Pipeline'}
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>{teamDetails.name}</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-500 font-medium">
+                {activeTab === 'members' ? 'Active Team Members' : 'Team Leads Pipeline'}
+              </span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               {activeTab === 'members'
-                ? 'Members currently assigned to your team'
-                : 'View and assign leads across your team'}
+                ? `Members assigned to ${teamDetails.name}`
+                : `View and assign leads across ${teamDetails.name}`}
             </p>
           </div>
 
