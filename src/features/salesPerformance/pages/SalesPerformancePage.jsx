@@ -40,11 +40,9 @@ export default function SalesPerformancePage() {
   const isBranchManager = primaryRole === 'BRANCH_MANAGER' || primaryRoleRank === 60;
   const isBdeOrIse = !isSuperAdmin && !isCompanyAdmin && !isBranchManager;
 
-  // RBAC Permission Checks (Direct Module check with general REPORT fallback)
-  const canViewPerformance = hasPermission('SALES_PERFORMANCE', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager || isBdeOrIse;
-  const canExportPerformance = hasPermission('SALES_PERFORMANCE', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
-
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBdeOrIse };
+  const canViewReport = hasPermission('SALES_PERFORMANCE', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager;
+  const canExportReport = hasPermission('SALES_PERFORMANCE', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
 
   const [filters, setFilters] = useState({
     rankingPeriod: 'MONTHLY',
@@ -303,7 +301,7 @@ export default function SalesPerformancePage() {
           </p>
         </div>
 
-        {canExportPerformance && (
+        {canExportReport && (
           <div className="relative">
             <button
               onClick={() => setIsExportMenuOpen(prev => !prev)}

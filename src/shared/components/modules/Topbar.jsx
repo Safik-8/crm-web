@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { Search, Bell, Menu, User, LogOut, Loader2, ChevronRight, Home } from 'lucide-react';
 import { Menu as MuiMenu, MenuItem } from '@mui/material';
-import { useAuth } from '../../../app/providers/AuthProvider.jsx';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';

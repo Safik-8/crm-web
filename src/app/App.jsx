@@ -1,7 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from './providers/AuthProvider.jsx';
+import { AuthProvider } from './providers/AuthProvider';
 import { router } from './routes/index.jsx';
 import { LoaderProvider } from '../shared/context/LoaderContext.jsx';
 import muiTheme from '../shared/theme/muiTheme.js';

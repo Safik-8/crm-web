@@ -2,7 +2,19 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { apiClient } from '../../lib/api/api';
 import { useQueryClient } from '@tanstack/react-query';
 
-const AuthContext = createContext(undefined);
+const defaultAuthContext = {
+  user: null,
+  login: async () => ({ success: false }),
+  logout: async () => {},
+  loading: true,
+  isLoggingOut: false,
+  isAuthenticated: false,
+  permissions: {},
+  hasPermission: () => false,
+  refetchUser: async () => {}
+};
+
+const AuthContext = createContext(defaultAuthContext);
 
 // RBAC Adapter Mapping
 // Maps frontend permission string identifiers to backend UPPERCASE module names + CRUD booleans.
@@ -18,6 +30,8 @@ const RBAC_ADAPTER_MAP = {
   'view:tasks': { module: 'TASK', action: 'canView' },
   'view:reports': { module: 'REPORT', action: 'canView' },
   'view:team_reports': { module: 'REPORT', action: 'canView' },
+  'view:sales_performance': { module: 'SALES_PERFORMANCE', action: 'canView' },
+  'view:revenue_report': { module: 'REVENUE_REPORT', action: 'canView' },
   'view:settings': { module: 'BRANCH', action: 'canView' },
   'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
@@ -165,13 +179,7 @@ export const AuthProvider = ({ children }) => {
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')
     if (action) {
-      const dbVal = user.permissions?.[moduleOrPermissionStr]?.[action];
-      if (dbVal !== undefined) return Boolean(dbVal);
-
-      if (moduleOrPermissionStr === 'REVENUE_REPORT' || moduleOrPermissionStr === 'SALES_PERFORMANCE') {
-        return !!(user.permissions?.REPORT?.[action]);
-      }
-      return false;
+      return !!(user.permissions?.[moduleOrPermissionStr]?.[action]);
     }
 
     // Special logic for settings organization path: allowed if they can view COMPANY OR BRANCH
@@ -231,6 +239,9 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response && response.success && response.data?.user) {
+        if (response.data.accessToken) {
+          localStorage.setItem('accessToken', response.data.accessToken);
+        }
         queryClient.clear();
         setUser(response.data.user);
         setLoading(false);
@@ -258,6 +269,7 @@ export const AuthProvider = ({ children }) => {
     // the network. The ProtectedRoute will redirect to /login as soon as
     // `isAuthenticated` becomes false.
     setUser(null);
+    localStorage.removeItem('accessToken');
     queryClient.clear();
 
     // ── Background API call ──────────────────────────────────────────────────
@@ -294,8 +306,5 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return context || defaultAuthContext;
 };

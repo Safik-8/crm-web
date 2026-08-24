@@ -61,11 +61,10 @@ export default function RevenueReportPage() {
   const isBDE = primaryRole === 'BDE' || primaryRoleRank === 40;
   const isISE = primaryRole === 'ISE' || primaryRoleRank === 20;
 
-  // RBAC Permission Checks (Direct Module check with general REPORT fallback)
-  const canViewReport = hasPermission('REVENUE_REPORT', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager || isBDE || isISE;
-  const canExportReport = hasPermission('REVENUE_REPORT', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
-
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBDE, isISE };
+
+  const canViewReport = hasPermission('REVENUE_REPORT', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager;
+  const canExportReport = hasPermission('REVENUE_REPORT', 'canCreate') || hasPermission('REPORT', 'canCreate') || isSuperAdmin || isCompanyAdmin || isBranchManager;
 
   const [filters, setFilters] = useState({
     rankingPeriod: 'ALL',
@@ -371,7 +370,7 @@ export default function RevenueReportPage() {
             </div>
 
             {canExportReport && (
-              <div>
+              <div className="relative">
                 <Button
                   variant="contained"
                   startIcon={<Download className="w-4 h-4" />}

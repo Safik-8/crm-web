@@ -84,9 +84,11 @@ export const apiClient = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
 
   const isFormData = fetchOptions.body instanceof FormData;
+  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
   const headers = {
     ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
+    ...(storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {}),
     ...(fetchOptions.headers || {}),
   };
 
@@ -121,6 +123,12 @@ export const apiClient = async (endpoint, options = {}) => {
       return null;
     }
 
+    // Save token if returned in response body
+    const tokenReceived = data?.data?.accessToken || data?.accessToken;
+    if (tokenReceived) {
+      localStorage.setItem('accessToken', tokenReceived);
+    }
+
     // ── Handle HTTP errors ───────────────────────────────────────────────────
     if (!response.ok) {
       const isLoginRequest = endpoint.includes('/auth/login');
@@ -131,6 +139,7 @@ export const apiClient = async (endpoint, options = {}) => {
         if (options._retry) {
           // Force-hide loader before redirecting so it doesn't persist on the
           // login page if the browser reuses the same JS context.
+          localStorage.removeItem('accessToken');
           loaderBridge.forceHide?.();
           window.location.href = '/login?session=expired';
           throw data;
@@ -153,12 +162,17 @@ export const apiClient = async (endpoint, options = {}) => {
         isRefreshingFetch = true;
 
         try {
-          await apiClient('/auth/refresh', { method: 'POST', silent: true });
+          const refreshRes = await apiClient('/auth/refresh', { method: 'POST', silent: true });
+          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+          if (newTok) {
+            localStorage.setItem('accessToken', newTok);
+          }
           isRefreshingFetch = false;
           processQueueFetch(null);
           return apiClient(endpoint, options);
         } catch (refreshErr) {
           isRefreshingFetch = false;
+          localStorage.removeItem('accessToken');
           processQueueFetch(refreshErr);
           loaderBridge.forceHide?.();
           window.location.href = '/login?session=expired';

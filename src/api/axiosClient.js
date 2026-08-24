@@ -28,9 +28,25 @@ const processQueueAxios = (error, token = null) => {
   failedQueueAxios = [];
 };
 
+// Request interceptor to attach Bearer token if available
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor for centralized error handling
 axiosClient.interceptors.response.use(
   (response) => {
+    const tokenReceived = response.data?.data?.accessToken || response.data?.accessToken;
+    if (tokenReceived) {
+      localStorage.setItem('accessToken', tokenReceived);
+    }
     // Return the custom unified response envelope (e.g. response.data)
     return response.data;
   },
@@ -49,6 +65,7 @@ axiosClient.interceptors.response.use(
       if (status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
         if (originalRequest._retry) {
           // Clear window context and redirect to login
+          localStorage.removeItem('accessToken');
           window.location.href = '/login?session=expired';
           return Promise.reject(data || new Error('Session expired'));
         }
@@ -70,12 +87,17 @@ axiosClient.interceptors.response.use(
         isRefreshingAxios = true;
 
         try {
-          await axiosClient.post('/auth/refresh');
+          const refreshRes = await axiosClient.post('/auth/refresh');
+          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+          if (newTok) {
+            localStorage.setItem('accessToken', newTok);
+          }
           isRefreshingAxios = false;
           processQueueAxios(null);
           return axiosClient(originalRequest);
         } catch (refreshError) {
           isRefreshingAxios = false;
+          localStorage.removeItem('accessToken');
           processQueueAxios(refreshError);
           window.location.href = '/login?session=expired';
           return Promise.reject(refreshError);
