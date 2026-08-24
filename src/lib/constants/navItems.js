@@ -57,6 +57,9 @@ export const navGroups = [
   {
     group: 'Analytics',
     items: [
+      { name: 'My Performance', path: '/my-performance', icon: Target, permission: PERMISSIONS.VIEW_KPI_OWN },
+      { name: 'KPI Analytics', path: '/kpi-analytics', icon: TrendingUp, permission: PERMISSIONS.VIEW_KPI_ALL },
+      { name: 'KPI Setup', path: '/kpi-management', icon: Target, permission: PERMISSIONS.CREATE_KPI },
       { name: 'Daily Report', path: '/reports/daily', icon: ClipboardCheck, permission: PERMISSIONS.VIEW_DAILY_REPORT },
       { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_REPORTS },
       { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REPORTS },

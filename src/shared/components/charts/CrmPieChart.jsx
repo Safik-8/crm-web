@@ -51,7 +51,7 @@ export default function CrmPieChart({
       name: item[nameKey] || 'Other',
       value: val,
       pct,
-      color: colors[idx % colors.length] || DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
+      color: item.color || colors[idx % colors.length] || DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
     };
   });
 
@@ -71,22 +71,25 @@ export default function CrmPieChart({
     return null;
   };
 
+  const pieData = enrichedData.filter((item) => item.value > 0);
+  const activePaddingAngle = pieData.length > 1 ? paddingAngle : 0;
+
   return (
     <div className={`w-full ${className}`}>
-      <div style={{ height: typeof height === 'number' ? `${height}px` : height }}>
+      <div style={{ height: typeof height === 'number' ? `${height}px` : height, minHeight: '200px', width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={enrichedData}
+              data={pieData}
               cx="50%"
               cy="50%"
               innerRadius={innerRadius}
               outerRadius={outerRadius}
-              paddingAngle={paddingAngle}
+              paddingAngle={activePaddingAngle}
               dataKey="value"
               strokeWidth={0}
             >
-              {enrichedData.map((entry, index) => (
+              {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>

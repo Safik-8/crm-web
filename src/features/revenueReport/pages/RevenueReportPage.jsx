@@ -46,7 +46,7 @@ import { revenueReportService } from '../services/revenueReportService';
 
 export default function RevenueReportPage() {
   const { user } = useAuth();
-  const { exportCSV, exportExcel, exportPDFFromData, isExporting } = useExport();
+  const { exportCSV, exportExcel, exportPDF, exportPDFFromData, isExporting } = useExport();
   const [activeTab, setActiveTab] = useState('overview');
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
   const isExportMenuOpen = Boolean(exportMenuAnchorEl);
@@ -136,9 +136,13 @@ export default function RevenueReportPage() {
   const teamQuery = useTeamRevenue(filters);
   const branchQuery = useBranchRevenue(filters);
 
-  const handleOpenExportMenu = (e) => {
-    setExportMenuAnchorEl(e.currentTarget);
-  };
+  // Multi-Format Export Handler
+  const handleExport = async (type) => {
+    setIsExportMenuOpen(false);
+    const logOpts = {
+      reportName: `Revenue Report - ${activeTab.toUpperCase()}`,
+      filtersUsed: filters
+    };
 
   const handleCloseExportMenu = () => {
     setExportMenuAnchorEl(null);
@@ -147,8 +151,9 @@ export default function RevenueReportPage() {
   const getExportDataSetAndColumns = () => {
     let exportData = [];
     let exportCols = [];
-    let filePrefix = `revenue_report_${activeTab}_${filters.rankingPeriod || 'ALL'}`;
-    let reportTitle = 'Revenue & Financial Report';
+   let filePrefix = `revenue_report_${activeTab}_${filters.rankingPeriod || 'ALL'}`;
+    let reportTitle = `Revenue Report (${activeTab.toUpperCase()})`;
+
 
     if (activeTab === 'monthly') {
       exportData = monthlyQuery.data?.data || [];
@@ -290,68 +295,46 @@ export default function RevenueReportPage() {
       ];
     }
 
-    return { exportData, exportCols, filePrefix, reportTitle };
-  };
+    if (type === 'excel') {
+      exportExcel(exportData, exportCols, filePrefix, logOpts);
+    } else if (type === 'csv') {
+      exportCSV(exportData, exportCols, filePrefix, logOpts);
+    } else if (type === 'pdf') {
+      if (exportPDFFromData && exportData.length > 0) {
+        const selectedCompanyObj = companies.find((c) => String(c.id) === String(filters.companyId));
+        const selectedBranchObj = branches.find((b) => String(b.id) === String(filters.branchId));
+        const selectedTeamObj = teams.find((t) => String(t.id) === String(filters.teamId));
+        const selectedCourseObj = courses.find((c) => String(c.id) === String(filters.courseId));
 
-  const handleExportFormat = async (format) => {
-    handleCloseExportMenu();
-    const { exportData, exportCols, filePrefix, reportTitle } = getExportDataSetAndColumns();
+        const companyName = user?.company?.name || user?.companyName || selectedCompanyObj?.name || 'ClassDesk';
+        const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
+        const totalRev = exportData.reduce((sum, item) => sum + (Number(item.totalRevenue) || 0), 0);
 
-    if (!exportData || exportData.length === 0) {
-      return;
+        const pdfOptions = {
+          userName: user?.name || user?.email || 'Authorized User',
+          companyName,
+          companySubtitle: `${companyName} • Financial & Revenue Analytics`,
+          logoUrl,
+          filtersSummary: {
+            Period: filters.rankingPeriod || 'ALL',
+            Company: isSuperAdmin ? (selectedCompanyObj?.name || null) : companyName,
+            Branch: selectedBranchObj?.name || null,
+            Team: selectedTeamObj?.name || null,
+            Course: selectedCourseObj?.name || null,
+            'Date Range': filters.startDate && filters.endDate ? `${filters.startDate} to ${filters.endDate}` : null
+          },
+          summaryCards: [
+            { label: 'Total Records', value: `${exportData.length} Rows` },
+            { label: 'Total Revenue', value: `₹${totalRev.toLocaleString('en-IN')}` }
+          ]
+        };
+
+        await exportPDFFromData(exportData, exportCols, reportTitle, `${filePrefix}.pdf`, pdfOptions);
+      } else {
+        exportPDF('revenue-report-printable', filePrefix, logOpts);
+      }
     }
 
-    const logOpts = {
-      rawFileName: true,
-      onSuccess: async (fmt, exportedFileName, rowCount) => {
-        try {
-          await revenueReportService.logExport({
-            reportName: `Revenue Report - ${activeTab.toUpperCase()}`,
-            exportType: fmt === 'XLSX' ? 'EXCEL' : fmt,
-            fileName: exportedFileName,
-            filtersUsed: filters
-          });
-        } catch (err) {
-          console.warn('Failed to record AuditLog entry:', err);
-        }
-      }
-    };
-
-    if (format === 'XLSX') {
-      await exportExcel(exportData, exportCols, `${filePrefix}.xlsx`, logOpts);
-    } else if (format === 'CSV') {
-      await exportCSV(exportData, exportCols, `${filePrefix}.csv`, logOpts);
-    } else if (format === 'PDF') {
-      const selectedCompanyObj = companies.find((c) => String(c.id) === String(filters.companyId));
-      const selectedBranchObj = branches.find((b) => String(b.id) === String(filters.branchId));
-      const selectedTeamObj = teams.find((t) => String(t.id) === String(filters.teamId));
-      const selectedCourseObj = courses.find((c) => String(c.id) === String(filters.courseId));
-
-      const companyName = user?.company?.name || user?.companyName || selectedCompanyObj?.name || 'ClassDesk';
-      const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
-
-      const totalRev = exportData.reduce((sum, item) => sum + (Number(item.totalRevenue) || 0), 0);
-
-      const pdfOptions = {
-        userName: user?.name || user?.email || 'Authorized User',
-        companyName,
-        companySubtitle: `${companyName} • Financial & Revenue Analytics`,
-        logoUrl,
-        filtersSummary: {
-          Period: filters.rankingPeriod || 'ALL',
-          Company: isSuperAdmin ? (selectedCompanyObj?.name || null) : companyName,
-          Branch: selectedBranchObj?.name || null,
-          Team: selectedTeamObj?.name || null,
-          Course: selectedCourseObj?.name || null,
-          'Date Range': filters.startDate && filters.endDate ? `${filters.startDate} to ${filters.endDate}` : null
-        },
-        summaryCards: [
-          { label: 'Total Records', value: `${exportData.length} Rows` },
-          { label: 'Total Revenue', value: `₹${totalRev.toLocaleString('en-IN')}` }
-        ]
-      };
-
-      await exportPDFFromData(exportData, exportCols, reportTitle, `${filePrefix}.pdf`, pdfOptions, logOpts);
     }
   };
 
@@ -402,41 +385,31 @@ export default function RevenueReportPage() {
                 {isExporting ? 'Exporting...' : 'Export Report'}
               </Button>
 
-            <Menu
-              anchorEl={exportMenuAnchorEl}
-              open={isExportMenuOpen}
-              onClose={handleCloseExportMenu}
-              PaperProps={{
-                style: {
-                  borderRadius: '16px',
-                  marginTop: '8px',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e2e8f0'
-                }
-              }}
-            >
-              <MenuItem
-                onClick={() => handleExportFormat('XLSX')}
-                className="text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 py-2.5 px-4"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600 mr-2" />
-                <span>Export as Excel (.xlsx)</span>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleExportFormat('CSV')}
-                className="text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 py-2.5 px-4"
-              >
-                <FileText className="w-4 h-4 text-blue-600 mr-2" />
-                <span>Export as CSV (.csv)</span>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleExportFormat('PDF')}
-                className="text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 py-2.5 px-4"
-              >
-                <Printer className="w-4 h-4 text-rose-600 mr-2" />
-                <span>Export as PDF (.pdf)</span>
-              </MenuItem>
-            </Menu>
+              {isExportMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                    onClick={() => handleExport('excel')}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-orange-600" />
+                    <span>Export Excel (.xlsx)</span>
+                  </button>
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                  >
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span>Export CSV (.csv)</span>
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                  >
+                    <Printer className="w-4 h-4 text-rose-600" />
+                    <span>Export PDF (.pdf)</span>
+                  </button>
+                </div>
+              )}
             </div>
           </>
         }

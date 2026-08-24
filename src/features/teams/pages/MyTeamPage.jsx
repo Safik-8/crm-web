@@ -29,14 +29,14 @@ import TeamDetailModal from '../components/TeamDetailModal';
 const PAGE_SIZE = 10;
 
 const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-900', loading }) => (
-  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+  <div className="bg-white p-4 rounded-none border border-slate-200 shadow-2xs flex items-center justify-between">
     <div>
       <span className="text-xs text-slate-500 font-medium block mb-1">{label}</span>
       {loading
-        ? <Skeleton className="h-7 w-16 rounded-md" />
+        ? <Skeleton className="h-7 w-16 rounded-none" />
         : <span className={`text-xl font-bold block ${valueClass}`}>{value}</span>}
     </div>
-    <div className={`w-10 h-10 rounded-md flex items-center justify-center ${iconBg}`}>
+    <div className={`w-10 h-10 rounded-none flex items-center justify-center ${iconBg}`}>
       <Icon className="w-5 h-5" />
     </div>
   </div>
@@ -167,11 +167,11 @@ const MyTeamPage = () => {
   if (loadingActiveTeam || (activeTeamId && loadingTeamDetails)) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-[88px] rounded-lg" />
+        <Skeleton className="h-[88px] rounded-none" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] rounded-lg" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] rounded-none" />)}
         </div>
-        <Skeleton className="h-[300px] rounded-lg" />
+        <Skeleton className="h-[300px] rounded-none" />
       </div>
     );
   }
@@ -390,11 +390,15 @@ const MyTeamPage = () => {
   return (
     <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
       <PageHeader
-        title="My Team"
-        description={`${teamDetails.name} · ${teamDetails.code} · ${teamDetails.branch?.name || 'No branch'}`}
+        title={`My Team — ${teamDetails.name}`}
+        description={`Code: ${teamDetails.code} · Branch: ${teamDetails.branch?.name || 'No branch'} · ${activeMembers.length} Active Member(s)`}
         icon={Users2}
         actions={
           <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-orange-50 text-orange-700 border border-orange-200/80 shadow-2xs">
+              <Users2 size={13} className="text-orange-500" />
+              {teamDetails.name}
+            </span>
             {/* Bulk Assign — only when on a leads tab with rows selected AND canAssignLeads */}
             {activeTab !== 'members' && canAssignLeads && selectedLeads.length > 0 && (
               <Button
@@ -461,15 +465,19 @@ const MyTeamPage = () => {
       {/* Single section — toggle Members / Leads */}
       <section>
         {/* Section header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-t-lg shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-none shadow-2xs">
           <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {activeTab === 'members' ? 'Active Team Members' : 'Team Leads Pipeline'}
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>{teamDetails.name}</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-500 font-medium">
+                {activeTab === 'members' ? 'Active Team Members' : 'Team Leads Pipeline'}
+              </span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               {activeTab === 'members'
-                ? 'Members currently assigned to your team'
-                : 'View and assign leads across your team'}
+                ? `Members assigned to ${teamDetails.name}`
+                : `View and assign leads across ${teamDetails.name}`}
             </p>
           </div>
 
@@ -488,7 +496,7 @@ const MyTeamPage = () => {
                 onClick={() => setActiveTab('members')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   activeTab === 'members'
-                    ? 'bg-white text-slate-800 shadow-sm'
+                    ? 'bg-white text-slate-800 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -501,7 +509,7 @@ const MyTeamPage = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white text-slate-800 shadow-sm'
+                      ? 'bg-white text-slate-800 shadow-2xs'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >

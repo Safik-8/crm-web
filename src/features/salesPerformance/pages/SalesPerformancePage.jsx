@@ -1,9 +1,7 @@
 // crm-web/src/features/salesPerformance/pages/SalesPerformancePage.jsx
 
 import React, { useState } from 'react';
-import { Award, UserCheck, PhoneCall, Users, Building2, Building, TrendingUp, Download, Sparkles, FileSpreadsheet, FileText, FileCode, ChevronDown } from 'lucide-react';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import { Award, UserCheck, PhoneCall, Users, Building2, Building, TrendingUp, Download, Sparkles, FileSpreadsheet, FileText, Printer, ChevronDown } from 'lucide-react';
 import PerformanceFilterBar from '../components/PerformanceFilterBar';
 import PerformanceRankingCard from '../components/PerformanceRankingCard';
 import PerformanceSummaryCards from '../components/PerformanceSummaryCards';
@@ -30,9 +28,8 @@ import { salesPerformanceService } from '../services/salesPerformanceService';
 export default function SalesPerformancePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('bde');
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const { exportCSV, exportExcel, exportPDFFromData, isExporting } = useExport();
-  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
-  const isExportMenuOpen = Boolean(exportMenuAnchorEl);
 
   // Role Scoping Matrix Identification
   const primaryRole = user?.primaryRole || '';
@@ -59,48 +56,41 @@ export default function SalesPerformancePage() {
 
   // Fetch Companies (SUPER ADMIN ONLY)
   const { data: companies = [] } = useQuery({
-    queryKey: ['companiesOptions'],
+    queryKey: ['sales-perf-companies'],
     enabled: isSuperAdmin,
     queryFn: async () => {
       const res = await axiosClient.get('/companies');
-      if (Array.isArray(res)) return res;
-      if (Array.isArray(res.data)) return res.data;
-      if (Array.isArray(res.data?.companies)) return res.data.companies;
-      if (Array.isArray(res.companies)) return res.companies;
-      return [];
+      const data = res?.data?.companies || res?.data || [];
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Fetch Branches for filter options
   const { data: branches = [] } = useQuery({
-    queryKey: ['branchesOptions', filters.companyId],
+    queryKey: ['sales-perf-branches', filters.companyId],
     enabled: (isSuperAdmin && Boolean(filters.companyId)) || isCompanyAdmin,
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.companyId) params.set('companyId', filters.companyId);
-      const res = await axiosClient.get(`/branches?${params.toString()}`);
-      if (Array.isArray(res)) return res;
-      if (Array.isArray(res.data)) return res.data;
-      if (Array.isArray(res.data?.branches)) return res.data.branches;
-      if (Array.isArray(res.branches)) return res.branches;
-      return [];
+      if (filters.companyId) params.append('company_id', filters.companyId);
+      const str = params.toString();
+      const res = await axiosClient.get(`/branches${str ? '?' + str : ''}`);
+      const data = res?.data?.branches || res?.data || [];
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Fetch Teams for filter options (ALL ROLES)
   const { data: teams = [] } = useQuery({
-    queryKey: ['teamsOptions', filters.companyId, filters.branchId],
+    queryKey: ['sales-perf-teams', filters.companyId, filters.branchId],
     enabled: (isSuperAdmin && Boolean(filters.companyId)) || !isSuperAdmin,
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.companyId) params.set('companyId', filters.companyId);
-      if (filters.branchId) params.set('branchId', filters.branchId);
-      const res = await axiosClient.get(`/teams?${params.toString()}`);
-      if (Array.isArray(res)) return res;
-      if (Array.isArray(res.data)) return res.data;
-      if (Array.isArray(res.data?.teams)) return res.data.teams;
-      if (Array.isArray(res.teams)) return res.teams;
-      return [];
+      if (filters.companyId) params.append('companyId', filters.companyId);
+      if (filters.branchId) params.append('branchId', filters.branchId);
+      const str = params.toString();
+      const res = await axiosClient.get(`/teams${str ? '?' + str : ''}`);
+      const data = res?.data?.teams || res?.data || [];
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -136,26 +126,19 @@ export default function SalesPerformancePage() {
     });
   };
 
-  const topBDEs = rankingsQuery.data?.topBDEs || [];
-  const topTeams = rankingsQuery.data?.topTeams || [];
+  const topBDEs = rankingsQuery.data?.data?.topBDEs || rankingsQuery.data?.topBDEs || [];
+  const topTeams = rankingsQuery.data?.data?.topTeams || rankingsQuery.data?.topTeams || [];
 
-  const handleOpenExportMenu = (e) => {
-    setExportMenuAnchorEl(e.currentTarget);
-  };
-
-  const handleCloseExportMenu = () => {
-    setExportMenuAnchorEl(null);
-  };
-
-  const getExportDataSetAndColumns = () => {
+  const handleExport = async (type = 'excel') => {
+    setIsExportMenuOpen(false);
     let currentDataSet = [];
     let columns = [];
-    let reportTypePrefix = 'sales_performance';
-    let reportTitle = 'Sales Performance Report';
+    let fileName = 'sales_performance';
+    let reportTitle = 'Sales Performance Analytics';
 
     if (activeTab === 'bde') {
       currentDataSet = bdeQuery.data?.data || [];
-      reportTypePrefix = 'bde_performance_report';
+      fileName = 'bde_performance_report';
       reportTitle = 'BDE Performance Report';
       columns = [
         { header: 'Rank', accessorKey: 'rank', align: 'center' },
@@ -182,7 +165,7 @@ export default function SalesPerformancePage() {
       ];
     } else if (activeTab === 'ise') {
       currentDataSet = iseQuery.data?.data || [];
-      reportTypePrefix = 'ise_activity_report';
+      fileName = 'ise_activity_report';
       reportTitle = 'ISE Activity Report';
       columns = [
         { header: 'Rank', accessorKey: 'rank', align: 'center' },
@@ -204,8 +187,8 @@ export default function SalesPerformancePage() {
       ];
     } else if (activeTab === 'team') {
       currentDataSet = teamQuery.data?.data || [];
-      reportTypePrefix = 'team_performance_report';
-      reportTitle = 'Team Performance Report';
+      fileName = 'team_rankings_report';
+      reportTitle = 'Team Rankings Report';
       columns = [
         { header: 'Rank', accessorKey: 'rank', align: 'center' },
         { header: 'Team Code', accessorKey: 'teamCode' },
@@ -232,7 +215,7 @@ export default function SalesPerformancePage() {
       ];
     } else if (activeTab === 'branch') {
       currentDataSet = branchQuery.data?.data || [];
-      reportTypePrefix = 'branch_performance_report';
+      fileName = 'branch_performance_report';
       reportTitle = 'Branch Performance Report';
       columns = [
         { header: 'Rank', accessorKey: 'rank', align: 'center' },
@@ -260,41 +243,11 @@ export default function SalesPerformancePage() {
       ];
     }
 
-    const fileName = `${reportTypePrefix}_${filters.rankingPeriod || 'MONTHLY'}`;
-
-    return { currentDataSet, columns, fileName, reportTitle };
-  };
-
-
-  const handleExportFormat = async (format) => {
-    handleCloseExportMenu();
-    const { currentDataSet, columns, fileName, reportTitle } = getExportDataSetAndColumns();
-
-    if (!currentDataSet || currentDataSet.length === 0) {
-      return;
-    }
-
-    const logOptions = {
-      rawFileName: true,
-      onSuccess: async (fmt, exportedFileName, rowCount) => {
-        try {
-          await salesPerformanceService.logExportAction({
-            reportType: activeTab,
-            format: fmt,
-            filters,
-            rowCount
-          });
-        } catch (err) {
-          console.warn('Failed to record AuditLog entry:', err);
-        }
-      }
-    };
-
-    if (format === 'XLSX') {
-      await exportExcel(currentDataSet, columns, `${fileName}.xlsx`, logOptions);
-    } else if (format === 'CSV') {
-      await exportCSV(currentDataSet, columns, `${fileName}.csv`, logOptions);
-    } else if (format === 'PDF') {
+    if (type === 'excel') {
+      exportExcel(currentDataSet, columns, `${fileName}_${filters.rankingPeriod}`);
+    } else if (type === 'csv') {
+      exportCSV(currentDataSet, columns, `${fileName}_${filters.rankingPeriod}`);
+    } else if (type === 'pdf') {
       const selectedCompanyObj = companies.find((c) => String(c.id) === String(filters.companyId));
       const selectedBranchObj = branches.find((b) => String(b.id) === String(filters.branchId));
       const selectedTeamObj = teams.find((t) => String(t.id) === String(filters.teamId));
@@ -311,7 +264,7 @@ export default function SalesPerformancePage() {
       const pdfOptions = {
         userName: user?.name || user?.email || 'Authorized User',
         companyName,
-        companySubtitle: `${companyName} • Analytics & Reporting`,
+        companySubtitle: `${companyName} • Sales & Performance Analytics`,
         logoUrl,
         filtersSummary: {
           Period: filters.rankingPeriod || 'MONTHLY',
@@ -327,7 +280,9 @@ export default function SalesPerformancePage() {
         ]
       };
 
-      await exportPDFFromData(currentDataSet, columns, reportTitle, `${fileName}.pdf`, pdfOptions, logOptions);
+      await exportPDFFromData(currentDataSet, columns, reportTitle, `${fileName}_${filters.rankingPeriod}.pdf`, pdfOptions);
+    }
+
     }
   };
 
@@ -346,65 +301,43 @@ export default function SalesPerformancePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleOpenExportMenu}
+        <div className="relative">
+                   <button
+            onClick={() => setIsExportMenuOpen(prev => !prev)}
             disabled={!isQueryEnabled || isExporting}
             className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             <Download size={14} className={isExporting ? 'animate-bounce text-orange-500' : 'text-slate-500'} />
-            <span>{isExporting ? 'Exporting...' : 'Export Data'}</span>
+            <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
             <ChevronDown size={14} className="text-slate-400" />
           </button>
 
-          <Menu
-            anchorEl={exportMenuAnchorEl}
-            open={isExportMenuOpen}
-            onClose={handleCloseExportMenu}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            slotProps={{
-              paper: {
-                sx: {
-                  mt: 1,
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05)',
-                  border: '1px solid rgba(226,232,240,0.8)',
-                  p: 0.5,
-                  minWidth: '170px',
-                  '& .MuiMenuItem-root': {
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    color: '#334155',
-                    borderRadius: '6px',
-                    mx: 0.5,
-                    my: 0.25,
-                    py: 1,
-                    px: 2,
-                    gap: 1.5,
-                    transition: 'all 0.15s ease-in-out',
-                    '&:hover': {
-                      bgcolor: '#F8FAFC',
-                      color: '#F86F03'
-                    }
-                  }
-                }
-              }
-            }}
-          >
-            <MenuItem onClick={() => handleExportFormat('XLSX')}>
-              <FileSpreadsheet size={15} className="text-emerald-600" />
-              <span>Export as Excel (.xlsx)</span>
-            </MenuItem>
-            <MenuItem onClick={() => handleExportFormat('CSV')}>
-              <FileText size={15} className="text-blue-600" />
-              <span>Export as CSV (.csv)</span>
-            </MenuItem>
-            <MenuItem onClick={() => handleExportFormat('PDF')}>
-              <FileCode size={15} className="text-rose-600" />
-              <span>Export as PDF (.pdf)</span>
-            </MenuItem>
-          </Menu>
+          {isExportMenuOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+              <button
+                onClick={() => handleExport('excel')}
+                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>Export as Excel (.xlsx)</span>
+              </button>
+              <button
+                onClick={() => handleExport('csv')}
+                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+              >
+                <FileText className="w-4 h-4 text-blue-600" />
+                <span>Export as CSV (.csv)</span>
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+              >
+                <Printer className="w-4 h-4 text-rose-600" />
+                <span>Export as PDF (.pdf)</span>
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
 

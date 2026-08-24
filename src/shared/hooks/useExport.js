@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import html2pdfLib from 'html2pdf.js';
 import { toast } from '../utils/toast';
 import { apiClient } from '../../lib/api/api';
+import logoOfficial from '../../assets/logos/logo-official.png';
 
 const getHtml2PdfInstance = async () => {
   let mod = html2pdfLib;
@@ -245,6 +246,7 @@ export const useExport = () => {
   }, []);
 
   /**
+   * Export dataset to formatted PDF (.pdf) using html2pdf.js with full company branding.
    * Export dataset directly to PDF (.pdf) using html2pdf.js with top-left company logo, report title, active filters, summary cards, data table & footer
    */
   const exportPDFFromData = useCallback(async (data = [], columns = [], title = 'Report', fileName = 'export', pdfOptions = {}, logOptions = null) => {
@@ -255,13 +257,9 @@ export const useExport = () => {
 
     setIsExporting(true);
     try {
-      const html2pdf = await getHtml2PdfInstance();
-      if (!html2pdf || typeof html2pdf !== 'function') {
-        throw new Error('html2pdf library is not loaded properly.');
-      }
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
 
-
-      // 1. Create printable HTML container
       const container = document.createElement('div');
       container.style.padding = '24px';
       container.style.fontFamily = 'Inter, Helvetica, Arial, sans-serif';
@@ -279,14 +277,13 @@ export const useExport = () => {
         .map(n => (n ? n[0] : ''))
         .join('')
         .slice(0, 2)
-        .toUpperCase() || 'SC';
+        .toUpperCase() || 'CD';
 
-      const logoHtml = pdfOptions.logoUrl
-        ? `<img src="${pdfOptions.logoUrl}" alt="Logo" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" />`
+      const logoUrlToUse = pdfOptions.logoUrl || logoOfficial;
+      const logoHtml = logoUrlToUse
+        ? `<img src="${logoUrlToUse}" alt="Logo" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" />`
         : `<div style="width: 38px; height: 38px; background: linear-gradient(135deg, #f86f03 0%, #ea580c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 15px; box-shadow: 0 2px 4px rgba(248,111,3,0.25); border: 1px solid rgba(255,255,255,0.2);">${companyInitials}</div>`;
 
-
-      // 3. Format Filter Badges
       const filterBadgesHtml = pdfOptions.filtersSummary
         ? Object.entries(pdfOptions.filtersSummary)
           .filter(([_, val]) => Boolean(val))
@@ -327,7 +324,6 @@ export const useExport = () => {
       }).join('');
 
       container.innerHTML = `
-
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #f86f03; padding-bottom: 12px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 12px;">
             ${logoHtml}
@@ -366,9 +362,7 @@ export const useExport = () => {
         </div>
       `;
 
-
-
-      const fullFileName = formatFileName(fileName, 'pdf', logOptions?.rawFileName);
+      const fullFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}_${new Date().toISOString().slice(0, 10)}.pdf`;
       const opt = {
         margin: [8, 8, 8, 8],
         filename: fullFileName,
@@ -378,7 +372,6 @@ export const useExport = () => {
       };
 
       document.body.appendChild(container);
-
       try {
         await html2pdf().from(container).set(opt).save();
 
@@ -394,13 +387,12 @@ export const useExport = () => {
       }
     } catch (err) {
       console.error('PDF Export Error:', err);
-      toast.error('Failed to export PDF document.');
+      toast.error('Failed to export PDF document: ' + err.message);
+
     } finally {
       setIsExporting(false);
     }
   }, []);
-
-
 
   return {
     exportCSV,

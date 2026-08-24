@@ -34,6 +34,9 @@ const ROUTE_LABELS = {
   'settings': 'Settings',
   'companies': 'Companies',
   'branches': 'Branches',
+  'kpi-management': 'KPI Target Management',
+  'my-performance': 'My Performance',
+  'kpi-analytics': 'KPI Analytics',
 };
 
 const buildBreadcrumbs = (pathname, search, state) => {
@@ -48,6 +51,17 @@ const buildBreadcrumbs = (pathname, search, state) => {
   });
 
   let currentPath = '';
+
+  // Special Handling for KPI Detail Route (/kpi/:id)
+  if (segments[0] === 'kpi') {
+    crumbs.push({ label: 'KPI Analytics', path: '/kpi-analytics' });
+    if (segments[1] && !isNaN(segments[1])) {
+      const kpiId = segments[1];
+      const nameLabel = state?.kpiType ? `${state.kpiType} Target Detail` : 'Target Detail';
+      crumbs.push({ label: nameLabel, path: `/kpi/${kpiId}` });
+    }
+    return crumbs;
+  }
 
   // Special Handling for Opportunities Detail Route (/opportunities/:id)
   if (segments[0] === 'opportunities') {
