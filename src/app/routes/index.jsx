@@ -6,7 +6,11 @@ import LoginPage from '../../features/auth/pages/LoginPage';
 import UnauthorizedPage from '../../features/auth/pages/UnauthorizedPage';
 import BaseLayout from '../../shared/layouts/BaseLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
-import BranchDashboardPage from '../../features/dashboard/pages/BranchDashboardPage';
+import BranchDashboardView from '../../features/dashboard/pages/BranchDashboardView';
+import SuperAdminDashboardView from '../../features/dashboard/pages/SuperAdminDashboardView';
+import CompanyAdminDashboardView from '../../features/dashboard/pages/CompanyAdminDashboardView';
+import BdeDashboardView from '../../features/dashboard/pages/BdeDashboardView';
+import IseDashboardView from '../../features/dashboard/pages/IseDashboardView';
 import LeadsPage from '../../features/leads/pages/LeadsPage';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
@@ -73,8 +77,8 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <ProtectedRoute>
-            <RootRedirect />
+          <ProtectedRoute requiredPermission="view:dashboard">
+            <DashboardPage />
           </ProtectedRoute>
         ),
       },
@@ -82,7 +86,31 @@ export const router = createBrowserRouter([
         path: 'dashboard/company',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COMPANY_DASHBOARD}>
-            <DashboardPage title="Company Dashboard" />
+            <CompanyAdminDashboardView />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/super-admin',
+        element: (
+          <ProtectedRoute requiredPermission="view:dashboard">
+            <SuperAdminDashboardView />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/bde',
+        element: (
+          <ProtectedRoute requiredPermission="view:dashboard">
+            <BdeDashboardView />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/ise',
+        element: (
+          <ProtectedRoute requiredPermission="view:dashboard">
+            <IseDashboardView />
           </ProtectedRoute>
         ),
       },
@@ -90,7 +118,7 @@ export const router = createBrowserRouter([
         path: 'dashboard/branch',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_BRANCH_DASHBOARD}>
-            <BranchDashboardPage />
+            <BranchDashboardView />
           </ProtectedRoute>
         ),
       },

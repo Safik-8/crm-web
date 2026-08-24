@@ -46,7 +46,7 @@ const buildBreadcrumbs = (pathname, search, state) => {
   // Home root
   crumbs.push({
     label: 'Home',
-    path: '/dashboard/branch',
+    path: '/dashboard',
     isHome: true
   });
 

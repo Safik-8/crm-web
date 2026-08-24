@@ -69,5 +69,10 @@ export const salesPerformanceService = {
     if (params.branchId) queryParams.set('branchId', params.branchId);
 
     return axiosClient.get(`${BASE_PATH}/rankings?${queryParams.toString()}`);
+  },
+
+  logExportAction: (payload = {}) => {
+    return axiosClient.post(`${BASE_PATH}/export-log`, payload);
   }
 };
+

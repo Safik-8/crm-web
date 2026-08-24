@@ -397,7 +397,7 @@ export const OpportunitiesPage = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* View Toggle */}
           <div className="flex items-center bg-slate-100 p-1 rounded-md border border-slate-200 h-[36px]">
             <button
@@ -434,6 +434,7 @@ export const OpportunitiesPage = () => {
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                whiteSpace: 'nowrap',
                 '&:hover': { backgroundColor: '#f8fafc', borderColor: '#94a3b8' },
               }}
             >
@@ -454,6 +455,7 @@ export const OpportunitiesPage = () => {
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                whiteSpace: 'nowrap',
                 '&:hover': { backgroundColor: '#DE5D02' },
               }}
             >
@@ -508,11 +510,10 @@ export const OpportunitiesPage = () => {
         </div>
       )}
 
-      {/* ── Filters Bar ─────────────────────────────────────────────── */}
-      <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
           {/* Search */}
-          <div className="flex-1 min-w-[200px] max-w-xs">
+          <div className="w-full">
             <TextField
               placeholder="Search opportunities or leads..."
               value={searchTerm}
@@ -522,7 +523,7 @@ export const OpportunitiesPage = () => {
           </div>
 
           {/* Stage Filter — status dropdown */}
-          <div className="relative w-44" ref={stageFilterRef}>
+          <div className="relative w-full" ref={stageFilterRef}>
             <button
               type="button"
               onClick={() => setStageFilterOpen((v) => !v)}
@@ -576,7 +577,7 @@ export const OpportunitiesPage = () => {
 
           {/* Company Filter — Super Admin only */}
           {canFilterByCompany && (
-            <div className="w-52">
+            <div className="w-full">
               <SelectField
                 placeholder="All Companies"
                 value={companyFilter}
@@ -591,7 +592,7 @@ export const OpportunitiesPage = () => {
 
           {/* Branch Filter — SA and Company Admin */}
           {canFilterByBranch && (
-            <div className="w-52">
+            <div className="w-full">
               <SelectField
                 placeholder={canFilterByCompany && !companyFilter ? 'Select company first' : 'All Branches'}
                 value={branchFilter}
@@ -607,19 +608,21 @@ export const OpportunitiesPage = () => {
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm('');
-                setStageFilter(null);
-                setCompanyFilter('');
-                setBranchFilter('');
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-[10px] text-[13px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-[10px] border border-slate-200 hover:border-red-200 transition-all whitespace-nowrap"
-            >
-              <Filter className="w-3.5 h-3.5" />
-              Clear Filters
-            </button>
+            <div className="w-full sm:col-span-2 lg:col-span-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStageFilter(null);
+                  setCompanyFilter('');
+                  setBranchFilter('');
+                }}
+                className="w-full flex items-center justify-center gap-1.5 px-3.5 h-[42px] text-[13px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-[10px] border border-slate-200 hover:border-red-200 transition-all whitespace-nowrap"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Clear Filters
+              </button>
+            </div>
           )}
 
           {/* Refetch Loading Indicator */}

@@ -73,11 +73,12 @@ export const useLeadQuery = (id, initialData) => {
 /**
  * Hook to load dropdown form options once and cache it.
  */
-export const useLeadFormDataQuery = (params = {}) => {
+export const useLeadFormDataQuery = (params = {}, options = {}) => {
   return useQuery({
     queryKey: [...LEAD_KEYS.formData(), params],
     queryFn: () => getLeadFormData(params),
     staleTime: 60000, // 60s cache
+    ...options,
   });
 };
 

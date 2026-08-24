@@ -1,7 +1,24 @@
 import { useState, useCallback } from 'react';
+import html2pdfLib from 'html2pdf.js';
 import { toast } from '../utils/toast';
 import { apiClient } from '../../lib/api/api';
 import logoOfficial from '../../assets/logos/logo-official.png';
+
+const getHtml2PdfInstance = async () => {
+  let mod = html2pdfLib;
+  if (!mod || (typeof mod !== 'function' && typeof mod?.default !== 'function')) {
+    try {
+      mod = await import('html2pdf.js');
+    } catch (e) {
+      console.warn('Dynamic html2pdf import fallback:', e);
+    }
+  }
+  if (typeof mod === 'function') return mod;
+  if (typeof mod?.default === 'function') return mod.default;
+  if (mod?.default && typeof mod.default.default === 'function') return mod.default.default;
+  if (typeof window !== 'undefined' && typeof window.html2pdf === 'function') return window.html2pdf;
+  return mod;
+};
 
 /**
  * Helper to safely extract nested values from an object using a dot-notation path.
@@ -11,6 +28,20 @@ const getNestedValue = (obj, path) => {
   if (!path) return '';
   return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : ''), obj);
 };
+
+/**
+ * Helper to determine final filename cleanly
+ */
+const formatFileName = (fileName, ext, rawFileName = false) => {
+  if (fileName.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) {
+    return fileName;
+  }
+  if (rawFileName) {
+    return `${fileName}.${ext}`;
+  }
+  return `${fileName}.${ext}`;
+};
+
 
 /**
  * Reusable Custom Hook to export datasets to CSV, Excel (.xlsx), and PDF (.pdf).
@@ -42,13 +73,18 @@ export const useExport = () => {
         columns
           .map((col) => {
             const rawVal = getNestedValue(row, col.accessorKey);
-            const valString = rawVal !== null && rawVal !== undefined ? String(rawVal) : '';
+            let valString = '';
+            if (col.formatter && typeof col.formatter === 'function') {
+              valString = col.formatter(rawVal, row);
+            } else if (rawVal !== null && rawVal !== undefined) {
+              valString = String(rawVal);
+            }
             return `"${valString.replace(/"/g, '""')}"`;
           })
           .join(',')
       );
 
-      // 3. Combine and Download
+      // 3. Combine and Download with UTF-8 BOM
       const csvContent = [headers, ...rows].join('\n');
       const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], {
         type: 'text/csv;charset=utf-8;'
@@ -56,7 +92,7 @@ export const useExport = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 
-      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.csv`;
+      const fullFileName = formatFileName(fileName, 'csv', logOptions?.rawFileName);
       link.setAttribute('href', url);
       link.setAttribute('download', fullFileName);
       link.style.visibility = 'hidden';
@@ -65,7 +101,9 @@ export const useExport = () => {
       document.body.removeChild(link);
 
       // 4. Log Export Action to Server
-      if (logOptions?.reportName) {
+      if (logOptions?.onSuccess) {
+        await logOptions.onSuccess('CSV', fullFileName, data.length);
+      } else if (logOptions?.reportName) {
         try {
           await apiClient.post('/reports/revenue/export-log', {
             reportName: logOptions.reportName,
@@ -104,7 +142,13 @@ export const useExport = () => {
         const item = {};
         columns.forEach((col) => {
           const rawVal = getNestedValue(row, col.accessorKey);
-          item[col.header] = rawVal !== null && rawVal !== undefined ? rawVal : '';
+          let valString = '';
+          if (col.formatter && typeof col.formatter === 'function') {
+            valString = col.formatter(rawVal, row);
+          } else if (rawVal !== null && rawVal !== undefined) {
+            valString = rawVal;
+          }
+          item[col.header] = valString;
         });
         return item;
       });
@@ -118,11 +162,13 @@ export const useExport = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Data List');
 
       // 4. Trigger download
-      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const fullFileName = formatFileName(fileName, 'xlsx', logOptions?.rawFileName);
       XLSX.writeFile(workbook, fullFileName);
 
       // 5. Log Export Action to Server
-      if (logOptions?.reportName) {
+      if (logOptions?.onSuccess) {
+        await logOptions.onSuccess('XLSX', fullFileName, data.length);
+      } else if (logOptions?.reportName) {
         try {
           await apiClient.post('/reports/revenue/export-log', {
             reportName: logOptions.reportName,
@@ -145,7 +191,7 @@ export const useExport = () => {
   }, []);
 
   /**
-   * Export DOM element or page component to PDF (.pdf) using html2pdf.js
+   * Export DOM element to PDF (.pdf) using html2pdf.js
    */
   const exportPDF = useCallback(async (elementOrId, fileName = 'export', logOptions = null) => {
     setIsExporting(true);
@@ -157,10 +203,13 @@ export const useExport = () => {
         return;
       }
 
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default || html2pdfModule;
+      const html2pdf = await getHtml2PdfInstance();
+      if (!html2pdf || typeof html2pdf !== 'function') {
+        throw new Error('html2pdf library is not loaded properly.');
+      }
 
-      const fullFileName = `${fileName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      const fullFileName = formatFileName(fileName, 'pdf', logOptions?.rawFileName);
       const opt = {
         margin: 8,
         filename: fullFileName,
@@ -172,7 +221,9 @@ export const useExport = () => {
       await html2pdf().set(opt).from(element).save();
 
       // Log Export Action to Server
-      if (logOptions?.reportName) {
+      if (logOptions?.onSuccess) {
+        await logOptions.onSuccess('PDF', fullFileName, 1);
+      } else if (logOptions?.reportName) {
         try {
           await apiClient.post('/reports/revenue/export-log', {
             reportName: logOptions.reportName,
@@ -196,6 +247,7 @@ export const useExport = () => {
 
   /**
    * Export dataset to formatted PDF (.pdf) using html2pdf.js with full company branding.
+   * Export dataset directly to PDF (.pdf) using html2pdf.js with top-left company logo, report title, active filters, summary cards, data table & footer
    */
   const exportPDFFromData = useCallback(async (data = [], columns = [], title = 'Report', fileName = 'export', pdfOptions = {}, logOptions = null) => {
     if (!data || data.length === 0) {
@@ -214,11 +266,12 @@ export const useExport = () => {
       container.style.color = '#0f172a';
       container.style.backgroundColor = '#ffffff';
 
-      const companyName = pdfOptions.companyName || 'ClassDesk CRM';
+      const companyName = pdfOptions.companyName || 'StackCode CRM';
       const companySubtitle = pdfOptions.companySubtitle || `${companyName} • Enterprise Analytics & Reporting`;
       const userName = pdfOptions.userName || 'Authorized User';
       const nowStr = new Date().toLocaleString();
 
+      // 2. Logo HTML - Use custom logo image if available, or generate dynamic Company Initials Badge
       const companyInitials = companyName
         .split(' ')
         .map(n => (n ? n[0] : ''))
@@ -238,6 +291,7 @@ export const useExport = () => {
           .join('')
         : '';
 
+      // 4. Format Summary KPI Cards
       const summaryCardsHtml = Array.isArray(pdfOptions.summaryCards) && pdfOptions.summaryCards.length > 0
         ? pdfOptions.summaryCards.map(card => `
             <div style="flex: 1; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; border-left: 3.5px solid #f86f03;">
@@ -247,6 +301,7 @@ export const useExport = () => {
           `).join('')
         : '';
 
+      // 5. Build Table Headers & Rows with Alignment and Formatter Support
       const tableHeadersHtml = columns.map(c => {
         const align = c.align || 'left';
         return `<th style="border: 1px solid #cbd5e1; padding: 8px 10px; background: #f8fafc; color: #1e293b; font-size: 10.5px; font-weight: 700; text-align: ${align};">${c.header}</th>`;
@@ -312,31 +367,28 @@ export const useExport = () => {
         margin: [8, 8, 8, 8],
         filename: fullFileName,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 1.5, useCORS: true, allowTaint: true },
+        html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
       };
 
       document.body.appendChild(container);
-      await html2pdf().set(opt).from(container).save();
-      document.body.removeChild(container);
+      try {
+        await html2pdf().from(container).set(opt).save();
 
-      if (logOptions?.reportName) {
-        try {
-          await apiClient.post('/reports/revenue/export-log', {
-            reportName: logOptions.reportName,
-            exportType: 'PDF',
-            fileName: fullFileName,
-            filtersUsed: logOptions.filtersUsed || {}
-          });
-        } catch (auditErr) {
-          console.warn('Export log recording failed:', auditErr);
+        if (logOptions?.onSuccess) {
+          await logOptions.onSuccess('PDF', fullFileName, data.length);
+        }
+
+        toast.success('PDF exported successfully.');
+      } finally {
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
         }
       }
-
-      toast.success('PDF exported successfully.');
     } catch (err) {
       console.error('PDF Export Error:', err);
       toast.error('Failed to export PDF document: ' + err.message);
+
     } finally {
       setIsExporting(false);
     }
@@ -352,3 +404,4 @@ export const useExport = () => {
 };
 
 export default useExport;
+

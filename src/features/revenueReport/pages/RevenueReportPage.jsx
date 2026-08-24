@@ -1,5 +1,3 @@
-// crm-web/src/features/revenueReport/pages/RevenueReportPage.jsx
-
 import React, { useState } from 'react';
 import {
   DollarSign,
@@ -12,8 +10,11 @@ import {
   GitBranch,
   FileSpreadsheet,
   FileText,
-  Printer
+  Printer,
+  ChevronDown
 } from 'lucide-react';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
@@ -41,12 +42,14 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api/api';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useExport } from '../../../shared/hooks/useExport';
+import { revenueReportService } from '../services/revenueReportService';
 
 export default function RevenueReportPage() {
   const { user } = useAuth();
   const { exportCSV, exportExcel, exportPDF, exportPDFFromData, isExporting } = useExport();
   const [activeTab, setActiveTab] = useState('overview');
-  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
+  const isExportMenuOpen = Boolean(exportMenuAnchorEl);
 
   // Role Scoping Matrix Identification
   const primaryRole = user?.primaryRole || '';
@@ -141,71 +144,154 @@ export default function RevenueReportPage() {
       filtersUsed: filters
     };
 
+  const handleCloseExportMenu = () => {
+    setExportMenuAnchorEl(null);
+  };
+
+  const getExportDataSetAndColumns = () => {
     let exportData = [];
     let exportCols = [];
-    let filePrefix = `revenue_report_${activeTab}`;
+   let filePrefix = `revenue_report_${activeTab}_${filters.rankingPeriod || 'ALL'}`;
     let reportTitle = `Revenue Report (${activeTab.toUpperCase()})`;
+
 
     if (activeTab === 'monthly') {
       exportData = monthlyQuery.data?.data || [];
+      reportTitle = 'Monthly Revenue Statement';
       exportCols = [
         { header: 'Period', accessorKey: 'periodKey' },
         { header: 'Month', accessorKey: 'monthName' },
-        { header: 'Year', accessorKey: 'year' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Deals Closed', accessorKey: 'dealsClosed' },
-        { header: 'Customers Added', accessorKey: 'customersAdded' },
-        { header: 'MoM Growth %', accessorKey: 'growthPct' }
+        { header: 'Year', accessorKey: 'year', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        { header: 'Deals Closed', accessorKey: 'dealsClosed', align: 'center' },
+        { header: 'Customers Added', accessorKey: 'customersAdded', align: 'center' },
+        {
+          header: 'MoM Growth %',
+          accessorKey: 'growthPct',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        }
       ];
     } else if (activeTab === 'quarterly') {
       exportData = quarterlyQuery.data?.data || [];
+      reportTitle = 'Quarterly Revenue Breakdown';
       exportCols = [
         { header: 'Quarter', accessorKey: 'periodKey' },
-        { header: 'Year', accessorKey: 'year' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Deals Closed', accessorKey: 'dealsClosed' },
-        { header: 'Customers Added', accessorKey: 'customersAdded' },
-        { header: 'QoQ Growth %', accessorKey: 'growthPct' }
+        { header: 'Year', accessorKey: 'year', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        { header: 'Deals Closed', accessorKey: 'dealsClosed', align: 'center' },
+        { header: 'Customers Added', accessorKey: 'customersAdded', align: 'center' },
+        {
+          header: 'QoQ Growth %',
+          accessorKey: 'growthPct',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        }
       ];
     } else if (activeTab === 'product') {
       exportData = productQuery.data?.data || [];
+      reportTitle = 'Product & Course Revenue Report';
       exportCols = [
         { header: 'Product Name', accessorKey: 'productName' },
         { header: 'Product Code', accessorKey: 'productCode' },
         { header: 'Category', accessorKey: 'category' },
-        { header: 'Sales Count', accessorKey: 'salesCount' },
-        { header: 'Average Selling Price', accessorKey: 'averageSellingPrice' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Contribution %', accessorKey: 'contributionPct' }
+        { header: 'Sales Count', accessorKey: 'salesCount', align: 'center' },
+        {
+          header: 'Average Selling Price',
+          accessorKey: 'averageSellingPrice',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Contribution %',
+          accessorKey: 'contributionPct',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        }
       ];
     } else if (activeTab === 'team') {
       exportData = teamQuery.data?.data || [];
+      reportTitle = 'Team Revenue Performance Report';
       exportCols = [
         { header: 'Team Name', accessorKey: 'teamName' },
         { header: 'Branch', accessorKey: 'branchName' },
-        { header: 'Deals Won', accessorKey: 'dealsWon' },
-        { header: 'Customers', accessorKey: 'customerCount' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' }
+        { header: 'Deals Won', accessorKey: 'dealsWon', align: 'center' },
+        { header: 'Customers', accessorKey: 'customerCount', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        }
       ];
     } else if (activeTab === 'branch') {
       exportData = branchQuery.data?.data || [];
+      reportTitle = 'Branch Revenue Performance Report';
       exportCols = [
         { header: 'Branch Name', accessorKey: 'branchName' },
         { header: 'Company', accessorKey: 'companyName' },
-        { header: 'Deals Won', accessorKey: 'dealsWon' },
-        { header: 'Customers', accessorKey: 'customerCount' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' }
+        { header: 'Deals Won', accessorKey: 'dealsWon', align: 'center' },
+        { header: 'Customers', accessorKey: 'customerCount', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        }
       ];
     } else {
       // Overview summary export
-      exportData = [summaryQuery.data?.metrics || {}];
+      const metrics = summaryQuery.data?.metrics || {};
+      exportData = [metrics];
+      reportTitle = 'Revenue & Financial Overview';
       exportCols = [
-        { header: 'Total Revenue', accessorKey: 'totalRevenue' },
-        { header: 'Monthly Revenue', accessorKey: 'monthlyRevenue' },
-        { header: 'Quarterly Revenue', accessorKey: 'quarterlyRevenue' },
-        { header: 'Yearly Revenue', accessorKey: 'yearlyRevenue' },
-        { header: 'Average Deal Size', accessorKey: 'averageDealSize' },
-        { header: 'Total Deals', accessorKey: 'totalDeals' }
+        {
+          header: 'Total Revenue',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Monthly Revenue',
+          accessorKey: 'monthlyRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Quarterly Revenue',
+          accessorKey: 'quarterlyRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Yearly Revenue',
+          accessorKey: 'yearlyRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Average Deal Size',
+          accessorKey: 'averageDealSize',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        { header: 'Total Deals', accessorKey: 'totalDeals', align: 'center' }
       ];
     }
 
@@ -215,24 +301,40 @@ export default function RevenueReportPage() {
       exportCSV(exportData, exportCols, filePrefix, logOpts);
     } else if (type === 'pdf') {
       if (exportPDFFromData && exportData.length > 0) {
-        const companyName = user?.company?.name || 'ClassDesk CRM';
+        const selectedCompanyObj = companies.find((c) => String(c.id) === String(filters.companyId));
+        const selectedBranchObj = branches.find((b) => String(b.id) === String(filters.branchId));
+        const selectedTeamObj = teams.find((t) => String(t.id) === String(filters.teamId));
+        const selectedCourseObj = courses.find((c) => String(c.id) === String(filters.courseId));
+
+        const companyName = user?.company?.name || user?.companyName || selectedCompanyObj?.name || 'ClassDesk';
+        const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
+        const totalRev = exportData.reduce((sum, item) => sum + (Number(item.totalRevenue) || 0), 0);
+
         const pdfOptions = {
-          companyName,
-          companySubtitle: 'Revenue & Financial Analytics Report',
           userName: user?.name || user?.email || 'Authorized User',
+          companyName,
+          companySubtitle: `${companyName} • Financial & Revenue Analytics`,
+          logoUrl,
           filtersSummary: {
-            Period: filters.rankingPeriod,
-            Scope: `${companies.find(c => c.id === filters.companyId)?.name || 'All Companies'} -> ${branches.find(b => b.id === filters.branchId)?.name || 'All Branches'}`
+            Period: filters.rankingPeriod || 'ALL',
+            Company: isSuperAdmin ? (selectedCompanyObj?.name || null) : companyName,
+            Branch: selectedBranchObj?.name || null,
+            Team: selectedTeamObj?.name || null,
+            Course: selectedCourseObj?.name || null,
+            'Date Range': filters.startDate && filters.endDate ? `${filters.startDate} to ${filters.endDate}` : null
           },
           summaryCards: [
-            { label: 'Total Revenue', value: summaryQuery.data?.metrics?.totalRevenue ? `₹${Number(summaryQuery.data.metrics.totalRevenue).toLocaleString('en-IN')}` : null },
-            { label: 'Total Records', value: `${exportData.length} Rows` }
-          ].filter(c => c.value !== null)
+            { label: 'Total Records', value: `${exportData.length} Rows` },
+            { label: 'Total Revenue', value: `₹${totalRev.toLocaleString('en-IN')}` }
+          ]
         };
+
         await exportPDFFromData(exportData, exportCols, reportTitle, `${filePrefix}.pdf`, pdfOptions);
       } else {
         exportPDF('revenue-report-printable', filePrefix, logOpts);
       }
+    }
+
     }
   };
 
@@ -263,19 +365,20 @@ export default function RevenueReportPage() {
               Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
             </div>
 
-            <div className="relative">
+            <div>
               <Button
                 variant="contained"
                 startIcon={<Download className="w-4 h-4" />}
-                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                endIcon={<ChevronDown className="w-3.5 h-3.5" />}
+                onClick={handleOpenExportMenu}
                 disabled={isExporting}
                 sx={{
-                  backgroundColor: '#DE5D02',
-                  '&:hover': { backgroundColor: '#C24102' },
+                  backgroundColor: '#10B981',
+                  '&:hover': { backgroundColor: '#059669' },
                   height: '36px',
-                  borderRadius: '6px',
+                  borderRadius: '10px',
                   fontSize: '12px',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textTransform: 'none',
                 }}
               >
@@ -311,6 +414,7 @@ export default function RevenueReportPage() {
           </>
         }
       />
+
 
       {/* Filter Bar */}
       <RevenueFilterBar

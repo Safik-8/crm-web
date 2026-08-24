@@ -53,12 +53,12 @@ export const SearchableSelect = ({
             setSearchTerm('');
           }
         }}
-        className={`w-full flex items-center justify-between rounded-[10px] border bg-[#F8FAFC] px-3.5 py-[10px] text-[13px] font-medium text-left outline-none transition-all ${
+        className={`w-full flex items-center justify-between rounded-[10px] border bg-[#FFFFFF] px-3.5 h-[38px] text-[12px] font-semibold text-left outline-none transition-all shadow-2xs ${
           hasError
             ? 'border-red-500 focus:border-red-500 focus:ring-3 focus:ring-red-500/14'
-            : 'border-[#E2E8F0] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14'
+            : 'border-[#E2E8F0] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14'
         } ${
-          isBtnDisabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-900'
+          isBtnDisabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-700'
         } ${isOpen && !isBtnDisabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
       >
         <span className={`truncate flex-1 pr-2 ${selectedOption && !isLoading ? 'text-slate-900' : 'text-slate-500 font-medium'}`}>

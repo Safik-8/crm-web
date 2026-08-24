@@ -181,27 +181,29 @@ const CoursesPage = () => {
               className="w-full lg:max-w-md"
             />
 
-            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 justify-start lg:justify-end">
-              <Button
-                variant="secondary"
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+              <button
+                type="button"
                 onClick={() => refetch()}
-                className="flex items-center gap-1.5 h-9 px-3 text-xs"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 h-[42px] px-5 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-[10px] text-[13px] font-semibold transition-all cursor-pointer"
                 title="Refresh course list"
               >
-                <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+                <RefreshCw size={16} className={loadingState === 'loading' ? 'animate-spin' : ''} />
                 <span>Refresh</span>
-              </Button>
+              </button>
 
-              <ExportMenu
-                data={courses}
-                columns={exportColumns}
-                fileName="courses"
-              />
+              <div className="w-full sm:w-auto [&>div]:w-full [&>button]:w-full [&>button]:justify-center">
+                <ExportMenu
+                  data={courses}
+                  columns={exportColumns}
+                  fileName="courses"
+                />
+              </div>
 
               {canCreate && (
                 <Button
                   onClick={handleOpenCreateForm}
-                  className="flex items-center gap-1.5 h-9 px-3 text-xs shadow-sm hover:shadow-md transition-all"
+                  className="col-span-2 w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all"
                   variant="contained"
                 >
                   <Plus size={16} />

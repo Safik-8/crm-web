@@ -28,7 +28,9 @@ const Modal = ({
           borderRadius: '24px',
           overflow: 'hidden',
           boxShadow: '0 20px 45px -12px rgba(15, 23, 42, 0.2)',
-          width: widthMap[maxWidth] || widthMap.md,
+          width: '100%',
+          maxWidth: widthMap[maxWidth] || widthMap.md,
+          m: 2, // Ensure it has some margin on small screens
         },
       }}
     >

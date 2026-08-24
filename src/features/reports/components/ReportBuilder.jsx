@@ -32,19 +32,32 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
 
   const [errorFields, setErrorFields] = useState({});
   const [userTeam, setUserTeam] = useState(null);
+  const [isTeamLeader, setIsTeamLeader] = useState(false);
   const [hasTeamChecked, setHasTeamChecked] = useState(false);
 
-  // Fetch active team membership of logged-in user
+  // Role permissions mappings
+  const isSuper = rank >= 100;
+  const isAdmin = rank >= 80 && rank < 100;
+  const isManager = rank >= 60 && rank < 80;
+  const isSales = rank > 0 && rank < 60;
+
+  // Fetch active team membership & team leadership status of logged-in user
   useEffect(() => {
     const checkTeamMembership = async () => {
-      if (rank > 0 && rank < 60 && user?.id) {
+      if (user?.id) {
         try {
           const res = await apiClient('/teams/membership/active', { silent: true });
-          if (res?.success && res.data?.team) {
-            setUserTeam(res.data.team);
+          if (res?.success && res.data) {
+            setIsTeamLeader(Boolean(res.data.isTeamLeader));
+            setUserTeam(res.data.team || res.data.ledTeam || null);
+          } else {
+            setIsTeamLeader(false);
+            setUserTeam(null);
           }
         } catch (err) {
           console.error('Failed to fetch team membership', err);
+          setIsTeamLeader(false);
+          setUserTeam(null);
         } finally {
           setHasTeamChecked(true);
         }
@@ -53,7 +66,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
       }
     };
     checkTeamMembership();
-  }, [rank, user?.id]);
+  }, [user?.id]);
 
   // Share option mapping details with parent components
   useEffect(() => {
@@ -62,37 +75,49 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
     }
   }, [options, onOptionsLoaded]);
 
-  // Role permissions mappings
-  const isSuper = rank >= 100;
-  const isAdmin = rank >= 80 && rank < 100;
-  const isManager = rank >= 60 && rank < 80;
-  const isSales = rank > 0 && rank < 60;
+  // Team View is allowed IF user is a Super Admin, Admin, Manager, OR part of an active team (leader or member)
+  const canSeeTeamView = isSuper || isAdmin || isManager || Boolean(userTeam);
 
-  // Default viewMode based on user roles (Admin = Org, Manager = Team, Sales = Individual)
-  const defaultMode = isSales ? 'INDIVIDUAL' : (isManager ? 'TEAM' : 'ORGANIZATION');
+  // Default viewMode: Team Leaders / Team members default to TEAM view, others default to INDIVIDUAL or ORGANIZATION
+  const defaultMode = canSeeTeamView 
+    ? (Boolean(userTeam) || isManager ? 'TEAM' : (isSuper || isAdmin ? 'ORGANIZATION' : 'INDIVIDUAL'))
+    : (isSuper || isAdmin ? 'ORGANIZATION' : 'INDIVIDUAL');
 
   // Reactively initialize viewMode when component mounts or filters are cleared
   useEffect(() => {
-    if (!currentFilters.viewMode) {
+    if (!currentFilters.viewMode || (!canSeeTeamView && currentFilters.viewMode === 'TEAM')) {
+      const targetMode = defaultMode;
       onChangeFilters({
         ...currentFilters,
-        viewMode: defaultMode,
+        viewMode: targetMode,
         startDate: currentFilters.startDate || new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
         endDate: currentFilters.endDate || new Date().toISOString().split('T')[0],
         companyId: currentFilters.companyId || user?.companyId || '',
         branchId: currentFilters.branchId || ((!isSuper && !isAdmin) ? (user?.branchId || '') : ''),
-        employeeId: isSales ? (user?.id || '') : (currentFilters.employeeId || ''),
-        teamId: userTeam ? String(userTeam.id) : (currentFilters.teamId || '')
+        employeeId: targetMode === 'INDIVIDUAL' && isSales ? String(user?.id || '') : (currentFilters.employeeId || ''),
+        teamId: targetMode === 'TEAM' && userTeam ? String(userTeam.id) : ''
       });
     }
-  }, [currentFilters.viewMode, defaultMode, userTeam]);
+  }, [currentFilters.viewMode, defaultMode, canSeeTeamView, userTeam, isSales, isSuper, isAdmin, user]);
 
-  // Auto-assign teamId filter if user belongs to a team and is sales agent
+  // Sync teamId filter based on active viewMode
   useEffect(() => {
-    if (isSales && userTeam && currentFilters.teamId !== String(userTeam.id)) {
-      onChangeFilters(prev => ({ ...prev, teamId: String(userTeam.id) }));
+    if (isSales || Boolean(userTeam)) {
+      const mode = currentFilters.viewMode || defaultMode;
+      if (mode === 'TEAM' && userTeam) {
+        if (currentFilters.teamId !== String(userTeam.id)) {
+          onChangeFilters(prev => ({ ...prev, teamId: String(userTeam.id) }));
+        }
+      } else if (mode === 'INDIVIDUAL') {
+        if (currentFilters.teamId !== '' || currentFilters.employeeId !== String(user?.id || '')) {
+          onChangeFilters(prev => ({ ...prev, teamId: '', employeeId: String(user?.id || '') }));
+        }
+      }
     }
-  }, [userTeam, isSales, currentFilters.teamId]);
+  }, [currentFilters.viewMode, userTeam, isSales, user?.id, defaultMode]);
+
+
+
 
   // Format Helper
   const formatOptions = (arr, labelKey = 'name', valKey = 'id') => {
@@ -429,6 +454,29 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
     }
   };
 
+  const getTeamMemberOptions = () => {
+    const list = [{ id: '', name: 'All Members (Whole Team)' }];
+    const seen = new Set(['']);
+
+    if (user?.id) {
+      seen.add(String(user.id));
+      list.push({ id: String(user.id), name: `${user.name || user.email} (Leader)` });
+    }
+
+    if (userTeam?.members && Array.isArray(userTeam.members)) {
+      userTeam.members.forEach(m => {
+        const uId = String(m.userId || m.user?.id);
+        const uName = m.user?.name || `Member #${uId}`;
+        if (uId && !seen.has(uId)) {
+          seen.add(uId);
+          list.push({ id: uId, name: uName });
+        }
+      });
+    }
+
+    return list;
+  };
+
   const teamPlaceholder = options.teams.length === 0 && !loadingFields.teams
     ? "No teams available for this branch"
     : "All Teams";
@@ -440,7 +488,7 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-slate-50/50 backdrop-blur-md border border-slate-200/80 rounded-none p-6 shadow-sm">
       {/* 1. View Mode Section */}
-      {(!isSales || (isSales && userTeam)) && (
+      {canSeeTeamView && (
         <div>
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Select Analysis Type</h4>
           <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200/40">
@@ -456,16 +504,18 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 Organization View
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => handleFieldChange('viewMode', 'TEAM')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${(currentFilters.viewMode || defaultMode) === 'TEAM'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Team View
-            </button>
+            {canSeeTeamView && (
+              <button
+                type="button"
+                onClick={() => handleFieldChange('viewMode', 'TEAM')}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${(currentFilters.viewMode || defaultMode) === 'TEAM'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Team View
+              </button>
+            )}
             <button
               type="button"
               onClick={() => handleFieldChange('viewMode', 'INDIVIDUAL')}
@@ -518,8 +568,8 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
               </div>
             )}
 
-            {/* Team Selector: shown only in Team view */}
-            {activeMode === 'TEAM' && (
+            {/* Team Selector: shown only in Team view for Admins/Managers not assigned to a team */}
+            {activeMode === 'TEAM' && !userTeam && (
               <SelectField
                 label="Team"
                 required={false}
@@ -534,8 +584,20 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
               />
             )}
 
+            {/* Team Member Filter: shown for any user assigned to a team in Team View */}
+            {activeMode === 'TEAM' && userTeam && (
+              <SelectField
+                label="Filter Team Member"
+                value={currentFilters.employeeId || ''}
+                onChange={(val) => handleFieldChange('employeeId', val)}
+                options={getTeamMemberOptions()}
+                placeholder="All Members (Whole Team)"
+                allowEmptyOption={false}
+              />
+            )}
+
             {/* Employee Selector: shown only in Individual view */}
-            {activeMode === 'INDIVIDUAL' && (
+            {activeMode === 'INDIVIDUAL' && !isSales && (
               <SelectField
                 label="Employee"
                 required={false}
@@ -556,11 +618,13 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
       {/* Sales Agent banner */}
       {isSales && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 p-3.5 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs font-bold text-indigo-700">
-            <Check className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span>You are viewing your assigned data</span>
-          </div>
-          {userTeam && (
+          {activeMode === 'INDIVIDUAL' && (
+            <div className="flex items-center gap-2 p-3.5 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs font-bold text-indigo-700">
+              <Check className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span>You are viewing your assigned data ({user?.name || user?.email})</span>
+            </div>
+          )}
+          {activeMode === 'TEAM' && userTeam && (
             <div className="flex items-center gap-2 p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-xl text-xs font-bold text-emerald-700">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Showing data for your team only ({userTeam.name})</span>

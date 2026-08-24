@@ -23,6 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../api/axiosClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useExport } from '../../../shared/hooks/useExport';
+import { salesPerformanceService } from '../services/salesPerformanceService';
 
 export default function SalesPerformancePage() {
   const { user } = useAuth();
@@ -140,70 +141,105 @@ export default function SalesPerformancePage() {
       fileName = 'bde_performance_report';
       reportTitle = 'BDE Performance Report';
       columns = [
-        { header: 'Rank', accessorKey: 'rank' },
+        { header: 'Rank', accessorKey: 'rank', align: 'center' },
         { header: 'Employee Code', accessorKey: 'employeeCode' },
         { header: 'Name', accessorKey: 'name' },
         { header: 'Branch', accessorKey: 'branchName' },
-        { header: 'Assigned Leads', accessorKey: 'leadsAssigned' },
-        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads' },
-        { header: 'Opportunities', accessorKey: 'opportunitiesCreated' },
-        { header: 'Deals Won', accessorKey: 'dealsWon' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Conversion Rate %', accessorKey: 'conversionRate' },
-        { header: 'Performance Score', accessorKey: 'performanceScore' }
+        { header: 'Assigned Leads', accessorKey: 'leadsAssigned', align: 'center' },
+        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads', align: 'center' },
+        { header: 'Opportunities', accessorKey: 'opportunitiesCreated', align: 'center' },
+        { header: 'Deals Won', accessorKey: 'dealsWon', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Conversion Rate %',
+          accessorKey: 'conversionRate',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        },
+        { header: 'Performance Score', accessorKey: 'performanceScore', align: 'center' }
       ];
     } else if (activeTab === 'ise') {
       currentDataSet = iseQuery.data?.data || [];
       fileName = 'ise_activity_report';
       reportTitle = 'ISE Activity Report';
       columns = [
-        { header: 'Rank', accessorKey: 'rank' },
+        { header: 'Rank', accessorKey: 'rank', align: 'center' },
         { header: 'Employee Code', accessorKey: 'employeeCode' },
         { header: 'Name', accessorKey: 'name' },
         { header: 'Branch', accessorKey: 'branchName' },
-        { header: 'Calls Completed', accessorKey: 'callsCompleted' },
-        { header: 'Followups Completed', accessorKey: 'followupsCompleted' },
-        { header: 'Meetings Scheduled', accessorKey: 'meetingsScheduled' },
-        { header: 'Assigned Leads', accessorKey: 'assignedLeads' },
-        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads' },
-        { header: 'Conversion Rate %', accessorKey: 'conversionRate' },
-        { header: 'Performance Score', accessorKey: 'performanceScore' }
+        { header: 'Calls Completed', accessorKey: 'callsCompleted', align: 'center' },
+        { header: 'Followups Completed', accessorKey: 'followupsCompleted', align: 'center' },
+        { header: 'Meetings Scheduled', accessorKey: 'meetingsScheduled', align: 'center' },
+        { header: 'Assigned Leads', accessorKey: 'assignedLeads', align: 'center' },
+        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads', align: 'center' },
+        {
+          header: 'Conversion Rate %',
+          accessorKey: 'conversionRate',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        },
+        { header: 'Performance Score', accessorKey: 'performanceScore', align: 'center' }
       ];
     } else if (activeTab === 'team') {
       currentDataSet = teamQuery.data?.data || [];
       fileName = 'team_rankings_report';
       reportTitle = 'Team Rankings Report';
       columns = [
-        { header: 'Rank', accessorKey: 'rank' },
+        { header: 'Rank', accessorKey: 'rank', align: 'center' },
         { header: 'Team Code', accessorKey: 'teamCode' },
         { header: 'Team Name', accessorKey: 'teamName' },
         { header: 'Branch', accessorKey: 'branchName' },
         { header: 'Team Leader', accessorKey: 'bdeName' },
-        { header: 'Member Count', accessorKey: 'memberCount' },
-        { header: 'Total Leads', accessorKey: 'totalLeads' },
-        { header: 'Opportunities', accessorKey: 'totalOpportunities' },
-        { header: 'Deals Won', accessorKey: 'dealsWon' },
-        { header: 'Team Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Conversion Rate %', accessorKey: 'conversionRate' },
-        { header: 'Performance Score', accessorKey: 'performanceScore' }
+        { header: 'Member Count', accessorKey: 'memberCount', align: 'center' },
+        { header: 'Total Leads', accessorKey: 'totalLeads', align: 'center' },
+        { header: 'Opportunities', accessorKey: 'totalOpportunities', align: 'center' },
+        { header: 'Deals Won', accessorKey: 'dealsWon', align: 'center' },
+        {
+          header: 'Team Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Conversion Rate %',
+          accessorKey: 'conversionRate',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        },
+        { header: 'Performance Score', accessorKey: 'performanceScore', align: 'center' }
       ];
     } else if (activeTab === 'branch') {
       currentDataSet = branchQuery.data?.data || [];
       fileName = 'branch_performance_report';
       reportTitle = 'Branch Performance Report';
       columns = [
-        { header: 'Rank', accessorKey: 'rank' },
+        { header: 'Rank', accessorKey: 'rank', align: 'center' },
         { header: 'Branch Code', accessorKey: 'branchCode' },
         { header: 'Branch Name', accessorKey: 'branchName' },
         { header: 'Location', accessorKey: 'location' },
-        { header: 'Total Leads', accessorKey: 'totalLeads' },
-        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads' },
-        { header: 'Opportunities', accessorKey: 'opportunitiesCount' },
-        { header: 'Deals Won', accessorKey: 'dealsWon' },
-        { header: 'New Customers', accessorKey: 'newCustomers' },
-        { header: 'Total Revenue (INR)', accessorKey: 'totalRevenue' },
-        { header: 'Conversion Rate %', accessorKey: 'conversionRate' },
-        { header: 'Performance Score', accessorKey: 'performanceScore' }
+        { header: 'Total Leads', accessorKey: 'totalLeads', align: 'center' },
+        { header: 'Qualified Leads', accessorKey: 'qualifiedLeads', align: 'center' },
+        { header: 'Opportunities', accessorKey: 'opportunitiesCount', align: 'center' },
+        { header: 'Deals Won', accessorKey: 'dealsWon', align: 'center' },
+        { header: 'New Customers', accessorKey: 'newCustomers', align: 'center' },
+        {
+          header: 'Total Revenue (INR)',
+          accessorKey: 'totalRevenue',
+          align: 'right',
+          formatter: (val) => (val ? `₹${Number(val).toLocaleString('en-IN')}` : '₹0')
+        },
+        {
+          header: 'Conversion Rate %',
+          accessorKey: 'conversionRate',
+          align: 'right',
+          formatter: (val) => `${Number(val || 0).toFixed(2)}%`
+        },
+        { header: 'Performance Score', accessorKey: 'performanceScore', align: 'center' }
       ];
     }
 
@@ -212,22 +248,45 @@ export default function SalesPerformancePage() {
     } else if (type === 'csv') {
       exportCSV(currentDataSet, columns, `${fileName}_${filters.rankingPeriod}`);
     } else if (type === 'pdf') {
-      const companyName = user?.company?.name || 'ClassDesk CRM';
+      const selectedCompanyObj = companies.find((c) => String(c.id) === String(filters.companyId));
+      const selectedBranchObj = branches.find((b) => String(b.id) === String(filters.branchId));
+      const selectedTeamObj = teams.find((t) => String(t.id) === String(filters.teamId));
+
+      const companyName = user?.company?.name || user?.companyName || selectedCompanyObj?.name || 'ClassDesk';
+      const logoUrl = user?.company?.logo || '/src/assets/logos/logo-official.png';
+
+      const totalRev = currentDataSet.reduce((sum, item) => sum + (Number(item.totalRevenue) || 0), 0);
+      const avgConv = (
+        currentDataSet.reduce((sum, item) => sum + (Number(item.conversionRate) || 0), 0) /
+        (currentDataSet.length || 1)
+      ).toFixed(1);
+
       const pdfOptions = {
-        companyName,
-        companySubtitle: 'Sales Performance & Analytics Report',
         userName: user?.name || user?.email || 'Authorized User',
+        companyName,
+        companySubtitle: `${companyName} • Sales & Performance Analytics`,
+        logoUrl,
         filtersSummary: {
-          Period: filters.rankingPeriod,
-          Scope: `${companies.find(c => c.id === filters.companyId)?.name || 'All Companies'} -> ${branches.find(b => b.id === filters.branchId)?.name || 'All Branches'}`
+          Period: filters.rankingPeriod || 'MONTHLY',
+          Company: isSuperAdmin ? (selectedCompanyObj?.name || null) : companyName,
+          Branch: selectedBranchObj?.name || null,
+          Team: selectedTeamObj?.name || null,
+          'Date Range': filters.startDate && filters.endDate ? `${filters.startDate} to ${filters.endDate}` : null
         },
         summaryCards: [
-          { label: 'Total Records', value: `${currentDataSet.length} Rows` }
+          { label: 'Total Records', value: `${currentDataSet.length} Rows` },
+          { label: 'Total Revenue', value: `₹${totalRev.toLocaleString('en-IN')}` },
+          { label: 'Avg Conversion', value: `${avgConv}%` }
         ]
       };
+
       await exportPDFFromData(currentDataSet, columns, reportTitle, `${fileName}_${filters.rankingPeriod}.pdf`, pdfOptions);
     }
+
+    }
   };
+
+
 
   return (
     <div className="w-full space-y-5 pb-12">
@@ -243,13 +302,13 @@ export default function SalesPerformancePage() {
         </div>
 
         <div className="relative">
-          <button
+                   <button
             onClick={() => setIsExportMenuOpen(prev => !prev)}
             disabled={!isQueryEnabled || isExporting}
-            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            <Download size={14} className="text-slate-500" />
-            <span>Export Report</span>
+            <Download size={14} className={isExporting ? 'animate-bounce text-orange-500' : 'text-slate-500'} />
+            <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
             <ChevronDown size={14} className="text-slate-400" />
           </button>
 
@@ -260,24 +319,25 @@ export default function SalesPerformancePage() {
                 className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>Export Excel (.xlsx)</span>
+                <span>Export as Excel (.xlsx)</span>
               </button>
               <button
                 onClick={() => handleExport('csv')}
                 className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
               >
                 <FileText className="w-4 h-4 text-blue-600" />
-                <span>Export CSV (.csv)</span>
+                <span>Export as CSV (.csv)</span>
               </button>
               <button
                 onClick={() => handleExport('pdf')}
                 className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
               >
                 <Printer className="w-4 h-4 text-rose-600" />
-                <span>Export PDF (.pdf)</span>
+                <span>Export as PDF (.pdf)</span>
               </button>
             </div>
           )}
+
         </div>
       </div>
 
@@ -424,3 +484,4 @@ export default function SalesPerformancePage() {
     </div>
   );
 }
+

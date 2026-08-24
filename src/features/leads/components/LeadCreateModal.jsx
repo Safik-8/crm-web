@@ -136,7 +136,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
   const { data: formDataRes, isLoading: isLoadingFormData, isError } = useLeadFormDataQuery({
     companyId: targetCompanyId,
     branchId: targetBranchId
-  });
+  }, { enabled: isOpen && !!targetCompanyId });
 
   const validate = () => {
     const errs = {};
