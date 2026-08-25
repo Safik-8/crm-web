@@ -139,6 +139,10 @@ export default function RevenueReportPage() {
   const teamQuery = useTeamRevenue(filters);
   const branchQuery = useBranchRevenue(filters);
 
+  const handleOpenExportMenu = (event) => {
+    setExportMenuAnchorEl((prev) => (prev ? null : event.currentTarget));
+  };
+
   const handleCloseExportMenu = () => {
     setExportMenuAnchorEl(null);
   };
