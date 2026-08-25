@@ -85,11 +85,11 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4 animate-pulse">
-        <div className="h-6 w-48 bg-slate-200 rounded-lg" />
+      <div className="bg-white border border-slate-100 shadow-sm p-6 space-y-4 animate-pulse">
+        <div className="h-6 w-48 bg-slate-200" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-slate-100 rounded-2xl" />
+            <div key={i} className="h-32 bg-slate-100" />
           ))}
         </div>
       </div>
@@ -98,11 +98,11 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
   return (
     <>
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+      <div className="bg-white border border-slate-100 shadow-sm p-6">
         {/* Widget Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shadow-2xs">
               <Trophy size={18} />
             </div>
             <div>
@@ -139,7 +139,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
             </div>
 
             {/* View Mode Toggle Buttons */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/60">
+            <div className="flex items-center bg-slate-100 p-0.5 border border-slate-200/60">
               <Button
                 variant={viewMode === 'cards' ? 'contained' : 'text'}
                 size="small"
@@ -148,7 +148,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                   minWidth: '34px',
                   height: '34px',
                   padding: 0,
-                  borderRadius: '8px',
+                  borderRadius: '0',
                   backgroundColor: viewMode === 'cards' ? '#FFFFFF' : 'transparent',
                   color: viewMode === 'cards' ? '#1E293B' : '#94A3B8',
                   boxShadow: viewMode === 'cards' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -169,7 +169,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                   minWidth: '34px',
                   height: '34px',
                   padding: 0,
-                  borderRadius: '8px',
+                  borderRadius: '0',
                   backgroundColor: viewMode === 'table' ? '#FFFFFF' : 'transparent',
                   color: viewMode === 'table' ? '#1E293B' : '#94A3B8',
                   boxShadow: viewMode === 'table' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -188,7 +188,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
         {/* Content View */}
         {processedMembers.length === 0 ? (
-          <div className="text-center py-12 px-4 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+          <div className="text-center py-12 px-4 border border-dashed border-slate-200 bg-slate-50/50">
             <Users size={32} className="text-slate-300 mx-auto mb-2" />
             <p className="text-sm font-bold text-slate-700">No representatives found</p>
             <p className="text-xs text-slate-400 mt-0.5">No active team members match the selected filter.</p>
@@ -204,7 +204,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
               return (
                 <div
                   key={member.userId}
-                  className={`p-4 rounded-2xl border transition-all duration-150 flex flex-col gap-3 relative group ${
+                  className={`p-4 border transition-all duration-150 flex flex-col gap-3 relative group ${
                     rank === 1
                       ? 'bg-gradient-to-br from-amber-50/40 to-white border-amber-200/80 shadow-xs'
                       : 'bg-white border-slate-200/80 hover:border-orange-300 hover:shadow-xs'
@@ -214,7 +214,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-extrabold text-xs flex items-center justify-center border border-slate-200 group-hover:bg-orange-100 group-hover:text-orange-700 transition-colors">
+                        <div className="w-10 h-10 bg-slate-100 text-slate-700 font-extrabold text-xs flex items-center justify-center border border-slate-200 group-hover:bg-orange-100 group-hover:text-orange-700 transition-colors">
                           {member.name.charAt(0).toUpperCase()}
                         </div>
                         {rankBadge && (
@@ -253,7 +253,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                   </div>
 
                   {/* 3 Metric Pillars */}
-                  <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center bg-slate-50/50 rounded-xl p-2">
+                  <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center bg-slate-50/50 p-2">
                     <div>
                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Leads</p>
                       <p className="text-xs font-extrabold text-slate-800 mt-0.5">{member.leadsCount}</p>
@@ -273,7 +273,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
           </div>
         ) : (
           /* Table Leaderboard View */
-          <div className="overflow-x-auto border border-slate-200/80 rounded-2xl">
+          <div className="overflow-x-auto border border-slate-200/80">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200/80">
                 <tr>
@@ -336,7 +336,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
               onClick={() => setIsDrawerOpen(true)}
               endIcon={<ChevronRight size={14} />}
               sx={{
-                borderRadius: '8px',
+                borderRadius: '0',
                 fontSize: '11px',
                 fontWeight: 700,
                 color: '#F86F03',
@@ -401,7 +401,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
           </div>
 
           {/* Drawer Table */}
-          <div className="flex-1 overflow-y-auto border border-slate-200/80 rounded-2xl">
+          <div className="flex-1 overflow-y-auto border border-slate-200/80">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 z-10">
                 <tr>

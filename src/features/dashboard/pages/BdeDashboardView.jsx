@@ -1,13 +1,14 @@
 // crm-web/src/features/dashboard/pages/BdeDashboardView.jsx
 import {
   Layers, Clock, AlertTriangle, Target,
-  Handshake, TrendingUp, CheckSquare, BarChart3,
+  Handshake, TrendingUp, CheckSquare, BarChart3, LayoutDashboard
 } from 'lucide-react';
 import KpiCard            from '../components/KpiCard';
 import TargetProgressBar  from '../components/TargetProgressBar';
 import LeadAgingWidget    from '../components/LeadAgingWidget';
 import ReminderWidget     from '../components/ReminderWidget';
 import QuickActionsBar    from '../components/QuickActionsBar';
+import PageHeader         from '../../../shared/components/modules/PageHeader';
 import { useDashboardMetrics, useLeadAging, useKpiTargets } from '../hooks/useRoleDashboard';
 import { useAuth }        from '../../../app/providers/AuthProvider';
 import { useNavigate }    from 'react-router-dom';
@@ -33,14 +34,13 @@ const BdeDashboardView = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-800">My Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Your personal performance workbench</p>
-        </div>
-        <QuickActionsBar actions={['add_lead', 'followup', 'opportunity', 'customers']} />
-      </div>
+    <div className=" max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      <PageHeader
+        title="My Dashboard"
+        description="Your personal performance workbench"
+        icon={LayoutDashboard}
+        actions={<QuickActionsBar actions={['add_lead', 'followup', 'opportunity', 'customers']} />}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {KPI_CARDS.map(card => <KpiCard key={card.title} {...card} isLoading={isLoading} />)}

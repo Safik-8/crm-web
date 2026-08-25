@@ -13,7 +13,7 @@ const LeadAgingWidget = ({ data = {}, isLoading = false }) => {
   const total = Object.values(data).reduce((s, v) => s + (v || 0), 0);
 
   return (
-    <section aria-label="Lead Aging" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <section aria-label="Lead Aging" className="bg-white border border-slate-100 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle size={15} className="text-amber-500" />
         <h3 className="text-sm font-bold text-slate-700">Active Lead Aging</h3>
@@ -27,7 +27,7 @@ const LeadAgingWidget = ({ data = {}, isLoading = false }) => {
       {isLoading ? (
         <div className="space-y-2">
           {BUCKETS.map(b => (
-            <div key={b.key} className="animate-pulse bg-slate-100 rounded-lg h-8" />
+            <div key={b.key} className="animate-pulse bg-slate-100 h-8" />
           ))}
         </div>
       ) : (
@@ -41,9 +41,9 @@ const LeadAgingWidget = ({ data = {}, isLoading = false }) => {
                   <p className="text-[11px] font-medium text-slate-600">{label}</p>
                   <p className={`text-[11px] font-bold ${text}`}>{count}</p>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5">
+                <div className="w-full bg-slate-100 h-1.5">
                   <div
-                    className={`h-1.5 rounded-full ${color} transition-all duration-500`}
+                    className={`h-1.5 ${color} transition-all duration-500`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

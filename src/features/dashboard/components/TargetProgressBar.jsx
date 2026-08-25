@@ -3,11 +3,11 @@ import CountUp from 'react-countup';
 import { Target } from 'lucide-react';
 
 const KPI_LABEL_MAP = {
-  LEAD_TARGET:                 'Lead Target',
-  REVENUE_TARGET:              'Revenue Target',
-  SALES_TARGET:                'Sales Target',
-  OPPORTUNITY_TARGET:          'Opportunity Target',
-  CONVERSION_TARGET:           'Conversion Target',
+  LEAD_TARGET: 'Lead Target',
+  REVENUE_TARGET: 'Revenue Target',
+  SALES_TARGET: 'Sales Target',
+  OPPORTUNITY_TARGET: 'Opportunity Target',
+  CONVERSION_TARGET: 'Conversion Target',
   CUSTOMER_ACQUISITION_TARGET: 'Customer Acquisition',
 };
 
@@ -16,20 +16,20 @@ const TargetProgressBar = ({ kpi, isLoading = false }) => {
     return <div className="animate-pulse bg-slate-100 rounded-xl h-16" />;
   }
 
-  const target    = Number(kpi?.targetValue   ?? 0);
-  const achieved  = Number(kpi?.achievedValue ?? 0);
-  const pct       = target > 0 ? Math.min((achieved / target) * 100, 100) : 0;
+  const target = Number(kpi?.targetValue ?? 0);
+  const achieved = Number(kpi?.achievedValue ?? 0);
+  const pct = target > 0 ? Math.min((achieved / target) * 100, 100) : 0;
   const remaining = Math.max(target - achieved, 0);
 
   const color =
     pct >= 100 ? 'bg-emerald-500' :
-    pct >= 60  ? 'bg-amber-400'   :
-                 'bg-rose-400';
+      pct >= 60 ? 'bg-amber-400' :
+        'bg-rose-400';
 
   const textColor =
     pct >= 100 ? 'text-emerald-600' :
-    pct >= 60  ? 'text-amber-600'   :
-                 'text-rose-600';
+      pct >= 60 ? 'text-amber-600' :
+        'text-rose-600';
 
   const label = KPI_LABEL_MAP[kpi?.kpiType] ?? kpi?.kpiType ?? 'KPI';
 

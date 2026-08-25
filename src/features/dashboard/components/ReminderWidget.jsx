@@ -8,46 +8,46 @@ import FollowupsDrawer from './FollowupsDrawer';
 
 const CARD_CONFIG = [
   {
-    key:     'todayCount',
-    label:   "Today's Follow-ups",
-    icon:    Clock,
-    color:   'blue',
-    filter:  'today',
+    key: 'todayCount',
+    label: "Today's Follow-ups",
+    icon: Clock,
+    color: 'blue',
+    filter: 'today',
     helpText: 'Due today',
   },
   {
-    key:     'upcomingCount',
-    label:   'Upcoming',
-    icon:    Calendar,
-    color:   'sky',
-    filter:  'upcoming',
+    key: 'upcomingCount',
+    label: 'Upcoming',
+    icon: Calendar,
+    color: 'sky',
+    filter: 'upcoming',
     helpText: 'Scheduled ahead',
   },
   {
-    key:     'overdueCount',
-    label:   'Overdue',
-    icon:    AlertTriangle,
-    color:   'red',
-    filter:  'overdue',
+    key: 'overdueCount',
+    label: 'Overdue',
+    icon: AlertTriangle,
+    color: 'red',
+    filter: 'overdue',
     helpText: 'Past due date — action needed',
-    urgent:  true,  // highlights red when count > 0
+    urgent: true,  // highlights red when count > 0
   },
 ];
 
 const COLOR_MAP = {
-  blue: { bg: 'bg-blue-50',   text: 'text-blue-600',   border: 'border-blue-100',   icon: 'text-blue-500'   },
-  sky:  { bg: 'bg-sky-50',    text: 'text-sky-600',    border: 'border-sky-100',    icon: 'text-sky-500'    },
-  red:  { bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100',    icon: 'text-red-500'    },
+  blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', icon: 'text-blue-500' },
+  sky: { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-100', icon: 'text-sky-500' },
+  red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-100', icon: 'text-red-500' },
 };
 
 const ReminderWidget = ({ onViewFollowups }) => {
   const [selectedFilter, setSelectedFilter] = useState(null);
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey:  ['reminder-summary'],
-    queryFn:   () => fetchReminderSummary(),
+    queryKey: ['reminder-summary'],
+    queryFn: () => fetchReminderSummary(),
     staleTime: 5 * 60 * 1000,
-    select:    (res) => res?.data ?? res,
+    select: (res) => res?.data ?? res,
   });
 
   const summary = data ?? { todayCount: 0, upcomingCount: 0, overdueCount: 0 };
@@ -88,21 +88,21 @@ const ReminderWidget = ({ onViewFollowups }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {CARD_CONFIG.map(({ key, label, icon: Icon, color, filter, helpText, urgent }) => {
-            const count   = summary[key] ?? 0;
+            const count = summary[key] ?? 0;
             const isUrgent = urgent && count > 0;
-            const c       = COLOR_MAP[color];
+            const c = COLOR_MAP[color];
 
             return (
               <div
                 key={key}
                 className={[
-                  'bg-white rounded-2xl border shadow-sm p-4 flex flex-col gap-2 transition-all',
+                  'bg-white border shadow-sm p-4 flex flex-col gap-2 transition-all',
                   isUrgent ? 'border-red-300 bg-red-50/40' : 'border-slate-200',
                   isLoading ? 'animate-pulse' : '',
                 ].join(' ')}
               >
                 <div className="flex items-start justify-between">
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${c.bg}`}>
+                  <span className={`flex h-9 w-9 items-center justify-center ${c.bg}`}>
                     <Icon size={17} className={c.icon} aria-hidden="true" />
                   </span>
                   {isUrgent && (

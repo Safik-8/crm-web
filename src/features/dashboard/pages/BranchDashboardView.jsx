@@ -13,6 +13,7 @@ import QuickActionsBar    from '../components/QuickActionsBar';
 import BranchTeamPerformanceWidget from '../components/BranchTeamPerformanceWidget';
 import SelectField       from '../../../shared/components/elements/SelectField';
 import Button            from '../../../shared/components/elements/Button';
+import PageHeader        from '../../../shared/components/modules/PageHeader';
 import { useDashboardMetrics, useLeadAging, useActivityFeed } from '../hooks/useRoleDashboard';
 import { useAuth }        from '../../../app/providers/AuthProvider';
 import { useNavigate }    from 'react-router-dom';
@@ -56,61 +57,57 @@ const BranchDashboardView = () => {
 
   const teamMembers = metrics.teamPerformance || [];
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
-            <BarChart3 size={24} className="text-primary" />
-            Branch Manager Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {user?.branch?.name ? `${user.branch.name} — ` : ''}Operational performance and team overview
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="w-40">
-            <SelectField
-              value={period}
-              onChange={(val) => setPeriod(val)}
-              options={PERIOD_OPTIONS}
-              searchable={false}
-              sx={{ minWidth: 140 }}
-            />
-          </div>
-
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
-            sx={{
-              height: '38px',
-              borderColor: '#E2E8F0',
-              color: '#475569',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: 600,
-              padding: '0 16px',
-              textTransform: 'none',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-              '&:hover': {
-                borderColor: '#CBD5E1',
-                backgroundColor: '#F8FAFC',
-              },
-            }}
-          >
-            Refresh
-          </Button>
-
-          <QuickActionsBar actions={['add_lead', 'followup', 'opportunity', 'customers']} />
-        </div>
+  const HeaderActions = (
+    <>
+      <div className="w-40">
+        <SelectField
+          value={period}
+          onChange={(val) => setPeriod(val)}
+          options={PERIOD_OPTIONS}
+          searchable={false}
+          sx={{ minWidth: 140 }}
+        />
       </div>
+
+      <Button
+        variant="outlined"
+        size="small"
+        onClick={() => refetch()}
+        disabled={isFetching}
+        startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
+        sx={{
+          height: '38px',
+          borderColor: '#E2E8F0',
+          color: '#475569',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          fontSize: '12px',
+          fontWeight: 600,
+          padding: '0 16px',
+          textTransform: 'none',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+          '&:hover': {
+            borderColor: '#CBD5E1',
+            backgroundColor: '#F8FAFC',
+          },
+        }}
+      >
+        Refresh
+      </Button>
+
+      <QuickActionsBar actions={['add_lead', 'followup', 'opportunity', 'customers']} />
+    </>
+  );
+
+  return (
+    <div className=" max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      <PageHeader
+        title="Branch Manager Dashboard"
+        description={user?.branch?.name ? `${user.branch.name} — Operational performance and team overview` : 'Operational performance and team overview'}
+        icon={BarChart3}
+        actions={HeaderActions}
+      />
 
       {/* 8 Primary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -120,9 +117,9 @@ const BranchDashboardView = () => {
       </div>
 
       {/* Conversion Rate Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between">
+      <div className="bg-white border border-slate-100 shadow-sm p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
             <ShieldCheck size={20} />
           </div>
           <div>

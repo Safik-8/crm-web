@@ -88,6 +88,19 @@
   scrollbar-width: none;
 }
 
+/* Remove default focus outline and borders on recharts to prevent black boxes */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-responsive-container,
+.recharts-cartesian-grid-bg {
+  outline: none !important;
+  border: none !important;
+}
+
+.recharts-wrapper * {
+  outline: none !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    TOAST SYSTEM — Orange Gradient Glass  (unstyled: true → full CSS control)
    ═══════════════════════════════════════════════════════════════════════════

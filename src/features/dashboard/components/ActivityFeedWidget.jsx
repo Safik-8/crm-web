@@ -3,7 +3,7 @@ import { Activity, User } from 'lucide-react';
 
 const ActivityFeedWidget = ({ activities = [], isLoading = false }) => {
   return (
-    <section aria-label="Recent Activities" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <section aria-label="Recent Activities" className="bg-white border border-slate-100 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <Activity size={15} className="text-blue-500" />
         <h3 className="text-sm font-bold text-slate-700">Recent Activities</h3>
@@ -15,7 +15,7 @@ const ActivityFeedWidget = ({ activities = [], isLoading = false }) => {
       {isLoading ? (
         <div className="space-y-2.5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-slate-100 rounded-xl h-12" />
+            <div key={i} className="animate-pulse bg-slate-100 h-12" />
           ))}
         </div>
       ) : activities.length === 0 ? (
@@ -25,7 +25,7 @@ const ActivityFeedWidget = ({ activities = [], isLoading = false }) => {
       ) : (
         <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
           {activities.map((act) => (
-            <div key={act.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+            <div key={act.id} className="p-3 bg-slate-50 border border-slate-100 text-xs">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-bold text-slate-700 truncate">
                   {act.lead?.name || 'Unknown Lead'}

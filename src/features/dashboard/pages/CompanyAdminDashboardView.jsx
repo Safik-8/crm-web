@@ -10,6 +10,7 @@ import ActivityFeedWidget from '../components/ActivityFeedWidget';
 import ReminderWidget     from '../components/ReminderWidget';
 import Button             from '../../../shared/components/elements/Button';
 import SelectField        from '../../../shared/components/elements/SelectField';
+import PageHeader         from '../../../shared/components/modules/PageHeader';
 import { CrmBarChart }    from '../../../shared/components/charts';
 import { useDashboardMetrics, useLeadAging, useActivityFeed } from '../hooks/useRoleDashboard';
 import { useAuth }        from '../../../app/providers/AuthProvider';
@@ -47,69 +48,70 @@ const CompanyAdminDashboardView = () => {
     deals:   b._count?.id ?? 0,
   }));
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
-            <BarChart3 size={22} className="text-purple-500" /> Company Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Company-level performance overview</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="w-36">
-            <SelectField
-              value={period}
-              onChange={(val) => setPeriod(val)}
-              searchable={false}
-              options={[
-                { value: 'MONTHLY', label: 'This Month' },
-                { value: 'QUARTERLY', label: 'This Quarter' },
-                { value: 'YEARLY', label: 'This Year' },
-              ]}
-            />
-          </div>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
-            sx={{
-              height: '38px',
-              borderColor: '#E2E8F0',
-              color: '#475569',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: 600,
-              padding: '0 16px',
-              textTransform: 'none',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-              '&:hover': {
-                borderColor: '#CBD5E1',
-                backgroundColor: '#F8FAFC',
-              },
-            }}
-          >
-            Refresh
-          </Button>
-        </div>
+  const HeaderActions = (
+    <>
+      <div className="w-36">
+        <SelectField
+          value={period}
+          onChange={(val) => setPeriod(val)}
+          searchable={false}
+          options={[
+            { value: 'MONTHLY', label: 'This Month' },
+            { value: 'QUARTERLY', label: 'This Quarter' },
+            { value: 'YEARLY', label: 'This Year' },
+          ]}
+        />
       </div>
+      <Button
+        variant="outlined"
+        size="small"
+        onClick={() => refetch()}
+        disabled={isFetching}
+        startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
+        sx={{
+          height: '38px',
+          borderColor: '#E2E8F0',
+          color: '#475569',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          fontSize: '12px',
+          fontWeight: 600,
+          padding: '0 16px',
+          textTransform: 'none',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+          '&:hover': {
+            borderColor: '#CBD5E1',
+            backgroundColor: '#F8FAFC',
+          },
+        }}
+      >
+        Refresh
+      </Button>
+    </>
+  );
+
+  return (
+    <div className=" max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      <PageHeader
+        title="Company Dashboard"
+        description="Company-level performance overview"
+        icon={BarChart3}
+        actions={HeaderActions}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {KPI_CARDS.map(card => <KpiCard key={card.title} {...card} isLoading={isLoading} />)}
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+      <div className="bg-white border border-slate-100 shadow-sm p-4">
         <p className="text-2xl font-extrabold text-purple-600">{metrics.conversionRate ?? 0}%</p>
         <p className="text-sm font-semibold text-slate-600">Conversion Rate</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {branchChartData.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <div className="bg-white border border-slate-100 shadow-sm p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">Branch Revenue Rankings</h3>
             <div className="h-64">
               <CrmBarChart

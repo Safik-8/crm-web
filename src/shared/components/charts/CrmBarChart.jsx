@@ -27,6 +27,7 @@ export default function CrmBarChart({
   formatYAxis,
   customTooltip,
   customYTick,
+  customXTick,
   customValueLabel,
   showGrid = true,
   showLegend = false,
@@ -61,6 +62,13 @@ export default function CrmBarChart({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const defaultFormatXAxis = (value) => {
+    if (typeof value === 'string' && value.length > 13) {
+      return `${value.substring(0, 13)}...`;
+    }
+    return value;
   };
 
   const defaultTooltipFormatter = (value, name) => [
@@ -107,7 +115,7 @@ export default function CrmBarChart({
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11, fill: '#64748b' }}
-                  tickFormatter={formatXAxis}
+                  tickFormatter={formatXAxis || defaultFormatXAxis}
                 />
                 <YAxis
                   type="category"
@@ -125,8 +133,8 @@ export default function CrmBarChart({
                   dataKey={xKey}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }}
-                  tickFormatter={formatXAxis}
+                  tick={customXTick || { fontSize: 11, fill: '#475569', fontWeight: 600 }}
+                  tickFormatter={formatXAxis || defaultFormatXAxis}
                 />
                 <YAxis
                   tickLine={false}
