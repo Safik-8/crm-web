@@ -367,7 +367,7 @@ export default function RevenueReportPage() {
         description="Real-time financial analytics, earnings attribution, growth trends, and multi-format exports"
         className=""
         actions={
-          <>
+          <div className="flex items-center space-x-3">
             <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-md text-xs font-medium text-slate-700 h-[36px]">
               <span className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span>
               Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
@@ -421,7 +421,7 @@ export default function RevenueReportPage() {
                 )}
               </div>
             )}
-          </>
+          </div>
         }
       />
 
