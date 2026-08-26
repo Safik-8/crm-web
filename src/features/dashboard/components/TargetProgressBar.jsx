@@ -13,7 +13,7 @@ const KPI_LABEL_MAP = {
 
 const TargetProgressBar = ({ kpi, isLoading = false }) => {
   if (isLoading) {
-    return <div className="animate-pulse bg-slate-100 rounded-xl h-16" />;
+    return <div className="animate-pulse bg-slate-100 h-16" />;
   }
 
   const target = Number(kpi?.targetValue ?? 0);
@@ -34,10 +34,10 @@ const TargetProgressBar = ({ kpi, isLoading = false }) => {
   const label = KPI_LABEL_MAP[kpi?.kpiType] ?? kpi?.kpiType ?? 'KPI';
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+    <div className="bg-white border border-slate-100 shadow-sm p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50">
+          <span className="flex h-8 w-8 items-center justify-center bg-slate-50">
             <Target size={15} className="text-slate-500" />
           </span>
           <p className="text-xs font-semibold text-slate-600">{label}</p>
@@ -46,9 +46,9 @@ const TargetProgressBar = ({ kpi, isLoading = false }) => {
           <CountUp end={pct} decimals={1} duration={0.8} />%
         </span>
       </div>
-      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-slate-100 h-2 overflow-hidden">
         <div
-          className={`h-2 rounded-full transition-all duration-700 ${color}`}
+          className={`h-2 transition-all duration-700 ${color}`}
           style={{ width: `${pct}%` }}
         />
       </div>

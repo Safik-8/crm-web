@@ -50,7 +50,11 @@ const ReminderWidget = ({ onViewFollowups }) => {
     select: (res) => res?.data ?? res,
   });
 
-  const summary = data ?? { todayCount: 0, upcomingCount: 0, overdueCount: 0 };
+  // --- DUMMY DATA FOR REMINDERS ---
+  const dummySummary = { todayCount: 15, upcomingCount: 30, overdueCount: 8 };
+  
+  const summary = data && Object.keys(data).length > 0 ? data : dummySummary;
+  // --------------------------------
 
   const handleCardClick = (filter) => {
     if (typeof onViewFollowups === 'function') {

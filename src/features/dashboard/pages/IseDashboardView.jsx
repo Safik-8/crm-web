@@ -17,9 +17,35 @@ const IseDashboardView = () => {
   const navigate = useNavigate();
   const params = { rankingPeriod: 'MONTHLY', companyId: user?.companyId };
 
-  const { data: metrics = {}, isLoading } = useDashboardMetrics(params);
-  const { data: kpis = [], isLoading: kl } = useKpiTargets(params);
-  const { data: callQueue = [], isLoading: ql } = useCallQueue(params);
+  const { data: realMetrics = {}, isLoading } = useDashboardMetrics(params);
+  const { data: realKpis = [], isLoading: kl } = useKpiTargets(params);
+  const { data: realCallQueue = [], isLoading: ql } = useCallQueue(params);
+
+  // --- DUMMY DATA FOR ISE DASHBOARD ---
+  const dummyMetrics = {
+    assignedLeads: 85,
+    callsCompletedToday: 42,
+    followupsToday: 18,
+    qualifiedLeads: 24,
+    pendingFollowups: 6,
+    revenue: 45000,
+  };
+
+  const dummyKpis = [
+    { id: 1, kpiType: 'CALLS_TARGET', targetValue: 100, achievedValue: 42 },
+    { id: 2, kpiType: 'CONVERSION_TARGET', targetValue: 20, achievedValue: 5 },
+  ];
+
+  const dummyCallQueue = [
+    { id: 1, lead: { name: 'Rahul Sharma', mobile: '+91 9876543210', interestedFor: 'Premium Plan' } },
+    { id: 2, lead: { name: 'Priya Singh', mobile: '+91 8765432109', interestedFor: 'Basic Plan' } },
+    { id: 3, lead: { name: 'Amit Verma', mobile: '+91 7654321098', interestedFor: 'Pro Plan' } },
+  ];
+
+  const metrics = Object.keys(realMetrics).length > 0 ? realMetrics : dummyMetrics;
+  const kpis = realKpis.length > 0 ? realKpis : dummyKpis;
+  const callQueue = realCallQueue.length > 0 ? realCallQueue : dummyCallQueue;
+  // ------------------------------------
 
   const KPI_CARDS = [
     { icon: Layers, title: 'Assigned Leads', value: metrics.assignedLeads, color: 'blue' },

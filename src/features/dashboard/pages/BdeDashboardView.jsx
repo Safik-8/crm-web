@@ -18,9 +18,40 @@ const BdeDashboardView = () => {
   const navigate = useNavigate();
   const params   = { rankingPeriod: 'MONTHLY', companyId: user?.companyId };
 
-  const { data: metrics = {}, isLoading }       = useDashboardMetrics(params);
-  const { data: aging   = {}, isLoading: al }   = useLeadAging(params);
-  const { data: kpis    = [], isLoading: kl }   = useKpiTargets(params);
+  const { data: realMetrics = {}, isLoading }       = useDashboardMetrics(params);
+  const { data: realAging   = {}, isLoading: al }   = useLeadAging(params);
+  const { data: realKpis    = [], isLoading: kl }   = useKpiTargets(params);
+
+  // --- DUMMY DATA FOR BDE DASHBOARD ---
+  const dummyMetrics = {
+    assignedLeads: 45,
+    qualifiedLeads: 18,
+    followupsToday: 12,
+    pendingFollowups: 5,
+    activeOpportunities: 8,
+    dealsWon: 3,
+    revenue: 125000,
+    callsCompletedToday: 34,
+  };
+
+  const dummyAging = {
+    '0-3': 20,
+    '4-7': 12,
+    '8-15': 5,
+    '16-30': 3,
+    '30+': 1,
+  };
+
+  const dummyKpis = [
+    { id: 1, kpiType: 'LEAD_TARGET', targetValue: 100, achievedValue: 45 },
+    { id: 2, kpiType: 'REVENUE_TARGET', targetValue: 500000, achievedValue: 125000 },
+    { id: 3, kpiType: 'SALES_TARGET', targetValue: 15, achievedValue: 3 },
+  ];
+
+  const metrics = Object.keys(realMetrics).length > 0 ? realMetrics : dummyMetrics;
+  const aging = Object.keys(realAging).length > 0 ? realAging : dummyAging;
+  const kpis = realKpis.length > 0 ? realKpis : dummyKpis;
+  // ------------------------------------
 
   const KPI_CARDS = [
     { icon: Layers,        title: 'Assigned Leads',    value: metrics.assignedLeads,       color: 'blue'    },
