@@ -138,7 +138,7 @@ export const AuthProvider = ({ children }) => {
     // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage, assign:kpi:*, view:kpi:*)
     if (
       moduleOrPermissionStr === 'KPI' ||
-      moduleOrPermissionStr.includes('kpi')
+      (typeof moduleOrPermissionStr === 'string' && moduleOrPermissionStr.includes('kpi'))
     ) {
       const rank = Number(user.primaryRoleRank || 0);
       const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;

@@ -406,7 +406,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'audit',
+        path: 'audit-logs',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_AUDIT}>
             <AuditPage />
