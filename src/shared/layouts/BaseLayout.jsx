@@ -6,11 +6,15 @@ import Topbar from '../components/modules/Topbar';
 import GlobalLoader from '../components/elements/GlobalLoader';
 import useRouteLoader from '../hooks/useRouteLoader';
 import ForcedChangePasswordModal from '../../features/auth/components/ForcedChangePasswordModal';
+import { useNotificationSocket } from '../../features/notifications/hooks/useNotificationSocket';
 
 const BaseLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
+
+  // Drives real-time notification socket listener globally
+  useNotificationSocket();
 
   // Drives the global loader on every route transition
   useRouteLoader();
