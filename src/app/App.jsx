@@ -10,6 +10,8 @@ import '../shared/styles/index.css';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 
+import { SocketProvider } from './providers/SocketProvider';
+
 function App() {
   return (
     /*
@@ -17,6 +19,7 @@ function App() {
      *   LoaderProvider  — must wrap everything so route components can
      *                     access the loader context.
      *   AuthProvider    — auth state, depends on apiClient (loader already wired)
+     *   SocketProvider  — real-time WebSocket connection
      *   RouterProvider  — page routing
      *
      * GlobalLoader renders the full-screen overlay; it is intentionally placed
@@ -39,7 +42,9 @@ function App() {
       <div className="antialiased text-zinc-900 bg-zinc-50 font-sans selection:bg-primary/20 selection:text-primary">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <RouterProvider router={router} />
+            <SocketProvider>
+              <RouterProvider router={router} />
+            </SocketProvider>
           </AuthProvider>
         </QueryClientProvider>
       </div>
