@@ -80,7 +80,7 @@ export const navGroups = [
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: PERMISSIONS.VIEW_SETTINGS },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
-      { name: 'Audit Logs', path: '/audit', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT },
+      { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
     ]
   }
 ];
@@ -92,9 +92,11 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
 
   let items = [...navItems];
 
+  const userRole = (user?.primaryRole || user?.role || user?.userRoles?.[0]?.role?.name || '').toUpperCase();
+
   return items.filter(item => {
-    // Check Role constraint if specified
-    if (item.roles && !item.roles.includes(user.primaryRole)) {
+    // Check Role constraint if specified (case-insensitive check)
+    if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) {
       return false;
     }
     // Hide 'My Team' if user has no active team
@@ -109,9 +111,11 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
 export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) => {
   if (!user) return [];
 
+  const userRole = (user?.primaryRole || user?.role || user?.userRoles?.[0]?.role?.name || '').toUpperCase();
+
   return navGroups.map(group => {
     const filteredItems = group.items.filter(item => {
-      if (item.roles && !item.roles.includes(user.primaryRole)) return false;
+      if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) return false;
       if (item.path === '/my-team' && !hasActiveTeam) return false;
       return !item.permission || hasPermission(item.permission);
     });
