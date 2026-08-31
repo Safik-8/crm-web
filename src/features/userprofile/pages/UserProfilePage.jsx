@@ -364,8 +364,16 @@ const UserProfilePage = () => {
     if (!newPassword) {
       errors.newPassword = 'New password is required';
     } else {
-      if (newPassword.length < 6) {
-        errors.newPassword = 'Password must be at least 6 characters long';
+      if (newPassword.length < 8) {
+        errors.newPassword = 'Password must be at least 8 characters';
+      } else if (!/[A-Z]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one uppercase letter';
+      } else if (!/[a-z]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one lowercase letter';
+      } else if (!/[0-9]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one number';
+      } else if (!/[^A-Za-z0-9]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one special character';
       }
     }
 
@@ -832,21 +840,68 @@ const UserProfilePage = () => {
                         </div>
                       </div>
 
-                      {/* Requirements Checklist */}
-                      <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-5 space-y-4 self-start">
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Complexity Requirements</p>
-                        
-                        <div className="space-y-3 text-[11px] font-semibold text-zinc-500">
-                          <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasMinLength ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                              hasMinLength ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
-                            }`}>
-                              {hasMinLength && <Check size={10} className="stroke-[3]" />}
+                      {/* Complexity Requirements Checklist */}
+                      {(() => {
+                        const newPass = passwordFields.newPassword || '';
+                        const hasMinLength = newPass.length >= 8;
+                        const hasUppercase = /[A-Z]/.test(newPass);
+                        const hasLowercase = /[a-z]/.test(newPass);
+                        const hasNumber = /[0-9]/.test(newPass);
+                        const hasSpecial = /[^A-Za-z0-9]/.test(newPass);
+
+                        return (
+                          <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-5 space-y-4 self-start">
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Password Requirements</p>
+                            
+                            <div className="space-y-2.5 text-[11px] font-semibold text-zinc-500">
+                              <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasMinLength ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                  hasMinLength ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
+                                }`}>
+                                  {hasMinLength && <Check size={10} className="stroke-[3]" />}
+                                </div>
+                                <span>At least 8 characters</span>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasUppercase ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                  hasUppercase ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
+                                }`}>
+                                  {hasUppercase && <Check size={10} className="stroke-[3]" />}
+                                </div>
+                                <span>At least 1 uppercase letter (A-Z)</span>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasLowercase ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                  hasLowercase ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
+                                }`}>
+                                  {hasLowercase && <Check size={10} className="stroke-[3]" />}
+                                </div>
+                                <span>At least 1 lowercase letter (a-z)</span>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasNumber ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                  hasNumber ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
+                                }`}>
+                                  {hasNumber && <Check size={10} className="stroke-[3]" />}
+                                </div>
+                                <span>At least 1 number (0-9)</span>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 transition-colors duration-200 ${hasSpecial ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                  hasSpecial ? 'bg-emerald-50 border-emerald-300' : 'border-zinc-300'
+                                }`}>
+                                  {hasSpecial && <Check size={10} className="stroke-[3]" />}
+                                </div>
+                                <span>At least 1 special character (!@#$%^&*)</span>
+                              </div>
                             </div>
-                            <span>At least 6 characters</span>
                           </div>
-                        </div>
-                      </div>
+                        );
+                      })()}
 
                     </div>
                   </form>
