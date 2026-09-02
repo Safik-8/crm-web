@@ -62,8 +62,7 @@ const ACTIONS = [
   { key: "canView", label: "View" },
   { key: "canCreate", label: "Create" },
   { key: "canEdit", label: "Edit" },
-  { key: "canDelete", label: "Delete" },
-  { key: "canArchive", label: "Archive" }
+  { key: "canDelete", label: "Delete" }
 ];
 
 const RoleManagementPage = () => {
@@ -98,6 +97,7 @@ const RoleManagementPage = () => {
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formCompanyId, setFormCompanyId] = useState('');
+  const [formHierarchyBracket, setFormHierarchyBracket] = useState('COMPANY_ADMIN_TO_BRANCH_MANAGER');
   const [formPermissions, setFormPermissions] = useState({});
 
   // Query Companies for Super Admin dropdown selection
@@ -122,6 +122,7 @@ const RoleManagementPage = () => {
         setFormName(selectedRole.name);
         setFormDescription(selectedRole.description || '');
         setFormCompanyId(selectedRole.companyId || '');
+        setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
 
         // Map permissions list to object map
         const permMap = {};
@@ -140,6 +141,7 @@ const RoleManagementPage = () => {
         setFormName('');
         setFormDescription('');
         setFormCompanyId('');
+        setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
         setFormPermissions({});
       }
     }
@@ -186,15 +188,31 @@ const RoleManagementPage = () => {
     setIsStatusOpen(true);
   };
 
-  // Toggle permission checkbox in matrix
+  // Toggle permission checkbox in matrix with view dependencies
   const handlePermissionChange = (module, action, checked) => {
-    setFormPermissions(prev => ({
-      ...prev,
-      [module]: {
-        ...(prev[module] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false }),
-        [action]: checked
+    setFormPermissions(prev => {
+      const current = prev[module] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false };
+      let updatedModule = { ...current, [action]: checked };
+
+      if (action === 'canView' && !checked) {
+        // Unchecking View automatically deselects all other actions for this module
+        updatedModule = {
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+          canArchive: false
+        };
+      } else if (action !== 'canView' && checked) {
+        // Checking Create, Edit, Delete, or Archive automatically checks View
+        updatedModule.canView = true;
       }
-    }));
+
+      return {
+        ...prev,
+        [module]: updatedModule
+      };
+    });
   };
 
   // Select all or deselect all permissions for a module
@@ -225,6 +243,7 @@ const RoleManagementPage = () => {
     const data = {
       name: formName,
       description: formDescription,
+      hierarchyBracket: formHierarchyBracket,
       companyId: formCompanyId ? parseInt(formCompanyId, 10) : null,
       permissions: payloadPermissions
     };
@@ -622,6 +641,21 @@ const RoleManagementPage = () => {
                 onChange={setFormDescription}
                 placeholder="Describe role responsibilities..."
               />
+
+              {!selectedRole && (
+                <SelectField
+                  id="hierarchy-bracket"
+                  label="Hierarchy Level (Authority Position)"
+                  value={formHierarchyBracket}
+                  onChange={(val) => setFormHierarchyBracket(val)}
+                  options={[
+                    { value: 'COMPANY_ADMIN_TO_BRANCH_MANAGER', label: 'Above Branch Manager' },
+                    { value: 'BRANCH_MANAGER_TO_BDE', label: 'Below Branch Manager / Above BDE' },
+                    { value: 'BDE_TO_ISE', label: 'Below BDE / Above ISE' },
+                    { value: 'BELOW_ISE', label: 'Below ISE' },
+                  ]}
+                />
+              )}
 
               {isSuperAdmin && !selectedRole && (
                 <SelectField

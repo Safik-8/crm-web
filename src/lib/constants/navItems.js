@@ -70,9 +70,9 @@ export const navGroups = [
   {
     group: 'System & Admin',
     items: [
-      { name: 'Organization', path: '/settings/organization', icon: Building2, permission: PERMISSIONS.VIEW_SETTINGS },
+      { name: 'Organization', path: '/settings/organization', icon: Building2, permission: PERMISSIONS.VIEW_COMPANY_SETUP },
       { name: 'System Settings', path: '/settings/system', icon: Sliders, permission: PERMISSIONS.VIEW_SYSTEM_SETTINGS },
-      { name: 'Branch', path: '/settings/branch', icon: GitBranch, permission: PERMISSIONS.VIEW_SETTINGS },
+      { name: 'Branch', path: '/settings/branch', icon: GitBranch, permission: PERMISSIONS.VIEW_BRANCHES },
       { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
       { name: 'Assignment Settings', path: '/assignment-settings', icon: GitBranch, permission: PERMISSIONS.VIEW_LEAD_ASSIGNMENT },
       { name: 'Transfer Approvals', path: '/approvals', icon: ClipboardCheck, permission: PERMISSIONS.APPROVE_TRANSFERS },
@@ -80,7 +80,7 @@ export const navGroups = [
       { name: 'My Team', path: '/my-team', icon: Users2, permission: PERMISSIONS.VIEW_TEAMS },
       { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
-      { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: PERMISSIONS.VIEW_SETTINGS },
+      { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
       { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
     ]
