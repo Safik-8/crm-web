@@ -21,6 +21,7 @@ import {
   Layers,
   TrendingUp,
   DollarSign,
+  Sliders,
 } from 'lucide-react';
 import {
   PERMISSIONS
@@ -70,6 +71,7 @@ export const navGroups = [
     group: 'System & Admin',
     items: [
       { name: 'Organization', path: '/settings/organization', icon: Building2, permission: PERMISSIONS.VIEW_SETTINGS },
+      { name: 'System Settings', path: '/settings/system', icon: Sliders, permission: PERMISSIONS.VIEW_SYSTEM_SETTINGS },
       { name: 'Branch', path: '/settings/branch', icon: GitBranch, permission: PERMISSIONS.VIEW_SETTINGS },
       { name: 'User Management', path: '/users', icon: Users2, permission: PERMISSIONS.VIEW_USERS },
       { name: 'Assignment Settings', path: '/assignment-settings', icon: GitBranch, permission: PERMISSIONS.VIEW_LEAD_ASSIGNMENT },

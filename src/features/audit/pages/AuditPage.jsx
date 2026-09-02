@@ -29,6 +29,7 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import { toast, enhancedToast } from '../../../shared/utils/toast';
 import { getAuditLogsApi, getAuditLogByIdApi, exportAuditLogsApi } from '../../../api/auditApi';
 import { companyService } from '../../company/services/companyService';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 // Shared UI components from shared/components
 import PageHeader from '../../../shared/components/modules/PageHeader';
@@ -108,6 +109,7 @@ const safeJsonFormat = (val, defaultMessage) => {
 const AuditPage = () => {
   const { user } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { formatDate, formatDateTime } = useFormatters();
 
   // Role Checks
   const userRole = (
@@ -561,7 +563,7 @@ const AuditPage = () => {
         headerClassName: 'w-[160px]',
         cell: (row) => (
           <div className="flex flex-col text-xs text-slate-700">
-            <span className="font-semibold text-slate-800">{new Date(row.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+            <span className="font-semibold text-slate-800">{formatDate(row.createdAt)}</span>
             <span className="text-slate-500 font-mono text-[11px] font-normal">{new Date(row.createdAt).toLocaleTimeString()}</span>
           </div>
         ),
@@ -978,7 +980,7 @@ const AuditPage = () => {
                   <Clock size={12} /> Timestamp
                 </span>
                 <span className="text-slate-800 font-semibold mt-1 block">
-                  {new Date(selectedLog.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {formatDateTime(selectedLog.createdAt)}
                 </span>
               </div>
             </div>

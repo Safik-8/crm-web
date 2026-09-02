@@ -121,37 +121,67 @@
      loading  → pulsing ring  + white  badge (spinning)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── 1. Card shell ─────────────────────────────────────────────────────────── */
+/* ── 0. Toaster Container Positioning ────────────────────────────────────── */
+[data-sonner-toaster][data-position*="right"] {
+  right: 20px !important;
+  left: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+}
+
+[data-sonner-toaster][data-position*="right"] ol {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+}
+
 /* ── 1. Card shell ─────────────────────────────────────────────────────────── */
 .toast-root {
   /* Layout */
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 356px;
-  max-width: calc(100vw - 32px);
-  min-height: 64px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  cursor: default;
-  font-family: "DM Sans", sans-serif;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 356px !important;
+  max-width: calc(100vw - 32px) !important;
+  min-height: 56px !important;
+  padding: 13px 38px 13px 14px !important;
+  border-radius: 13px !important;
+  position: relative !important;
+  margin-left: auto !important;
+  align-self: flex-end !important;
+  overflow: visible !important;
+  cursor: default !important;
+  font-family: "DM Sans", sans-serif !important;
+  box-sizing: border-box !important;
 
-  /* Premium White Card */
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid #E2E8F0;
+  /* Premium SaaS Glass Card */
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid #E2E8F0 !important;
 
-  /* Modern Subtle Shadow */
+  /* Modern Subtle Drop Shadow */
   box-shadow: 
-    0 10px 15px -3px rgba(15, 23, 42, 0.08),
-    0 4px 6px -4px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(15, 23, 42, 0.04);
+    0 12px 24px -4px rgba(15, 23, 42, 0.09),
+    0 4px 8px -2px rgba(15, 23, 42, 0.05),
+    0 0 0 1px rgba(15, 23, 42, 0.03) !important;
 
   /* Animations */
-  animation: t-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1),
-              box-shadow 0.2s ease;
+  animation: t-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease !important;
+}
+
+/* Multi-line or rich action card adjustments */
+.toast-root:has([data-description]),
+.toast-root:has([data-button]) {
+  align-items: flex-start !important;
+  min-height: 66px !important;
+  padding: 15px 40px 15px 15px !important;
 }
 
 /* Shimmer highlight layer */
@@ -162,101 +192,188 @@
   border-radius: 12px;
   background: linear-gradient(
     145deg,
-    rgba(255,255,255,0.4) 0%,
-    rgba(255,255,255,0.1) 40%,
-    rgba(255,255,255,0.0) 100%
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.0) 100%
   );
   pointer-events: none;
 }
 
 /* Hover lift */
 .toast-root:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) !important;
+  border-color: #CBD5E1 !important;
   box-shadow: 
-    0 20px 25px -5px rgba(15, 23, 42, 0.12),
-    0 8px 10px -6px rgba(15, 23, 42, 0.12),
-    0 0 0 1px rgba(15, 23, 42, 0.06);
+    0 16px 24px -4px rgba(15, 23, 42, 0.12),
+    0 6px 10px -3px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(15, 23, 42, 0.05) !important;
 }
 
 /* Exit */
-.toast-root[data-removed="true"] {
-  animation: t-out 0.2s cubic-bezier(0.4,0,1,1) forwards;
+[data-sonner-toast][data-removed="true"],
+[data-sonner-toast][data-dismissed="true"],
+.toast-root[data-removed="true"],
+.toast-root[data-dismissed="true"],
+.toast-root[data-state="closed"] {
+  animation: t-out 0.24s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  pointer-events: none !important;
+}
+
+/* ── 2. Content wrapper ─────────────────────────────────────────────────────── */
+.toast-root [data-content] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
 }
 
 /* ── 3. Text ───────────────────────────────────────────────────────────────── */
 .toast-root [data-title] {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #0F172A; /* Slate-900 */
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-}
-.toast-root [data-description] {
-  font-size: 12px;
-  font-weight: 500;
-  color: #475569; /* Slate-600 */
-  line-height: 1.5;
-  margin-top: 2px;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  color: #0F172A !important; /* Slate-900 */
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em !important;
+  word-break: break-word !important;
 }
 
-/* ── 4. Icon badge ─────────────────────────────────────────────────────────── */
+.toast-root [data-description] {
+  font-size: 12px !important;
+  font-weight: 450 !important;
+  color: #475569 !important; /* Slate-600 */
+  line-height: 1.45 !important;
+  word-break: break-word !important;
+  margin-top: 1px !important;
+}
+
+/* ── 4. Action Button (e.g. "View", "Undo") ─────────────────────────────────── */
+.toast-root [data-button] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: flex-start !important;
+  margin-top: 8px !important;
+  padding: 4px 11px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  color: #FFFFFF !important;
+  background: #0F172A !important;
+  border: 1px solid #1E293B !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.15s ease !important;
+}
+
+.toast-root [data-button]:hover {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  transform: translateY(-1px) !important;
+}
+
+.toast-root [data-button]:active {
+  transform: translateY(0) !important;
+}
+
+/* ── 5. Icon wrapper & badges ──────────────────────────────────────────────── */
+.toast-root [data-icon],
+.toast-root [data-loading-wrapper] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.toast-root:has([data-description]) [data-icon],
+.toast-root:has([data-button]) [data-icon] {
+  align-self: flex-start !important;
+  margin-top: 1px !important;
+}
+
+.toast-root [data-icon] > * {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Sonner native loading spinner positioning */
+.toast-root .sonner-loader,
+.toast-root [data-sonner-loader] {
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+  top: auto !important;
+  margin: 0 !important;
+}
+
 .toast-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  position: relative;
-  z-index: 1;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* Success */
 .toast-icon--success {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-  color: #059669;
+  background: #ECFDF5 !important;
+  border-color: #A7F3D0 !important;
+  color: #059669 !important;
 }
 
 /* Error */
 .toast-icon--error {
-  background: #FEF2F2;
-  border-color: #FCA5A5;
-  color: #DC2626;
+  background: #FEF2F2 !important;
+  border-color: #FCA5A5 !important;
+  color: #DC2626 !important;
 }
 
 /* Warning */
 .toast-icon--warning {
-  background: #FFFBEB;
-  border-color: #FDE68A;
-  color: #D97706;
+  background: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #D97706 !important;
 }
 
 /* Info */
 .toast-icon--info {
-  background: #FFF7ED;
-  border-color: #FFEDD5;
-  color: #F86F03;
+  background: #FFF7ED !important;
+  border-color: #FFEDD5 !important;
+  color: #F86F03 !important;
 }
 
 /* Loading */
 .toast-icon--loading {
-  background: #F8FAFC;
-  border-color: #E2E8F0;
-  color: #64748B;
-  animation: t-icon-pulse 1.5s ease-in-out infinite;
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  color: #64748B !important;
+  animation: t-icon-pulse 1.5s ease-in-out infinite !important;
 }
 
-/* ── 5. Close button ───────────────────────────────────────────────────────── */
+/* ── 6. Close button ───────────────────────────────────────────────────────── */
 .toast-root [data-close-button] {
   position: absolute !important;
   top: 50% !important;
-  right: 12px !important;
-  transform: translateY(-50%) scale(1.15) !important;
+  right: 10px !important;
+  transform: translateY(-50%) !important;
   width: 22px !important;
   height: 22px !important;
+  border-radius: 6px !important;
   border: none !important;
   background: transparent !important;
   color: #94A3B8 !important;
@@ -264,20 +381,28 @@
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
-  opacity: 1 !important;
-  transition: color 0.16s ease !important;
-}
-.toast-root [data-close-button]:hover {
-  background: transparent !important;
-  color: #475569 !important;
-  border: none !important;
-  transform: translateY(-50%) scale(1.15) !important;
+  opacity: 0.8 !important;
+  transition: all 0.15s ease !important;
+  z-index: 20 !important;
 }
 
-/* ── 6. Mobile close button positioning override ────────────────────────────── */
+.toast-root:has([data-description]) [data-close-button],
+.toast-root:has([data-button]) [data-close-button] {
+  top: 10px !important;
+  transform: none !important;
+}
+
+.toast-root [data-close-button]:hover {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  opacity: 1 !important;
+}
+
+/* ── 7. Mobile responsive override ─────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .toast-root [data-close-button] {
-    transform: translateY(-50%) scale(1.15) !important;
+  .toast-root {
+    width: calc(100vw - 24px) !important;
+    max-width: 100% !important;
   }
 }
 
@@ -289,8 +414,8 @@
   100% { opacity:1; transform: translateX(0) scale(1); }
 }
 @keyframes t-out {
-  0%   { opacity:1; transform: translateX(0) scale(1); }
-  100% { opacity:0; transform: translateX(calc(100% + 28px)) scale(0.90); }
+  0%   { opacity: 1; transform: translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateX(calc(100% + 40px)) scale(0.92); }
 }
 @keyframes t-up {
   0%   { opacity:0; transform: translateY(110%) scale(0.92); }

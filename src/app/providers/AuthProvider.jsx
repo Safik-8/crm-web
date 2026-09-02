@@ -33,6 +33,8 @@ const RBAC_ADAPTER_MAP = {
   'view:sales_performance': { module: 'SALES_PERFORMANCE', action: 'canView' },
   'view:revenue_report': { module: 'REVENUE_REPORT', action: 'canView' },
   'view:settings': { module: 'BRANCH', action: 'canView' },
+  'view:system_settings': { module: 'SYSTEM_SETTINGS', action: 'canView' },
+  'edit:system_settings': { module: 'SYSTEM_SETTINGS', action: 'canEdit' },
   'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
   'view:company_setup': { module: 'COMPANY', action: 'canCreate' },

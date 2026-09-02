@@ -43,6 +43,7 @@ import {
   updateProposalStatus,
   deleteProposal
 } from '../../proposals/services/proposalService';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 import { apiClient } from '../../../lib/api/api';
 import { toast } from '../../../shared/utils/toast';
 
@@ -174,22 +175,7 @@ export const OpportunityDetailPage = () => {
     }
   };
 
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val || 0);
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+  const { formatCurrency, formatDate, formatDateTime, currencySymbol } = useFormatters();
 
   const handleStageClick = (st) => {
     if (!opportunity || opportunity.status !== 'OPEN') return;

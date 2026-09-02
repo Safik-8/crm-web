@@ -1,17 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchUnreadCount } from '../services/notificationService';
+import { useSocket } from '../../../shared/hooks/useSocket';
 
+/**
+ * useNotificationBadge Hook
+ * Tier-1 Production Event-Driven Pattern:
+ * - When WebSocket is connected: Zero polling overhead; updates are pushed directly via WebSockets.
+ * - When WebSocket is disconnected: Graceful lazy fallback interval (120s).
+ */
 export const useNotificationBadge = () => {
-  const { data } = useQuery({
-    queryKey:  ['notification-badge'],
-    queryFn:   () => fetchUnreadCount(),
-    staleTime:               5_000,   // 5 seconds
-    refetchInterval:         15_000,  // poll every 15s
+  const { isConnected } = useSocket();
 
+  const { data } = useQuery({
+    queryKey: ['notification-badge'],
+    queryFn: () => fetchUnreadCount(),
+    staleTime: Infinity, // Pure event-driven updates while socket is connected
+    refetchInterval: isConnected ? false : 120_000, // 2-minute fallback only if disconnected
     refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     retry: false,
-    select: (res) => res?.data?.unreadCount ?? res?.unreadCount ?? 0,
+    select: (res) => (typeof res === 'number' ? res : (res?.data?.unreadCount ?? res?.unreadCount ?? 0)),
   });
 
-  return { unreadCount: data ?? 0 };
+  return { unreadCount: typeof data === 'number' ? data : (data?.unreadCount ?? 0) };
 };

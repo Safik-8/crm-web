@@ -1,17 +1,9 @@
-// crm-web/src/features/revenueReport/components/TeamRevenueTable.jsx
-
 import React from 'react';
 import { Users } from 'lucide-react';
-
-const formatCurrency = (val) => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(Number(val) || 0);
-};
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 export const TeamRevenueTable = ({ data = [], isLoading = false }) => {
+  const { formatCurrency } = useFormatters();
   if (isLoading) {
     return (
       <div className="bg-white  border border-slate-200/80 shadow-sm p-6 animate-pulse">

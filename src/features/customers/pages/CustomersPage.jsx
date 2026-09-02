@@ -15,7 +15,7 @@ import Button from '../../../shared/components/elements/Button';
 import Pagination from '../../../shared/components/elements/Pagination';
 import CustomerDetailModal from '../components/CustomerDetailModal';
 import { getCustomers, getCustomerById, updateCustomerStatus } from '../services/customerService';
-import { formatCurrency, formatDate } from '../utils/customerUtils';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 import { toast } from '../../../shared/utils/toast';
 import { companyApi } from '../../company/api/companyApi';
 import { branchService } from '../../branch/services/branchService';
@@ -68,6 +68,7 @@ const getThisMonthRange = () => {
 };
 
 const CustomersPage = () => {
+  const { formatCurrency, formatDate } = useFormatters();
   const { user, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
 

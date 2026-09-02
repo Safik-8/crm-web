@@ -48,6 +48,7 @@ import { OpportunityDetailPage } from '../../features/opportunities/pages/Opport
 import { OpportunityStageManagement } from '../../features/opportunities/pages/OpportunityStageManagement';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import QualificationCriteriaSettingsPage from '../../features/settings/pages/QualificationCriteriaSettingsPage';
+import SystemSettingsPage from '../../features/settings/pages/SystemSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import ProposalsPage from '../../features/proposals/pages/ProposalsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
@@ -362,6 +363,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEAD_ASSIGNMENT}>
             <AssignmentSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/system',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SYSTEM_SETTINGS}>
+            <SystemSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/system-settings',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SYSTEM_SETTINGS}>
+            <SystemSettingsPage />
           </ProtectedRoute>
         ),
       },

@@ -85,27 +85,15 @@ const RowActionsMenu = ({ row, onView, onClose }) => {
 };
 
 
+import { useFormatters } from '../../../shared/hooks/useFormatters';
+
 export const OpportunitySpreadsheet = ({
   opportunities = [],
   loadingState = 'success',
   onRowClick,
   onCloseClick,
 }) => {
-  const formatCurrency = (val) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val || 0);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+  const { formatCurrency, formatDate } = useFormatters();
 
   const columns = [
     {

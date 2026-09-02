@@ -22,15 +22,9 @@ import PageHeader from '../../../shared/components/modules/PageHeader';
 import Drawer from '../../../shared/components/elements/Drawer';
 import { Dialog } from '@mui/material';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (v) =>
-  new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Number(v || 0));
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
-const fmtDate = (d) => {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-};
-
+// ── Date Range Helpers ──────────────────────────────────────────────────────────
 const getTodayRange = () => {
   const d = new Date();
   const dateStr = d.toLocaleDateString('en-CA');
@@ -93,6 +87,7 @@ const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-9
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 const DealDetailModal = ({ dealId, onClose }) => {
   const { data: deal, isLoading } = useDealDetailQuery(dealId);
+  const { formatCurrency, formatDate } = useFormatters();
 
   const Row = ({ label, value, icon: Icon }) => (
     <div className="flex items-start gap-2.5 p-3 bg-slate-50/60 rounded-xl border border-slate-100 hover:border-slate-200 transition-all">
@@ -152,7 +147,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
               </div>
               <div className="text-right">
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Closing Value</span>
-                <span className="text-2xl font-black text-slate-900 block mt-0.5">₹{fmt(deal.finalAmount)}</span>
+                <span className="text-2xl font-black text-slate-900 block mt-0.5">{formatCurrency(deal.finalAmount)}</span>
               </div>
             </div>
 
@@ -161,7 +156,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
               <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Core Details</h4>
               <div className="grid grid-cols-2 gap-3">
                 <Row label="Deal Number"       value={deal.dealNumber}        icon={Tag} />
-                <Row label="Closing Date"      value={fmtDate(deal.closingDate)} icon={Calendar} />
+                <Row label="Closing Date"      value={formatDate(deal.closingDate)} icon={Calendar} />
                 <Row label="Opportunity"       value={deal.opportunity?.opportunityName} icon={Briefcase} />
                 <Row label="Assigned Owner"    value={deal.closedBy?.name}    icon={User} />
                 <Row label="Customer Name"     value={deal.customer?.customerName || deal.lead?.name} icon={User} />
@@ -185,7 +180,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
                 <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-emerald-100/40 text-xs">
                   <div>
                     <span className="text-slate-400 font-medium block">Amount</span>
-                    <strong className="text-slate-800 text-[13px]">₹{fmt(deal.revenueLog.revenueAmount)}</strong>
+                    <strong className="text-slate-800 text-[13px]">{formatCurrency(deal.revenueLog.revenueAmount)}</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium block">Status</span>
@@ -195,7 +190,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium block">Log Date</span>
-                    <strong className="text-slate-800 text-[13px]">{fmtDate(deal.revenueLog.revenueDate)}</strong>
+                    <strong className="text-slate-800 text-[13px]">{formatDate(deal.revenueLog.revenueDate)}</strong>
                   </div>
                 </div>
               </div>
@@ -247,6 +242,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
 const DealsPage = () => {
   const { user } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { formatCurrency, formatDate } = useFormatters();
 
   const isSuperAdmin   = user?.primaryRole === 'SUPER_ADMIN';
   const isCompanyAdmin = !isSuperAdmin && (user?.primaryRoleRank ?? 0) >= 80;
@@ -437,13 +433,13 @@ const DealsPage = () => {
       align     : 'right',
       skeleton  : () => <Skeleton className="h-5 w-20 ml-auto" />,
       cell      : (row) => (
-        <span className="font-bold text-slate-900 text-[13px] tabular-nums">₹{fmt(row.finalAmount)}</span>
+        <span className="font-bold text-slate-900 text-[13px] tabular-nums">{formatCurrency(row.finalAmount)}</span>
       ),
     },
     {
       header    : <button onClick={() => handleSort('closingDate')} className="flex items-center">Close Date <SortIcon field="closingDate" /></button>,
       skeleton  : () => <Skeleton className="h-5 w-24" />,
-      cell      : (row) => <span className="text-[13px] text-slate-600">{fmtDate(row.closingDate)}</span>,
+      cell      : (row) => <span className="text-[13px] text-slate-600">{formatDate(row.closingDate)}</span>,
     },
     {
       header    : 'Owner',
@@ -491,7 +487,7 @@ const DealsPage = () => {
         <StatCard label="Total Deals"   value={stats?.total ?? '—'}     icon={Handshake}    iconBg="bg-orange-50 text-orange-600"  loading={statsLoading} />
         <StatCard label="Won Deals"     value={stats?.won ?? '—'}       icon={TrendingUp}   iconBg="bg-emerald-50 text-emerald-600" loading={statsLoading} valueClass="text-emerald-700" />
         <StatCard label="Lost Deals"    value={stats?.lost ?? '—'}      icon={TrendingDown} iconBg="bg-rose-50 text-rose-600"       loading={statsLoading} valueClass="text-rose-700" />
-        <StatCard label="Won Revenue"   value={`₹${fmt(stats?.wonRevenue)}`} icon={IndianRupee} iconBg="bg-indigo-50 text-indigo-600"  loading={statsLoading} valueClass="text-indigo-700" />
+        <StatCard label="Won Revenue"   value={formatCurrency(stats?.wonRevenue)} icon={IndianRupee} iconBg="bg-indigo-50 text-indigo-600"  loading={statsLoading} valueClass="text-indigo-700" />
       </div>
 
       {/* Search & Actions Bar */}

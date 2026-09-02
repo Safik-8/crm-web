@@ -119,33 +119,20 @@ const RowActionsMenu = ({
  * Reusable table component for Courses master records.
  * Uses shared `<Table>` element and provides full responsive column layouts.
  */
-const CourseListTable = ({
-  courses = [],
-  loadingState = 'success',
-  errorMessage = '',
-  onRetry,
+export const CourseListTable = ({
+  data = [],
+  loading = false,
+  canEdit = false,
+  canDelete = false,
   onViewDetails,
   onEdit,
   onToggleStatus,
   onDelete,
-  hasActiveFilters,
-  onClearFilters,
-  canEdit = false,
-  canDelete = false,
   sortBy,
   sortOrder,
   onSort
 }) => {
-
-  const formatCurrency = (value) => {
-    const num = Number(value);
-    if (isNaN(num)) return '₹0.00';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2
-    }).format(num);
-  };
+  const { formatCurrency } = useFormatters();
 
   const columns = [
     {

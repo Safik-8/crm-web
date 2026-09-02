@@ -30,6 +30,7 @@ import {
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import useListManager from '../../../shared/hooks/useListManager';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 import {
   useLeadsQuery,
   useLeadFormDataQuery,
@@ -166,6 +167,7 @@ export const LeadsPage = () => {
   const location = useLocation();
   const { user: currentUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { formatDate } = useFormatters();
 
   // Overlay states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -676,11 +678,7 @@ export const LeadsPage = () => {
       cell: (row) => (
         <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-500">
           <Calendar size={11} className="text-slate-400" />
-          {new Date(row.createdAt).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-          })}
+          {formatDate(row.createdAt)}
         </span>
       )
     },

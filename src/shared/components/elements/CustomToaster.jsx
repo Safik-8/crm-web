@@ -13,9 +13,9 @@ const CustomToaster = () => {
       closeButton
       duration={5000}
       gap={8}
-      offset={20}
+      offset={16}
       expand={false}
-      visibleToasts={4}
+      visibleToasts={5}
       containerAriaLabel="Notifications"
       style={{ zIndex: 9999 }}
       toastOptions={{
