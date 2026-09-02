@@ -12,6 +12,7 @@ import CompanyAdminDashboardView from '../../features/dashboard/pages/CompanyAdm
 import BdeDashboardView from '../../features/dashboard/pages/BdeDashboardView';
 import IseDashboardView from '../../features/dashboard/pages/IseDashboardView';
 import LeadsPage from '../../features/leads/pages/LeadsPage';
+import LeadDeepLinkRedirect from '../../features/leads/pages/LeadDeepLinkRedirect';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
 import TasksPage from '../../features/tasks/pages/TasksPage';
@@ -152,6 +153,18 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
             <LeadsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        // Redirect alias: stale notification action URLs stored in the DB may use
+        // the /leads/:id pattern (e.g. from reminderJob before the fix).
+        // This redirect transparently converts them to the canonical
+        // /leads?leadId=<id> deep-link so the drawer opens correctly.
+        path: 'leads/:leadId',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <LeadDeepLinkRedirect />
           </ProtectedRoute>
         ),
       },

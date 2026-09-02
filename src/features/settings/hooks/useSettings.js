@@ -45,7 +45,8 @@ const CATEGORY_FIELD_MAP = {
   ],
 }
 
-export const useSettings = (companyId = null) => {
+export const useSettings = (companyId = null, options = {}) => {
+  const { enabled = true } = options
   const queryClient = useQueryClient()
 
   // State management
@@ -66,6 +67,12 @@ export const useSettings = (companyId = null) => {
   } = useQuery({
     queryKey: companyId ? ["system-settings", companyId] : ["system-settings"],
     queryFn: () => settingsApi.getSettings(companyId),
+    // Only fire when:
+    // 1. The caller explicitly enabled it (default: true), AND
+    // 2. companyId has a real value (not null/undefined/0).
+    //    This prevents Super Admin from triggering a settings fetch before
+    //    selecting a tenant company, which would cause a 403 from the backend.
+    enabled: enabled && Boolean(companyId),
     staleTime: 5 * 60 * 1000,
   })
 

@@ -178,13 +178,29 @@ export const LeadsPage = () => {
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
 
-  // Auto-open lead detail drawer if navigated from Opportunity or external link with detailId/leadId
+  // Auto-open lead detail drawer if navigated via notification deep-link or from an
+  // Opportunity record. Supports the following URL patterns:
+  //   /leads?leadId=123           → opens the lead drawer (default tab)
+  //   /leads?leadId=123&tab=followups → opens the lead drawer on the Follow-ups tab
+  //   /leads?detailId=123         → legacy alias (from Opportunity page)
+  //   route state: location.state.openLeadId (programmatic navigation)
   useEffect(() => {
-    const targetLeadId = searchParams.get('detailId') || searchParams.get('leadId') || location.state?.openLeadId;
+    const targetLeadId =
+      searchParams.get('detailId') ||
+      searchParams.get('leadId') ||
+      location.state?.openLeadId;
+
     if (targetLeadId) {
       const numericId = Number(targetLeadId);
       if (!isNaN(numericId) && numericId > 0) {
-        setSelectedLeadForView((prev) => (prev?.id === numericId ? prev : { id: numericId }));
+        // Read optional tab hint from URL; fall back to undefined so the drawer
+        // uses its own default ('comments') when no tab is specified.
+        const tabHint = searchParams.get('tab') || location.state?.openLeadTab || undefined;
+        setSelectedLeadForView((prev) =>
+          prev?.id === numericId && prev?.initialTab === tabHint
+            ? prev
+            : { id: numericId, initialTab: tabHint }
+        );
       }
     }
   }, [searchParams, location.state]);
@@ -1301,6 +1317,7 @@ export const LeadsPage = () => {
       {selectedLeadForView && (
         <LeadDetailDrawer
           lead={selectedLeadForView}
+          initialTab={selectedLeadForView.initialTab}
           onClose={() => setSelectedLeadForView(null)}
         />
       )}
