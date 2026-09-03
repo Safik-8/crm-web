@@ -7,8 +7,8 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery } from '@tanstack/react-query';
 
-// Import removed
 import Button from '../../../shared/components/elements/Button';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import SelectField from '../../../shared/components/elements/SelectField';
 
@@ -204,194 +204,191 @@ const UsersPage = () => {
   };
 
   return (
-    <>
-      <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* ── Top Page Header ── */}
+      <PageHeader
+        title="User Management"
+        description="Manage system users, company access scopes, roles, and organizational structure"
+        icon={Users2}
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
+            title="Refresh List"
+          >
+            <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-        {/* ── TABS FOR VIEW MODE ── */}
-        <div className="bg-white border border-slate-200 flex items-center px-6 pt-4">
-          <div className="flex space-x-6 relative top-[1px]">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'list' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
-            >
-              <List size={16} /> User Manager
-            </button>
-            <button
-              onClick={() => setViewMode('orgchart')}
-              className={`pb-4 font-semibold text-sm transition-colors flex items-center gap-2 ${viewMode === 'orgchart' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'}`}
-            >
-              <Network size={16} /> Org Chart
-            </button>
-          </div>
+      {/* ── TABS FOR VIEW MODE ── */}
+      <div className="bg-white border border-slate-200 px-6 pt-3.5">
+        <div className="flex space-x-6 relative top-[1px]">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+              viewMode === 'list'
+                ? 'text-orange-600 border-b-2 border-orange-600'
+                : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+            }`}
+          >
+            <List size={16} /> User Manager
+          </button>
+          <button
+            onClick={() => setViewMode('orgchart')}
+            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+              viewMode === 'orgchart'
+                ? 'text-orange-600 border-b-2 border-orange-600'
+                : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+            }`}
+          >
+            <Network size={16} /> Org Chart
+          </button>
         </div>
+      </div>
 
-        {viewMode === 'orgchart' ? (
-          <div className="bg-white border border-slate-200 p-4">
-            <OrgChart users={allUsers || []} currentUser={currentUser} />
-          </div>
-        ) : (
-          <>
-
-
-
-
-            <div className='bg-white border border-slate-200 p-4'>
-              {/* ── SEARCH AND FILTER BAR ── */}
-              <div className="relative z-20 p-4 bg-white border border-slate-200 mb-4 space-y-4">
-
-                {/* Row 1: Search & Main Actions */}
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-                  <SearchInput
-                    value={search}
-                    onChange={handleSearchChange}
-                    placeholder="Search name, email, employee ID..."
-                    isLoading={loadingState === 'loading'}
-                    className="w-full lg:max-w-md"
-                  />
-
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => refetch()}
-                      disabled={loadingState === 'loading'}
-                      className="flex items-center gap-1.5 h-9 px-3 text-xs"
-                      title="Refresh List"
-                    >
-                      <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-                      <span>Refresh</span>
-                    </button>
-
-                    <div className="w-full sm:w-auto [&>div]:w-full [&>button]:w-full [&>button]:justify-center [&>button]:whitespace-nowrap">
-                      <ExportMenu
-                        data={users}
-                        columns={exportColumns}
-                        fileName="users"
-                      />
-                    </div>
-
-                    {canCreate && (
-                      <Button
-                        onClick={handleOpenCreateForm}
-                        className="col-span-2 w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
-                        variant="contained"
-                      >
-                        <Plus size={16} />
-                        <span>Onboard User</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Divider Line */}
-                <div className="border-t border-slate-100/80" />
-
-                {/* Row 2: Select Filters group */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-3 flex-1">
-
-                    {/* Visual Label */}
-                    <div className="flex items-center gap-1.5 h-[42px] px-5 bg-slate-100/60 rounded-[10px] border border-slate-200/40 text-slate-500 font-semibold text-[13px] uppercase tracking-wider">
-                      <Filter size={16} className="text-primary" />
-                      <span>Filters</span>
-                    </div>
-
-                    {canFilterByCompany && (
-                      <div className="w-full sm:w-[160px]">
-                        <SelectField
-                          id="companyFilter"
-                          value={companyId}
-                          onChange={(val) => handleFilterChange('companyId', val)}
-                          options={companies.map(c => ({ value: c.id, label: c.name }))}
-                          placeholder="All Companies"
-                          allowEmptyOption={true}
-                        />
-                      </div>
-                    )}
-
-                    {canFilterByBranch && (
-                      <div className="w-full sm:w-[160px]">
-                        <SelectField
-                          id="branchFilter"
-                          value={branchId}
-                          onChange={(val) => handleFilterChange('branchId', val)}
-                          options={branches.map(b => ({ value: b.id, label: b.name }))}
-                          placeholder="All Branches"
-                          allowEmptyOption={true}
-                          disabled={!targetCompanyId}
-                          searchable={true}
-                        />
-                      </div>
-                    )}
-
-                    {canViewRoles && (
-                      <div className="w-full sm:w-[160px]">
-                        <SelectField
-                          id="roleFilter"
-                          value={roleId}
-                          onChange={(val) => handleFilterChange('roleId', val)}
-                          options={roles.map(r => ({ value: r.id, label: r.name }))}
-                          placeholder="All Roles"
-                          allowEmptyOption={true}
-                          disabled={!targetCompanyId}
-                        />
-                      </div>
-                    )}
-
-                    <div className="w-full sm:w-[140px]">
-                      <SelectField
-                        id="statusFilter"
-                        value={status}
-                        onChange={(val) => handleFilterChange('status', val)}
-                        options={[
-                          { value: 'ACTIVE', label: 'Active' },
-                          { value: 'INACTIVE', label: 'Inactive' }
-                        ]}
-                        placeholder="All Statuses"
-                        allowEmptyOption={true}
-                      />
-                    </div>
-
-                  </div>
-
-                  {/* Reset trigger */}
-                  {hasActiveFilters && (
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="flex items-center justify-center h-[42px] px-5 text-[13px] font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-[10px] transition-all self-end lg:self-auto"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
-                </div>
+      {viewMode === 'orgchart' ? (
+        <div className="bg-white border border-slate-200 p-4">
+          <OrgChart users={allUsers || []} currentUser={currentUser} />
+        </div>
+      ) : (
+        <>
+          {/* ── SEARCH AND FILTER BAR ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+              {/* Search Input */}
+              <div className="w-full sm:w-64">
+                <SearchInput
+                  value={search}
+                  onChange={handleSearchChange}
+                  placeholder="Search..."
+                  isLoading={loadingState === 'loading'}
+                />
               </div>
-              {/* ── USERS DATA TABLE ── */}
-              <UserListTable
-                users={users}
-                loadingState={loadingState}
-                errorMessage={errorMessage}
-                onRetry={() => refetch()}
-                onViewDetails={handleOpenDetails}
-                onEdit={handleOpenEditForm}
-                onResetPassword={handleOpenResetPassword}
-                onToggleStatus={handleOpenToggleStatus}
-                hasActiveFilters={hasActiveFilters}
-                onClearFilters={clearFilters}
-                canEdit={canEdit}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={toggleSort}
-              />
 
-              {/* ── PAGINATION CONTROLS ── */}
-              <Pagination
-                pagination={pagination}
-                onPageChange={setPage}
-                isLoading={loadingState === 'loading'}
-                entityName="users"
-              />
+              {/* Company Filter (Super Admin level) */}
+              {canFilterByCompany && (
+                <div className="w-full sm:w-44">
+                  <SelectField
+                    id="companyFilter"
+                    value={companyId}
+                    onChange={(val) => handleFilterChange('companyId', val)}
+                    options={companies.map(c => ({ value: c.id, label: c.name }))}
+                    placeholder="All Companies"
+                    allowEmptyOption={true}
+                    searchable
+                  />
+                </div>
+              )}
 
+              {/* Branch Filter */}
+              {canFilterByBranch && (
+                <div className="w-full sm:w-44">
+                  <SelectField
+                    id="branchFilter"
+                    value={branchId}
+                    onChange={(val) => handleFilterChange('branchId', val)}
+                    options={branches.map(b => ({ value: b.id, label: b.name }))}
+                    placeholder="All Branches"
+                    allowEmptyOption={true}
+                    disabled={!targetCompanyId}
+                    searchable
+                  />
+                </div>
+              )}
+
+              {/* Role Filter */}
+              {canViewRoles && (
+                <div className="w-full sm:w-44">
+                  <SelectField
+                    id="roleFilter"
+                    value={roleId}
+                    onChange={(val) => handleFilterChange('roleId', val)}
+                    options={roles.map(r => ({ value: r.id, label: r.name }))}
+                    placeholder="All Roles"
+                    allowEmptyOption={true}
+                    disabled={!targetCompanyId}
+                    searchable
+                  />
+                </div>
+              )}
+
+              {/* Status Filter */}
+              <div className="w-full sm:w-36">
+                <SelectField
+                  id="statusFilter"
+                  value={status}
+                  onChange={(val) => handleFilterChange('status', val)}
+                  options={[
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'INACTIVE', label: 'Inactive' }
+                  ]}
+                  placeholder="All Statuses"
+                  allowEmptyOption={true}
+                />
+              </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
+
+            {/* Main Action Buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+              <ExportMenu
+                data={users}
+                columns={exportColumns}
+                fileName="users"
+              />
+              {canCreate && (
+                <Button
+                  onClick={handleOpenCreateForm}
+                  className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                  variant="contained"
+                  size="medium"
+                  startIcon={<Plus size={18} />}
+                >
+                  Onboard User
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* ── USERS DATA TABLE ── */}
+          <UserListTable
+            users={users}
+            loadingState={loadingState}
+            errorMessage={errorMessage}
+            onRetry={() => refetch()}
+            onViewDetails={handleOpenDetails}
+            onEdit={handleOpenEditForm}
+            onResetPassword={handleOpenResetPassword}
+            onToggleStatus={handleOpenToggleStatus}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            canEdit={canEdit}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={toggleSort}
+          />
+
+          {/* ── PAGINATION CONTROLS ── */}
+          <Pagination
+            pagination={pagination}
+            onPageChange={setPage}
+            isLoading={loadingState === 'loading'}
+            entityName="users"
+          />
+        </>
+      )}
 
             {/* ── MODALS & DRAWER PORTALS ── */}
 
@@ -443,11 +440,7 @@ const UsersPage = () => {
               confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
               isLoading={isTogglingStatus}
             />
-          </>
-        )}
-
       </div>
-    </>
   );
 };
 

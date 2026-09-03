@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, RefreshCw, Users2, SlidersHorizontal, UserCheck, UserX, IndianRupee, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Eye, RefreshCw, Users2, SlidersHorizontal, UserCheck, UserX, IndianRupee, TrendingUp, Search, MoreVertical, Power } from 'lucide-react';
+import { Menu, MenuItem } from '@mui/material';
 import { 
   BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -10,6 +11,7 @@ import { useLoader } from '../../../shared/context/LoaderContext';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Table from '../../../shared/components/elements/Table';
 import SearchInput from '../../../shared/components/elements/SearchInput';
+import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Pagination from '../../../shared/components/elements/Pagination';
@@ -21,11 +23,12 @@ import { companyApi } from '../../company/api/companyApi';
 import { branchService } from '../../branch/services/branchService';
 import { userService } from '../../users/services/userService';
 import Drawer from '../../../shared/components/elements/Drawer';
+import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-900', loading }) => (
-  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+  <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
     <div>
       <span className="text-xs text-slate-500 font-medium block mb-1">{label}</span>
       {loading
@@ -288,6 +291,77 @@ const CustomersPage = () => {
 
   const hasActiveFilters = useMemo(() => Boolean(search || status || ownerId || companyId || branchId || dateRangePreset || dateFrom || dateTo), [search, status, ownerId, companyId, branchId, dateRangePreset, dateFrom, dateTo]);
 
+  const CustomerActionsMenu = ({ row, openDetails, handleToggleStatus, canToggleStatus, togglingId }) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
+    const handleOpen = (e) => {
+      e.stopPropagation();
+      setAnchorEl(e.currentTarget);
+    };
+
+    const handleClose = () => {
+      setAnchorEl(null);
+    };
+
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+          title="Actions"
+        >
+          <MoreVertical size={16} />
+        </button>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          elevation={0}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              openDetails(row);
+            }}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Eye size={14} className="text-slate-400" />
+            <span>View Details</span>
+          </MenuItem>
+
+          {canToggleStatus && (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                handleToggleStatus(row);
+              }}
+              disabled={togglingId === row.id}
+              className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+            >
+              <Power size={14} className={row.status === 'ACTIVE' ? 'text-amber-500' : 'text-emerald-500'} />
+              <span>{row.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</span>
+            </MenuItem>
+          )}
+        </Menu>
+      </>
+    );
+  };
+
   const columns = [
     {
       header: 'Customer Name',
@@ -344,24 +418,21 @@ const CustomersPage = () => {
       header: 'Actions',
       isActionColumn: true,
       cell: (row) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button size="small" variant="outlined" onClick={() => openDetails(row)}>
-            <span className="flex items-center gap-1.5">
-              <Eye size={14} /> View
-            </span>
-          </Button>
-          {canToggleStatus && (
-            <Button size="small" variant="outlined" onClick={() => handleToggleStatus(row)} isLoading={togglingId === row.id}>
-              {row.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-            </Button>
-          )}
+        <div className="flex items-center justify-end">
+          <CustomerActionsMenu
+            row={row}
+            openDetails={openDetails}
+            handleToggleStatus={handleToggleStatus}
+            canToggleStatus={canToggleStatus}
+            togglingId={togglingId}
+          />
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       <PageHeader
         icon={Users2}
         title="Customers"
@@ -385,7 +456,7 @@ const CustomersPage = () => {
       {showInsights && customers.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
           {/* Revenue by Product Chart */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 p-5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Revenue Contribution by Product</h3>
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
@@ -406,7 +477,7 @@ const CustomersPage = () => {
           </div>
 
           {/* Customer Status Ratio */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="bg-white border border-slate-200 p-5 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex-1 w-full">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Account Segmentations</h3>
               <div className="space-y-3 mt-4">
@@ -453,17 +524,21 @@ const CustomersPage = () => {
       )}
 
       {/* Search & Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
         {/* Search Input */}
         <div className="flex-1 min-w-[240px] max-w-sm">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search by name, phone or email" />
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search..."
+          />
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowInsights(!showInsights)}
-            className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 h-11 border rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               showInsights
                 ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -475,7 +550,7 @@ const CustomersPage = () => {
 
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 h-11 border rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               hasActiveFilters
                 ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -493,7 +568,7 @@ const CustomersPage = () => {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all cursor-pointer"
             >
               Clear
             </button>
@@ -523,116 +598,137 @@ const CustomersPage = () => {
         onClose={() => setIsFilterDrawerOpen(false)}
         title="Filter Customers"
         subtitle="Apply segmentations and user assignment filters"
-      >
-        <div className="flex flex-col h-full justify-between pb-10">
-          <div className="space-y-5">
-            {/* Status Filter */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
-              <SelectField
-                placeholder="All statuses"
-                value={status}
-                onChange={(value) => setStatus(value === undefined ? '' : value)}
-                options={[{ id: '', name: 'All statuses' }, { id: 'ACTIVE', name: 'ACTIVE' }, { id: 'INACTIVE', name: 'INACTIVE' }]}
-                allowEmptyOption={false}
-              />
-            </div>
-
-            {/* Date Range Preset Filter */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date Range</label>
-              <SelectField
-                placeholder="All Time"
-                value={dateRangePreset}
-                onChange={(v) => handleDateRangePresetChange(v === undefined ? '' : v)}
-                allowEmptyOption
-                options={[
-                  { value: 'today',     label: 'Today' },
-                  { value: 'thisWeek',  label: 'This Week' },
-                  { value: 'thisMonth', label: 'This Month' },
-                  { value: 'custom',    label: 'Custom Range' },
-                ]}
-              />
-            </div>
-
-            {/* Custom Date Pickers */}
-            {dateRangePreset === 'custom' && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">From Date</span>
-                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">To Date</span>
-                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-              </div>
-            )}
-
-            {/* Owner Filter (Admin / Manager only) */}
-            {canFilterOwner && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
-                <SelectField
-                  placeholder="All owners"
-                  value={ownerId}
-                  onChange={(value) => setOwnerId(value === undefined ? '' : value)}
-                  options={[{ id: '', name: 'All owners' }, ...owners.map((owner) => ({ id: owner.id, name: owner.name || owner.email }))]}
-                  allowEmptyOption={false}
-                />
-              </div>
-            )}
-
-            {/* Company Filter (Super Admin only) */}
-            {canFilterCompany && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
-                <SelectField
-                  placeholder="All companies"
-                  value={companyId}
-                  onChange={(value) => setCompanyId(value === undefined ? '' : value)}
-                  options={[{ id: '', name: 'All companies' }, ...companies.map((company) => ({ id: company.id, name: company.name }))]}
-                  allowEmptyOption={false}
-                />
-              </div>
-            )}
-
-            {/* Branch Filter (Admin / Super Admin only) */}
-            {canFilterBranch && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
-                <SelectField
-                  placeholder="All branches"
-                  value={branchId}
-                  onChange={(value) => setBranchId(value === undefined ? '' : value)}
-                  options={[{ id: '', name: 'All branches' }, ...branches.map((branch) => ({ id: branch.id, name: branch.name }))]}
-                  allowEmptyOption={false}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Drawer Actions */}
-          <div className="flex gap-3 border-t border-slate-100 pt-6 mt-8">
-            <button
+        icon={SlidersHorizontal}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        width={{ xs: '100%', sm: 480, md: 520 }}
+        showFooter={true}
+        customFooter={
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button
+              variant="outlined"
               onClick={() => {
                 clearFilters();
                 setIsFilterDrawerOpen(false);
               }}
               disabled={!hasActiveFilters}
-              className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              sx={{
+                borderColor: '#CBD5E1',
+                color: '#64748B',
+                fontWeight: 600,
+                fontSize: '13px',
+                height: '42px',
+                px: 2.5
+              }}
             >
               Reset All
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="contained"
               onClick={() => setIsFilterDrawerOpen(false)}
-              className="flex-1 py-2.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-all cursor-pointer text-center"
+              sx={{
+                backgroundColor: '#F86F03',
+                fontWeight: 700,
+                fontSize: '13px',
+                height: '42px',
+                px: 3,
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
             >
-              Close
-            </button>
+              Apply Filters
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-5 pb-6">
+          {/* Status Filter */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
+            <SelectField
+              placeholder="All statuses"
+              value={status}
+              onChange={(value) => setStatus(value === undefined ? '' : value)}
+              options={[{ id: '', name: 'All statuses' }, { id: 'ACTIVE', name: 'ACTIVE' }, { id: 'INACTIVE', name: 'INACTIVE' }]}
+              allowEmptyOption={false}
+            />
+          </div>
+
+          {/* Date Range Preset Filter */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date Range</label>
+            <SelectField
+              placeholder="All Time"
+              value={dateRangePreset}
+              onChange={(v) => handleDateRangePresetChange(v === undefined ? '' : v)}
+              allowEmptyOption
+              options={[
+                { value: 'today',     label: 'Today' },
+                { value: 'thisWeek',  label: 'This Week' },
+                { value: 'thisMonth', label: 'This Month' },
+                { value: 'custom',    label: 'Custom Range' },
+              ]}
+            />
+          </div>
+
+          {/* Custom Date Pickers */}
+          {dateRangePreset === 'custom' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">From Date</span>
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">To Date</span>
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+            </div>
+          )}
+
+          {/* Owner Filter (Admin / Manager only) */}
+          {canFilterOwner && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
+              <SelectField
+                placeholder="All owners"
+                value={ownerId}
+                onChange={(value) => setOwnerId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All owners' }, ...owners.map((owner) => ({ value: String(owner.id), label: owner.name || owner.email }))]}
+                allowEmptyOption={true}
+                searchable={true}
+              />
+            </div>
+          )}
+
+          {/* Company Filter (Super Admin only) */}
+          {canFilterCompany && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
+              <SelectField
+                placeholder="All companies"
+                value={companyId}
+                onChange={(value) => setCompanyId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All companies' }, ...companies.map((company) => ({ value: String(company.id), label: company.name }))]}
+                allowEmptyOption={true}
+                searchable={true}
+              />
+            </div>
+          )}
+
+          {/* Branch Filter (Admin / Super Admin only) */}
+          {canFilterBranch && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
+              <SelectField
+                placeholder="All branches"
+                value={branchId}
+                onChange={(value) => setBranchId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All branches' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))]}
+                allowEmptyOption={true}
+                searchable={true}
+              />
+            </div>
+          )}
         </div>
       </Drawer>
     </div>

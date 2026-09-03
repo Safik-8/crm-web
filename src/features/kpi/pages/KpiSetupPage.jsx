@@ -12,6 +12,8 @@ import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Alert from '../../../shared/components/elements/Alert';
 
+import PageHeader from '../../../shared/components/modules/PageHeader';
+
 export default function KpiSetupPage() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
@@ -496,19 +498,14 @@ export default function KpiSetupPage() {
   }
 
   return (
-    <div className="w-full space-y-6 pb-12">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       {/* Enterprise Page Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Target className="text-orange-500" size={24} />
-            <span>KPI Target Management Setup</span>
-          </h1>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            Assign individual or team performance targets (auto-scoped to your organization branch).
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Target}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="KPI Target Management Setup"
+        description="Assign individual or team performance targets (auto-scoped to your organization branch)."
+      />
 
       {formError && <Alert variant="danger" title="Validation Error" message={formError} />}
 

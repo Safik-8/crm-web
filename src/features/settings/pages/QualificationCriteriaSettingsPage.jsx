@@ -350,7 +350,7 @@ const QualificationCriteriaSettingsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Level 1: Page Header ── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0 shadow-2xs">
             <Target size={24} className="text-orange-600" />
@@ -368,7 +368,7 @@ const QualificationCriteriaSettingsPage = () => {
         <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
           <button
             onClick={fetchMatrix}
-            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
+            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-lg transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
             title="Refresh Data"
           >
             <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
@@ -439,7 +439,7 @@ const QualificationCriteriaSettingsPage = () => {
       {/* ── Level 2: Allocation & Pass Threshold Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Total Weight Allocation Card (Span 7) */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-7 bg-white border border-slate-200 p-5 shadow-xs flex flex-col justify-between space-y-4">
           <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -534,7 +534,7 @@ const QualificationCriteriaSettingsPage = () => {
         </div>
 
         {/* Qualification Pass Threshold Card (Span 5) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 bg-white border border-slate-200 p-5 shadow-xs flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
@@ -552,7 +552,7 @@ const QualificationCriteriaSettingsPage = () => {
             </p>
           </div>
 
-          <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex items-center gap-4">
+          <div className="bg-slate-50/70 border border-slate-200/80 p-4 flex items-center gap-4">
             {/* Circular Progress Visual */}
             <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30 shadow-2xs">
               <span className="text-lg font-black text-slate-900 leading-none">
@@ -590,7 +590,7 @@ const QualificationCriteriaSettingsPage = () => {
       </div>
 
       {/* ── Level 3: Active Qualification Factors Table ── */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 shadow-xs overflow-hidden">
         {/* Table Toolbar Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-2.5">

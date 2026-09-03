@@ -1,8 +1,9 @@
 // crm-web/src/features/salesPerformance/components/PerformanceFilterBar.jsx
 
 import React from 'react';
-import { Filter, Calendar, Building, Building2, Users, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Calendar, Building, Building2, Users, Download, ChevronDown, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 import SelectField from '../../../shared/components/elements/SelectField';
+import Button from '../../../shared/components/elements/Button';
 
 export default function PerformanceFilterBar({
   filters,
@@ -12,7 +13,13 @@ export default function PerformanceFilterBar({
   teams = [],
   userRoleInfo = {},
   onReset,
-  isFetching = false
+  isFetching = false,
+  canExportReport = false,
+  isExporting = false,
+  isQueryEnabled = true,
+  handleExport,
+  isExportMenuOpen = false,
+  setIsExportMenuOpen
 }) {
   const { isSuperAdmin, isCompanyAdmin, isBranchManager } = userRoleInfo;
 
@@ -38,114 +45,133 @@ export default function PerformanceFilterBar({
     ...teams.map((t) => ({ value: String(t.id), label: t.name }))
   ];
 
-  let gridColsClass = 'grid-cols-1 sm:grid-cols-3';
-  if (isSuperAdmin) {
-    gridColsClass = 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
-  } else if (isCompanyAdmin) {
-    gridColsClass = 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4';
-  }
-
-  const getScopeBadge = () => {
-    if (isSuperAdmin) return { label: 'Super Admin Scope', color: 'bg-purple-50 text-purple-700 border-purple-200' };
-    if (isCompanyAdmin) return { label: 'Company Scope', color: 'bg-blue-50 text-blue-700 border-blue-200' };
-    if (isBranchManager) return { label: 'Branch Scope', color: 'bg-amber-50 text-amber-700 border-amber-200' };
-    return { label: 'Team Scope', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-  };
-
-  const badge = getScopeBadge();
+  const hasActiveFilters = Boolean(filters.companyId || filters.branchId || filters.teamId || filters.startDate || filters.endDate || filters.rankingPeriod !== 'MONTHLY');
 
   return (
-    <div className="bg-white rounded-none border border-slate-200/80 shadow-2xs p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-4">
-        <div className="flex items-center gap-2">
-          <Filter size={15} className="text-slate-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Filter Dimensions</h3>
-        </div>
+    <div className="bg-white border border-slate-200 p-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+          {/* 1. Time Period Selector */}
+          <div className="w-full sm:w-40">
+            <SelectField
+              placeholder="Period"
+              value={filters.rankingPeriod || 'MONTHLY'}
+              onChange={(val) => onFilterChange('rankingPeriod', val)}
+              options={periodOptions}
+              icon={Calendar}
+              searchable={true}
+            />
+          </div>
 
-        <div className="flex items-center gap-3">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${badge.color}`}>
-            <ShieldCheck size={12} />
-            <span>{badge.label}</span>
-          </span>
+          {/* 2. Company Selector */}
+          {isSuperAdmin && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                placeholder="Company *"
+                value={filters.companyId || ''}
+                onChange={(val) => onFilterChange('companyId', val)}
+                options={companyOptions}
+                icon={Building}
+                searchable={true}
+              />
+            </div>
+          )}
 
-          {onReset && (
+          {/* 3. Branch Selector */}
+          {(isSuperAdmin || isCompanyAdmin) && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                placeholder="Branch"
+                value={filters.branchId || ''}
+                onChange={(val) => onFilterChange('branchId', val)}
+                options={branchOptions}
+                disabled={isSuperAdmin && !filters.companyId}
+                icon={Building2}
+                searchable={true}
+              />
+            </div>
+          )}
+
+          {/* 4. Team Selector */}
+          <div className="w-full sm:w-44">
+            <SelectField
+              placeholder="Team"
+              value={filters.teamId || ''}
+              onChange={(val) => onFilterChange('teamId', val)}
+              options={teamOptions}
+              disabled={isSuperAdmin && !filters.companyId}
+              icon={Users}
+              searchable={true}
+            />
+          </div>
+
+          {/* Reset / Clear Filters */}
+          {hasActiveFilters && onReset && (
             <button
+              type="button"
               onClick={onReset}
-              className="text-xs text-slate-400 hover:text-slate-700 font-medium transition-colors"
+              className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
-              Reset
+              Clear Filters
             </button>
           )}
         </div>
-      </div>
 
-      <div className={`grid ${gridColsClass} gap-3`}>
-        {/* 1. Time Period Selector */}
-        <div>
-          <SelectField
-            label="Period"
-            value={filters.rankingPeriod || 'MONTHLY'}
-            onChange={(val) => onFilterChange('rankingPeriod', val)}
-            options={periodOptions}
-            icon={Calendar}
-          />
-        </div>
+        {/* Action Button: Export Report (Orange) */}
+        {canExportReport && (
+          <div className="relative shrink-0">
+            <Button
+              variant="contained"
+              startIcon={<Download className="w-4 h-4" />}
+              endIcon={<ChevronDown className="w-3.5 h-3.5" />}
+              onClick={() => setIsExportMenuOpen && setIsExportMenuOpen((prev) => !prev)}
+              disabled={!isQueryEnabled || isExporting}
+              className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+              sx={{
+                backgroundColor: '#F86F03',
+                '&:hover': { backgroundColor: '#E06202' },
+                height: '38px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 700,
+                textTransform: 'none',
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export Report'}
+            </Button>
 
-        {/* 2. Company Selector */}
-        {isSuperAdmin && (
-          <div>
-            <SelectField
-              label="Company *"
-              value={filters.companyId || ''}
-              onChange={(val) => onFilterChange('companyId', val)}
-              options={companyOptions}
-              icon={Building}
-            />
+            {isExportMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  onClick={() => handleExport('excel')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors cursor-pointer text-left"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-orange-600" />
+                  <span>Export Excel (.xlsx)</span>
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors cursor-pointer text-left"
+                >
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span>Export CSV (.csv)</span>
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors cursor-pointer text-left"
+                >
+                  <Printer className="w-4 h-4 text-rose-600" />
+                  <span>Export PDF (.pdf)</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
-
-        {/* 3. Branch Selector */}
-        {(isSuperAdmin || isCompanyAdmin) && (
-          <div>
-            <SelectField
-              label="Branch"
-              value={filters.branchId || ''}
-              onChange={(val) => onFilterChange('branchId', val)}
-              options={branchOptions}
-              disabled={isSuperAdmin && !filters.companyId}
-              icon={Building2}
-            />
-          </div>
-        )}
-
-        {/* 4. Team Selector */}
-        <div>
-          <SelectField
-            label="Team"
-            value={filters.teamId || ''}
-            onChange={(val) => onFilterChange('teamId', val)}
-            options={teamOptions}
-            disabled={isSuperAdmin && !filters.companyId}
-            icon={Users}
-          />
-        </div>
-
-        {/* 5. Apply Filters Button */}
-        <div className="flex items-end">
-          <button
-            onClick={() => onFilterChange('refresh', Date.now())}
-            disabled={isFetching || (isSuperAdmin && !filters.companyId)}
-            className="w-full h-[40px] px-3.5 rounded-md bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-2xs transition-colors disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-            <span>{isFetching ? 'Refreshing...' : 'Apply Filters'}</span>
-          </button>
-        </div>
       </div>
 
       {/* Custom Date Range Picker */}
       {filters.rankingPeriod === 'CUSTOM' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">Start Date</label>
             <input

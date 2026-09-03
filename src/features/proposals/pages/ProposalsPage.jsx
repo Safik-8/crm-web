@@ -256,10 +256,10 @@ export default function ProposalsPage() {
   ];
 
   return (
-    <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       <PageHeader
         title="Proposals & Quotations"
-        subtitle="Manage and track commercial proposals and pricing version revisions."
+        description="Manage and track commercial proposals and pricing version revisions."
         icon={FileText}
       >
         {rank >= 40 && (

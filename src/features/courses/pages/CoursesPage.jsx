@@ -20,6 +20,7 @@ import CourseDetailModal from '../components/CourseDetailModal';
 import SearchInput from '../../../shared/components/elements/SearchInput';
 import Pagination from '../../../shared/components/elements/Pagination';
 import ExportMenu from '../../../shared/components/elements/ExportMenu';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 const exportColumns = [
   { header: 'Code', accessorKey: 'code' },
@@ -98,6 +99,9 @@ const CoursesPage = () => {
 
   const targetCompanyId = isSuperAdmin ? companyId : currentUser?.companyId;
 
+  // Derived filter state: true ONLY when user actively searches or selects a filter option
+  const isFilterApplied = Boolean(search || status || category || (isSuperAdmin && companyId));
+
   // Retrieve distinct categories currently saved for courses in active company
   const { data: dbCategories = [] } = useCourseCategoriesQuery(targetCompanyId);
 
@@ -166,147 +170,129 @@ const CoursesPage = () => {
 
   return (
     <>
-      <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pb-8">
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        {/* Top Header Card */}
+        <PageHeader
+          title="Course Management"
+          description="Manage academic programs, course modules, pricing, and curriculum."
+          icon={BookOpen}
+          actions={
+            <button onClick={() => refetch()} className="text-slate-400 hover:text-orange-500 transition-colors" title="Refresh">
+              <RefreshCw size={15} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+            </button>
+          }
+        />
 
-        {/* ── SEARCH AND ACTIONS HEADER ── */}
-        <div className="relative z-20 p-4 bg-white border border-slate-200 mb-4">
-
-          {/* Row 1: Search & Main Actions */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-            <SearchInput
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search course name or code..."
-              isLoading={loadingState === 'loading'}
-              className="w-full lg:max-w-md"
-            />
-
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="w-full sm:w-auto flex items-center justify-center gap-1.5 h-[42px] px-5 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 rounded-[10px] text-[13px] font-semibold transition-all cursor-pointer"
-                title="Refresh course list"
-              >
-                <RefreshCw size={16} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-                <span>Refresh</span>
-              </button>
-
-              <div className="w-full sm:w-auto [&>div]:w-full [&>button]:w-full [&>button]:justify-center">
-                <ExportMenu
-                  data={courses}
-                  columns={exportColumns}
-                  fileName="courses"
-                />
-              </div>
-
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="col-span-2 w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all"
-                  variant="contained"
-                >
-                  <Plus size={16} />
-                  <span>Add Course</span>
-                </Button>
-              )}
+        {/* ── SEARCH AND FILTERS BAR ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+          {/* Search & Select Filters */}
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+            <div className="w-full sm:w-64">
+              <SearchInput
+                value={search}
+                onChange={handleSearchChange}
+                placeholder="Search..."
+                isLoading={loadingState === 'loading'}
+              />
             </div>
-          </div>
 
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4">
-          {/* Row 2: Select Filters group */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
-            <div className="flex flex-wrap items-center gap-3 flex-1">
-
-              {/* Visual Label */}
-              <div className="flex items-center gap-1.5 h-[42px] px-5 bg-slate-100/60 rounded-[10px] border border-slate-200/40 text-slate-500 font-semibold text-[13px] uppercase tracking-wider">
-                <Filter size={16} className="text-primary" />
-                <span>Filters</span>
-              </div>
-
-              {isSuperAdmin && (
-                <div className="w-full sm:w-[160px]">
-                  <SelectField
-                    id="companyFilter"
-                    value={companyId}
-                    onChange={(val) => handleFilterChange('companyId', val)}
-                    options={companies.map(c => ({ value: c.id, label: c.name }))}
-                    placeholder="All Companies"
-                    allowEmptyOption={true}
-                    searchable={true}
-                  />
-                </div>
-              )}
-
-              <div className="w-full sm:w-[160px]">
+            {isSuperAdmin && (
+              <div className="w-full sm:w-[150px]">
                 <SelectField
-                  id="categoryFilter"
-                  value={category}
-                  onChange={(val) => handleFilterChange('category', val)}
-                  options={categoryOptions}
-                  placeholder="All Categories"
+                  id="companyFilter"
+                  value={companyId}
+                  onChange={(val) => handleFilterChange('companyId', val)}
+                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="All Companies"
                   allowEmptyOption={true}
                   searchable={true}
                 />
               </div>
+            )}
 
-              <div className="w-full sm:w-[140px]">
-                <SelectField
-                  id="statusFilter"
-                  value={status}
-                  onChange={(val) => handleFilterChange('status', val)}
-                  options={[
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' }
-                  ]}
-                  placeholder="All Statuses"
-                  allowEmptyOption={true}
-                />
-              </div>
-
+            <div className="w-full sm:w-[150px]">
+              <SelectField
+                id="categoryFilter"
+                value={category}
+                onChange={(val) => handleFilterChange('category', val)}
+                options={categoryOptions}
+                placeholder="All Categories"
+                allowEmptyOption={true}
+                searchable={true}
+              />
             </div>
 
-            {/* Reset trigger */}
-            {hasActiveFilters && (
+            <div className="w-full sm:w-[130px]">
+              <SelectField
+                id="statusFilter"
+                value={status}
+                onChange={(val) => handleFilterChange('status', val)}
+                options={[
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'INACTIVE', label: 'Inactive' }
+                ]}
+                placeholder="All Statuses"
+                allowEmptyOption={true}
+              />
+            </div>
+
+            {isFilterApplied && (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="flex items-center justify-center h-[42px] px-5 text-[13px] font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-[10px] transition-all self-end lg:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all cursor-pointer whitespace-nowrap"
               >
                 Clear Filters
               </button>
             )}
           </div>
 
-          {/* Data Table */}
-          <CourseListTable
-            courses={courses}
-            loadingState={loadingState}
-            errorMessage={errorMessage}
-            onRetry={() => refetch()}
-            onViewDetails={handleOpenDetails}
-            onEdit={handleOpenEditForm}
-            onToggleStatus={handleOpenToggleStatus}
-            onDelete={handleOpenDelete}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={clearFilters}
-            canEdit={canEdit}
-            canDelete={canDelete}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={toggleSort}
-          />
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-2">
+            <ExportMenu
+              data={courses}
+              columns={exportColumns}
+              fileName="courses"
+            />
 
-          {/* Pagination Bar */}
-          <Pagination
-            pagination={pagination}
-            onPageChange={setPage}
-            isLoading={loadingState === 'loading'}
-            entityName="courses"
-          />
+            {canCreate && (
+              <Button
+                onClick={handleOpenCreateForm}
+                variant="contained"
+                startIcon={<Plus size={16} />}
+              >
+                Add Course
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Data Table */}
+        <CourseListTable
+          courses={courses}
+          loadingState={loadingState}
+          errorMessage={errorMessage}
+          onRetry={() => refetch()}
+          onViewDetails={handleOpenDetails}
+          onEdit={handleOpenEditForm}
+          onToggleStatus={handleOpenToggleStatus}
+          onDelete={handleOpenDelete}
+          hasActiveFilters={isFilterApplied}
+          onClearFilters={clearFilters}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
+        />
+
+        {/* Pagination Bar */}
+        <Pagination
+          pagination={pagination}
+          onPageChange={setPage}
+          isLoading={loadingState === 'loading'}
+          entityName="courses"
+        />
 
         {/* Modals & Slide-overs */}
 

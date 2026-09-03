@@ -1,36 +1,10 @@
-// src/features/pipelines/components/AvailableStagesPanel.jsx
-
 import React from 'react';
 import { Plus, Search, Check, Power, Pencil, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import Button from '../../../shared/components/elements/Button';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import InlineStageNameEditor from './InlineStageNameEditor';
 import { isMandatoryStage } from '../utils/stageRules';
 
-/**
- * AvailableStagesPanel — Left panel of PipelineStageBuilder.
- * Manages stage search, quick-add input with color swatch selector, master stage selection,
- * enable/disable status toggling, inline renaming, and global stage deletion.
- *
- * @param {Object} props
- * @param {number} props.customSelectedCount - Number of non-mandatory stages selected
- * @param {Array} props.masterStages - List of all master stages
- * @param {Array} props.displayStages - Filtered master stages to display
- * @param {Set} props.selectedIds - Set of selected stage IDs
- * @param {string} props.newStageName - Controlled quick-add stage name
- * @param {Function} props.setNewStageName - State setter for quick-add stage name
- * @param {string} props.newStageColor - Controlled quick-add stage color hex
- * @param {Function} props.setNewStageColor - State setter for quick-add color hex
- * @param {string} props.searchTerm - Controlled filter query string
- * @param {Function} props.setSearchTerm - State setter for filter query string
- * @param {Function} props.handleAddNewStage - Submits quick-add stage creation
- * @param {Function} props.toggleStage - Toggles stage inclusion in current pipeline
- * @param {Function} props.handleToggleStatus - Toggles stage active/inactive status
- * @param {number|null} props.togglingStageId - ID of stage currently undergoing status toggle
- * @param {boolean} props.canRename - RBAC boolean for stage renaming permission
- * @param {boolean} props.canDelete - RBAC boolean for stage deletion permission
- * @param {Object} props.stageRename - Stage rename hook state & actions
- * @param {Object} props.stageDelete - Stage delete hook state & actions
- */
 const AvailableStagesPanel = ({
   customSelectedCount,
   masterStages,
@@ -54,39 +28,31 @@ const AvailableStagesPanel = ({
   const PRESET_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#64748b'];
 
   return (
-    <div
-      className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden"
-      style={{ height: 560 }}
-    >
+    <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
       {/* Panel Header */}
-      <div className="px-6 pt-6 pb-5 border-b border-slate-100 space-y-5">
+      <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.18em]">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Available Stages
           </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-2.5 py-1 bg-primary/10 text-primary rounded-lg">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 bg-orange-50 text-orange-600 rounded-md border border-orange-100">
               {customSelectedCount} Selected
             </span>
-            <span className="text-xs font-bold px-2.5 py-1 bg-slate-50 text-slate-400 rounded-lg border border-slate-100">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 bg-slate-50 text-slate-500 rounded-md border border-slate-200">
               {masterStages.length} Total
             </span>
           </div>
         </div>
 
         {/* Quick-add with Color Picker */}
-        <div className="flex flex-col gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div className="flex flex-col gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-lg">
           <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Plus size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
+            <div className="flex-1">
+              <SearchInput
                 value={newStageName}
-                onChange={(e) => setNewStageName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddNewStage()}
+                onChange={(val) => setNewStageName(val)}
                 placeholder="Quick add stage..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl
-                  outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/8
-                  transition-all font-medium text-slate-700 placeholder-slate-400"
               />
             </div>
             <Button
@@ -94,14 +60,21 @@ const AvailableStagesPanel = ({
               onClick={() => handleAddNewStage()}
               variant="contained"
               size="small"
-              sx={{ height: '42px', px: '20px' }}
+              sx={{
+                height: '38px',
+                borderRadius: '8px',
+                backgroundColor: '#F86F03',
+                fontWeight: 700,
+                px: 2.5,
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
             >
               ADD
             </Button>
           </div>
 
           {/* Color Swatch Picker */}
-          <div className="flex items-center gap-2 pt-1 px-1">
+          <div className="flex items-center gap-2 pt-0.5 px-1">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Color:</span>
             <div className="flex items-center gap-1.5 flex-wrap">
               {PRESET_COLORS.map((color) => (
@@ -109,7 +82,7 @@ const AvailableStagesPanel = ({
                   key={color}
                   type="button"
                   onClick={() => setNewStageColor(color)}
-                  className={`w-5 h-5 rounded-full transition-transform ${newStageColor === color ? 'scale-125 ring-2 ring-offset-1 ring-slate-400' : 'hover:scale-110'}`}
+                  className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${newStageColor === color ? 'scale-125 ring-2 ring-offset-1 ring-orange-400' : 'hover:scale-110'}`}
                   style={{ backgroundColor: color }}
                 />
               ))}
@@ -132,30 +105,17 @@ const AvailableStagesPanel = ({
         </div>
 
         {/* Search */}
-        <div className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
+        <div>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(val) => setSearchTerm(val)}
             placeholder="Filter by name..."
-            className="w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-slate-200 rounded-xl
-              outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/8
-              transition-all text-slate-700 font-medium placeholder-slate-400"
           />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-black
-                text-slate-400 hover:text-primary uppercase tracking-widest transition-colors"
-            >
-              Clear
-            </button>
-          )}
         </div>
       </div>
 
       {/* Stage List */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-2 custom-scrollbar">
         {displayStages.length > 0 ? (
           displayStages.map((stage) => {
             const checked = selectedIds.has(stage.id);
@@ -167,16 +127,16 @@ const AvailableStagesPanel = ({
             return (
               <div
                 key={stage.id}
-                className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all ${
+                className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-md border transition-all ${
                   isEditingThis
-                    ? 'bg-white border-primary/30 shadow-md ring-2 ring-primary/10'
+                    ? 'bg-white border-orange-400 ring-2 ring-orange-100'
                     : isInactive
                       ? 'bg-slate-50 border-slate-200'
                       : mandatory
-                        ? 'bg-primary/[0.02] border-primary/25 border-l-[3px] border-l-primary shadow-sm'
+                        ? 'bg-orange-50/20 border-orange-200 border-l-[3px] border-l-orange-500'
                         : checked
-                          ? 'bg-white border-slate-200 border-l-[3px] border-l-primary shadow-sm'
-                          : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                          ? 'bg-white border-slate-200 border-l-[3px] border-l-orange-500'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
                 }`}
               >
                 {/* Checkbox — mandatory stages show locked filled circle */}

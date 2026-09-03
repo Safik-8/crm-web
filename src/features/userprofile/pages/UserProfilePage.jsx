@@ -15,6 +15,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import Button from '../../../shared/components/elements/Button';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import Pagination from '../../../shared/components/elements/Pagination';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
 
@@ -166,6 +167,12 @@ const UserProfilePage = () => {
     },
     enabled: activeTab === 'preferences'
   });
+
+  const [sessionPage, setSessionPage] = useState(1);
+  const sessionLimit = 3;
+  const totalSessions = sessions?.length || 0;
+  const totalSessionPages = Math.ceil(totalSessions / sessionLimit) || 1;
+  const paginatedSessions = sessions?.slice((sessionPage - 1) * sessionLimit, sessionPage * sessionLimit) || [];
 
   // Revoke Specific Session Mutation
   const revokeSessionMutation = useMutation({
@@ -670,7 +677,7 @@ const UserProfilePage = () => {
             
             {/* Left side: Navigation / Overview */}
             <div className="w-full md:w-64 shrink-0 space-y-4 sticky top-6">
-              <div className="bg-zinc-50 border border-zinc-200/60 rounded-2xl p-5 space-y-4">
+              <div className="bg-zinc-50 border border-zinc-200 p-5 space-y-4">
                 <div>
                   <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Account Settings</h4>
                   <p className="text-xs text-zinc-500 font-medium mt-1">Manage notifications, credentials, and active device sessions.</p>
@@ -699,7 +706,7 @@ const UserProfilePage = () => {
             <div className="flex-1 space-y-8">
               
               {/* Card 1: Notifications */}
-              <div id="notifications-card" className="bg-white border border-zinc-200/60 rounded-2xl shadow-sm overflow-hidden scroll-mt-6">
+              <div id="notifications-card" className="bg-white border border-zinc-200 overflow-hidden scroll-mt-6">
                 <div className="border-b border-zinc-200/60 px-6 py-4 bg-zinc-50/50">
                   <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
                     <Bell size={16} className="text-orange-500" />
@@ -740,7 +747,7 @@ const UserProfilePage = () => {
               </div>
 
               {/* Card 2: Security & Password Change */}
-              <div id="security-card" className="bg-white border border-zinc-200/60 rounded-2xl shadow-sm overflow-hidden scroll-mt-6">
+              <div id="security-card" className="bg-white border border-zinc-200 overflow-hidden scroll-mt-6">
                 <div className="border-b border-zinc-200/60 px-6 py-4 bg-zinc-50/50">
                   <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
                     <Key size={16} className="text-orange-500" />
@@ -850,7 +857,7 @@ const UserProfilePage = () => {
                         const hasSpecial = /[^A-Za-z0-9]/.test(newPass);
 
                         return (
-                          <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-5 space-y-4 self-start">
+                          <div className="bg-zinc-50 border border-zinc-200 p-5 space-y-4 self-start">
                             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Password Requirements</p>
                             
                             <div className="space-y-2.5 text-[11px] font-semibold text-zinc-500">
@@ -909,7 +916,7 @@ const UserProfilePage = () => {
               </div>
 
               {/* Card 3: Session Preferences & Devices */}
-              <div id="sessions-card" className="bg-white border border-zinc-200/60 rounded-2xl shadow-sm overflow-hidden scroll-mt-6">
+              <div id="sessions-card" className="bg-white border border-zinc-200 overflow-hidden scroll-mt-6">
                 <div className="border-b border-zinc-200/60 px-6 py-4 bg-zinc-50/50 flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
@@ -925,7 +932,7 @@ const UserProfilePage = () => {
                   {/* Account Control (Deactivation) */}
                   <div className="space-y-3">
                     <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider text-red-700">Enterprise Control</p>
-                    <div className="p-4 bg-red-50/30 border border-red-200/40 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="p-4 bg-red-50/30 border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <p className="text-sm font-bold text-red-800">Deactivate Enterprise Account</p>
                         <p className="text-xs text-red-600/90 font-medium leading-relaxed max-w-lg">
@@ -954,82 +961,97 @@ const UserProfilePage = () => {
                     </div>
 
                     {isLoadingSessions ? (
-                      <div className="flex items-center justify-center py-8 text-zinc-400 bg-zinc-50 rounded-2xl border border-zinc-100">
+                      <div className="flex items-center justify-center py-8 text-zinc-400 bg-zinc-50 border border-zinc-200">
                         <Loader2 className="animate-spin mr-2" size={16} />
                         <span className="text-xs font-semibold">Retrieving session list...</span>
                       </div>
                     ) : sessions && sessions.length > 0 ? (
                       <div className="space-y-3">
-                        {sessions.map((session) => {
-                          const isDesktop = session.deviceName?.toLowerCase().includes('pc') || session.deviceName?.toLowerCase().includes('mac') || session.os?.toLowerCase().includes('windows') || session.os?.toLowerCase().includes('mac');
-                          const Icon = isDesktop ? Laptop : Smartphone;
-                          
-                          return (
-                            <div
-                              key={session.id}
-                              className={`flex items-start justify-between p-4 rounded-xl border transition-all duration-150 ${
-                                session.isCurrent
-                                  ? 'bg-emerald-50/15 border-emerald-200/50 shadow-sm'
-                                  : 'bg-white border-zinc-200/60 hover:border-zinc-300'
-                              }`}
-                            >
-                              <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                                <div className={`p-2.5 rounded-xl shrink-0 mt-0.5 ${
-                                  session.isCurrent ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
-                                }`}>
-                                  <Icon size={18} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-xs font-bold text-zinc-800 truncate">
-                                      {session.deviceName || 'Unknown Device'}
-                                    </p>
-                                    {session.isCurrent && (
-                                      <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-700 rounded-md border border-emerald-200/40 tracking-wider">
-                                        Current Session
-                                      </span>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-y-1 gap-x-4 text-xs font-semibold text-zinc-500">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">OS:</span>
-                                      <span className="text-zinc-700">{session.os || 'Unknown OS'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">Browser:</span>
-                                      <span className="text-zinc-700">{session.browser || 'Unknown Browser'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">IP:</span>
-                                      <span className="text-zinc-700">{session.ipAddress || 'Unknown IP'}</span>
-                                    </div>
-                                    <div className="sm:col-span-3 flex items-center gap-1.5 mt-1 text-[11px] text-zinc-400">
-                                      <span className="text-[10px] font-bold uppercase tracking-wider">Last Active:</span>
-                                      <span className="font-medium">{new Date(session.lastActive || session.createdAt).toLocaleString()}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <button
-                                disabled={revokeSessionMutation.isPending}
-                                onClick={() => setSessionToRevoke(session)}
-                                className={`p-2 rounded-lg border transition-colors shrink-0 ml-4 ${
+                        <div className="space-y-3">
+                          {paginatedSessions.map((session) => {
+                            const isDesktop = session.deviceName?.toLowerCase().includes('pc') || session.deviceName?.toLowerCase().includes('mac') || session.os?.toLowerCase().includes('windows') || session.os?.toLowerCase().includes('mac');
+                            const Icon = isDesktop ? Laptop : Smartphone;
+                            
+                            return (
+                              <div
+                                key={session.id}
+                                className={`flex items-start justify-between p-4 rounded-xl border transition-all duration-150 ${
                                   session.isCurrent
-                                    ? 'border-red-200 text-red-600 hover:bg-red-50 bg-white'
-                                    : 'border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-100 hover:bg-red-50/30'
+                                    ? 'bg-emerald-50/15 border-emerald-200/50 shadow-sm'
+                                    : 'bg-white border-zinc-200/60 hover:border-zinc-300'
                                 }`}
-                                title="Terminate session"
                               >
-                                <LogOut size={14} />
-                              </button>
-                            </div>
-                          )
-                        })}
+                                <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                                  <div className={`p-2.5 rounded-xl shrink-0 mt-0.5 ${
+                                    session.isCurrent ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
+                                  }`}>
+                                    <Icon size={18} />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-xs font-bold text-zinc-800 truncate">
+                                        {session.deviceName || 'Unknown Device'}
+                                      </p>
+                                      {session.isCurrent && (
+                                        <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-700 rounded-md border border-emerald-200/40 tracking-wider">
+                                          Current Session
+                                        </span>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-y-1 gap-x-4 text-xs font-semibold text-zinc-500">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">OS:</span>
+                                        <span className="text-zinc-700">{session.os || 'Unknown OS'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">Browser:</span>
+                                        <span className="text-zinc-700">{session.browser || 'Unknown Browser'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">IP:</span>
+                                        <span className="text-zinc-700">{session.ipAddress || 'Unknown IP'}</span>
+                                      </div>
+                                      <div className="sm:col-span-3 flex items-center gap-1.5 mt-1 text-[11px] text-zinc-400">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Last Active:</span>
+                                        <span className="font-medium">{new Date(session.lastActive || session.createdAt).toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <button
+                                  disabled={revokeSessionMutation.isPending}
+                                  onClick={() => setSessionToRevoke(session)}
+                                  className={`p-2 rounded-lg border transition-colors shrink-0 ml-4 ${
+                                    session.isCurrent
+                                      ? 'border-red-200 text-red-600 hover:bg-red-50 bg-white'
+                                      : 'border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-100 hover:bg-red-50/30'
+                                  }`}
+                                  title="Terminate session"
+                                >
+                                  <LogOut size={14} />
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* Devices Pagination */}
+                        <Pagination
+                          pagination={{
+                            page: sessionPage,
+                            totalPages: totalSessionPages,
+                            total: totalSessions,
+                            limit: sessionLimit,
+                          }}
+                          onPageChange={(newPage) => setSessionPage(newPage)}
+                          isLoading={isLoadingSessions}
+                          entityName="devices"
+                        />
                       </div>
                     ) : (
-                      <div className="py-8 text-center bg-zinc-50 rounded-2xl border border-zinc-100 text-xs font-semibold text-zinc-500">
+                      <div className="py-8 text-center bg-zinc-50 border border-zinc-200 text-xs font-semibold text-zinc-500">
                         No active sessions registered.
                       </div>
                     )}

@@ -16,7 +16,7 @@ export const ProfileSection = ({ title, description, icon: Icon, children }) => 
         </h3>
         <p className="text-xs text-zinc-400 font-medium">{description}</p>
       </div>
-      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 bg-zinc-50/40 p-5 sm:p-6 rounded-2xl border border-zinc-200/50 hover:bg-zinc-50/70 transition-colors duration-200">
+      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 bg-white p-5 sm:p-6 border border-zinc-200 hover:bg-zinc-50/50 transition-colors duration-200">
         {children}
       </div>
     </div>
