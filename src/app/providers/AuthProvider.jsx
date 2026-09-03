@@ -37,7 +37,7 @@ const RBAC_ADAPTER_MAP = {
   'edit:system_settings': { module: 'SYSTEM_SETTINGS', action: 'canEdit' },
   'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
-  'view:company_setup': { module: 'COMPANY', action: 'canCreate' },
+  'view:company_setup': { module: 'COMPANY', action: 'canView' },
   'view:users': { module: 'USER', action: 'canView' },
   'view:roles': { module: 'ROLE_PERMISSION', action: 'canView' },
   'view:leads': { module: 'LEAD', action: 'canView' },
@@ -121,11 +121,8 @@ export const AuthProvider = ({ children }) => {
       return true;
     }
 
-    // Branch Managers have permission to view & edit their own branch and organization settings
-    if (
-      user.primaryRole === 'BRANCH_MANAGER' ||
-      (user.primaryRoleRank && Number(user.primaryRoleRank) >= 60)
-    ) {
+    // System Branch Managers have permission to view & edit their own branch and organization settings
+    if (user.primaryRole === 'BRANCH_MANAGER') {
       if (
         moduleOrPermissionStr === 'view:settings' ||
         moduleOrPermissionStr === 'view:branches' ||
