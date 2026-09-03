@@ -1,5 +1,10 @@
-import { useRef, useState, useCallback } from 'react';
-import { Search, Bell, Menu, User, LogOut, Loader2, ChevronRight, Home } from 'lucide-react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { 
+  Search, Bell, Menu, User, LogOut, Loader2, ChevronRight, Home, X, 
+  CornerDownLeft, ClipboardList, Kanban, SlidersHorizontal, Briefcase, 
+  Layers, Handshake, Users, CheckSquare, Target, BarChart3, FileText, 
+  ShieldAlert, ArrowRightLeft, BookOpen, Key, Building2, Tag, Compass
+} from 'lucide-react';
 import { Menu as MuiMenu, MenuItem } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -39,11 +44,321 @@ const ROUTE_LABELS = {
   'kpi-analytics': 'KPI Analytics',
 };
 
+// Global navigation search registry with permission checks
+const SEARCH_NAV_ITEMS = [
+  {
+    id: 'dashboard-analytics',
+    title: 'Dashboard Overview',
+    subtitle: 'System executive metrics and sales performance overview',
+    category: 'Dashboard',
+    icon: Compass,
+    path: '/dashboard',
+    keywords: ['home', 'dashboard', 'analytics', 'overview', 'metrics', 'stats', 'kpi'],
+    permission: () => true
+  },
+  {
+    id: 'leads-registry',
+    title: 'Leads Registry',
+    subtitle: 'Manage sales leads, assignments & filter presets',
+    category: 'Leads & Sales',
+    icon: ClipboardList,
+    path: '/leads',
+    keywords: ['lead', 'leads', 'prospect', 'contact', 'registry', 'assign', 'excel', 'import'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('LEAD', 'canView') || 
+      hasPermission('view:lead')
+  },
+  {
+    id: 'leads-kanban',
+    title: 'Leads Kanban Board',
+    subtitle: 'Visual drag-and-drop lead pipeline board',
+    category: 'Leads & Sales',
+    icon: Kanban,
+    path: '/leads/board',
+    keywords: ['lead', 'kanban', 'board', 'pipeline', 'drag', 'stage', 'cards'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('LEAD', 'canView') || 
+      hasPermission('view:lead')
+  },
+  {
+    id: 'lead-sources',
+    title: 'Lead Sources',
+    subtitle: 'Configure lead generation channels & sources',
+    category: 'Settings',
+    icon: Tag,
+    path: '/settings/lead-sources',
+    keywords: ['source', 'lead source', 'channel', 'campaign', 'origin'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('SYSTEM_SETTINGS', 'canView')
+  },
+  {
+    id: 'lead-statuses',
+    title: 'Lead Statuses',
+    subtitle: 'Manage custom lead status lifecycle states',
+    category: 'Settings',
+    icon: SlidersHorizontal,
+    path: '/settings/lead-statuses',
+    keywords: ['status', 'lead status', 'stage', 'lifecycle', 'workflow'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('SYSTEM_SETTINGS', 'canView')
+  },
+  {
+    id: 'opportunities',
+    title: 'Opportunities Engine',
+    subtitle: 'Track active sales opportunities & deal stages',
+    category: 'Opportunities',
+    icon: Briefcase,
+    path: '/opportunities',
+    keywords: ['opportunity', 'opportunities', 'opp', 'deal', 'pipeline', 'value', 'forecast'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('OPPORTUNITY', 'canView') || 
+      hasPermission('view:opportunity')
+  },
+  {
+    id: 'opportunity-stages',
+    title: 'Opportunity Stages',
+    subtitle: 'Configure opportunity workflow stage ordering',
+    category: 'Opportunities',
+    icon: Layers,
+    path: '/opportunities/stages',
+    keywords: ['stage', 'opportunity stage', 'order', 'probability', 'win rate'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('OPPORTUNITY', 'canView') || 
+      hasPermission('view:opportunity')
+  },
+  {
+    id: 'deals',
+    title: 'Deal Management',
+    subtitle: 'Closed deals, won revenue & outcome analytics',
+    category: 'Deals & Revenue',
+    icon: Handshake,
+    path: '/deals',
+    keywords: ['deal', 'deals', 'won', 'lost', 'revenue', 'closed', 'contract'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('DEAL', 'canView') || 
+      hasPermission('view:deal')
+  },
+  {
+    id: 'customers',
+    title: 'Customers Directory',
+    subtitle: 'Customer accounts, contacts & account history',
+    category: 'Customers',
+    icon: Users,
+    path: '/customers',
+    keywords: ['customer', 'customers', 'account', 'client', 'contact', 'buyer'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('CUSTOMER', 'canView') || 
+      hasPermission('view:customer')
+  },
+  {
+    id: 'pipelines',
+    title: 'Pipeline Management',
+    subtitle: 'Custom sales pipelines & stage builders',
+    category: 'Pipelines',
+    icon: Layers,
+    path: '/pipelines',
+    keywords: ['pipeline', 'pipelines', 'stage builder', 'sales funnel'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('PIPELINE', 'canView') || 
+      hasPermission('view:pipeline')
+  },
+  {
+    id: 'tasks',
+    title: 'Tasks & Activities',
+    subtitle: 'Schedule follow-ups, calls, meetings & tasks',
+    category: 'Activities',
+    icon: CheckSquare,
+    path: '/tasks',
+    keywords: ['task', 'tasks', 'activity', 'followup', 'call', 'meeting', 'reminder'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('TASK', 'canView') || 
+      hasPermission('view:task')
+  },
+  {
+    id: 'targets',
+    title: 'Targets & Goals',
+    subtitle: 'Performance targets, metrics & goal tracking',
+    category: 'Performance',
+    icon: Target,
+    path: '/targets',
+    keywords: ['target', 'targets', 'kpi', 'goal', 'quota', 'performance', 'metric'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('TARGET', 'canView') || 
+      hasPermission('view:target')
+  },
+  {
+    id: 'kpi-management',
+    title: 'KPI Management',
+    subtitle: 'Set and assign company/branch KPI targets',
+    category: 'Performance',
+    icon: Target,
+    path: '/kpi-management',
+    keywords: ['kpi management', 'assign kpi', 'quota management', 'target setup'],
+    permission: (user) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      (user?.primaryRoleRank >= 80)
+  },
+  {
+    id: 'kpi-analytics',
+    title: 'KPI Analytics',
+    subtitle: 'Detailed target achievement analytics & charts',
+    category: 'Performance',
+    icon: BarChart3,
+    path: '/kpi-analytics',
+    keywords: ['kpi analytics', 'target charts', 'achievement', 'quota breakdown'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('KPI', 'canView') || 
+      hasPermission('view:kpi')
+  },
+  {
+    id: 'reports',
+    title: 'Reports & Analytics',
+    subtitle: 'Business intelligence reports & exports',
+    category: 'Reports',
+    icon: FileText,
+    path: '/reports',
+    keywords: ['report', 'reports', 'analytics', 'bi', 'summary', 'export', 'charts'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('REPORT', 'canView') || 
+      hasPermission('view:report')
+  },
+  {
+    id: 'daily-report',
+    title: 'Daily Summary Report',
+    subtitle: 'Daily operational summary & activity logs',
+    category: 'Reports',
+    icon: FileText,
+    path: '/reports/daily',
+    keywords: ['daily report', 'daily summary', 'activity summary'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('REPORT', 'canView') || 
+      hasPermission('view:report')
+  },
+  {
+    id: 'audit-logs',
+    title: 'Audit Logs & Security',
+    subtitle: 'Enterprise security audit trail & activity monitor',
+    category: 'Administration',
+    icon: ShieldAlert,
+    path: '/audit-logs',
+    keywords: ['audit', 'audit log', 'logs', 'security', 'trail', 'history', 'ip'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('AUDIT', 'canView')
+  },
+  {
+    id: 'transfer-approvals',
+    title: 'Transfer Approvals',
+    subtitle: 'Approve or reject lead & opportunity transfers',
+    category: 'Administration',
+    icon: ArrowRightLeft,
+    path: '/approvals',
+    keywords: ['approval', 'approvals', 'transfer', 'reassign', 'request'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('TRANSFER', 'canView')
+  },
+  {
+    id: 'users',
+    title: 'User Management',
+    subtitle: 'Manage employees, accounts, designations & access',
+    category: 'User & Team',
+    icon: Users,
+    path: '/users',
+    keywords: ['user', 'users', 'employee', 'staff', 'member', 'account', 'bde', 'ise', 'manager'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('USER', 'canView') || 
+      hasPermission('view:user')
+  },
+  {
+    id: 'teams',
+    title: 'Team Management',
+    subtitle: 'Organize sales teams, team leads & members',
+    category: 'User & Team',
+    icon: Users,
+    path: '/teams',
+    keywords: ['team', 'teams', 'group', 'sales team', 'squad'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('TEAM', 'canView') || 
+      hasPermission('view:team')
+  },
+  {
+    id: 'courses',
+    title: 'Course / Product Catalog',
+    subtitle: 'Manage product catalog, pricing & courses',
+    category: 'Catalog',
+    icon: BookOpen,
+    path: '/courses',
+    keywords: ['course', 'courses', 'product', 'catalog', 'pricing', 'training'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      hasPermission('COURSE', 'canView') || 
+      hasPermission('view:course')
+  },
+  {
+    id: 'roles',
+    title: 'Roles & Permissions',
+    subtitle: 'Custom RBAC permissions matrix & role definitions',
+    category: 'Settings',
+    icon: Key,
+    path: '/roles',
+    keywords: ['role', 'roles', 'permission', 'rbac', 'access control', 'matrix'],
+    permission: (user, hasPermission) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('ROLE', 'canView')
+  },
+  {
+    id: 'organization-settings',
+    title: 'Organization & Companies',
+    subtitle: 'Manage company hierarchy, branches & tenant settings',
+    category: 'Settings',
+    icon: Building2,
+    path: '/settings/organization',
+    keywords: ['organization', 'company', 'companies', 'branch', 'branches', 'tenant', 'settings'],
+    permission: (user) => 
+      user?.primaryRole === 'SUPER_ADMIN' || 
+      user?.primaryRole === 'COMPANY_ADMIN'
+  },
+  {
+    id: 'profile',
+    title: 'My Profile',
+    subtitle: 'View and edit account profile & security settings',
+    category: 'Account',
+    icon: User,
+    path: '/profile',
+    keywords: ['profile', 'account', 'password', 'my profile', 'me', 'photo'],
+    permission: () => true
+  }
+];
+
 const buildBreadcrumbs = (pathname, search, state) => {
   const segments = pathname.split('/').filter(Boolean);
   const crumbs = [];
 
-  // Home root
   crumbs.push({
     label: 'Home',
     path: '/dashboard',
@@ -52,7 +367,6 @@ const buildBreadcrumbs = (pathname, search, state) => {
 
   let currentPath = '';
 
-  // Special Handling for KPI Detail Route (/kpi/:id)
   if (segments[0] === 'kpi') {
     crumbs.push({ label: 'KPI Analytics', path: '/kpi-analytics' });
     if (segments[1] && !isNaN(segments[1])) {
@@ -63,7 +377,6 @@ const buildBreadcrumbs = (pathname, search, state) => {
     return crumbs;
   }
 
-  // Special Handling for Opportunities Detail Route (/opportunities/:id)
   if (segments[0] === 'opportunities') {
     crumbs.push({ label: 'Opportunities', path: '/opportunities' });
     if (segments[1] === 'stages') {
@@ -115,6 +428,7 @@ const buildBreadcrumbs = (pathname, search, state) => {
       path: currentPath
     });
   });
+
   const searchParams = new URLSearchParams(search);
   const leadName = searchParams.get('leadName');
   const reportType = searchParams.get('type');
@@ -138,8 +452,8 @@ const buildBreadcrumbs = (pathname, search, state) => {
   return crumbs.filter((c, idx, arr) => idx === 0 || c.path !== arr[idx - 1].path);
 };
 
-const Topbar = ({ toggleSidebar, pageTitle }) => {
-  const { logout, user, isLoggingOut } = useAuth();
+const Topbar = ({ toggleSidebar }) => {
+  const { logout, user, isLoggingOut, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,11 +461,84 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
   const bellButtonRef = useRef(null);
   const { unreadCount } = useNotificationBadge();
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchContainerRef = useRef(null);
+
   const crumbs = buildBreadcrumbs(location.pathname, location.search, location.state);
 
-  const openPanel  = useCallback(() => setIsPanelOpen(true),  []);
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
   const togglePanel = useCallback(() => setIsPanelOpen((prev) => !prev), []);
+
+  // Filter allowed search items strictly by user permissions
+  const accessibleSearchItems = useMemo(() => {
+    return SEARCH_NAV_ITEMS.filter((item) => {
+      try {
+        return item.permission(user, hasPermission);
+      } catch {
+        return false;
+      }
+    });
+  }, [user, hasPermission]);
+
+  // Compute search matches
+  const filteredNavResults = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) {
+      return accessibleSearchItems.slice(0, 6);
+    }
+    return accessibleSearchItems.filter((item) => {
+      const matchTitle = item.title.toLowerCase().includes(q);
+      const matchSub = item.subtitle.toLowerCase().includes(q);
+      const matchCat = item.category.toLowerCase().includes(q);
+      const matchPath = item.path.toLowerCase().includes(q);
+      const matchKw = item.keywords.some((kw) => kw.toLowerCase().includes(q));
+      return matchTitle || matchSub || matchCat || matchPath || matchKw;
+    });
+  }, [searchQuery, accessibleSearchItems]);
+
+  // Click outside to close search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+        setSelectedIndex(-1);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectNav = (path) => {
+    navigate(path);
+    setSearchQuery('');
+    setIsSearchOpen(false);
+    setSelectedIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!isSearchOpen) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < filteredNavResults.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredNavResults.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && filteredNavResults[selectedIndex]) {
+        handleSelectNav(filteredNavResults[selectedIndex].path);
+      } else if (filteredNavResults.length > 0) {
+        handleSelectNav(filteredNavResults[0].path);
+      }
+    } else if (e.key === 'Escape') {
+      setIsSearchOpen(false);
+      setSelectedIndex(-1);
+    }
+  };
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -174,7 +561,7 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl ">
+      <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl">
 
         {/* Left: hamburger + breadcrumbs */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">
@@ -216,20 +603,105 @@ const Topbar = ({ toggleSidebar, pageTitle }) => {
         {/* Right: search + bell + profile */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
-          {/* Search — hidden on mobile */}
-          <div className="hidden md:block">
+          {/* Global Navigation Search Bar */}
+          <div className="relative" ref={searchContainerRef}>
             <div className="relative group">
               <Search
                 size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-primary transition-colors pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-orange-500 transition-colors pointer-events-none"
               />
               <input
                 type="text"
-                placeholder="Search…"
-                className="h-8 w-44 lg:w-56 xl:w-72 rounded-xl bg-zinc-100 pl-9 pr-4 text-[13px] text-zinc-700 placeholder:text-zinc-400 outline-none transition-all duration-200
-                  focus:bg-white focus:ring-4 focus:ring-orange-100 focus:border focus:border-orange-200/60 focus:w-52 lg:focus:w-64 xl:focus:w-80"
+                value={searchQuery}
+                onFocus={() => setIsSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                  setSelectedIndex(-1);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Search pages & modules…"
+                className="h-9 w-44 sm:w-56 lg:w-72 xl:w-80 rounded-xl bg-slate-100/80 pl-9 pr-8 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-200
+                  focus:bg-white focus:ring-4 focus:ring-orange-100 focus:border focus:border-orange-300 border border-transparent font-medium"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedIndex(-1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md hover:bg-slate-200 transition-colors"
+                >
+                  <X size={13} />
+                </button>
+              )}
             </div>
+
+            {/* Navigation Search Results Dropdown */}
+            {isSearchOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3.5 py-2 bg-slate-50 border-b border-slate-100">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    {searchQuery.trim() ? 'Navigation Results' : 'Suggested Quick Links'}
+                  </span>
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto p-1.5 divide-y divide-slate-50">
+                  {filteredNavResults.length > 0 ? (
+                    filteredNavResults.map((item, index) => {
+                      const IconComponent = item.icon || Compass;
+                      const isSelected = index === selectedIndex;
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => handleSelectNav(item.path)}
+                          onMouseEnter={() => setSelectedIndex(index)}
+                          className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-orange-50/90 text-orange-900 border border-orange-200/80'
+                              : 'hover:bg-slate-50 text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-lg shrink-0 ${
+                            isSelected ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            <IconComponent size={14} />
+                          </div>
+                          <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-bold truncate text-slate-800">
+                              {item.title}
+                            </p>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100/60 shrink-0">
+                              {item.category}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="py-8 px-4 text-center">
+                      <Search size={24} className="mx-auto text-slate-300 mb-2" />
+                      <p className="text-xs font-bold text-slate-700">No matching pages found</p>
+                      <p className="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
+                        No authorized navigation routes found for "{searchQuery}".
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600">↑↓</kbd> navigate
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600 flex items-center gap-0.5">
+                      <CornerDownLeft size={10} /> Enter
+                    </kbd> open
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Notification bell */}

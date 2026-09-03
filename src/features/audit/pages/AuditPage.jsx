@@ -664,41 +664,21 @@ const AuditPage = () => {
         title="Audit Logs & Activity Monitor"
         description="Enterprise security trail recording real-time data mutations, user access, and system configurations."
         actions={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fetchAuditLogs()}
-              disabled={loading}
-              className="flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs"
-              title="Refresh Audit Logs"
-            >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-              <span>Refresh</span>
-            </button>
-
-            {/* SUPER ADMIN ONLY: Export Report Button (Opens Right-Side Export Filter Drawer) */}
-            {isSuperAdmin && (
-              <button
-                type="button"
-                onClick={() => {
-                  setExportError('');
-                  setIsExportDrawerOpen(true);
-                }}
-                disabled={exporting}
-                className="flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition-all shadow-xs active:scale-95 disabled:opacity-50"
-                title="Export Audit Logs Report"
-              >
-                <Download size={14} />
-                <span>Export Report</span>
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => fetchAuditLogs()}
+            disabled={loading}
+            className="text-slate-400 hover:text-orange-500 transition-colors cursor-pointer p-1"
+            title="Refresh Audit Logs"
+          >
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          </button>
         }
       />
 
       {/* ── KPI METRICS OVERVIEW CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Recorded Logs</p>
             <p className="text-xl font-semibold text-slate-900 mt-0.5">{pagination.total.toLocaleString()}</p>
@@ -708,7 +688,7 @@ const AuditPage = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Scope Access</p>
             <p className="text-sm font-semibold text-emerald-600 mt-0.5">
@@ -720,7 +700,7 @@ const AuditPage = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Current Page</p>
             <p className="text-xl font-semibold text-slate-900 mt-0.5">
@@ -732,7 +712,7 @@ const AuditPage = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between shadow-2xs">
+        <div className="bg-white border border-slate-200 p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Audit Security Stream</p>
             <p className="text-sm font-semibold mt-0.5 text-emerald-600">
@@ -746,8 +726,8 @@ const AuditPage = () => {
       </div>
 
       {/* ── SEPARATE FILTER & SEARCH CARD (WITH VISUAL SPACING) ── */}
-      <div className="bg-white border border-slate-200 p-4 shadow-xs space-y-3">
-        {/* Row 1: Search Input & Reset Button */}
+      <div className="bg-white border border-slate-200 p-4 space-y-3">
+        {/* Row 1: Search Input & Action Buttons */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           <SearchInput
             value={filters.search}
@@ -755,16 +735,34 @@ const AuditPage = () => {
             placeholder="Search action, IP, or user..."
             className="w-full flex-1"
           />
-          {hasAccess && (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-slate-500 hover:text-primary transition-colors shrink-0"
-            >
-              <RotateCcw size={14} />
-              <span>Reset Filters</span>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+            {hasAccess && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex items-center gap-1.5 h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all cursor-pointer"
+              >
+                <RotateCcw size={14} />
+                <span>Reset Filters</span>
+              </button>
+            )}
+
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setExportError('');
+                  setIsExportDrawerOpen(true);
+                }}
+                disabled={exporting}
+                className="flex items-center gap-1.5 h-11 px-4 text-xs font-bold text-white bg-[#F86F03] hover:bg-[#DE5D02] rounded-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                title="Export Audit Logs Report"
+              >
+                <Download size={15} />
+                <span>Export Report</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Divider Line */}

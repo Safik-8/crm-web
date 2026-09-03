@@ -350,9 +350,9 @@ const QualificationCriteriaSettingsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Level 1: Page Header ── */}
-      <div className="bg-white border border-slate-200 p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
             <Target size={24} className="text-orange-600" />
           </div>
           <div>
@@ -439,7 +439,7 @@ const QualificationCriteriaSettingsPage = () => {
       {/* ── Level 2: Allocation & Pass Threshold Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Total Weight Allocation Card (Span 7) */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-7 bg-white border border-slate-200 p-5 flex flex-col justify-between space-y-4">
           <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -534,7 +534,7 @@ const QualificationCriteriaSettingsPage = () => {
         </div>
 
         {/* Qualification Pass Threshold Card (Span 5) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 bg-white border border-slate-200 p-5 flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
@@ -554,7 +554,7 @@ const QualificationCriteriaSettingsPage = () => {
 
           <div className="bg-slate-50/70 border border-slate-200/80 p-4 flex items-center gap-4">
             {/* Circular Progress Visual */}
-            <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30 shadow-2xs">
+            <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30">
               <span className="text-lg font-black text-slate-900 leading-none">
                 {settings.passThreshold}
               </span>
@@ -578,7 +578,7 @@ const QualificationCriteriaSettingsPage = () => {
                       max="100"
                       value={settings.passThreshold}
                       onChange={(e) => canEdit && setSettings({ ...settings, passThreshold: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
-                      className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-md text-center focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-2xs"
+                      className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-md text-center focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                     />
                   </div>
                   <span className="text-xs text-slate-400 font-medium">PTS</span>
@@ -590,7 +590,7 @@ const QualificationCriteriaSettingsPage = () => {
       </div>
 
       {/* ── Level 3: Active Qualification Factors Table ── */}
-      <div className="bg-white border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 overflow-hidden">
         {/* Table Toolbar Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-2.5">
@@ -629,7 +629,7 @@ const QualificationCriteriaSettingsPage = () => {
               >
                 {/* Factor Details (Left) */}
                 <div className="col-span-12 md:col-span-6 lg:col-span-7 flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5 shadow-2xs">
+                  <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5">
                     {getFieldIcon(item.fieldType)}
                   </div>
 
@@ -689,7 +689,7 @@ const QualificationCriteriaSettingsPage = () => {
                       disabled={!canEdit}
                       value={item.maxPoints}
                       onChange={(e) => canEdit && handlePointChange(item.id, e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all shadow-2xs"
+                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all"
                     />
                   </div>
                 </div>
