@@ -30,9 +30,28 @@ import { useAuth } from '../../../app/providers/AuthProvider';
  * LeadDetailDrawer — Premium dashboard-style two-column view displaying lead metadata,
  * assigned user/branch scope, notes, activities, timeline logs, and stage history.
  */
-const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
+/** Valid tab keys used in the drawer's tab navigation */
+const VALID_TABS = [
+  'comments',
+  'notes',
+  'qualification',
+  'communications',
+  'timeline',
+  'stage-history',
+  'followups',
+];
+
+/**
+ * Resolves an initial tab key from a URL hint.
+ * Falls back to 'comments' for any unknown/undefined value so all existing
+ * callers that do not pass initialTab are unaffected.
+ */
+const resolveInitialTab = (tabHint) =>
+  VALID_TABS.includes(tabHint) ? tabHint : 'comments';
+
+const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab }) => {
   const { hasPermission } = useAuth();
-  const [activeTab, setActiveTab] = useState('comments');
+  const [activeTab, setActiveTab] = useState(() => resolveInitialTab(initialTab));
   const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
   const tabSectionRef = useRef(null);

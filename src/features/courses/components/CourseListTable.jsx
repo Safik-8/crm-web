@@ -6,6 +6,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { Edit2, Power, Trash2, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 /**
  * Renders actions dropdown menu for a specific row in the course table.
@@ -120,8 +121,13 @@ const RowActionsMenu = ({
  * Uses shared `<Table>` element and provides full responsive column layouts.
  */
 export const CourseListTable = ({
-  data = [],
-  loading = false,
+  courses = [],
+  data,
+  loadingState = 'idle',
+  errorMessage,
+  onRetry,
+  hasActiveFilters = false,
+  onClearFilters,
   canEdit = false,
   canDelete = false,
   onViewDetails,
@@ -133,6 +139,7 @@ export const CourseListTable = ({
   onSort
 }) => {
   const { formatCurrency } = useFormatters();
+  const tableData = courses || data || [];
 
   const columns = [
     {
@@ -282,7 +289,7 @@ export const CourseListTable = ({
   return (
     <Table
       columns={columns}
-      data={courses}
+      data={tableData}
       loadingState={loadingState}
       errorMessage={errorMessage}
       onRetry={onRetry}

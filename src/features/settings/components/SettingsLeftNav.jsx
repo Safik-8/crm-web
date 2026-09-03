@@ -44,72 +44,82 @@ export const SettingsLeftNav = ({
   })
 
   return (
-    <nav className="w-full flex flex-col gap-1.5 p-2 bg-white border border-slate-200/80 rounded-xl shadow-xs">
-      <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-        Settings Categories ({filteredCategories.length})
+    <nav className="w-full flex flex-col bg-white border border-slate-200 rounded-none shadow-xs divide-y divide-slate-100">
+      <div className="px-4 py-3 bg-slate-50/70">
+        <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          Settings Categories ({filteredCategories.length})
+        </h2>
       </div>
 
-      {filteredCategories.length === 0 ? (
-        <div className="px-4 py-6 text-center text-slate-500 text-xs">
-          No categories match "{searchQuery}"
-        </div>
-      ) : (
-        filteredCategories.map((item) => {
-          const Icon = item.icon
-          const isActive = activeTab === item.id
-          const isRestricted = item.adminOnly && !canEditSettings
+      <div className="p-2 space-y-1">
+        {filteredCategories.length === 0 ? (
+          <div className="px-4 py-8 text-center text-slate-400 text-xs">
+            No categories match "{searchQuery}"
+          </div>
+        ) : (
+          filteredCategories.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            const isRestricted = item.adminOnly && !canEditSettings
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer ${
-                isActive
-                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/80 shadow-xs"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <div
-                className={`p-2 rounded-lg transition-colors shrink-0 ${
+            return (
+              <button
+                key={item.id}
+                onClick={() => onTabChange(item.id)}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-left transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? "bg-orange-100 text-orange-600"
-                    : "bg-slate-100 text-slate-500 group-hover:text-slate-800 group-hover:bg-slate-200/60"
+                    ? "bg-orange-50 text-orange-900 font-bold border border-orange-200/80 shadow-2xs"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                 }`}
               >
-                <Icon className="w-4 h-4" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold truncate leading-tight">{item.label}</span>
-                  {item.adminOnly && (
-                    <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wider uppercase ${
-                        isActive
-                          ? "bg-orange-200/70 text-orange-800"
-                          : "bg-amber-50 text-amber-700 border border-amber-200/70"
-                      }`}
-                    >
-                      ADMIN
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`text-[11px] truncate mt-0.5 ${
-                    isActive ? "text-orange-600/80 font-medium" : "text-slate-400"
+                <div
+                  className={`w-8 h-8 flex items-center justify-center rounded-[6px] transition-colors shrink-0 ${
+                    isActive
+                      ? "bg-orange-500 text-white"
+                      : "bg-slate-100 text-slate-500 group-hover:text-slate-800 group-hover:bg-slate-200/70"
                   }`}
                 >
-                  {item.desc}
-                </p>
-              </div>
+                  <Icon className="w-4 h-4" />
+                </div>
 
-              {isRestricted && (
-                <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
-              )}
-            </button>
-          )
-        })
-      )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="text-[13px] font-semibold truncate leading-tight tracking-tight">
+                      {item.label}
+                    </span>
+                    {item.adminOnly && (
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold tracking-wider uppercase ${
+                          isActive
+                            ? "bg-orange-200/70 text-orange-900"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}
+                      >
+                        ADMIN
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className={`text-[11px] truncate mt-0.5 font-normal ${
+                      isActive ? "text-orange-700/80" : "text-slate-400"
+                    }`}
+                  >
+                    {item.desc}
+                  </p>
+                </div>
+
+                {isRestricted && (
+                  <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+                )}
+              </button>
+            )
+          })
+        )}
+      </div>
     </nav>
   )
 }
+
+
+
+

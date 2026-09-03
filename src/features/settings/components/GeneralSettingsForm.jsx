@@ -1,7 +1,8 @@
 // crm-web/src/features/settings/components/GeneralSettingsForm.jsx
 
 import React from "react"
-import { Building2, Globe, Clock, DollarSign, Calendar, Languages } from "lucide-react"
+import { Building2, Globe, Clock, DollarSign, Calendar, Languages, Image } from "lucide-react"
+import SelectField from "../../../shared/components/elements/SelectField"
 
 const isValidHttpUrl = (str) => {
   if (!str || str.trim() === "") return true
@@ -13,7 +14,41 @@ const isValidHttpUrl = (str) => {
   }
 }
 
-export const GeneralSettingsForm = ({ formData, updateField }) => {
+const TIMEZONE_OPTIONS = [
+  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST - UTC+05:30) (Default)" },
+  { value: "UTC", label: "UTC (Coordinated Universal Time)" },
+  { value: "America/New_York", label: "America/New_York (EST - UTC-05:00)" },
+  { value: "Europe/London", label: "Europe/London (GMT - UTC+00:00)" },
+  { value: "Asia/Dubai", label: "Asia/Dubai (GST - UTC+04:00)" },
+  { value: "Australia/Sydney", label: "Australia/Sydney (AEST - UTC+10:00)" },
+]
+
+const CURRENCY_OPTIONS = [
+  { value: "INR", label: "INR (₹) (Default)" },
+  { value: "USD", label: "USD ($)" },
+  { value: "EUR", label: "EUR (€)" },
+  { value: "GBP", label: "GBP (£)" },
+  { value: "AUD", label: "AUD (A$)" },
+  { value: "CAD", label: "CAD (C$)" },
+]
+
+const DATE_FORMAT_OPTIONS = [
+  { value: "DD/MM/YYYY", label: "DD/MM/YYYY (India/UK - e.g. 27/08/2026) (Default)" },
+  { value: "YYYY-MM-DD", label: "YYYY-MM-DD (ISO 8601 - e.g. 2026-08-27)" },
+  { value: "MM/DD/YYYY", label: "MM/DD/YYYY (US - e.g. 08/27/2026)" },
+  { value: "DD-MMM-YYYY", label: "DD-MMM-YYYY (e.g. 27-Aug-2026)" },
+]
+
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English (US)" },
+  { value: "en-GB", label: "English (UK)" },
+  { value: "hi", label: "Hindi (हिन्दी)" },
+  { value: "es", label: "Spanish (Español)" },
+  { value: "fr", label: "French (Français)" },
+  { value: "de", label: "German (Deutsch)" },
+]
+
+export const GeneralSettingsForm = ({ formData, updateField, readOnly = false }) => {
   const isWebsiteValid = isValidHttpUrl(formData.website)
   const isLogoValid = isValidHttpUrl(formData.companyLogo)
 
@@ -24,35 +59,40 @@ export const GeneralSettingsForm = ({ formData, updateField }) => {
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary" /> Basic System Information
         </h3>
-        <p className="text-xs text-slate-500 font-medium mt-0.5">
+        <p className="text-xs text-slate-500 font-normal mt-0.5">
           Configure default company parameters, timezones, and regional formatting options.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
         {/* Company Name */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Company Name</label>
+          <label className="block text-[12px] font-semibold text-slate-700 tracking-tight mb-1.5">
+            Company Name
+          </label>
           <input
             type="text"
+            disabled={readOnly}
             value={formData.companyName || ""}
             onChange={(e) => updateField("companyName", e.target.value)}
             placeholder="e.g. Acme Corporation"
-            className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
+            className="w-full px-3.5 h-[38px] text-[13px] font-medium bg-white hover:bg-slate-50/50 border border-slate-200 rounded-[10px] text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Website */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Official Website</label>
+          <label className="block text-[12px] font-semibold text-slate-700 tracking-tight mb-1.5 flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5 text-slate-400" /> Official Website
+          </label>
           <div className="relative">
-            <Globe className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
+              disabled={readOnly}
               value={formData.website || ""}
               onChange={(e) => updateField("website", e.target.value)}
               placeholder="https://www.example.com"
-              className={`w-full pl-9 pr-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+              className={`w-full px-3.5 h-[38px] text-[13px] font-medium bg-white hover:bg-slate-50/50 border rounded-[10px] text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed ${
                 !isWebsiteValid
                   ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
                   : "border-slate-200 focus:border-orange-500 focus:ring-orange-500/10"
@@ -60,7 +100,7 @@ export const GeneralSettingsForm = ({ formData, updateField }) => {
             />
           </div>
           {!isWebsiteValid && (
-            <span className="text-[10px] text-rose-500 font-semibold mt-1 block">
+            <span className="text-[11px] text-rose-500 font-semibold mt-1 block">
               Please enter a valid URL starting with http:// or https://
             </span>
           )}
@@ -68,126 +108,112 @@ export const GeneralSettingsForm = ({ formData, updateField }) => {
 
         {/* Company Logo URL */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Company Logo URL</label>
-          <input
-            type="text"
-            value={formData.companyLogo || ""}
-            onChange={(e) => updateField("companyLogo", e.target.value)}
-            placeholder="https://cdn.example.com/logo.png"
-            className={`w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-              !isLogoValid
-                ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
-                : "border-slate-200 focus:border-orange-500 focus:ring-orange-500/10"
-            }`}
-          />
-          {!isLogoValid ? (
-            <span className="text-[10px] text-rose-500 font-semibold mt-1 block">
+          <label className="block text-[12px] font-semibold text-slate-700 tracking-tight mb-1.5 flex items-center gap-1.5">
+            <Image className="w-3.5 h-3.5 text-slate-400" /> Company Logo URL
+          </label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <input
+              type="text"
+              disabled={readOnly}
+              value={formData.companyLogo || ""}
+              onChange={(e) => updateField("companyLogo", e.target.value)}
+              placeholder="https://cdn.example.com/logo.png"
+              className={`flex-1 w-full px-3.5 h-[38px] text-[13px] font-medium bg-white hover:bg-slate-50/50 border rounded-[10px] text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed ${
+                !isLogoValid
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
+                  : "border-slate-200 focus:border-orange-500 focus:ring-orange-500/10"
+              }`}
+            />
+            {formData.companyLogo && isLogoValid && (
+              <div className="h-[38px] px-3 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-[8px] shrink-0 shadow-2xs">
+                <span className="text-[11px] text-slate-500 font-medium">Preview:</span>
+                <img
+                  src={formData.companyLogo}
+                  alt="Logo Preview"
+                  className="h-6 max-w-[100px] object-contain"
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              </div>
+            )}
+          </div>
+          {!isLogoValid && (
+            <span className="text-[11px] text-rose-500 font-semibold mt-1 block">
               Please enter a valid image URL starting with http:// or https://
             </span>
-          ) : formData.companyLogo ? (
-            <div className="mt-2.5 flex items-center gap-3">
-              <span className="text-xs text-slate-500 font-medium">Logo Preview:</span>
-              <img
-                src={formData.companyLogo}
-                alt="Logo Preview"
-                className="h-8 max-w-[120px] object-contain rounded border border-slate-200 bg-slate-50 p-1"
-                onError={(e) => (e.target.style.display = "none")}
-              />
-            </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Time Zone */}
+        {/* Time Zone using shared SelectField */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-500" /> Time Zone
-          </label>
-          <select
+          <SelectField
+            label="Time Zone"
+            disabled={readOnly}
             value={formData.timeZone || "Asia/Kolkata"}
-            onChange={(e) => updateField("timeZone", e.target.value)}
-            className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
-          >
-            <option value="Asia/Kolkata">Asia/Kolkata (IST - UTC+05:30) (Default)</option>
-            <option value="UTC">UTC (Coordinated Universal Time)</option>
-            <option value="America/New_York">America/New_York (EST - UTC-05:00)</option>
-            <option value="Europe/London">Europe/London (GMT - UTC+00:00)</option>
-            <option value="Asia/Dubai">Asia/Dubai (GST - UTC+04:00)</option>
-            <option value="Australia/Sydney">Australia/Sydney (AEST - UTC+10:00)</option>
-          </select>
+            onChange={(val) => updateField("timeZone", val)}
+            options={TIMEZONE_OPTIONS}
+            placeholder="Select Timezone"
+          />
         </div>
 
         {/* Currency & Symbol */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
-              <DollarSign className="w-3.5 h-3.5 text-slate-500" /> Currency
-            </label>
-            <select
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2">
+            <SelectField
+              label="Currency"
+              disabled={readOnly}
               value={formData.currency || "INR"}
-              onChange={(e) => {
-                const val = e.target.value
+              onChange={(val) => {
                 const symbols = { INR: "₹", USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$" }
                 updateField("currency", val)
                 if (symbols[val]) updateField("currencySymbol", symbols[val])
               }}
-              className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
-            >
-              <option value="INR">INR (₹) (Default)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="AUD">AUD (A$)</option>
-              <option value="CAD">CAD (C$)</option>
-            </select>
+              options={CURRENCY_OPTIONS}
+              placeholder="Select Currency"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Symbol</label>
+            <label className="block text-[12px] font-semibold text-slate-700 tracking-tight mb-1.5">
+              Symbol
+            </label>
             <input
               type="text"
+              disabled={readOnly}
               value={formData.currencySymbol || "₹"}
               onChange={(e) => updateField("currencySymbol", e.target.value)}
-              className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
+              className="w-full px-3 h-[38px] text-[13px] font-semibold text-center bg-white hover:bg-slate-50/50 border border-slate-200 rounded-[10px] text-slate-900 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
             />
           </div>
         </div>
 
-        {/* Date Format */}
+        {/* Date Format using shared SelectField */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-slate-500" /> Date Format
-          </label>
-          <select
+          <SelectField
+            label="Date Format"
+            disabled={readOnly}
             value={formData.dateFormat || "DD/MM/YYYY"}
-            onChange={(e) => updateField("dateFormat", e.target.value)}
-            className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
-          >
-            <option value="DD/MM/YYYY">DD/MM/YYYY (India/UK - e.g. 27/08/2026) (Default)</option>
-            <option value="YYYY-MM-DD">YYYY-MM-DD (ISO 8601 - e.g. 2026-08-27)</option>
-            <option value="MM/DD/YYYY">MM/DD/YYYY (US - e.g. 08/27/2026)</option>
-            <option value="DD-MMM-YYYY">DD-MMM-YYYY (e.g. 27-Aug-2026)</option>
-          </select>
+            onChange={(val) => updateField("dateFormat", val)}
+            options={DATE_FORMAT_OPTIONS}
+            placeholder="Select Date Format"
+          />
         </div>
 
-        {/* System Language */}
+        {/* System Language using shared SelectField */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-            <Languages className="w-3.5 h-3.5 text-slate-500" /> Primary Language
-          </label>
-          <select
+          <SelectField
+            label="Primary Language"
+            disabled={readOnly}
             value={formData.language || "en"}
-            onChange={(e) => updateField("language", e.target.value)}
-            className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all"
-          >
-            <option value="en">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="hi">Hindi (हिन्दी)</option>
-            <option value="es">Spanish (Español)</option>
-            <option value="fr">French (Français)</option>
-            <option value="de">German (Deutsch)</option>
-          </select>
+            onChange={(val) => updateField("language", val)}
+            options={LANGUAGE_OPTIONS}
+            placeholder="Select Language"
+          />
         </div>
       </div>
     </div>
   )
 }
+
+
+
+
