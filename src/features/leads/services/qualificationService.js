@@ -29,8 +29,9 @@ export const getQualificationHistory = async (leadId) => {
 /**
  * Get active dynamic qualification criteria for the company
  */
-export const getQualificationCriteria = async () => {
-  const response = await apiClient('/qualification-settings/criteria', {
+export const getQualificationCriteria = async (companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/criteria${query}`, {
     method: 'GET',
   });
   return response?.data || [];
@@ -39,8 +40,9 @@ export const getQualificationCriteria = async () => {
 /**
  * Get company qualification settings (pass threshold, hold threshold)
  */
-export const getQualificationSettings = async () => {
-  const response = await apiClient('/qualification-settings/settings', {
+export const getQualificationSettings = async (companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/settings${query}`, {
     method: 'GET',
   });
   return response?.data || { passThreshold: 60, holdThreshold: 40 };
@@ -49,10 +51,11 @@ export const getQualificationSettings = async () => {
 /**
  * Create a new criterion field (Admin)
  */
-export const createCriteria = async (data) => {
-  const response = await apiClient('/qualification-settings/criteria', {
+export const createCriteria = async (data, companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/criteria${query}`, {
     method: 'POST',
-    body: data,
+    body: { ...data, ...(companyId ? { companyId } : {}) },
   });
   return response?.data || response;
 };
@@ -60,10 +63,11 @@ export const createCriteria = async (data) => {
 /**
  * Update an existing criterion field (Admin)
  */
-export const updateCriteria = async (id, data) => {
-  const response = await apiClient(`/qualification-settings/criteria/${id}`, {
+export const updateCriteria = async (id, data, companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/criteria/${id}${query}`, {
     method: 'PUT',
-    body: data,
+    body: { ...data, ...(companyId ? { companyId } : {}) },
   });
   return response?.data || response;
 };
@@ -71,8 +75,9 @@ export const updateCriteria = async (id, data) => {
 /**
  * Soft-delete a criterion field (Admin)
  */
-export const deleteCriteria = async (id) => {
-  const response = await apiClient(`/qualification-settings/criteria/${id}`, {
+export const deleteCriteria = async (id, companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/criteria/${id}${query}`, {
     method: 'DELETE',
   });
   return response?.data || response;
@@ -81,10 +86,11 @@ export const deleteCriteria = async (id) => {
 /**
  * Save entire criteria matrix (Admin)
  */
-export const saveCriteriaMatrix = async (criteria) => {
-  const response = await apiClient('/qualification-settings/matrix', {
+export const saveCriteriaMatrix = async (criteria, companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/matrix${query}`, {
     method: 'POST',
-    body: { criteria },
+    body: { criteria, ...(companyId ? { companyId } : {}) },
   });
   return response?.data || response;
 };
@@ -92,9 +98,11 @@ export const saveCriteriaMatrix = async (criteria) => {
 /**
  * Auto-balance criteria weights to 100 points using Largest Remainder Algorithm (Admin)
  */
-export const autoBalanceCriteria = async () => {
-  const response = await apiClient('/qualification-settings/auto-balance', {
+export const autoBalanceCriteria = async (companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/auto-balance${query}`, {
     method: 'POST',
+    body: companyId ? { companyId } : {},
   });
   return response?.data || response;
 };
@@ -102,10 +110,11 @@ export const autoBalanceCriteria = async () => {
 /**
  * Update company qualification settings (pass threshold, hold threshold)
  */
-export const updateQualificationSettings = async (data) => {
-  const response = await apiClient('/qualification-settings/settings', {
+export const updateQualificationSettings = async (data, companyId = null) => {
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const response = await apiClient(`/qualification-settings/settings${query}`, {
     method: 'PUT',
-    body: data,
+    body: { ...data, ...(companyId ? { companyId } : {}) },
   });
   return response?.data || response;
 };
