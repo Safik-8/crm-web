@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, TrendingUp, CheckCircle2, Clock, AlertCircle, BarChart3, PieChart as PieIcon, Filter, Search } from 'lucide-react';
+import { Target, TrendingUp, CheckCircle2, Clock, AlertCircle, BarChart3, PieChart as PieIcon, Filter, Search, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useKpiDashboard } from '../hooks/useKpi';
 import KpiCard from '../components/KpiCard';
@@ -7,6 +7,9 @@ import { CrmBarChart, CrmLineChart, CrmPieChart, ChartEmptyState } from '../../.
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import SelectField from '../../../shared/components/elements/SelectField';
 import TextField from '../../../shared/components/elements/TextField';
+
+import SearchInput from '../../../shared/components/elements/SearchInput';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 export default function MyPerformancePage() {
   const { user } = useAuth();
@@ -21,7 +24,7 @@ export default function MyPerformancePage() {
   };
 
   // Request 'my' tab for personal performance with API-level filters
-  const { data: dashboardData, isLoading, isFetching, isError, error } = useKpiDashboard('my', filters, {
+  const { data: dashboardData, isLoading, isFetching, isError, error, refetch } = useKpiDashboard('my', filters, {
     enabled: Boolean(user),
   });
 
@@ -67,28 +70,32 @@ export default function MyPerformancePage() {
   }
 
   return (
-    <div className="w-full space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Target className="text-orange-500" size={24} />
-            <span>My Performance</span>
-          </h1>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            Track your personal target achievements, live CRM progress, and KPI metrics.
-          </p>
-        </div>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* Page Header */}
+      <PageHeader
+        icon={Target}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="My Performance"
+        description="Track your personal target achievements, live CRM progress, and KPI metrics."
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Personal Filter Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 border border-slate-200/80 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 border border-slate-200">
         <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <TextField
-            placeholder="Search my targets or KPI type..."
+          <SearchInput
+            placeholder="Search my targets..."
             value={searchQuery}
             onChange={(val) => setSearchQuery(val)}
-            startIcon={Search}
           />
         </div>
 

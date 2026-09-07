@@ -18,7 +18,7 @@ const KpiCard = ({ icon: Icon, title, value = 0, prefix = '', suffix = '', subte
   const isPositive = trend > 0;
 
   return (
-    <div className={`bg-white border shadow-sm p-4 flex flex-col gap-2.5 transition-all ${c.border} ${isLoading ? 'animate-pulse' : ''}`}>
+    <div className={`bg-white border border-slate-200 p-4 flex flex-col gap-2.5 transition-all ${c.border} ${isLoading ? 'animate-pulse' : ''}`}>
       <div className="flex items-start justify-between">
         <span className={`flex h-10 w-10 items-center justify-center ${c.bg}`}>
           {Icon && <Icon size={19} className={c.icon} aria-hidden="true" />}

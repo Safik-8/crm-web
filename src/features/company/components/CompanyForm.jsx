@@ -333,25 +333,25 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   // ─── PROFILE SKELETON LOADER ───────────────────────────────────────────────
   const ProfileSkeleton = () => (
     <div className="flex flex-col gap-5 w-full px-0 lg:px-1">
-      <div className="bg-white rounded-3xl border border-slate-200 w-full shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 w-full overflow-hidden">
         <div className="flex items-center gap-4 py-5 px-6 md:py-6 md:px-8 border-b border-slate-100">
-          <Skeleton className="h-14 w-14 rounded-2xl shrink-0" />
+          <Skeleton className="h-14 w-14 rounded-md shrink-0" />
           <div className="flex-1">
             <Skeleton className="h-6 w-40 mb-2" />
             <Skeleton className="h-4 w-60" />
           </div>
         </div>
         <div className="py-4 md:py-5 px-6 md:px-8 bg-slate-50/50 border-t border-slate-100">
-          <Skeleton className="h-5 w-3/4 rounded-lg" />
+          <Skeleton className="h-5 w-3/4 rounded-md" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 md:p-6 border border-slate-200">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6" />
         </div>
-        <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 md:p-6 border border-slate-200">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6" />
@@ -368,24 +368,24 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   if (inlineMode) {
     return (
       <div className="flex flex-col gap-5 w-full px-0 lg:px-1">
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden w-full shadow-sm">
+        <div className="bg-white border border-slate-200 overflow-hidden w-full">
           <div className="py-5 px-6 md:py-6 md:px-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, rgba(248, 111, 3, 0.05) 100%)' }}>
             <div className="absolute right-0 top-0 w-[180px] h-full pointer-events-none opacity-30" style={{ backgroundImage: 'radial-gradient(circle, rgba(248, 111, 3, 0.1) 0%, transparent 70%)' }} />
             <div className="flex items-center gap-6">
               {company.logo ? (
-                <div className="w-[88px] h-[88px] rounded-[22px] overflow-hidden border border-slate-200/80 shadow-md shadow-slate-100 flex-shrink-0">
+                <div className="w-[88px] h-[88px] border border-slate-200/80 flex-shrink-0">
                   <img src={company.logo} alt="Company avatar" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-[88px] h-[88px] rounded-[22px] flex items-center justify-center bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0">
+                <div className="w-[88px] h-[88px] flex items-center justify-center bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0">
                   <Building size={36} />
                 </div>
               )}
               <div>
                 <h2 className="font-heading font-extrabold text-slate-900 text-2xl md:text-3xl tracking-tight leading-none">{company.name}</h2>
                 <div className="flex items-center gap-3 mt-3">
-                  <span className="inline-flex items-center px-3 py-0.5 rounded-lg text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200/80 uppercase tracking-wider"># {company.code}</span>
-                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-black bg-[#ECFDF5] text-[#047857] border border-[#D1FAE5] uppercase tracking-wider">
+                  <span className="inline-flex items-center px-3 py-0.5 text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200/80 uppercase tracking-wider"># {company.code}</span>
+                  <span className="inline-flex items-center px-3 py-0.5 text-[10px] font-black bg-[#ECFDF5] text-[#047857] border border-[#D1FAE5] uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-[#10B981] animate-pulse" />
                     {company.status}
                   </span>
@@ -414,7 +414,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
               </div>
             </div>
             {(user?.primaryRole === 'SUPER_ADMIN' || hasPermission('COMPANY', 'canEdit')) && (
-              <button onClick={handleEditClick} type="button" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2.5 px-5 z-10 shadow-sm shadow-slate-100 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 hover:shadow-md hover:shadow-orange-100/30 shrink-0">
+              <button onClick={handleEditClick} type="button" className="inline-flex items-center gap-2 border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2.5 px-5 z-10 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 shrink-0 cursor-pointer">
                 <Pencil size={14} className="stroke-[2.5]" /> Edit Profile
               </button>
             )}
@@ -429,7 +429,7 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 md:p-6 border border-slate-200">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0"><Shield size={16} /></div>
               <div>
@@ -448,7 +448,8 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
               </div>
             </div>
           </div>
-          <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+
+          <div className="bg-white p-5 md:p-6 border border-slate-200">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0"><Activity size={16} /></div>
               <div>

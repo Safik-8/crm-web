@@ -89,6 +89,15 @@ export const useBranches = (companyId) => {
   // Cleanup timers
   useEffect(() => () => clearTimeout(debounceTimer.current), []);
 
+  const clearFilters = useCallback(() => {
+    setSearch('');
+    setDebouncedSearch('');
+    setStatus('');
+    setPage(1);
+  }, []);
+
+  const hasActiveFilters = Boolean(search || status);
+
   return {
     // query results
     branches: branchesList,
@@ -98,9 +107,11 @@ export const useBranches = (companyId) => {
     // filters
     search,
     status,
+    hasActiveFilters,
     // handlers
     handleSearchChange,
     handleStatusChange,
+    clearFilters,
     setPage,
     refetch
   };

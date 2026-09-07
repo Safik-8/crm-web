@@ -43,7 +43,7 @@ const BaseLayout = () => {
   };
 
   const pageTitle = getPageTitle(location.pathname);
-  const isFullWidthPage = location.pathname.includes('/board') || location.pathname.includes('/stages');
+  const isFullWidthPage = location.pathname.includes('/board');
 
   return (
     <div className="flex bg-slate-100 h-screen overflow-hidden">

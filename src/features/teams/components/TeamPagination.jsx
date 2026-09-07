@@ -40,7 +40,7 @@ const TeamPagination = ({ pagination, onPageChange, isLoading }) => {
   const pageRange = buildPageRange(page, totalPages);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-3 sm:px-5 py-3">
+    <div className="bg-white border border-slate-200 px-3 sm:px-5 py-3">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
 
         {/* ── Summary ── */}

@@ -99,6 +99,18 @@ export const useUserList = (currentUser = null) => {
     listClearFilters(defaults);
   };
 
+  // Calculate explicit user-applied filters (preventing auto tenant scopes like companyId/branchId from showing Clear Filters button by default)
+  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
+  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
+
+  const isFilterApplied = Boolean(
+    search ||
+    filters.status ||
+    filters.roleId ||
+    (isSuperAdmin && filters.companyId) ||
+    ((isSuperAdmin || isCompanyAdmin) && filters.branchId && filters.branchId !== (currentUser?.branchId || ''))
+  );
+
   return {
     users,
     pagination,
@@ -109,7 +121,7 @@ export const useUserList = (currentUser = null) => {
     branchId: filters.branchId,
     loadingState,
     errorMessage: error?.message || 'Something went wrong.',
-    hasActiveFilters,
+    hasActiveFilters: isFilterApplied,
     page,
     setPage,
     handleSearchChange,

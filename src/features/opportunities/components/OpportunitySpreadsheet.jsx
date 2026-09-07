@@ -238,7 +238,7 @@ export const OpportunitySpreadsheet = ({
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 overflow-hidden">
       <Table
         columns={columns}
         data={opportunities}

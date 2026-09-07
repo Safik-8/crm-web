@@ -65,7 +65,7 @@ const LoginForm = () => {
   return (
     <>
     {/* Card Layout refactored to HTML div with Tailwind CSS */}
-    <div className="relative w-full max-w-sm overflow-hidden bg-white border border-gray-100 rounded-2xl shadow-xl p-7 sm:p-9 animate-fade-in-zoom">
+    <div className="relative w-full max-w-sm overflow-hidden bg-white border border-gray-100 shadow-xl p-7 sm:p-9 animate-fade-in-zoom">
       {/* Top accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
 

@@ -548,41 +548,21 @@ const ReportsPage = () => {
             </div>
           )}
 
-          {/* Quick Access / Recently Viewed */}
-          {recentlyViewed.length > 0 && (
-            <div className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-hide">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 whitespace-nowrap">
-                <Clock className="w-4 h-4" />
-                Recently Viewed:
-              </div>
-              {recentlyViewed.map(rType => {
-                const rep = reportsList.find(rl => rl.reportType === rType);
-                if (!rep) return null;
-                return (
-                  <button
-                    key={rType}
-                    onClick={() => handleOpenReport(rType)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-none transition-all"
-                  >
-                    {rep.reportName}
-                  </button>
-                );
-              })}
+          {/* Search & Filter Bar Card */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 border border-slate-200">
+            <div className="w-full sm:w-72">
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search reports..."
+              />
             </div>
-          )}
-
-          {/* Search, Filter controls */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search reports..."
-            />
             <div className="w-full sm:w-64">
               <SelectField
                 value={selectedCategory}
                 onChange={setSelectedCategory}
                 options={categoryOptions}
+                searchable={true}
               />
             </div>
           </div>

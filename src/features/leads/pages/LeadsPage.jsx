@@ -491,8 +491,10 @@ export const LeadsPage = () => {
 
   // Role-based scope permissions
   const role = currentUser?.primaryRole;
-  const canSelectCompany = role === 'SUPER_ADMIN';
-  const canSelectBranch = role === 'SUPER_ADMIN' || role === 'COMPANY_ADMIN';
+  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isCompanyAdmin = role === 'COMPANY_ADMIN' || (currentUser?.primaryRoleRank >= 80 && !currentUser?.branchId);
+  const canSelectCompany = isSuperAdmin;
+  const canSelectBranch = isSuperAdmin || isCompanyAdmin;
 
   // Fetch Companies (for Super Admin)
   const { data: companiesRes } = useQuery({
@@ -765,100 +767,26 @@ export const LeadsPage = () => {
         title="Leads Registry"
         description="Capture, track, and convert leads."
         icon={ClipboardList}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
         actions={
-          <>
-            {selectedLeadIds.length > 0 && (hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
-                  setLeadsToAssign(selectedLeads);
-                  setIsAssignOpen(true);
-                }}
-                startIcon={<UserCheck size={16} />}
-                sx={{
-                  backgroundColor: '#F86F03',
-                  '&:hover': { backgroundColor: '#DE5D02' }
-                }}
-              >
-                Assign Selected ({selectedLeadIds.length})
-              </Button>
-            )}
-
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/pipelines')}
-              startIcon={<Kanban size={16} />}
-              sx={{
-                borderColor: '#E2E8F0',
-                color: '#475569',
-                '&:hover': {
-                  borderColor: '#CBD5E1',
-                  bgcolor: '#F8FAFC'
-                }
-              }}
-            >
-              Kanban Boards
-            </Button>
-
-            {hasPermission('LEAD', 'canDelete') && (
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => setIsDeleteAllOpen(true)}
-                startIcon={<Trash2 size={16} />}
-                sx={{
-                  borderColor: '#FEE2E2',
-                  color: '#EF4444',
-                  '&:hover': {
-                    borderColor: '#FCA5A5',
-                    bgcolor: '#FEF2F2'
-                  }
-                }}
-              >
-                Delete All
-              </Button>
-            )}
-
-            {hasPermission('LEAD', 'canCreate') && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outlined"
-                  onClick={() => setIsImportOpen(true)}
-                  startIcon={<FileSpreadsheet size={16} />}
-                  sx={{
-                    borderColor: '#E2E8F0',
-                    color: '#475569',
-                    '&:hover': {
-                      borderColor: '#CBD5E1',
-                      bgcolor: '#F8FAFC'
-                    }
-                  }}
-                >
-                  Import Leads
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => setIsCreateOpen(true)}
-                  startIcon={<Plus size={16} />}
-                >
-                  Add Lead
-                </Button>
-              </div>
-            )}
-          </>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer p-2"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
         }
       />
 
 
 
-      <section className=''>
-
+      <section className="space-y-4">
         {/* Toolbar Filter Panel */}
-        <div className="bg-white border-x border-t border-slate-200/60 p-4">
+        <div className="bg-white border border-slate-200 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex-1 min-w-[280px] w-full sm:w-auto">
+            <div className="flex-1 min-w-[260px] w-full sm:w-auto">
               <SearchInput
                 value={search}
                 onChange={handleSearchChange}
@@ -970,14 +898,101 @@ export const LeadsPage = () => {
                 </div>
               )}
 
-              <button
-                onClick={() => refetch()}
-                disabled={isLoading || isFetching}
-                className="flex items-center justify-center h-11 w-11 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
-                title="Refresh List"
+              {/* Primary Action Controls */}
+              {selectedLeadIds.length > 0 && (hasPermission('LEAD_ASSIGNMENT', 'canCreate') || hasPermission('LEAD_ASSIGNMENT', 'canEdit')) && (
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    const selectedLeads = leads.filter(l => selectedLeadIds.includes(l.id));
+                    setLeadsToAssign(selectedLeads);
+                    setIsAssignOpen(true);
+                  }}
+                  startIcon={<UserCheck size={16} />}
+                  sx={{
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#F86F03',
+                    '&:hover': { backgroundColor: '#DE5D02' }
+                  }}
+                >
+                  Assign Selected ({selectedLeadIds.length})
+                </Button>
+              )}
+
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/pipelines')}
+                startIcon={<Kanban size={16} />}
+                sx={{
+                  height: '44px',
+                  borderRadius: '12px',
+                  borderColor: '#E2E8F0',
+                  color: '#475569',
+                  '&:hover': {
+                    borderColor: '#CBD5E1',
+                    bgcolor: '#F8FAFC'
+                  }
+                }}
               >
-                <RefreshCw size={15} className={`${isFetching ? 'animate-spin' : ''}`} />
-              </button>
+                Kanban
+              </Button>
+
+              {hasPermission('LEAD', 'canDelete') && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => setIsDeleteAllOpen(true)}
+                  startIcon={<Trash2 size={16} />}
+                  sx={{
+                    height: '44px',
+                    borderRadius: '12px',
+                    borderColor: '#FEE2E2',
+                    color: '#EF4444',
+                    '&:hover': {
+                      borderColor: '#FCA5A5',
+                      bgcolor: '#FEF2F2'
+                    }
+                  }}
+                >
+                  Delete All
+                </Button>
+              )}
+
+              {hasPermission('LEAD', 'canCreate') && (
+                <>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setIsImportOpen(true)}
+                    startIcon={<FileSpreadsheet size={16} />}
+                    sx={{
+                      height: '44px',
+                      borderRadius: '12px',
+                      borderColor: '#E2E8F0',
+                      color: '#475569',
+                      '&:hover': {
+                        borderColor: '#CBD5E1',
+                        bgcolor: '#F8FAFC'
+                      }
+                    }}
+                  >
+                    Import
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => setIsCreateOpen(true)}
+                    startIcon={<Plus size={16} />}
+                    sx={{
+                      height: '44px',
+                      borderRadius: '12px',
+                      backgroundColor: '#F86F03',
+                      fontWeight: 700,
+                      '&:hover': { backgroundColor: '#DE5D02' }
+                    }}
+                  >
+                    Add Lead
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1002,7 +1017,6 @@ export const LeadsPage = () => {
           }
           emptyTitle="No leads registered"
           emptyDescription="Manually add a lead or import them from Excel to get started."
-          className=" shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
           rowClassName="group"
           sortBy={sortBy}
           sortOrder={sortOrder}
@@ -1018,8 +1032,6 @@ export const LeadsPage = () => {
             entityName="leads"
           />
         )}
-
-
       </section>
 
 
@@ -1029,265 +1041,249 @@ export const LeadsPage = () => {
         onClose={() => setIsFilterOpen(false)}
         title="Filter Leads"
         subtitle="Apply segmentation and business routing rules"
+        icon={SlidersHorizontal}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        width={{ xs: '100%', sm: 480, md: 520 }}
+        showFooter={true}
+        customFooter={
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                const cleared = {
+                  sourceId: '',
+                  courseId: '',
+                  statusId: '',
+                  priority: '',
+                  assignedToId: '',
+                  dateFrom: '',
+                  dateTo: '',
+                  branchId: '',
+                  teamId: ''
+                };
+                setTempFilters(cleared);
+                clearFilters(cleared);
+                setIsFilterOpen(false);
+              }}
+              disabled={!Object.values(tempFilters).some(Boolean)}
+              sx={{
+                borderColor: '#CBD5E1',
+                color: '#64748B',
+                fontWeight: 600,
+                fontSize: '13px',
+                height: '42px',
+                px: 2.5
+              }}
+            >
+              Reset All
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                handleFilterChange(tempFilters);
+                setIsFilterOpen(false);
+              }}
+              sx={{
+                backgroundColor: '#F86F03',
+                fontWeight: 700,
+                fontSize: '13px',
+                height: '42px',
+                px: 3,
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
+            >
+              Apply Filters
+            </Button>
+          </div>
+        }
       >
-        <div className="flex flex-col h-full justify-between">
-          <div className="space-y-5">
-            {savedFiltersList.length > 0 && (
-              <div className="border-b border-slate-100 pb-5 mb-3">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Saved Filters</label>
-                <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                  {savedFiltersList.map((sf) => (
-                    <div key={sf.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-all group/item">
+        <div className="space-y-5 pb-6">
+          {savedFiltersList.length > 0 && (
+            <div className="border-b border-slate-100 pb-5 mb-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Saved Filters</label>
+              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                {savedFiltersList.map((sf) => (
+                  <div key={sf.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-all group/item">
+                    <button
+                      onClick={() => {
+                        const defaultEmptyFilters = {
+                          sourceId: '',
+                          courseId: '',
+                          statusId: '',
+                          priority: '',
+                          assignedToId: '',
+                          dateFrom: '',
+                          dateTo: '',
+                          branchId: '',
+                          teamId: ''
+                        };
+                        handleFilterChange({
+                          ...defaultEmptyFilters,
+                          ...sf.filters
+                        });
+                        setIsFilterOpen(false);
+                        toast.success(`Applied filter "${sf.name}"`);
+                      }}
+                      className="text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors text-left flex-1"
+                    >
+                      {sf.name}
+                    </button>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => handleUpdateFilterValues(sf.id)}
+                        className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
+                        title="Update Preset with current filters"
+                      >
+                        <Bookmark size={11} />
+                      </button>
                       <button
                         onClick={() => {
-                          const defaultEmptyFilters = {
-                            sourceId: '',
-                            courseId: '',
-                            statusId: '',
-                            priority: '',
-                            assignedToId: '',
-                            dateFrom: '',
-                            dateTo: '',
-                            branchId: '',
-                            teamId: ''
-                          };
-                          handleFilterChange({
-                            ...defaultEmptyFilters,
-                            ...sf.filters
-                          });
-                          setIsFilterOpen(false);
-                          toast.success(`Applied filter "${sf.name}"`);
+                          setFilterName(sf.name);
+                          setFilterModalConfig({ isOpen: true, mode: 'rename', filterId: sf.id });
                         }}
-                        className="text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors text-left flex-1"
+                        className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
+                        title="Rename Filter"
                       >
-                        {sf.name}
+                        <Pencil size={11} />
                       </button>
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => handleUpdateFilterValues(sf.id)}
-                          className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
-                          title="Update Preset with current filters"
-                        >
-                          <Bookmark size={11} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setFilterName(sf.name);
-                            setFilterModalConfig({ isOpen: true, mode: 'rename', filterId: sf.id });
-                          }}
-                          className="p-1 rounded text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover/item:opacity-100 mr-0.5"
-                          title="Rename Filter"
-                        >
-                          <Pencil size={11} />
-                        </button>
-                        <button
-                          onClick={() => setDeletingFilterId(sf.id)}
-                          className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover/item:opacity-100"
-                          title="Delete Filter"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setDeletingFilterId(sf.id)}
+                        className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover/item:opacity-100"
+                        title="Delete Filter"
+                      >
+                        <Trash2 size={11} />
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {canSelectCompany && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Company</label>
+          {/* Scope Filters */}
+          {(isSuperAdmin || isCompanyAdmin) && (
+            <div className="space-y-4 border-b border-slate-100 pb-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500">Scope Filters</h3>
+              {isSuperAdmin && (
                 <SelectField
-                  id="filter-company"
+                  id="drawer-filter-company"
+                  label="Company"
                   placeholder="All Companies"
                   allowEmptyOption
                   value={tempFilters.companyId}
                   onChange={(val) => {
                     handleTempFilterChange('companyId', val);
-                    handleTempFilterChange('branchId', ''); // Reset branch selection
+                    handleTempFilterChange('branchId', '');
                   }}
                   options={companyOptions}
                   searchable={true}
                 />
-              </div>
-            )}
-
-            {canSelectBranch && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Branch</label>
+              )}
+              {canSelectBranch && (
                 <SelectField
-                  id="filter-branch"
+                  id="drawer-filter-branch"
+                  label="Branch"
                   placeholder="All Branches"
                   allowEmptyOption
                   value={tempFilters.branchId}
                   onChange={(val) => handleTempFilterChange('branchId', val)}
                   options={branchOptions}
                   searchable={true}
-                  disabled={canSelectCompany && !tempFilters.companyId}
+                  disabled={isSuperAdmin && !tempFilters.companyId}
                 />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lead Source</label>
-              <SelectField
-                id="filter-source"
-                placeholder="All Sources"
-                allowEmptyOption
-                value={tempFilters.sourceId}
-                onChange={(val) => handleTempFilterChange('sourceId', val)}
-                options={sourcesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
+              )}
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Interested Course/Product</label>
-              <SelectField
-                id="filter-course"
-                placeholder="All Courses"
-                allowEmptyOption
-                value={tempFilters.courseId}
-                onChange={(val) => handleTempFilterChange('courseId', val)}
-                options={coursesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pipeline Status</label>
-              <SelectField
-                id="filter-status"
-                placeholder="All Statuses"
-                allowEmptyOption
-                value={tempFilters.statusId}
-                onChange={(val) => handleTempFilterChange('statusId', val)}
-                options={statusesOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority Level</label>
-              <SelectField
-                id="filter-priority"
-                placeholder="All Priorities"
-                allowEmptyOption
-                value={tempFilters.priority}
-                onChange={(val) => handleTempFilterChange('priority', val)}
-                options={priorityOptions}
-                searchable={false}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assigned Owner</label>
-              <SelectField
-                id="filter-assignee"
-                placeholder="All Assignees"
-                allowEmptyOption
-                value={tempFilters.assignedToId}
-                onChange={(val) => handleTempFilterChange('assignedToId', val)}
-                options={assigneeOptions}
-                searchable={true}
-                isLoading={isLoadingFormData}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assigned Team</label>
-              <SelectField
-                id="filter-team"
-                placeholder="All Teams"
-                allowEmptyOption
-                value={tempFilters.teamId}
-                onChange={(val) => handleTempFilterChange('teamId', val)}
-                options={teamOptions}
-                searchable={true}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Creation Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">From</span>
-                  <input
-                    type="date"
-                    value={tempFilters.dateFrom || ''}
-                    onChange={(e) => handleTempFilterChange('dateFrom', e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-slate-700"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">To</span>
-                  <input
-                    type="date"
-                    value={tempFilters.dateTo || ''}
-                    onChange={(e) => handleTempFilterChange('dateTo', e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-slate-700"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Business Filters */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500">Business Segmentation</h3>
+            <SelectField
+              id="drawer-filter-source"
+              label="Lead Source"
+              placeholder="All Sources"
+              allowEmptyOption
+              value={tempFilters.sourceId}
+              onChange={(val) => handleTempFilterChange('sourceId', val)}
+              options={sourcesOptions}
+              searchable={true}
+              isLoading={isLoadingFormData}
+            />
+            <SelectField
+              id="drawer-filter-course"
+              label="Course / Product"
+              placeholder="All Courses"
+              allowEmptyOption
+              value={tempFilters.courseId}
+              onChange={(val) => handleTempFilterChange('courseId', val)}
+              options={coursesOptions}
+              searchable={true}
+              isLoading={isLoadingFormData}
+            />
+            <SelectField
+              id="drawer-filter-status"
+              label="Lead Status"
+              placeholder="All Statuses"
+              allowEmptyOption
+              value={tempFilters.statusId}
+              onChange={(val) => handleTempFilterChange('statusId', val)}
+              options={statusesOptions}
+              searchable={true}
+              isLoading={isLoadingFormData}
+            />
+            <SelectField
+              id="drawer-filter-priority"
+              label="Priority Level"
+              placeholder="All Priorities"
+              allowEmptyOption
+              value={tempFilters.priority}
+              onChange={(val) => handleTempFilterChange('priority', val)}
+              options={priorityOptions}
+              searchable={false}
+            />
+            <SelectField
+              id="drawer-filter-assignee"
+              label="Assigned Owner"
+              placeholder="All Assignees"
+              allowEmptyOption
+              value={tempFilters.assignedToId}
+              onChange={(val) => handleTempFilterChange('assignedToId', val)}
+              options={assigneeOptions}
+              searchable={true}
+              isLoading={isLoadingFormData}
+            />
+            <SelectField
+              id="drawer-filter-team"
+              label="Assigned Team"
+              placeholder="All Teams"
+              allowEmptyOption
+              value={tempFilters.teamId}
+              onChange={(val) => handleTempFilterChange('teamId', val)}
+              options={teamOptions}
+              searchable={true}
+            />
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 mt-8">
-            <Button
-              variant="outlined"
-              onClick={() => setFilterModalConfig({ isOpen: true, mode: 'save', filterId: null })}
-              disabled={!Object.values(tempFilters).some(Boolean)}
-              startIcon={<BookmarkPlus size={16} />}
-              sx={{
-                borderColor: '#f97316',
-                color: '#f97316',
-                py: 1.25,
-                '&:hover': {
-                  borderColor: '#ea580c',
-                  backgroundColor: '#fff7ed'
-                }
-              }}
-            >
-              Save Filter Preset
-            </Button>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  const cleared = {
-                    sourceId: '',
-                    courseId: '',
-                    statusId: '',
-                    priority: '',
-                    assignedToId: '',
-                    dateFrom: '',
-                    dateTo: '',
-                    branchId: '',
-                    teamId: ''
-                  };
-                  setTempFilters(cleared);
-                  clearFilters(cleared);
-                  setIsFilterOpen(false);
-                }}
-                disabled={!Object.values(tempFilters).some(Boolean)}
-                sx={{ flex: 1, borderColor: '#cbd5e1', color: '#64748b' }}
-              >
-                Reset All
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  handleFilterChange(tempFilters);
-                  setIsFilterOpen(false);
-                }}
-                sx={{ flex: 1, backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
-              >
-                Apply & Close
-              </Button>
+          {/* Date Range Filter */}
+          <div className="space-y-4 border-t border-slate-100 pt-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500">Creation Date Range</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <TextField
+                id="drawer-filter-date-from"
+                label="From Date"
+                type="date"
+                value={tempFilters.dateFrom || ''}
+                onChange={(e) => handleTempFilterChange('dateFrom', e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                id="drawer-filter-date-to"
+                label="To Date"
+                type="date"
+                value={tempFilters.dateTo || ''}
+                onChange={(e) => handleTempFilterChange('dateTo', e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
             </div>
           </div>
         </div>
