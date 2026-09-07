@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useAuth } from "../../../app/providers/AuthProvider"
 import { settingsApi } from "../services/settingsApi"
 
 /**
@@ -46,6 +47,8 @@ const CATEGORY_FIELD_MAP = {
 }
 
 export const useSettings = (companyId = null, options = {}) => {
+  const { user } = useAuth()
+  const targetCompanyId = companyId || user?.companyId
   const { enabled = true } = options
   const queryClient = useQueryClient()
 
@@ -65,14 +68,9 @@ export const useSettings = (companyId = null, options = {}) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: companyId ? ["system-settings", companyId] : ["system-settings"],
-    queryFn: () => settingsApi.getSettings(companyId),
-    // Only fire when:
-    // 1. The caller explicitly enabled it (default: true), AND
-    // 2. companyId has a real value (not null/undefined/0).
-    //    This prevents Super Admin from triggering a settings fetch before
-    //    selecting a tenant company, which would cause a 403 from the backend.
-    enabled: enabled && Boolean(companyId),
+    queryKey: targetCompanyId ? ["system-settings", targetCompanyId] : ["system-settings"],
+    queryFn: () => settingsApi.getSettings(targetCompanyId),
+    enabled: enabled && Boolean(targetCompanyId),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -123,13 +121,13 @@ export const useSettings = (companyId = null, options = {}) => {
         if (key in formData) acc[key] = formData[key]
         return acc
       }, {})
-      return await settingsApi.updateCategorySettings(category, payload, companyId)
+      return await settingsApi.updateCategorySettings(category, payload, targetCompanyId)
     },
     onSuccess: (updatedSettings, category) => {
       // 1. Immediately update all settings query cache keys for instant 0ms UI reactivity
       queryClient.setQueryData(["system-settings"], updatedSettings)
-      if (companyId) {
-        queryClient.setQueryData(["system-settings", companyId], updatedSettings)
+      if (targetCompanyId) {
+        queryClient.setQueryData(["system-settings", targetCompanyId], updatedSettings)
       }
 
       // 2. Invalidate settings, company profile and list queries
@@ -169,12 +167,12 @@ export const useSettings = (companyId = null, options = {}) => {
   // Reset Category to System Defaults Mutation
   const resetDefaultsMutation = useMutation({
     mutationFn: async (category) => {
-      return await settingsApi.resetCategorySettings(category, companyId)
+      return await settingsApi.resetCategorySettings(category, targetCompanyId)
     },
     onSuccess: (resetSettings, category) => {
       queryClient.setQueryData(["system-settings"], resetSettings)
-      if (companyId) {
-        queryClient.setQueryData(["system-settings", companyId], resetSettings)
+      if (targetCompanyId) {
+        queryClient.setQueryData(["system-settings", targetCompanyId], resetSettings)
       }
 
       queryClient.invalidateQueries({ queryKey: ["system-settings"] })
@@ -202,7 +200,7 @@ export const useSettings = (companyId = null, options = {}) => {
   // Send Test Email Mutation
   const sendTestEmailMutation = useMutation({
     mutationFn: async (recipientEmail) => {
-      return await settingsApi.sendTestEmail(recipientEmail, companyId)
+      return await settingsApi.sendTestEmail(recipientEmail, targetCompanyId)
     },
     onSuccess: (response) => {
       toast.success(response?.message || "Test email sent successfully!")

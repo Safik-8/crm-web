@@ -118,7 +118,7 @@ export const SystemSettingsPage = () => {
 
   if (isSuperAdmin && !selectedCompanyId) {
     return (
-      <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in duration-200">
+      <div className="space-y-4 max-w-[1600px] mx-auto">
         <div className="bg-white border border-slate-200 rounded-none p-12 text-center shadow-xs space-y-5">
           <div className="w-14 h-14 mx-auto rounded-[12px] bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center">
             <Building className="w-7 h-7" />
@@ -165,7 +165,7 @@ export const SystemSettingsPage = () => {
   }
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in duration-200">
+    <div className="space-y-4 max-w-[1600px] mx-auto">
       <SettingsHeader
         activeTabTitle={currentCategoryObj.label}
         activeTabCategory={activeTab}
