@@ -1,6 +1,7 @@
 // crm-web/src/shared/hooks/useFormatters.js
 
 import { useQuery } from "@tanstack/react-query"
+import { useAuth } from "../../app/providers/AuthProvider"
 import { settingsApi } from "../../features/settings/services/settingsApi"
 import {
   formatCurrency as baseFormatCurrency,
@@ -16,9 +17,13 @@ import {
  * and provides pre-bound formatting functions.
  */
 export const useFormatters = (companyId = null) => {
+  const { user } = useAuth()
+  const targetCompanyId = companyId || user?.companyId
+
   const { data: settings } = useQuery({
-    queryKey: companyId ? ["system-settings", companyId] : ["system-settings"],
-    queryFn: () => settingsApi.getSettings(companyId),
+    queryKey: targetCompanyId ? ["system-settings", targetCompanyId] : ["system-settings"],
+    queryFn: () => settingsApi.getSettings(targetCompanyId),
+    enabled: Boolean(targetCompanyId),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   })

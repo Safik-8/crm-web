@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   getQualificationCriteria,
   getQualificationSettings,
@@ -9,6 +10,7 @@ import {
   updateQualificationSettings,
   autoBalanceCriteria,
 } from '../../leads/services/qualificationService';
+import { companyApi } from '../../company/api/companyApi';
 import {
   Target,
   Plus,
@@ -26,7 +28,8 @@ import {
   X,
   ShieldCheck,
   RefreshCcw,
-  Lock
+  Lock,
+  Building
 } from 'lucide-react';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
@@ -57,6 +60,8 @@ const FIELD_TYPE_OPTIONS = [
 
 const QualificationCriteriaSettingsPage = () => {
   const { hasPermission, user } = useAuth();
+  const userRole = user?.primaryRole || user?.role || "COMPANY_ADMIN";
+  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN";
 
   // Dynamic RBAC Permission Checks
   const canEdit =
@@ -72,6 +77,38 @@ const QualificationCriteriaSettingsPage = () => {
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
     user?.primaryRole === 'SUPER_ADMIN' ||
     user?.primaryRole === 'COMPANY_ADMIN';
+
+  // Super Admin Multi-Company Selector State
+  const [selectedCompanyId, setSelectedCompanyId] = useState(
+    isSuperAdmin ? null : (user?.companyId || null)
+  );
+
+  const { data: companiesRes, isLoading: loadingCompanies } = useQuery({
+    queryKey: ["companies-all-options"],
+    queryFn: () => companyApi.getCompanies(),
+    enabled: isSuperAdmin,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rawCompanies = Array.isArray(companiesRes?.data)
+    ? companiesRes.data
+    : companiesRes?.data?.companies || (Array.isArray(companiesRes) ? companiesRes : []);
+
+  const companiesList = Array.isArray(rawCompanies) ? rawCompanies : [];
+
+  const companyOptions = companiesList.map((comp) => ({
+    value: String(comp.id),
+    label: comp.name ? `${comp.name}${comp.code ? ` (${comp.code})` : ''}` : `Company #${comp.id}`,
+  }));
+
+  // Automatically select first company if Super Admin has not chosen yet
+  useEffect(() => {
+    if (isSuperAdmin && !selectedCompanyId && companiesList.length > 0) {
+      setSelectedCompanyId(companiesList[0].id);
+    }
+  }, [isSuperAdmin, selectedCompanyId, companiesList]);
+
+  const effectiveCompanyId = isSuperAdmin ? selectedCompanyId : user?.companyId;
 
   const [criteria, setCriteria] = useState([]);
   const [settings, setSettings] = useState({ passThreshold: 60, holdThreshold: 40 });
@@ -102,12 +139,13 @@ const QualificationCriteriaSettingsPage = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchMatrix = async () => {
+  const fetchMatrix = async (targetCompanyId = effectiveCompanyId) => {
+    if (isSuperAdmin && !targetCompanyId) return;
     try {
       setLoading(true);
       const [fetchedCriteria, fetchedSettings] = await Promise.all([
-        getQualificationCriteria(),
-        getQualificationSettings(),
+        getQualificationCriteria(targetCompanyId),
+        getQualificationSettings(targetCompanyId),
       ]);
       setCriteria(fetchedCriteria || []);
       if (fetchedSettings) setSettings(fetchedSettings);
@@ -120,8 +158,10 @@ const QualificationCriteriaSettingsPage = () => {
   };
 
   useEffect(() => {
-    fetchMatrix();
-  }, []);
+    if (effectiveCompanyId || !isSuperAdmin) {
+      fetchMatrix(effectiveCompanyId);
+    }
+  }, [effectiveCompanyId]);
 
   const totalPoints = criteria.reduce((sum, item) => sum + (Number(item.maxPoints) || 0), 0);
   const isValidMatrix = totalPoints === 100;
@@ -148,7 +188,7 @@ const QualificationCriteriaSettingsPage = () => {
     }
     try {
       setIsAutoBalancing(true);
-      const updated = await autoBalanceCriteria();
+      const updated = await autoBalanceCriteria(effectiveCompanyId);
       setCriteria(updated || []);
       toast.success('Criteria weights auto-balanced to exactly 100 points!');
     } catch (err) {
@@ -171,8 +211,8 @@ const QualificationCriteriaSettingsPage = () => {
 
     try {
       setIsSaving(true);
-      await saveCriteriaMatrix(criteria);
-      await updateQualificationSettings(settings);
+      await saveCriteriaMatrix(criteria, effectiveCompanyId);
+      await updateQualificationSettings(settings, effectiveCompanyId);
       toast.success('Qualification criteria matrix saved successfully!');
     } catch (err) {
       console.error('Failed to save matrix:', err);
@@ -264,17 +304,17 @@ const QualificationCriteriaSettingsPage = () => {
         await updateCriteria(editingItem.id, {
           ...formData,
           key,
-        });
+        }, effectiveCompanyId);
         toast.success('Criterion field updated!');
       } else {
         await createCriteria({
           ...formData,
           key,
-        });
+        }, effectiveCompanyId);
         toast.success('Criterion field created!');
       }
       setModalOpen(false);
-      fetchMatrix();
+      fetchMatrix(effectiveCompanyId);
     } catch (err) {
       console.error('Failed to save criterion:', err);
       toast.error(err?.message || 'Failed to save criterion');
@@ -301,11 +341,11 @@ const QualificationCriteriaSettingsPage = () => {
 
     try {
       setIsDeleting(true);
-      await deleteCriteria(itemToDelete.id);
+      await deleteCriteria(itemToDelete.id, effectiveCompanyId);
       toast.success(`Criterion "${itemToDelete.label}" deactivated.`);
       setDeleteModalOpen(false);
       setItemToDelete(null);
-      fetchMatrix();
+      fetchMatrix(effectiveCompanyId);
     } catch (err) {
       console.error('Failed to delete criterion:', err);
       toast.error(err?.message || 'Failed to deactivate criterion');
@@ -365,10 +405,25 @@ const QualificationCriteriaSettingsPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+          {isSuperAdmin && (
+            <div className="w-full sm:w-60 shrink-0">
+              <SelectField
+                id="superadmin-qualification-company-select"
+                label=""
+                value={selectedCompanyId ? String(selectedCompanyId) : ""}
+                onChange={(val) => setSelectedCompanyId(val ? Number(val) : null)}
+                options={companyOptions}
+                placeholder="Select company..."
+                isLoading={loadingCompanies}
+                className="!mb-0"
+              />
+            </div>
+          )}
+
           <button
-            onClick={fetchMatrix}
-            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
+            onClick={() => fetchMatrix(effectiveCompanyId)}
+            className="h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap cursor-pointer"
             title="Refresh Data"
           >
             <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
