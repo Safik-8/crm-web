@@ -147,9 +147,10 @@ export const useUpdateCompany = () => {
   return useMutation({
     mutationFn: ({ id, data }) => companyService.updateCompany(id, data),
     onSuccess: (res, variables) => {
-      // Refresh single company detail caches and company lists
+      // Refresh single company detail caches, company lists, and system settings
       queryClient.invalidateQueries({ queryKey: ['company', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
     }
   });
 };

@@ -6,7 +6,7 @@ import {
   KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Layers, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Services & Hooks
@@ -17,6 +17,7 @@ import { useStageRename } from '../hooks/useStageRename';
 import { useStageDelete } from '../hooks/useStageDelete';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import Button from '../../../shared/components/elements/Button';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import {
   isMandatoryStage, isClosureStage, enforceAnchorPositions, applyConstrainedDragMove
 } from '../utils/stageRules';
@@ -55,39 +56,40 @@ export const PipelineStageBuilderPage = () => {
   const canRename = hasPermission('manage:stages');
   const canDelete = hasPermission('manage:stages');
 
+  // Load data callback
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [pipeRes, masterRes] = await Promise.all([
+        getPipelineById(pipelineId),
+        getAllStagesAdmin(),
+      ]);
+
+      const pipeData = pipeRes?.data?.pipeline || pipeRes?.data || pipeRes;
+      const rawMaster = masterRes?.data?.stages || masterRes?.stages || masterRes || [];
+      const stagesList = Array.isArray(rawMaster) ? rawMaster : [];
+
+      setPipeline(pipeData);
+      setMasterStages(stagesList);
+
+      if (pipeData?.stages?.length > 0) {
+        const mapped = pipeData.stages.map(ps => ps.stage || ps);
+        setSelectedStages(enforceAnchorPositions(mapped));
+      } else {
+        const defaults = stagesList.filter(s => isMandatoryStage(s));
+        setSelectedStages(enforceAnchorPositions(defaults));
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Failed to load pipeline stages');
+    } finally {
+      setLoading(false);
+    }
+  }, [pipelineId]);
+
   // Load data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [pipeRes, masterRes] = await Promise.all([
-          getPipelineById(pipelineId),
-          getAllStagesAdmin(),
-        ]);
-
-        const pipeData = pipeRes?.data?.pipeline || pipeRes?.data || pipeRes;
-        const rawMaster = masterRes?.data?.stages || masterRes?.stages || masterRes || [];
-        const stagesList = Array.isArray(rawMaster) ? rawMaster : [];
-
-        setPipeline(pipeData);
-        setMasterStages(stagesList);
-
-        if (pipeData?.stages?.length > 0) {
-          const mapped = pipeData.stages.map(ps => ps.stage || ps);
-          setSelectedStages(enforceAnchorPositions(mapped));
-        } else {
-          const defaults = stagesList.filter(s => isMandatoryStage(s));
-          setSelectedStages(enforceAnchorPositions(defaults));
-        }
-      } catch (err) {
-        toast.error(err?.message || 'Failed to load pipeline stages');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-  }, [pipelineId]);
+  }, [fetchData]);
 
   // Rename & Delete Hooks
   const handleRenameSuccess = useCallback(({ stageId, newName }) => {
@@ -265,41 +267,27 @@ export const PipelineStageBuilderPage = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Top Header & Save CTA */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* Top Header Card */}
+      <PageHeader
+        icon={Layers}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title={pipeline?.name ? `${pipeline.name} — Pipeline Stages` : 'Configure Pipeline Stages'}
+        description="Select stages from the left panel to include in this pipeline. Drag on the right to reorder."
+        actions={
           <button
-            onClick={() => navigate('/pipelines')}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            type="button"
+            onClick={fetchData}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer p-2"
+            title="Refresh Data"
           >
-            <ArrowLeft size={18} />
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              {pipeline?.name ? `${pipeline.name} — Stages` : 'Configure Pipeline Stages'}
-            </h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Select stages from the left panel to include in this pipeline. Drag on the right to reorder.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          isLoading={saving}
-          variant="contained"
-          size="medium"
-          startIcon={<Check size={16} strokeWidth={3} />}
-        >
-          Save Pipeline Stages
-        </Button>
-      </div>
+        }
+      />
 
       {/* Two-panel Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         {/* LEFT: Available Stages Panel */}
         <AvailableStagesPanel
           customSelectedCount={customSelectedCount}
@@ -332,6 +320,8 @@ export const PipelineStageBuilderPage = () => {
           canDelete={canDelete}
           stageRename={stageRename}
           stageDelete={stageDelete}
+          handleSave={handleSave}
+          saving={saving}
         />
       </div>
 

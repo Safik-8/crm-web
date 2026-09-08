@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   getQualificationCriteria,
   getQualificationSettings,
@@ -9,6 +10,7 @@ import {
   updateQualificationSettings,
   autoBalanceCriteria,
 } from '../../leads/services/qualificationService';
+import { companyApi } from '../../company/api/companyApi';
 import {
   Target,
   Plus,
@@ -26,7 +28,8 @@ import {
   X,
   ShieldCheck,
   RefreshCcw,
-  Lock
+  Lock,
+  Building
 } from 'lucide-react';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
@@ -57,6 +60,8 @@ const FIELD_TYPE_OPTIONS = [
 
 const QualificationCriteriaSettingsPage = () => {
   const { hasPermission, user } = useAuth();
+  const userRole = user?.primaryRole || user?.role || "COMPANY_ADMIN";
+  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN";
 
   // Dynamic RBAC Permission Checks
   const canEdit =
@@ -72,6 +77,38 @@ const QualificationCriteriaSettingsPage = () => {
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
     user?.primaryRole === 'SUPER_ADMIN' ||
     user?.primaryRole === 'COMPANY_ADMIN';
+
+  // Super Admin Multi-Company Selector State
+  const [selectedCompanyId, setSelectedCompanyId] = useState(
+    isSuperAdmin ? null : (user?.companyId || null)
+  );
+
+  const { data: companiesRes, isLoading: loadingCompanies } = useQuery({
+    queryKey: ["companies-all-options"],
+    queryFn: () => companyApi.getCompanies(),
+    enabled: isSuperAdmin,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rawCompanies = Array.isArray(companiesRes?.data)
+    ? companiesRes.data
+    : companiesRes?.data?.companies || (Array.isArray(companiesRes) ? companiesRes : []);
+
+  const companiesList = Array.isArray(rawCompanies) ? rawCompanies : [];
+
+  const companyOptions = companiesList.map((comp) => ({
+    value: String(comp.id),
+    label: comp.name ? `${comp.name}${comp.code ? ` (${comp.code})` : ''}` : `Company #${comp.id}`,
+  }));
+
+  // Automatically select first company if Super Admin has not chosen yet
+  useEffect(() => {
+    if (isSuperAdmin && !selectedCompanyId && companiesList.length > 0) {
+      setSelectedCompanyId(companiesList[0].id);
+    }
+  }, [isSuperAdmin, selectedCompanyId, companiesList]);
+
+  const effectiveCompanyId = isSuperAdmin ? selectedCompanyId : user?.companyId;
 
   const [criteria, setCriteria] = useState([]);
   const [settings, setSettings] = useState({ passThreshold: 60, holdThreshold: 40 });
@@ -102,12 +139,13 @@ const QualificationCriteriaSettingsPage = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchMatrix = async () => {
+  const fetchMatrix = async (targetCompanyId = effectiveCompanyId) => {
+    if (isSuperAdmin && !targetCompanyId) return;
     try {
       setLoading(true);
       const [fetchedCriteria, fetchedSettings] = await Promise.all([
-        getQualificationCriteria(),
-        getQualificationSettings(),
+        getQualificationCriteria(targetCompanyId),
+        getQualificationSettings(targetCompanyId),
       ]);
       setCriteria(fetchedCriteria || []);
       if (fetchedSettings) setSettings(fetchedSettings);
@@ -120,8 +158,10 @@ const QualificationCriteriaSettingsPage = () => {
   };
 
   useEffect(() => {
-    fetchMatrix();
-  }, []);
+    if (effectiveCompanyId || !isSuperAdmin) {
+      fetchMatrix(effectiveCompanyId);
+    }
+  }, [effectiveCompanyId]);
 
   const totalPoints = criteria.reduce((sum, item) => sum + (Number(item.maxPoints) || 0), 0);
   const isValidMatrix = totalPoints === 100;
@@ -148,7 +188,7 @@ const QualificationCriteriaSettingsPage = () => {
     }
     try {
       setIsAutoBalancing(true);
-      const updated = await autoBalanceCriteria();
+      const updated = await autoBalanceCriteria(effectiveCompanyId);
       setCriteria(updated || []);
       toast.success('Criteria weights auto-balanced to exactly 100 points!');
     } catch (err) {
@@ -171,8 +211,8 @@ const QualificationCriteriaSettingsPage = () => {
 
     try {
       setIsSaving(true);
-      await saveCriteriaMatrix(criteria);
-      await updateQualificationSettings(settings);
+      await saveCriteriaMatrix(criteria, effectiveCompanyId);
+      await updateQualificationSettings(settings, effectiveCompanyId);
       toast.success('Qualification criteria matrix saved successfully!');
     } catch (err) {
       console.error('Failed to save matrix:', err);
@@ -264,17 +304,17 @@ const QualificationCriteriaSettingsPage = () => {
         await updateCriteria(editingItem.id, {
           ...formData,
           key,
-        });
+        }, effectiveCompanyId);
         toast.success('Criterion field updated!');
       } else {
         await createCriteria({
           ...formData,
           key,
-        });
+        }, effectiveCompanyId);
         toast.success('Criterion field created!');
       }
       setModalOpen(false);
-      fetchMatrix();
+      fetchMatrix(effectiveCompanyId);
     } catch (err) {
       console.error('Failed to save criterion:', err);
       toast.error(err?.message || 'Failed to save criterion');
@@ -301,11 +341,11 @@ const QualificationCriteriaSettingsPage = () => {
 
     try {
       setIsDeleting(true);
-      await deleteCriteria(itemToDelete.id);
+      await deleteCriteria(itemToDelete.id, effectiveCompanyId);
       toast.success(`Criterion "${itemToDelete.label}" deactivated.`);
       setDeleteModalOpen(false);
       setItemToDelete(null);
-      fetchMatrix();
+      fetchMatrix(effectiveCompanyId);
     } catch (err) {
       console.error('Failed to delete criterion:', err);
       toast.error(err?.message || 'Failed to deactivate criterion');
@@ -350,9 +390,9 @@ const QualificationCriteriaSettingsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Level 1: Page Header ── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
             <Target size={24} className="text-orange-600" />
           </div>
           <div>
@@ -365,10 +405,25 @@ const QualificationCriteriaSettingsPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
+          {isSuperAdmin && (
+            <div className="w-full sm:w-60 shrink-0">
+              <SelectField
+                id="superadmin-qualification-company-select"
+                label=""
+                value={selectedCompanyId ? String(selectedCompanyId) : ""}
+                onChange={(val) => setSelectedCompanyId(val ? Number(val) : null)}
+                options={companyOptions}
+                placeholder="Select company..."
+                isLoading={loadingCompanies}
+                className="!mb-0"
+              />
+            </div>
+          )}
+
           <button
             onClick={fetchMatrix}
-            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-[10px] transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
+            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-lg transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
             title="Refresh Data"
           >
             <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
@@ -439,7 +494,7 @@ const QualificationCriteriaSettingsPage = () => {
       {/* ── Level 2: Allocation & Pass Threshold Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Total Weight Allocation Card (Span 7) */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-7 bg-white border border-slate-200 p-5 flex flex-col justify-between space-y-4">
           <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -534,7 +589,7 @@ const QualificationCriteriaSettingsPage = () => {
         </div>
 
         {/* Qualification Pass Threshold Card (Span 5) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 bg-white border border-slate-200 p-5 flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
@@ -552,9 +607,9 @@ const QualificationCriteriaSettingsPage = () => {
             </p>
           </div>
 
-          <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex items-center gap-4">
+          <div className="bg-slate-50/70 border border-slate-200/80 p-4 flex items-center gap-4">
             {/* Circular Progress Visual */}
-            <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30 shadow-2xs">
+            <div className="relative shrink-0 w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-500 flex flex-col items-center justify-center bg-orange-50/30">
               <span className="text-lg font-black text-slate-900 leading-none">
                 {settings.passThreshold}
               </span>
@@ -578,7 +633,7 @@ const QualificationCriteriaSettingsPage = () => {
                       max="100"
                       value={settings.passThreshold}
                       onChange={(e) => canEdit && setSettings({ ...settings, passThreshold: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
-                      className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-md text-center focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-2xs"
+                      className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-md text-center focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                     />
                   </div>
                   <span className="text-xs text-slate-400 font-medium">PTS</span>
@@ -590,7 +645,7 @@ const QualificationCriteriaSettingsPage = () => {
       </div>
 
       {/* ── Level 3: Active Qualification Factors Table ── */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 overflow-hidden">
         {/* Table Toolbar Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-2.5">
@@ -629,7 +684,7 @@ const QualificationCriteriaSettingsPage = () => {
               >
                 {/* Factor Details (Left) */}
                 <div className="col-span-12 md:col-span-6 lg:col-span-7 flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5 shadow-2xs">
+                  <div className="p-2.5 rounded-lg bg-slate-100/80 border border-slate-200/80 text-slate-700 shrink-0 mt-0.5">
                     {getFieldIcon(item.fieldType)}
                   </div>
 
@@ -689,7 +744,7 @@ const QualificationCriteriaSettingsPage = () => {
                       disabled={!canEdit}
                       value={item.maxPoints}
                       onChange={(e) => canEdit && handlePointChange(item.id, e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all shadow-2xs"
+                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg text-center focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100 transition-all"
                     />
                   </div>
                 </div>

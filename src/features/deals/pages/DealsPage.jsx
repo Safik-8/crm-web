@@ -5,7 +5,9 @@ import {
   TrendingUp, TrendingDown, XCircle, Eye, X, Calendar,
   User, Building2, GitBranch, ChevronDown, ChevronUp,
   SlidersHorizontal, Briefcase, Phone, Mail, Tag, Award,
+  MoreVertical,
 } from 'lucide-react';
+import { Menu, MenuItem, Dialog } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useDealsQuery, useDealsStatsQuery, useDealDetailQuery } from '../hooks/useDeals';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -15,22 +17,17 @@ import { apiClient } from '../../../lib/api/api';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
 import Pagination from '../../../shared/components/elements/Pagination';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Drawer from '../../../shared/components/elements/Drawer';
-import { Dialog } from '@mui/material';
+import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (v) =>
-  new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Number(v || 0));
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
-const fmtDate = (d) => {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-};
-
+// ── Date Range Helpers ──────────────────────────────────────────────────────────
 const getTodayRange = () => {
   const d = new Date();
   const dateStr = d.toLocaleDateString('en-CA');
@@ -77,7 +74,7 @@ const OutcomeBadge = ({ outcome }) => {
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-900', loading }) => (
-  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+  <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
     <div>
       <span className="text-xs text-slate-500 font-medium block mb-1">{label}</span>
       {loading
@@ -93,6 +90,7 @@ const StatCard = ({ label, value, icon: Icon, iconBg, valueClass = 'text-slate-9
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 const DealDetailModal = ({ dealId, onClose }) => {
   const { data: deal, isLoading } = useDealDetailQuery(dealId);
+  const { formatCurrency, formatDate } = useFormatters();
 
   const Row = ({ label, value, icon: Icon }) => (
     <div className="flex items-start gap-2.5 p-3 bg-slate-50/60 rounded-xl border border-slate-100 hover:border-slate-200 transition-all">
@@ -152,7 +150,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
               </div>
               <div className="text-right">
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">Closing Value</span>
-                <span className="text-2xl font-black text-slate-900 block mt-0.5">₹{fmt(deal.finalAmount)}</span>
+                <span className="text-2xl font-black text-slate-900 block mt-0.5">{formatCurrency(deal.finalAmount)}</span>
               </div>
             </div>
 
@@ -161,7 +159,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
               <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Core Details</h4>
               <div className="grid grid-cols-2 gap-3">
                 <Row label="Deal Number"       value={deal.dealNumber}        icon={Tag} />
-                <Row label="Closing Date"      value={fmtDate(deal.closingDate)} icon={Calendar} />
+                <Row label="Closing Date"      value={formatDate(deal.closingDate)} icon={Calendar} />
                 <Row label="Opportunity"       value={deal.opportunity?.opportunityName} icon={Briefcase} />
                 <Row label="Assigned Owner"    value={deal.closedBy?.name}    icon={User} />
                 <Row label="Customer Name"     value={deal.customer?.customerName || deal.lead?.name} icon={User} />
@@ -185,7 +183,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
                 <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-emerald-100/40 text-xs">
                   <div>
                     <span className="text-slate-400 font-medium block">Amount</span>
-                    <strong className="text-slate-800 text-[13px]">₹{fmt(deal.revenueLog.revenueAmount)}</strong>
+                    <strong className="text-slate-800 text-[13px]">{formatCurrency(deal.revenueLog.revenueAmount)}</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium block">Status</span>
@@ -195,7 +193,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium block">Log Date</span>
-                    <strong className="text-slate-800 text-[13px]">{fmtDate(deal.revenueLog.revenueDate)}</strong>
+                    <strong className="text-slate-800 text-[13px]">{formatDate(deal.revenueLog.revenueDate)}</strong>
                   </div>
                 </div>
               </div>
@@ -247,6 +245,7 @@ const DealDetailModal = ({ dealId, onClose }) => {
 const DealsPage = () => {
   const { user } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { formatCurrency, formatDate } = useFormatters();
 
   const isSuperAdmin   = user?.primaryRole === 'SUPER_ADMIN';
   const isCompanyAdmin = !isSuperAdmin && (user?.primaryRoleRank ?? 0) >= 80;
@@ -264,7 +263,7 @@ const DealsPage = () => {
   const [ownerFilter, setOwnerFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [branchFilter,  setBranchFilter]  = useState('');
-  const [sortBy,    setSortBy]    = useState('closingDate');
+  const [sortBy,    setSortBy]    = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
   const [selectedDealId, setSelectedDealId] = useState(null);
@@ -385,7 +384,7 @@ const DealsPage = () => {
   }, [sortBy]);
 
   const SortIcon = ({ field }) => {
-    if (sortBy !== field) return <ChevronDown className="w-3 h-3 text-slate-300 ml-1 inline" />;
+    if (sortBy !== field) return null;
     return sortOrder === 'asc'
       ? <ChevronUp   className="w-3 h-3 text-orange-500 ml-1 inline" />
       : <ChevronDown className="w-3 h-3 text-orange-500 ml-1 inline" />;
@@ -394,10 +393,66 @@ const DealsPage = () => {
   // ── loading state ─────────────────────────────────────────────────────────
   const loadingState = isLoading ? 'loading' : isError ? 'error' : deals.length === 0 ? 'empty' : 'success';
 
+  const DealActionsMenu = ({ row }) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
+    const handleOpen = (e) => {
+      e.stopPropagation();
+      setAnchorEl(e.currentTarget);
+    };
+
+    const handleClose = () => {
+      setAnchorEl(null);
+    };
+
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+          title="Actions"
+        >
+          <MoreVertical size={16} />
+        </button>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          elevation={0}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              setSelectedDealId(row.id);
+            }}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Eye size={14} className="text-slate-400" />
+            <span>View Details</span>
+          </MenuItem>
+        </Menu>
+      </>
+    );
+  };
+
   // ── table columns ─────────────────────────────────────────────────────────
   const columns = [
     {
-      header    : <button onClick={() => handleSort('dealNumber')} className="flex items-center text-left">Deal No <SortIcon field="dealNumber" /></button>,
+      header    : <button onClick={() => handleSort('dealNumber')} className="flex items-center text-left">DEAL NO <SortIcon field="dealNumber" /></button>,
       skeleton  : () => <Skeleton className="h-5 w-28" />,
       cell      : (row) => (
         <div>
@@ -406,7 +461,7 @@ const DealsPage = () => {
       ),
     },
     {
-      header    : <button onClick={() => handleSort('customerName')} className="flex items-center">Customer <SortIcon field="customerName" /></button>,
+      header    : <button onClick={() => handleSort('customerName')} className="flex items-center">CUSTOMER <SortIcon field="customerName" /></button>,
       skeleton  : () => <Skeleton className="h-5 w-32" />,
       cell      : (row) => (
         <div>
@@ -418,7 +473,7 @@ const DealsPage = () => {
       ),
     },
     {
-      header    : 'Opportunity',
+      header    : 'OPPORTUNITY',
       skeleton  : () => <Skeleton className="h-5 w-36" />,
       cell      : (row) => (
         <span className="text-[13px] text-slate-700 font-medium truncate block max-w-[160px]" title={row.opportunity?.opportunityName}>
@@ -427,26 +482,26 @@ const DealsPage = () => {
       ),
     },
     {
-      header    : 'Outcome',
+      header    : 'OUTCOME',
       align     : 'center',
       skeleton  : () => <Skeleton className="h-6 w-20 rounded-md mx-auto" />,
       cell      : (row) => <OutcomeBadge outcome={row.outcome} />,
     },
     {
-      header    : <button onClick={() => handleSort('finalAmount')} className="flex items-center">Amount <SortIcon field="finalAmount" /></button>,
+      header    : <button onClick={() => handleSort('finalAmount')} className="flex items-center">AMOUNT <SortIcon field="finalAmount" /></button>,
       align     : 'right',
       skeleton  : () => <Skeleton className="h-5 w-20 ml-auto" />,
       cell      : (row) => (
-        <span className="font-bold text-slate-900 text-[13px] tabular-nums">₹{fmt(row.finalAmount)}</span>
+        <span className="font-bold text-slate-900 text-[13px] tabular-nums">{formatCurrency(row.finalAmount)}</span>
       ),
     },
     {
-      header    : <button onClick={() => handleSort('closingDate')} className="flex items-center">Close Date <SortIcon field="closingDate" /></button>,
+      header    : <button onClick={() => handleSort('closingDate')} className="flex items-center">CLOSE DATE <SortIcon field="closingDate" /></button>,
       skeleton  : () => <Skeleton className="h-5 w-24" />,
-      cell      : (row) => <span className="text-[13px] text-slate-600">{fmtDate(row.closingDate)}</span>,
+      cell      : (row) => <span className="text-[13px] text-slate-600">{formatDate(row.closingDate)}</span>,
     },
     {
-      header    : 'Owner',
+      header    : 'OWNER',
       skeleton  : () => <Skeleton className="h-5 w-24" />,
       cell      : (row) => (
         <span className="text-[13px] text-slate-700 font-medium truncate block max-w-[110px]">
@@ -455,24 +510,21 @@ const DealsPage = () => {
       ),
     },
     {
-      header         : 'Actions',
+      header         : 'ACTIONS',
       isActionColumn : true,
       align          : 'right',
       skeleton       : () => <Skeleton className="h-8 w-16 rounded-lg ml-auto" />,
       cell           : (row) => (
-        <button
-          onClick={() => setSelectedDealId(row.id)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50 hover:text-orange-800 rounded-lg transition-all border border-orange-100 cursor-pointer"
-        >
-          <Eye className="w-3.5 h-3.5" /> View
-        </button>
+        <div className="flex items-center justify-end">
+          <DealActionsMenu row={row} />
+        </div>
       ),
     },
   ];
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
 
       {/* Header */}
       <PageHeader
@@ -491,18 +543,17 @@ const DealsPage = () => {
         <StatCard label="Total Deals"   value={stats?.total ?? '—'}     icon={Handshake}    iconBg="bg-orange-50 text-orange-600"  loading={statsLoading} />
         <StatCard label="Won Deals"     value={stats?.won ?? '—'}       icon={TrendingUp}   iconBg="bg-emerald-50 text-emerald-600" loading={statsLoading} valueClass="text-emerald-700" />
         <StatCard label="Lost Deals"    value={stats?.lost ?? '—'}      icon={TrendingDown} iconBg="bg-rose-50 text-rose-600"       loading={statsLoading} valueClass="text-rose-700" />
-        <StatCard label="Won Revenue"   value={`₹${fmt(stats?.wonRevenue)}`} icon={IndianRupee} iconBg="bg-indigo-50 text-indigo-600"  loading={statsLoading} valueClass="text-indigo-700" />
+        <StatCard label="Won Revenue"   value={formatCurrency(stats?.wonRevenue)} icon={IndianRupee} iconBg="bg-indigo-50 text-indigo-600"  loading={statsLoading} valueClass="text-indigo-700" />
       </div>
 
       {/* Search & Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
         {/* Search Input */}
         <div className="flex-1 min-w-[240px] max-w-sm">
-          <TextField
-            placeholder="Search deal, customer, opportunity…"
+          <SearchInput
+            placeholder="Search..."
             value={search}
             onChange={setSearch}
-            startIcon={Search}
           />
         </div>
 
@@ -510,7 +561,7 @@ const DealsPage = () => {
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className={`flex items-center gap-2 px-4 h-11 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 h-11 border rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               hasFilters
                 ? 'border-orange-200 bg-orange-50/50 text-orange-600 hover:bg-orange-100/60'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -528,7 +579,7 @@ const DealsPage = () => {
           {hasFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all cursor-pointer"
             >
               Clear
             </button>
@@ -569,140 +620,158 @@ const DealsPage = () => {
         onClose={() => setIsFilterDrawerOpen(false)}
         title="Filter Deals"
         subtitle="Segment outcomes and revenue analytics"
-      >
-        <div className="flex flex-col h-full justify-between pb-10">
-          <div className="space-y-5">
-            {/* Outcome Filter */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Outcome</label>
-              <SelectField
-                placeholder="All Outcomes"
-                value={outcome}
-                onChange={(v) => { setOutcome(v === undefined ? '' : v); setPage(1); }}
-                allowEmptyOption
-                options={[
-                  { value: 'WON',       label: 'Won' },
-                  { value: 'LOST',      label: 'Lost' },
-                  { value: 'CANCELLED', label: 'Cancelled' },
-                ]}
-              />
-            </div>
-
-            {/* Date Range Preset Filter */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date Range</label>
-              <SelectField
-                placeholder="All Time"
-                value={dateRangePreset}
-                onChange={(v) => handleDateRangePresetChange(v === undefined ? '' : v)}
-                allowEmptyOption
-                options={[
-                  { value: 'today',     label: 'Today' },
-                  { value: 'thisWeek',  label: 'This Week' },
-                  { value: 'thisMonth', label: 'This Month' },
-                  { value: 'custom',    label: 'Custom Range' },
-                ]}
-              />
-            </div>
-
-            {/* Custom Date Pickers */}
-            {dateRangePreset === 'custom' && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">From Date</span>
-                  <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">To Date</span>
-                  <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-              </div>
-            )}
-
-            {/* Revenue / Amount Range */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Revenue / Amount Range</label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">Min Amount</span>
-                  <input type="number" placeholder="Min ₹" value={minAmount} onChange={(e) => { setMinAmount(e.target.value); setPage(1); }}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold block mb-1">Max Amount</span>
-                  <input type="number" placeholder="Max ₹" value={maxAmount} onChange={(e) => { setMaxAmount(e.target.value); setPage(1); }}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
-                </div>
-              </div>
-            </div>
-
-            {/* Owner Filter (Admin / Manager only) */}
-            {(user?.primaryRoleRank ?? 0) >= 60 && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
-                <SelectField
-                  placeholder="All Owners"
-                  value={ownerFilter}
-                  onChange={(v) => { setOwnerFilter(v === undefined ? '' : v); setPage(1); }}
-                  allowEmptyOption
-                  searchable
-                  options={activeUsers.map((u) => ({ value: String(u.id), label: u.name }))}
-                />
-              </div>
-            )}
-
-            {/* Company Filter (Super Admin only) */}
-            {isSuperAdmin && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
-                <SelectField
-                  placeholder="All Companies"
-                  value={companyFilter}
-                  onChange={(v) => { setCompanyFilter(v === undefined ? '' : v); setPage(1); }}
-                  allowEmptyOption
-                  searchable
-                  options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
-                />
-              </div>
-            )}
-
-            {/* Branch Filter (Admin / Super Admin only) */}
-            {canSeeAll && (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
-                <SelectField
-                  placeholder="All Branches"
-                  value={branchFilter}
-                  onChange={(v) => { setBranchFilter(v === undefined ? '' : v); setPage(1); }}
-                  allowEmptyOption
-                  searchable
-                  options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Drawer Actions */}
-          <div className="flex gap-3 border-t border-slate-100 pt-6 mt-8">
-            <button
+        icon={SlidersHorizontal}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        width={{ xs: '100%', sm: 480, md: 520 }}
+        showFooter={true}
+        customFooter={
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button
+              variant="outlined"
               onClick={() => {
                 clearFilters();
                 setIsFilterDrawerOpen(false);
               }}
               disabled={!hasFilters}
-              className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              sx={{
+                borderColor: '#CBD5E1',
+                color: '#64748B',
+                fontWeight: 600,
+                fontSize: '13px',
+                height: '42px',
+                px: 2.5
+              }}
             >
               Reset All
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="contained"
               onClick={() => setIsFilterDrawerOpen(false)}
-              className="flex-1 py-2.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-all cursor-pointer text-center"
+              sx={{
+                backgroundColor: '#F86F03',
+                fontWeight: 700,
+                fontSize: '13px',
+                height: '42px',
+                px: 3,
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
             >
-              Close
-            </button>
+              Apply Filters
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-5 pb-6">
+          {/* Outcome Filter */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Outcome</label>
+            <SelectField
+              placeholder="All Outcomes"
+              value={outcome}
+              onChange={(v) => { setOutcome(v === undefined ? '' : v); setPage(1); }}
+              allowEmptyOption
+              options={[
+                { value: 'WON',       label: 'Won' },
+                { value: 'LOST',      label: 'Lost' },
+                { value: 'CANCELLED', label: 'Cancelled' },
+              ]}
+            />
+          </div>
+
+          {/* Date Range Preset Filter */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date Range</label>
+            <SelectField
+              placeholder="All Time"
+              value={dateRangePreset}
+              onChange={(v) => handleDateRangePresetChange(v === undefined ? '' : v)}
+              allowEmptyOption
+              options={[
+                { value: 'today',     label: 'Today' },
+                { value: 'thisWeek',  label: 'This Week' },
+                { value: 'thisMonth', label: 'This Month' },
+                { value: 'custom',    label: 'Custom Range' },
+              ]}
+            />
+          </div>
+
+          {/* Custom Date Pickers */}
+          {dateRangePreset === 'custom' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">From Date</span>
+                <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">To Date</span>
+                <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+            </div>
+          )}
+
+          {/* Revenue / Amount Range */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Revenue / Amount Range</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">Min Amount</span>
+                <input type="number" placeholder="Min ₹" value={minAmount} onChange={(e) => { setMinAmount(e.target.value); setPage(1); }}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block mb-1">Max Amount</span>
+                <input type="number" placeholder="Max ₹" value={maxAmount} onChange={(e) => { setMaxAmount(e.target.value); setPage(1); }}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
+              </div>
+            </div>
+          </div>
+
+          {/* Owner Filter (Admin / Manager only) */}
+          {(user?.primaryRoleRank ?? 0) >= 60 && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
+              <SelectField
+                placeholder="All Owners"
+                value={ownerFilter}
+                onChange={(v) => { setOwnerFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                options={activeUsers.map((u) => ({ value: String(u.id), label: u.name }))}
+              />
+            </div>
+          )}
+
+          {/* Company Filter (Super Admin only) */}
+          {isSuperAdmin && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
+              <SelectField
+                placeholder="All Companies"
+                value={companyFilter}
+                onChange={(v) => { setCompanyFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
+              />
+            </div>
+          )}
+
+          {/* Branch Filter (Admin / Super Admin only) */}
+          {canSeeAll && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
+              <SelectField
+                placeholder="All Branches"
+                value={branchFilter}
+                onChange={(v) => { setBranchFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
+              />
+            </div>
+          )}
         </div>
       </Drawer>
     </div>

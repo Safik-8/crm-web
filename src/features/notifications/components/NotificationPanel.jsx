@@ -13,7 +13,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Inbox, Clock, CheckCheck, ChevronDown, Trash2, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bell, X, Inbox, Clock, CheckCheck, ChevronDown, Trash2, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import NotificationItem from './NotificationItem';
 import NotificationSkeleton from './NotificationSkeleton';
@@ -21,9 +22,13 @@ import NotificationSkeleton from './NotificationSkeleton';
 // ── Notification Helpers ──────────────────────────────────────────────────────
 const mapNotification = (n) => ({
   id:               n.id,
+  title:            n.title ?? null,
   notificationType: n.notificationType,
   message:          n.message,
-  isRead:           n.status === 'READ',
+  priority:         n.priority ?? 'MEDIUM',
+  moduleName:       n.moduleName ?? 'SYSTEM',
+  actionUrl:        n.actionUrl ?? null,
+  isRead:           n.status === 'READ' || n.isRead === true,
   createdAt:        n.createdAt,
   // Scope context — populated when NOTIFICATION_INCLUDE fetches company/branch
   company:          n.company ?? null,
@@ -312,6 +317,7 @@ const NotificationPanel = ({ isOpen, onClose, triggerRef }) => {
                 notification={mapNotification(n)}
                 onMarkAsRead={markAsRead}
                 onDelete={deleteItem}
+                onClosePanel={onClose}
               />
             ))
           }
@@ -347,15 +353,19 @@ const NotificationPanel = ({ isOpen, onClose, triggerRef }) => {
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────── */}
-        <div className="shrink-0 border-t border-slate-100 px-4 py-2 flex items-center justify-between">
+        <div className="shrink-0 border-t border-slate-100 px-4 py-2.5 flex items-center justify-between">
           <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
             {notifications.length > 0
               ? `${notifications.length} notification${notifications.length === 1 ? '' : 's'}`
               : 'No notifications'}
           </p>
-          {isMobile && (
-            <div className="h-1 w-10 rounded-full bg-slate-200 mx-auto" aria-hidden="true" />
-          )}
+          <Link
+            to="/notifications"
+            onClick={onClose}
+            className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+          >
+            View All History <ExternalLink size={11} />
+          </Link>
         </div>
       </div>
     </>,

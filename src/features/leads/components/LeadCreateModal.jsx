@@ -11,9 +11,11 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Drawer from '../../../shared/components/elements/Drawer';
+import { useSettings } from '../../settings/hooks/useSettings';
 
 export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId }) => {
   const { user: currentUser } = useAuth();
+  const { settings } = useSettings();
   const createLeadMutation = useCreateLeadMutation();
 
   const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
@@ -52,7 +54,10 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     if (isOpen) {
       const initialCompany = currentUser?.companyId ? String(currentUser.companyId) : '';
       const initialBranch = currentUser?.branchId ? String(currentUser.branchId) : '';
-      const initialPipeline = initialPipelineId ? String(initialPipelineId) : '';
+      const initialPipeline = initialPipelineId
+        ? String(initialPipelineId)
+        : (settings?.defaultPipelineId ? String(settings.defaultPipelineId) : '');
+      const initialStatus = settings?.defaultLeadStatusId ? String(settings.defaultLeadStatusId) : '';
 
       setSelectedCompanyId(initialCompany);
       setSelectedBranchId(initialBranch);
@@ -65,7 +70,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
         alternateMobile: '',
         sourceId: '',
         courseId: '',
-        statusId: '',
+        statusId: initialStatus,
         priority: 'MEDIUM',
         budget: '',
         city: '',
@@ -79,7 +84,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       });
       setErrors({});
     }
-  }, [isOpen, currentUser, initialPipelineId]);
+  }, [isOpen, currentUser, initialPipelineId, settings]);
 
   const targetCompanyId = isSuperAdmin ? selectedCompanyId : currentUser?.companyId;
   const targetBranchId = (isSuperAdmin || isCompanyAdmin) ? selectedBranchId : currentUser?.branchId;

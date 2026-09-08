@@ -165,7 +165,7 @@ const LeadsKanbanPage = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [showImport, setShowImport] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const leadIdParam = searchParams.get('lead');
+  const leadIdParam = searchParams.get('lead') || searchParams.get('leadId');
 
   // Auto-select lead on initial load if URL has ?lead=xxx
   useEffect(() => {

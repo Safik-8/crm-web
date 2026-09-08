@@ -20,6 +20,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { useOpportunityDetailQuery } from '../hooks/useOpportunities';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 /**
  * Clean, Formal Loading Skeleton
@@ -45,17 +46,10 @@ const OpportunityDrawerSkeleton = () => (
       ))}
     </div>
 
-    {/* Details Box Skeleton */}
+    {/* Big Details Block */}
     <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
-      <div className="h-4 w-28 bg-slate-200 rounded pb-2 border-b border-slate-100" />
-      <div className="grid grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="space-y-1">
-            <div className="h-3 w-16 bg-slate-200 rounded" />
-            <div className="h-4 w-24 bg-slate-200 rounded" />
-          </div>
-        ))}
-      </div>
+      <div className="h-4 w-28 bg-slate-200 rounded" />
+      <div className="h-16 w-full bg-slate-100 rounded-lg" />
     </div>
   </div>
 );
@@ -68,26 +62,10 @@ export const OpportunityDetailDrawer = ({
   onLeadClick,
 }) => {
   const navigate = useNavigate();
+  const { formatCurrency, formatDate } = useFormatters();
   const { data: opportunity, isLoading } = useOpportunityDetailQuery(opportunityId);
 
   if (!isOpen) return null;
-
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val || 0);
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
 
   const drawerTitle = opportunity?.opportunityName || 'Opportunity Details';
 

@@ -6,6 +6,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { Edit2, Power, Trash2, Eye, MoreVertical } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 /**
  * Renders actions dropdown menu for a specific row in the course table.
@@ -119,33 +120,26 @@ const RowActionsMenu = ({
  * Reusable table component for Courses master records.
  * Uses shared `<Table>` element and provides full responsive column layouts.
  */
-const CourseListTable = ({
+export const CourseListTable = ({
   courses = [],
-  loadingState = 'success',
-  errorMessage = '',
+  data,
+  loadingState = 'idle',
+  errorMessage,
   onRetry,
+  hasActiveFilters = false,
+  onClearFilters,
+  canEdit = false,
+  canDelete = false,
   onViewDetails,
   onEdit,
   onToggleStatus,
   onDelete,
-  hasActiveFilters,
-  onClearFilters,
-  canEdit = false,
-  canDelete = false,
   sortBy,
   sortOrder,
   onSort
 }) => {
-
-  const formatCurrency = (value) => {
-    const num = Number(value);
-    if (isNaN(num)) return '₹0.00';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2
-    }).format(num);
-  };
+  const { formatCurrency } = useFormatters();
+  const tableData = courses || data || [];
 
   const columns = [
     {
@@ -295,7 +289,7 @@ const CourseListTable = ({
   return (
     <Table
       columns={columns}
-      data={courses}
+      data={tableData}
       loadingState={loadingState}
       errorMessage={errorMessage}
       onRetry={onRetry}

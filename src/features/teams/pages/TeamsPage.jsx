@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../../shared/components/elements/Button';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import SelectField from '../../../shared/components/elements/SelectField';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
@@ -224,176 +225,165 @@ const TeamsPage = () => {
 
   return (
     <>
-      <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
         {/* Header Title Section */}
         <PageHeader
           title="Team Manager"
           description="Organize, delegate, and manage branch level business execution teams"
           icon={Users2}
-          className=""
           actions={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => refetch()}
-                disabled={isLoading}
-                className="h-10 px-4 flex items-center justify-center gap-2"
-              >
-                <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-                <span>Sync</span>
-              </Button>
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="h-10 px-4 flex items-center justify-center gap-2"
-                >
-                  <Plus size={16} />
-                  <span>Add Team</span>
-                </Button>
-              )}
-            </>
+            <button
+              onClick={() => refetch()}
+              className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
+              title="Refresh Data"
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </button>
           }
         />
 
-        <section>
-          {/* Filter and Search Bar */}
-          <div className="bg-white border-x border-t border-slate-200/60 p-4 ">
-            <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+        {/* Filter and Search Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+            {/* Search Input */}
+            <div className="w-full sm:w-64">
+              <SearchInput
+                placeholder="Search..."
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
 
-              {/* Search Input */}
-              <div className="relative flex-1 min-w-[240px]">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                  <Search size={15} />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search name, code..."
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-800 placeholder-slate-400
-                     focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+            {/* View Toggle Tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={() => { setView('active'); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                  view === 'active'
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => { setView('archived'); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                  view === 'archived'
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Archived
+              </button>
+              <button
+                type="button"
+                onClick={() => { setView('all'); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                  view === 'all'
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                All
+              </button>
+            </div>
+
+            {/* Company Filter (Super Admin only) */}
+            {canFilterByCompany && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  id="companyFilter"
+                  value={companyId}
+                  onChange={(val) => handleFilterChange('companyId', val)}
+                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="All Companies"
+                  allowEmptyOption={true}
+                  searchable
                 />
               </div>
+            )}
 
-              {/* Filter Dropdowns */}
-              <div className="flex flex-wrap items-center gap-2.5">
-
-                {/* View Toggle Tabs */}
-                <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => { setView('active'); setPage(1); }}
-                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'active'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                      }`}
-                  >
-                    Active
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setView('archived'); setPage(1); }}
-                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'archived'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                      }`}
-                  >
-                    Archived
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setView('all'); setPage(1); }}
-                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer select-none ${view === 'all'
-                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
-                      : 'text-slate-400 hover:text-slate-600 border border-transparent'
-                      }`}
-                  >
-                    All
-                  </button>
-                </div>
-
-                {/* Company Filter (Super Admin only) */}
-                {canFilterByCompany && (
-                  <div className="w-full sm:w-[165px]">
-                    <SelectField
-                      id="companyFilter"
-                      value={companyId}
-                      onChange={(val) => handleFilterChange('companyId', val)}
-                      options={companies.map(c => ({ value: c.id, label: c.name }))}
-                      placeholder="All Companies"
-                      allowEmptyOption={true}
-                    />
-                  </div>
-                )}
-
-                {/* Branch Filter */}
-                {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-                  <div className="w-full sm:w-[165px]">
-                    <SelectField
-                      id="branchFilter"
-                      value={branchId}
-                      onChange={(val) => handleFilterChange('branchId', val)}
-                      options={branches.map(b => ({ value: b.id, label: b.name }))}
-                      placeholder="All Branches"
-                      allowEmptyOption={true}
-                    />
-                  </div>
-                )}
-
-                {/* Status Filter */}
-                <div className="w-full sm:w-[150px]">
-                  <SelectField
-                    id="statusFilter"
-                    value={status}
-                    onChange={(val) => handleFilterChange('status', val)}
-                    options={[
-                      { value: 'ACTIVE', label: 'Active' },
-                      { value: 'INACTIVE', label: 'Inactive' }
-                    ]}
-                    placeholder="All Statuses"
-                    allowEmptyOption={true}
-                  />
-                </div>
-
-                {/* Clear Filters Button */}
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-3.5 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
-                  >
-                    Clear Filters
-                  </button>
-                )}
+            {/* Branch Filter */}
+            {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  id="branchFilter"
+                  value={branchId}
+                  onChange={(val) => handleFilterChange('branchId', val)}
+                  options={branches.map(b => ({ value: b.id, label: b.name }))}
+                  placeholder="All Branches"
+                  allowEmptyOption={true}
+                  searchable
+                />
               </div>
+            )}
 
+            {/* Status Filter */}
+            <div className="w-full sm:w-36">
+              <SelectField
+                id="statusFilter"
+                value={status}
+                onChange={(val) => handleFilterChange('status', val)}
+                options={[
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'INACTIVE', label: 'Inactive' }
+                ]}
+                placeholder="All Statuses"
+                allowEmptyOption={true}
+              />
             </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
 
-          {/* Data Table */}
-          <TeamListTable
-            teams={teams}
-            loadingState={loadingState}
-            errorMessage={error?.message}
-            onRetry={refetch}
-            onViewDetails={handleOpenDetails}
-            onEdit={handleOpenEditForm}
-            onToggleStatus={handleToggleStatus}
-            onDelete={handleOpenDelete}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={clearFilters}
-          />
+          {/* Action Button */}
+          {canCreate && (
+            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
+              <Button
+                onClick={handleOpenCreateForm}
+                variant="contained"
+                size="medium"
+                startIcon={<Plus size={18} />}
+                className="group shadow-sm hover:shadow-md transition-all"
+              >
+                Add Team
+              </Button>
+            </div>
+          )}
+        </div>
 
-          {/* Pagination */}
-          <Pagination
-            pagination={pagination}
-            onPageChange={setPage}
-            isLoading={isLoading}
-            entityName="teams"
-          />
+        {/* Data Table */}
+        <TeamListTable
+          teams={teams}
+          loadingState={loadingState}
+          errorMessage={error?.message}
+          onRetry={refetch}
+          onViewDetails={handleOpenDetails}
+          onEdit={handleOpenEditForm}
+          onToggleStatus={handleToggleStatus}
+          onDelete={handleOpenDelete}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearFilters}
+        />
 
-
-        </section>
+        {/* Pagination */}
+        <Pagination
+          pagination={pagination}
+          onPageChange={setPage}
+          isLoading={isLoading}
+          entityName="teams"
+        />
       </div>
 
 

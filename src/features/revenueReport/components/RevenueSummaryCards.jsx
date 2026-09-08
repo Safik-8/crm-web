@@ -1,18 +1,9 @@
-// crm-web/src/features/revenueReport/components/RevenueSummaryCards.jsx
-
 import React from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Calendar, ShoppingBag, PieChart, Users } from 'lucide-react';
-
-const formatCurrency = (val) => {
-  const num = Number(val) || 0;
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(num);
-};
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = false }) => {
+  const { formatCurrency } = useFormatters();
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

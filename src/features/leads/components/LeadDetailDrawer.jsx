@@ -25,18 +25,52 @@ import { useCreateOpportunityMutation } from '../../opportunities/hooks/useOppor
 import { useCoursesQuery } from '../../courses/hooks/useCourses';
 import { getOpportunityStages } from '../../opportunities/services/opportunityService';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { toast } from '../../../shared/utils/toast';
 
 /**
  * LeadDetailDrawer — Premium dashboard-style two-column view displaying lead metadata,
  * assigned user/branch scope, notes, activities, timeline logs, and stage history.
  */
-const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
+/** Valid tab keys used in the drawer's tab navigation */
+const VALID_TABS = [
+  'comments',
+  'notes',
+  'qualification',
+  'communications',
+  'timeline',
+  'stage-history',
+  'followups',
+];
+
+/**
+ * Resolves an initial tab key from a URL hint.
+ * Falls back to 'comments' for any unknown/undefined value so all existing
+ * callers that do not pass initialTab are unaffected.
+ */
+const resolveInitialTab = (tabHint) =>
+  VALID_TABS.includes(tabHint) ? tabHint : 'comments';
+
+const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, initialFilter }) => {
   const { hasPermission } = useAuth();
-  const [activeTab, setActiveTab] = useState('comments');
+  const [activeTab, setActiveTab] = useState(() => resolveInitialTab(initialTab));
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(resolveInitialTab(initialTab));
+    }
+  }, [initialTab]);
+
   const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
   const tabSectionRef = useRef(null);
-  const { data: leadRes } = useLeadQuery(initialLead?.id, initialLead);
+  const { data: leadRes, isError, error } = useLeadQuery(initialLead?.id, initialLead);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(error?.response?.data?.message || 'This lead is no longer available or you do not have permission to view it.');
+      onClose?.();
+    }
+  }, [isError, error, onClose]);
 
   const lead = React.useMemo(() => {
     const fetched = leadRes?.data?.lead || leadRes?.lead;
@@ -410,7 +444,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose }) => {
                 {activeTab === 'communications' && <div className="fade-in"><CommunicationsTab leadId={lead.id} /></div>}
                 {activeTab === 'timeline' && <div className="fade-in"><TimelineTab leadId={lead.id} branchId={lead.branchId} /></div>}
                 {activeTab === 'stage-history' && <div className="fade-in"><StageHistoryTab leadId={lead.id} /></div>}
-                {activeTab === 'followups' && <div className="fade-in"><FollowupsTab leadId={lead.id} /></div>}
+                {activeTab === 'followups' && <div className="fade-in"><FollowupsTab leadId={lead.id} initialFilter={initialFilter} /></div>}
               </div>
             </div>
 

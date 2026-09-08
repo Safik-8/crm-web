@@ -25,6 +25,7 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { DynamicFormModal } from '../../../shared/components/elements/DynamicFormModal';
 import Checkbox from '../../../shared/components/elements/Checkbox';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
 import SelectField from '../../../shared/components/elements/SelectField';
@@ -84,12 +85,12 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center justify-between bg-white border rounded-xl px-4 py-3 shadow-sm hover:shadow transition-all ${
+      className={`group flex items-center justify-between bg-white border px-4 py-3 transition-all ${
         isDragging
-          ? 'border-primary/40 shadow-md scale-[1.01] ring-2 ring-primary/5'
+          ? 'border-orange-400 scale-[1.01] ring-2 ring-orange-100'
           : isLocked
           ? 'border-slate-100 bg-slate-50/50'
-          : 'border-slate-200 border-l-[3px] border-l-primary hover:border-slate-300'
+          : 'border-slate-200 border-l-[3px] border-l-orange-500 hover:border-slate-300'
       }`}
     >
       <div className="flex items-center gap-3">
@@ -413,56 +414,38 @@ export const OpportunityStageManagement = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Top Header & Save CTA */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="space-y-1">
-            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" /> Configure Opportunity Stages
-            </h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Select stages from the left panel to include in the opportunity pipeline. Drag on the right to reorder.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={bulkUpdateMutation.isPending}
-          isLoading={bulkUpdateMutation.isPending}
-          variant="contained"
-          size="medium"
-          startIcon={<Check size={16} strokeWidth={3} />}
-        >
-          Save Stages
-        </Button>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* Top Header Card */}
+      <PageHeader
+        icon={Layers}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="Configure Opportunity Stages"
+        description="Select stages from the left panel to include in the opportunity pipeline. Drag on the right to reorder."
+      />
 
       {/* Two-panel Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         {/* LEFT: Available Stages Panel */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
+        <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
           {/* Panel Header */}
-          <div className="px-6 pt-6 pb-5 border-b border-slate-100 space-y-4">
+          <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.18em]">
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Available Stages
               </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-2.5 py-1 bg-primary/10 text-primary rounded-lg">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold px-2.5 py-0.5 bg-orange-50 text-orange-600 rounded-md border border-orange-100">
                   {selectedStages.length} Selected
                 </span>
-                <span className="text-xs font-bold px-2.5 py-1 bg-slate-50 text-slate-400 rounded-lg border border-slate-100">
+                <span className="text-[11px] font-bold px-2.5 py-0.5 bg-slate-50 text-slate-500 rounded-md border border-slate-200">
                   {masterStages.length} Total
                 </span>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex items-center gap-2.5">
               {isSuperAdmin && (
-                <div className="w-48">
+                <div className="w-44">
                   <SelectField
                     placeholder="Select Company"
                     value={companyFilter}
@@ -472,15 +455,11 @@ export const OpportunityStageManagement = () => {
                   />
                 </div>
               )}
-              <div className="flex-1 relative">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <input
+              <div className="flex-1">
+                <SearchInput
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(val) => setSearchTerm(val)}
                   placeholder="Search stages..."
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl
-                    outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/8
-                    transition-all text-slate-700 font-medium placeholder-slate-400"
                 />
               </div>
               <Button
@@ -488,7 +467,14 @@ export const OpportunityStageManagement = () => {
                 variant="contained"
                 size="small"
                 startIcon={<Plus size={14} />}
-                sx={{ height: '38px' }}
+                sx={{
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#F86F03',
+                  fontWeight: 700,
+                  px: 2.5,
+                  '&:hover': { backgroundColor: '#DE5D02' }
+                }}
               >
                 Add
               </Button>
@@ -496,17 +482,17 @@ export const OpportunityStageManagement = () => {
           </div>
 
           {/* Master Stage List */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-3.5 space-y-2 custom-scrollbar">
             {displayStages.length > 0 ? (
               displayStages.map((stage) => {
                 const isSelected = selectedIdsSet.has(stage.id);
                 return (
                   <div
                     key={stage.id}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 border rounded-md transition-all ${
                       isSelected
-                        ? 'bg-primary/[0.02] border-primary/25 shadow-sm'
-                        : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                        ? 'bg-orange-50/40 border-orange-200'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -533,7 +519,7 @@ export const OpportunityStageManagement = () => {
                       {!stage.isSystem && (
                         <button
                           onClick={() => handleEditClick(stage)}
-                          className="p-1 text-slate-400 hover:text-primary hover:bg-slate-50 rounded"
+                          className="p-1 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                         >
                           <Pencil size={14} />
                         </button>
@@ -541,7 +527,7 @@ export const OpportunityStageManagement = () => {
                       {!stage.isSystem && (
                         <button
                           onClick={() => handleDeleteClick(stage)}
-                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -559,19 +545,42 @@ export const OpportunityStageManagement = () => {
         </div>
 
         {/* RIGHT: Stage Order DnD Panel */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
+        <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
           {/* Panel Header */}
-          <div className="px-6 pt-6 pb-5 border-b border-slate-100 space-y-1">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.18em]">
-              Stage Order
-            </h2>
-            <p className="text-xs text-slate-400 font-medium">
-              Drag to reorder stages. Qualification stays first; Won, Lost, and Cancelled stay last.
-            </p>
+          <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white flex items-center justify-between gap-4">
+            <div className="space-y-0.5 flex-1">
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Stage Order
+              </h2>
+              <p className="text-xs text-slate-400 font-medium leading-normal">
+                Drag to reorder stages. Qualification stays first; Won, Lost, and Cancelled stay last.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={bulkUpdateMutation.isPending}
+              isLoading={bulkUpdateMutation.isPending}
+              variant="contained"
+              size="small"
+              startIcon={<Check size={15} strokeWidth={3} />}
+              sx={{
+                height: '38px',
+                borderRadius: '8px',
+                backgroundColor: '#F86F03',
+                fontWeight: 700,
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+                shrink: 0,
+                '&:hover': { backgroundColor: '#DE5D02' }
+              }}
+            >
+              Save Stages
+            </Button>
           </div>
 
           {/* DnD Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-3.5 custom-scrollbar">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <div className="space-y-2">
                 {/* 1. Qualification Stage (Static, first) */}
