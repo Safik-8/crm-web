@@ -33,9 +33,11 @@ const RBAC_ADAPTER_MAP = {
   'view:sales_performance': { module: 'SALES_PERFORMANCE', action: 'canView' },
   'view:revenue_report': { module: 'REVENUE_REPORT', action: 'canView' },
   'view:settings': { module: 'BRANCH', action: 'canView' },
+  'view:system_settings': { module: 'SYSTEM_SETTINGS', action: 'canView' },
+  'edit:system_settings': { module: 'SYSTEM_SETTINGS', action: 'canEdit' },
   'view:branches': { module: 'BRANCH', action: 'canView' },
   'view:branch_settings': { module: 'BRANCH', action: 'canEdit' },
-  'view:company_setup': { module: 'COMPANY', action: 'canCreate' },
+  'view:company_setup': { module: 'COMPANY', action: 'canView' },
   'view:users': { module: 'USER', action: 'canView' },
   'view:roles': { module: 'ROLE_PERMISSION', action: 'canView' },
   'view:leads': { module: 'LEAD', action: 'canView' },
@@ -119,11 +121,8 @@ export const AuthProvider = ({ children }) => {
       return true;
     }
 
-    // Branch Managers have permission to view & edit their own branch and organization settings
-    if (
-      user.primaryRole === 'BRANCH_MANAGER' ||
-      (user.primaryRoleRank && Number(user.primaryRoleRank) >= 60)
-    ) {
+    // System Branch Managers have permission to view & edit their own branch and organization settings
+    if (user.primaryRole === 'BRANCH_MANAGER') {
       if (
         moduleOrPermissionStr === 'view:settings' ||
         moduleOrPermissionStr === 'view:branches' ||
@@ -138,7 +137,7 @@ export const AuthProvider = ({ children }) => {
     // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage, assign:kpi:*, view:kpi:*)
     if (
       moduleOrPermissionStr === 'KPI' ||
-      moduleOrPermissionStr.includes('kpi')
+      (typeof moduleOrPermissionStr === 'string' && moduleOrPermissionStr.includes('kpi'))
     ) {
       const rank = Number(user.primaryRoleRank || 0);
       const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;

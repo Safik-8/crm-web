@@ -1,25 +1,15 @@
-// src/features/courses/components/CourseDetailModal.jsx
-
 import React from 'react';
 import { BookOpen, Calendar, Shield, Building2, Tag, DollarSign, Activity } from 'lucide-react';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
+import { useFormatters } from '../../../shared/hooks/useFormatters';
 
 /**
  * Slide-out detail sheet to display comprehensive, read-only information about a Course.
  * Reuses the shared `<DynamicFormSlideover>` overlay wrapper.
  */
 const CourseDetailModal = ({ isOpen, onClose, course = null }) => {
+  const { formatCurrency } = useFormatters();
   if (!course) return null;
-
-  const formatCurrency = (value) => {
-    const num = Number(value);
-    if (isNaN(num)) return '₹0.00';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2
-    }).format(num);
-  };
 
   const DetailItem = ({ icon: Icon, label, value, className = '' }) => (
     <div className={`flex items-start gap-3 py-3 border-b border-slate-100 last:border-0 ${className}`}>

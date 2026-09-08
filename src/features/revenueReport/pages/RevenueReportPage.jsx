@@ -11,7 +11,8 @@ import {
   FileSpreadsheet,
   FileText,
   Printer,
-  ChevronDown
+  ChevronDown,
+  RefreshCw
 } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -357,74 +358,37 @@ export default function RevenueReportPage() {
       : [])
   ];
 
+  const isRefreshing = summaryQuery.isFetching || trendQuery.isFetching || monthlyQuery.isFetching || quarterlyQuery.isFetching || productQuery.isFetching || teamQuery.isFetching || branchQuery.isFetching;
+
+  const handleRefreshAll = () => {
+    summaryQuery.refetch();
+    trendQuery.refetch();
+    monthlyQuery.refetch();
+    quarterlyQuery.refetch();
+    productQuery.refetch();
+    teamQuery.refetch();
+    branchQuery.refetch();
+  };
+
   return (
-    <div className=" max-w-7xl mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       {/* Header Section */}
       <PageHeader
         icon={DollarSign}
         iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
         title="Revenue & Financial Reports"
         description="Real-time financial analytics, earnings attribution, growth trends, and multi-format exports"
-        className=""
         actions={
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-md text-xs font-medium text-slate-700 h-[36px]">
-              <span className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span>
-              Role: <strong className="ml-1 text-slate-900">{primaryRole || 'User'}</strong>
-            </div>
-
-            {canExportReport && (
-              <div className="relative">
-                <Button
-                  variant="contained"
-                  startIcon={<Download className="w-4 h-4" />}
-                  endIcon={<ChevronDown className="w-3.5 h-3.5" />}
-                  onClick={handleOpenExportMenu}
-                  disabled={isExporting}
-                  sx={{
-                    backgroundColor: '#10B981',
-                    '&:hover': { backgroundColor: '#059669' },
-                    height: '36px',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                  }}
-                >
-                  {isExporting ? 'Exporting...' : 'Export Report'}
-                </Button>
-
-                {isExportMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    <button
-                      onClick={() => handleExport('excel')}
-                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                    >
-                      <FileSpreadsheet className="w-4 h-4 text-orange-600" />
-                      <span>Export Excel (.xlsx)</span>
-                    </button>
-                    <button
-                      onClick={() => handleExport('csv')}
-                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span>Export CSV (.csv)</span>
-                    </button>
-                    <button
-                      onClick={() => handleExport('pdf')}
-                      className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-                    >
-                      <Printer className="w-4 h-4 text-rose-600" />
-                      <span>Export PDF (.pdf)</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={handleRefreshAll}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
         }
       />
-
 
       {/* Filter Bar */}
       <RevenueFilterBar
@@ -435,6 +399,11 @@ export default function RevenueReportPage() {
         teams={teams}
         courses={courses}
         userRoleInfo={userRoleInfo}
+        canExportReport={canExportReport}
+        isExporting={isExporting}
+        handleOpenExportMenu={handleOpenExportMenu}
+        isExportMenuOpen={isExportMenuOpen}
+        handleExport={handleExport}
       />
 
       {/* Tab Navigation */}

@@ -17,13 +17,18 @@ import {
   Activity,
   ShieldCheck,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import WinLossReasonModal from '../components/WinLossReasonModal';
 import Skeleton from '../../../shared/components/elements/Skeleton';
+
+import PageHeader from '../../../shared/components/modules/PageHeader';
+import Pagination from '../../../shared/components/elements/Pagination';
 
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
@@ -61,7 +66,7 @@ const DEFAULT_STAGES = [
 
 // ── Metric Card Skeleton ────────────────────────────────────────────────────
 const MetricCardSkeleton = () => (
-  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+  <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
     <div className="space-y-2">
       <Skeleton className="h-3 w-28 rounded-md" />
       <Skeleton className="h-6 w-20 rounded-md" />
@@ -72,7 +77,7 @@ const MetricCardSkeleton = () => (
 
 // ── Filter Bar Skeleton ─────────────────────────────────────────────────────
 const FilterBarSkeleton = () => (
-  <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+  <div className="bg-white p-3 border border-slate-200 flex items-center gap-3">
     <Skeleton className="h-9 w-72 rounded-lg" />
     <Skeleton className="h-9 w-40 rounded-lg" />
     <Skeleton className="h-9 w-40 rounded-lg" />
@@ -270,7 +275,6 @@ export const OpportunitiesPage = () => {
   const handleStageChange = (opportunityId, newStageId) => {
     const targetStageId = Number(newStageId);
     const targetStageObj = stages.find((s) => Number(s.id) === targetStageId);
-    console.log('[DEBUG] handleStageChange:', { opportunityId, newStageId, targetStageId, targetStageObj, stages });
 
     const isWon = targetStageObj?.stageType === 'WON' || targetStageObj?.code === 'WON' || targetStageObj?.name?.toLowerCase() === 'won';
     const isLost = targetStageObj?.stageType === 'LOST' || targetStageObj?.code === 'LOST' || targetStageObj?.name?.toLowerCase() === 'lost';
@@ -377,93 +381,35 @@ export const OpportunitiesPage = () => {
 
   const hasActiveFilters = !!(searchTerm || stageFilter || companyFilter || branchFilter);
 
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const totalOpportunities = opportunities.length;
+  const totalPages = Math.ceil(totalOpportunities / limit) || 1;
+  const paginatedOpportunities = viewMode === 'spreadsheet'
+    ? opportunities.slice((page - 1) * limit, page * limit)
+    : opportunities;
+
   const tableLoadingState = isLoading ? 'loading' : isError ? 'error' : opportunities.length === 0 ? 'empty' : 'success';
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto">
-
-      {/* ── Top Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-        <div>
-          {/* Header Title */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-orange-50 text-orange-600 rounded-md border border-orange-100">
-              <Target className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl font-bold text-slate-900">Opportunities Engine</h1>
-          </div>
-          <p className="text-slate-500 text-xs">
-            Manage sales pipeline deals, track revenue forecasting, and close opportunities.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* View Toggle */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-md border border-slate-200 h-[36px]">
-            <button
-              type="button"
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all h-[28px] cursor-pointer ${
-                viewMode === 'kanban' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" /> Kanban
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('spreadsheet')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all h-[28px] cursor-pointer ${
-                viewMode === 'spreadsheet' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <TableIcon className="w-3.5 h-3.5" /> Table
-            </button>
-          </div>
-
-          {hasPermission(PERMISSIONS.MANAGE_STAGES) && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<GitBranch className="w-4 h-4" />}
-              onClick={() => navigate('/opportunities/stages')}
-              sx={{
-                height: '36px',
-                borderRadius: '6px',
-                borderColor: '#cbd5e1',
-                color: '#475569',
-                fontSize: '12px',
-                fontWeight: 600,
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
-                '&:hover': { backgroundColor: '#f8fafc', borderColor: '#94a3b8' },
-              }}
-            >
-              Manage Stages
-            </Button>
-          )}
-
-          {canCreateOpportunity && (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Plus className="w-4 h-4" />}
-              onClick={() => setIsCreateOpen(true)}
-              sx={{
-                height: '36px',
-                borderRadius: '6px',
-                backgroundColor: '#F86F03',
-                fontSize: '12px',
-                fontWeight: 600,
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
-                '&:hover': { backgroundColor: '#DE5D02' },
-              }}
-            >
-              New Opportunity
-            </Button>
-          )}
-        </div>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* ── Page Header ─────────────────────────────────────────────── */}
+      <PageHeader
+        icon={Target}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="Opportunities Engine"
+        description="Manage sales pipeline deals, track revenue forecasting, and close opportunities."
+        actions={
+          <button
+            type="button"
+            onClick={() => opportunitiesQuery.refetch()}
+            className="p-2 text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* ── Metrics Row ─────────────────────────────────────────────── */}
       {isLoading ? (
@@ -474,7 +420,7 @@ export const OpportunitiesPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-500 font-medium block mb-1">Total Pipeline Value</span>
               <span className="text-xl font-bold text-slate-900">
@@ -486,7 +432,7 @@ export const OpportunitiesPage = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-500 font-medium block mb-1">Closed Won Revenue</span>
               <span className="text-xl font-bold text-emerald-600">
@@ -498,7 +444,7 @@ export const OpportunitiesPage = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-500 font-medium block mb-1">Active Opportunities</span>
               <span className="text-xl font-bold text-slate-900">{opportunities.length} Deals</span>
@@ -510,105 +456,82 @@ export const OpportunitiesPage = () => {
         </div>
       )}
 
-      <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
-          {/* Search */}
-          <div className="w-full">
-            <TextField
-              placeholder="Search opportunities or leads..."
-              value={searchTerm}
-              onChange={(val) => setSearchTerm(val)}
-              startIcon={Search}
-            />
-          </div>
+      <div className="bg-white p-3.5 border border-slate-200">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Filters on Left */}
+          <div className="flex flex-wrap items-center gap-3 flex-1">
+            {/* Search */}
+            <div className="w-full sm:w-60">
+              <SearchInput
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(val) => setSearchTerm(val)}
+              />
+            </div>
 
-          {/* Stage Filter — status dropdown */}
-          <div className="relative w-full" ref={stageFilterRef}>
-            <button
-              type="button"
-              onClick={() => setStageFilterOpen((v) => !v)}
-              className={`w-full flex items-center justify-between gap-2 px-3.5 py-[10px] text-[13px] font-medium rounded-[10px] border transition-all
-                ${stageFilter
-                  ? 'bg-orange-50 border-orange-300 text-orange-700'
-                  : 'bg-[#F8FAFC] border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-[#F1F5F9]'
-                }`}
-            >
-              <span className="truncate">
-                {stageFilter ? stageFilter.label : 'All Statuses'}
-              </span>
-              <svg className={`w-3.5 h-3.5 shrink-0 transition-transform ${stageFilterOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            {/* Stage Filter — searchable status dropdown */}
+            <div className="w-full sm:w-44">
+              <SelectField
+                placeholder="All Statuses"
+                value={stageFilter ? stageFilter.value : ''}
+                onChange={(val) => {
+                  if (!val) {
+                    setStageFilter(null);
+                  } else {
+                    const statusOpts = [
+                      { label: 'Open', type: 'status', value: 'OPEN' },
+                      { label: 'Won', type: 'status', value: 'WON' },
+                      { label: 'Lost', type: 'status', value: 'LOST' },
+                      { label: 'Cancelled', type: 'status', value: 'CANCELLED' },
+                    ];
+                    const selected = statusOpts.find((s) => s.value === val);
+                    setStageFilter(selected || null);
+                  }
+                }}
+                allowEmptyOption={true}
+                searchable={true}
+                options={[
+                  { value: 'OPEN', label: 'Open' },
+                  { value: 'WON', label: 'Won' },
+                  { value: 'LOST', label: 'Lost' },
+                  { value: 'CANCELLED', label: 'Cancelled' },
+                ]}
+              />
+            </div>
 
-            {stageFilterOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 w-44 bg-white rounded-xl border border-slate-200 shadow-lg py-1.5 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => { setStageFilter(null); setStageFilterOpen(false); }}
-                  className={`w-full text-left px-3.5 py-2 text-xs font-semibold transition-colors
-                    ${!stageFilter ? 'bg-orange-50 text-orange-700' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  All Statuses
-                </button>
-                <div className="h-px bg-slate-100 mx-2 my-1" />
-                {[
-                  { label: 'Open', type: 'status', value: 'OPEN' },
-                  { label: 'Won', type: 'status', value: 'WON' },
-                  { label: 'Lost', type: 'status', value: 'LOST' },
-                  { label: 'Cancelled', type: 'status', value: 'CANCELLED' },
-                ].map((opt) => {
-                  const isActive = stageFilter?.type === opt.type && stageFilter?.value === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => { setStageFilter({ ...opt }); setStageFilterOpen(false); }}
-                      className={`w-full text-left px-3.5 py-2 text-xs transition-colors
-                        ${isActive ? 'bg-orange-50 text-orange-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+            {/* Company Filter — Super Admin only */}
+            {canFilterByCompany && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  placeholder="All Companies"
+                  value={companyFilter}
+                  onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
+                  allowEmptyOption
+                  searchable={true}
+                  isLoading={companiesQuery.isLoading}
+                  options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
+                />
               </div>
             )}
-          </div>
 
-          {/* Company Filter — Super Admin only */}
-          {canFilterByCompany && (
-            <div className="w-full">
-              <SelectField
-                placeholder="All Companies"
-                value={companyFilter}
-                onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
-                allowEmptyOption
-                searchable={true}
-                isLoading={companiesQuery.isLoading}
-                options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
-              />
-            </div>
-          )}
+            {/* Branch Filter — SA and Company Admin */}
+            {canFilterByBranch && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  placeholder={canFilterByCompany && !companyFilter ? 'Select company first' : 'All Branches'}
+                  value={branchFilter}
+                  onChange={(val) => setBranchFilter(val === undefined ? '' : val)}
+                  allowEmptyOption
+                  searchable={true}
+                  isLoading={branchesQuery.isLoading}
+                  disabled={canFilterByCompany && branches.length === 0 && !branchesQuery.isLoading}
+                  options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
+                />
+              </div>
+            )}
 
-          {/* Branch Filter — SA and Company Admin */}
-          {canFilterByBranch && (
-            <div className="w-full">
-              <SelectField
-                placeholder={canFilterByCompany && !companyFilter ? 'Select company first' : 'All Branches'}
-                value={branchFilter}
-                onChange={(val) => setBranchFilter(val === undefined ? '' : val)}
-                allowEmptyOption
-                searchable={true}
-                isLoading={branchesQuery.isLoading}
-                disabled={canFilterByCompany && branches.length === 0 && !branchesQuery.isLoading}
-                options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
-              />
-            </div>
-          )}
-
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <div className="w-full sm:col-span-2 lg:col-span-1">
+            {/* Clear Filters */}
+            {hasActiveFilters && (
               <button
                 type="button"
                 onClick={() => {
@@ -617,24 +540,92 @@ export const OpportunitiesPage = () => {
                   setCompanyFilter('');
                   setBranchFilter('');
                 }}
-                className="w-full flex items-center justify-center gap-1.5 px-3.5 h-[42px] text-[13px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-[10px] border border-slate-200 hover:border-red-200 transition-all whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all cursor-pointer whitespace-nowrap"
               >
-                <Filter className="w-3.5 h-3.5" />
-                Clear Filters
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Clear</span>
+              </button>
+            )}
+
+            {/* Refetch Loading Indicator */}
+            {isFetching && !isLoading && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-md">
+                <svg className="animate-spin h-3.5 w-3.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-xs font-medium text-indigo-600">Filtering...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action Controls on Right */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* View Toggle */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0 h-[38px]">
+              <button
+                type="button"
+                onClick={() => setViewMode('kanban')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all h-[28px] cursor-pointer ${
+                  viewMode === 'kanban' ? 'bg-white text-orange-600 border border-slate-200/80 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> Kanban
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('spreadsheet')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all h-[28px] cursor-pointer ${
+                  viewMode === 'spreadsheet' ? 'bg-white text-orange-600 border border-slate-200/80 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <TableIcon className="w-3.5 h-3.5" /> Table
               </button>
             </div>
-          )}
 
-          {/* Refetch Loading Indicator */}
-          {isFetching && !isLoading && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-md">
-              <svg className="animate-spin h-3.5 w-3.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span className="text-xs font-medium text-indigo-600">Filtering...</span>
-            </div>
-          )}
+            {hasPermission(PERMISSIONS.MANAGE_STAGES) && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<GitBranch className="w-4 h-4" />}
+                onClick={() => navigate('/opportunities/stages')}
+                sx={{
+                  height: '38px',
+                  borderRadius: '8px',
+                  borderColor: '#cbd5e1',
+                  color: '#475569',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { backgroundColor: '#f8fafc', borderColor: '#94a3b8' },
+                }}
+              >
+                Manage Stages
+              </Button>
+            )}
+
+            {canCreateOpportunity && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setIsCreateOpen(true)}
+                sx={{
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#F86F03',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { backgroundColor: '#DE5D02' },
+                }}
+              >
+                New Opportunity
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -643,12 +634,12 @@ export const OpportunitiesPage = () => {
         viewMode === 'kanban' ? (
           <KanbanSkeleton stageCount={stages.length || 5} />
         ) : (
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white border border-slate-200 overflow-hidden">
             <OpportunitySpreadsheet opportunities={[]} loadingState="loading" />
           </div>
         )
       ) : isError ? (
-        <div className="bg-white rounded-lg border border-rose-200 shadow-sm p-12 flex flex-col items-center gap-4 text-center">
+        <div className="bg-white border border-rose-200 p-12 flex flex-col items-center gap-4 text-center">
           <div className="w-14 h-14 rounded-xl bg-rose-50 flex items-center justify-center text-rose-400">
             <Target className="w-7 h-7" />
           </div>
@@ -665,7 +656,7 @@ export const OpportunitiesPage = () => {
         </div>
       ) : viewMode === 'kanban' ? (
         isSuperAdmin && !companyFilter ? (
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-12 flex flex-col items-center gap-4 text-center">
+          <div className="bg-white border border-slate-200 p-12 flex flex-col items-center gap-4 text-center">
             <div className="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
               <Building2 className="w-6 h-6" />
             </div>
@@ -687,16 +678,31 @@ export const OpportunitiesPage = () => {
           />
         )
       ) : (
-        <OpportunitySpreadsheet
-          opportunities={opportunities}
-          loadingState={tableLoadingState}
-          onRowClick={(opp) =>
-            navigate(`/opportunities/${opp.id}`, {
-              state: { leadName: opp.lead?.name || opp.opportunityName, opportunityName: opp.opportunityName },
-            })
-          }
-          onCloseClick={(opp) => setClosingOpportunity(opp)}
-        />
+        <div className="space-y-4">
+          <OpportunitySpreadsheet
+            opportunities={paginatedOpportunities}
+            loadingState={tableLoadingState}
+            onRowClick={(opp) =>
+              navigate(`/opportunities/${opp.id}`, {
+                state: { leadName: opp.lead?.name || opp.opportunityName, opportunityName: opp.opportunityName },
+              })
+            }
+            onCloseClick={(opp) => setClosingOpportunity(opp)}
+          />
+          {!isLoading && !isError && (
+            <Pagination
+              pagination={{
+                page,
+                totalPages,
+                total: totalOpportunities,
+                limit,
+              }}
+              onPageChange={(newPage) => setPage(newPage)}
+              isLoading={isLoading}
+              entityName="opportunities"
+            />
+          )}
+        </div>
       )}
 
       {/* ── Create Opportunity Slideover ──────────────────────────── */}

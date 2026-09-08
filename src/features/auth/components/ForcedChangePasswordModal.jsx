@@ -35,10 +35,22 @@ const ForcedChangePasswordModal = () => {
     }
     if (!newPassword) {
       tempErrors.newPassword = 'New password is required';
-    } else if (newPassword.length < 6) {
-      tempErrors.newPassword = 'Password must be at least 6 characters';
+    } else {
+      if (newPassword.length < 8) {
+        tempErrors.newPassword = 'Password must be at least 8 characters';
+      } else if (!/[A-Z]/.test(newPassword)) {
+        tempErrors.newPassword = 'Password must contain at least one uppercase letter';
+      } else if (!/[a-z]/.test(newPassword)) {
+        tempErrors.newPassword = 'Password must contain at least one lowercase letter';
+      } else if (!/[0-9]/.test(newPassword)) {
+        tempErrors.newPassword = 'Password must contain at least one number';
+      } else if (!/[^A-Za-z0-9]/.test(newPassword)) {
+        tempErrors.newPassword = 'Password must contain at least one special character';
+      }
     }
-    if (confirmPassword !== newPassword) {
+    if (!confirmPassword) {
+      tempErrors.confirmPassword = 'Confirm password is required';
+    } else if (confirmPassword !== newPassword) {
       tempErrors.confirmPassword = 'Passwords do not match';
     }
     setErrors(tempErrors);
@@ -65,16 +77,19 @@ const ForcedChangePasswordModal = () => {
       }
     } catch (err) {
       console.error('[ChangePassword] Failed:', err);
-      // Map API validation errors or generic errors
-      if (err?.details && Array.isArray(err.details)) {
+      const validationErrors = err?.errors || err?.details || err?.response?.data?.errors;
+      
+      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
         const fieldErrors = {};
-        err.details.forEach(item => {
+        validationErrors.forEach(item => {
           fieldErrors[item.field] = item.message;
         });
         setErrors(fieldErrors);
+        toast.error(validationErrors[0]?.message || 'Validation failed');
       } else {
-        toast.error(err?.message || 'Failed to change password. Please check current credentials.');
-        setErrors({ currentPassword: err?.message || 'Invalid credentials' });
+        const msg = err?.message || err?.response?.data?.message || 'Failed to change password.';
+        toast.error(msg);
+        setErrors({ currentPassword: msg });
       }
     } finally {
       setLoading(false);
@@ -139,7 +154,7 @@ const ForcedChangePasswordModal = () => {
             id="newPassword"
             label="New Secure Password"
             type={showNewPassword ? 'text' : 'password'}
-            placeholder="Min 6 characters..."
+            placeholder="Min 8 characters, 1 uppercase, 1 number, 1 symbol..."
             value={newPassword}
             onChange={(val) => {
               setNewPassword(val);
@@ -167,6 +182,33 @@ const ForcedChangePasswordModal = () => {
               </InputAdornment>
             }
           />
+
+          {/* Password Complexity Checklist */}
+          <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5 space-y-2">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Password Requirements</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-semibold text-slate-500">
+              <div className={`flex items-center gap-2 ${newPassword.length >= 8 ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${newPassword.length >= 8 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>✓</span>
+                <span>Min 8 characters</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[A-Z]/.test(newPassword) ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${/[A-Z]/.test(newPassword) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>✓</span>
+                <span>Uppercase (A-Z)</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[a-z]/.test(newPassword) ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${/[a-z]/.test(newPassword) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>✓</span>
+                <span>Lowercase (a-z)</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[0-9]/.test(newPassword) ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${/[0-9]/.test(newPassword) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>✓</span>
+                <span>Number (0-9)</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(newPassword) ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${/[^A-Za-z0-9]/.test(newPassword) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>✓</span>
+                <span>Symbol (!@#$)</span>
+              </div>
+            </div>
+          </div>
 
           <TextField
             id="confirmPassword"

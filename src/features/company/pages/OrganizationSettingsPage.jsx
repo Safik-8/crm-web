@@ -11,6 +11,8 @@ import { Building2, GitBranch, ChevronLeft, Building, RefreshCcw } from 'lucide-
 import { useSearchParams } from 'react-router-dom';
 import { useCompany } from '../hooks/useCompanies';
 
+import PageHeader from '../../../shared/components/modules/PageHeader';
+
 /**
  * OrganizationSettingsPage
  * Central setting workspace that adapts based on user role permissions:
@@ -90,46 +92,32 @@ const OrganizationSettingsPage = () => {
   // ── 2. COMPANY ADMIN or custom role with COMPANY permissions: Tabbed Company Profile + Branch Registry View ──
   if (primaryRole === 'COMPANY_ADMIN' || primaryRole === 'SUPER_ADMIN' || hasPermission('COMPANY', 'canView')) {
     return (
-      <GenericPage
-        title="Organization Settings"
-        description="Manage your company's profile details and coordinate branch directories."
-        icon={Building2}
-        hideHeader={true}
-      >
-        <div className="flex flex-col gap-4">
-          {/* ── Desktop section header ─────────────────────────────────────── */}
-          <div className="hidden lg:flex lg:items-center lg:justify-between bg-white px-5 py-4 border border-slate-200">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center text-primary shrink-0 shadow-sm">
-                <Building2 size={20} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[17px] font-bold text-slate-800 font-heading leading-tight">Organization Settings</h2>
-                  <button
-                    onClick={handleRefresh}
-                    className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
-                    title="Refresh Data"
-                  >
-                    <RefreshCcw size={14} className={isQueryingCompany ? 'animate-spin' : ''} />
-                  </button>
-                </div>
-                <p className="text-[13px] text-slate-500 font-medium mt-0.5">
-                  Manage your company's profile details and coordinate branch directories.
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        {/* ── Page Header Title ── */}
+        <PageHeader
+          title="Organization Settings"
+          description="Manage your company's profile details and coordinate branch directories."
+          icon={Building2}
+          actions={
+            <button
+              onClick={handleRefresh}
+              className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+              title="Refresh Data"
+            >
+              <RefreshCcw size={14} className={isQueryingCompany ? 'animate-spin' : ''} />
+            </button>
+          }
+        />
 
           <div className="bg-white border border-slate-200 p-4">
-            {/* Top navigation tabs with segmented control styling */}
-            <div className="mb-8 flex">
-              <div className="inline-flex items-center p-1 bg-slate-100/70 border border-slate-200 rounded-xl shadow-inner">
+            {/* Top navigation tabs */}
+            <div className="mb-6 flex">
+              <div className="inline-flex items-center p-1 bg-slate-100 border border-slate-200">
                 <button
                   onClick={() => handleTabChange(0)}
-                  className={`flex items-center gap-2 px-6 py-2.5 text-[14px] font-bold font-heading rounded-lg transition-all focus:outline-none ${activeTab === 0
-                    ? 'bg-white text-slate-900 shadow-[0_2px_10px_rgb(0,0,0,0.06)] border border-slate-200/50'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 border border-transparent'
+                  className={`flex items-center gap-2 px-5 py-2 text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 0
+                    ? 'bg-white text-slate-800 border border-slate-200/80 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700 border border-transparent'
                     }`}
                 >
                   <Building2 size={16} className={activeTab === 0 ? 'text-primary' : 'text-slate-400'} />
@@ -138,9 +126,9 @@ const OrganizationSettingsPage = () => {
                 {canViewBranches && (
                   <button
                     onClick={() => handleTabChange(1)}
-                    className={`flex items-center gap-2 px-6 py-2.5 text-[14px] font-bold font-heading rounded-lg transition-all focus:outline-none ${activeTab === 1
-                      ? 'bg-white text-slate-900 shadow-[0_2px_10px_rgb(0,0,0,0.06)] border border-slate-200/50'
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 border border-transparent'
+                    className={`flex items-center gap-2 px-5 py-2 text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 1
+                      ? 'bg-white text-slate-800 border border-slate-200/80 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-700 border border-transparent'
                       }`}
                   >
                     <GitBranch size={16} className={activeTab === 1 ? 'text-primary' : 'text-slate-400'} />
@@ -180,8 +168,7 @@ const OrganizationSettingsPage = () => {
               </div>
             )}
           </div>
-        </div>
-      </GenericPage>
+      </div>
     );
   }
 

@@ -1,22 +1,8 @@
-export const formatCurrency = (value) => {
-  const amount = Number(value || 0);
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
+import { formatCurrency as universalFormatCurrency, formatDate as universalFormatDate } from "../../../shared/utils/formatters";
 
-export const formatDate = (value) => {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-IN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
-};
+export const formatCurrency = (value, symbol) => universalFormatCurrency(value, symbol);
+
+export const formatDate = (value, pattern) => universalFormatDate(value, pattern);
 
 export const formatText = (value) => value || '—';
 

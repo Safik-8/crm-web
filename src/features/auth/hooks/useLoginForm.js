@@ -36,8 +36,8 @@ export const useLoginForm = () => {
   const [forgotErrors, setForgotErrors] = useState({});
   const [forgotIsSubmitting, setForgotIsSubmitting] = useState(false);
 
-  // Redirect target after successful authorization
-  const redirectTo = '/dashboard';
+  // Redirect target after successful authorization (uses RootRedirect to pick first accessible module)
+  const redirectTo = '/';
 
   // ── Helper: Reset all modal states ───────────────────────────────────────────
   const resetForgotState = () => {

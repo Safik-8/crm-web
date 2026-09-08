@@ -2,6 +2,7 @@ import React from 'react';
 import { Target } from 'lucide-react';
 import { DynamicFormSlideover } from '../../../shared/components/elements/DynamicFormSlideover';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { useSettings } from '../../settings/hooks/useSettings';
 
 export const CreateOpportunitySlideover = ({
   isOpen,
@@ -14,6 +15,7 @@ export const CreateOpportunitySlideover = ({
   leads = [],
 }) => {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const isManagerOrAdmin = (user?.rank && user.rank >= 60) || ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'].includes(user?.role);
 
   // Deduplicate and format course options cleanly
@@ -38,7 +40,18 @@ export const CreateOpportunitySlideover = ({
 
   // Compute prefilled initialValues when a lead is passed via initialValues prop
   const computedInitialValues = React.useMemo(() => {
-    const base = { ...initialValues };
+    const defaultStageId = settings?.defaultOpportunityStageId
+      ? Number(settings.defaultOpportunityStageId)
+      : (stages[0]?.id ? Number(stages[0].id) : '');
+    const defaultWinProb = settings?.defaultOpportunityWinProb != null
+      ? Number(settings.defaultOpportunityWinProb)
+      : 50;
+
+    const base = {
+      probabilityPercentage: defaultWinProb,
+      stageId: defaultStageId,
+      ...initialValues
+    };
     if (base.leadId) {
       const selectedLead = leads.find((l) => Number(l.id) === Number(base.leadId));
       if (selectedLead) {
@@ -65,13 +78,13 @@ export const CreateOpportunitySlideover = ({
           if (selectedLead.stageId && stages.some((s) => Number(s.id) === Number(selectedLead.stageId))) {
             base.stageId = Number(selectedLead.stageId);
           } else {
-            base.stageId = Number(stages[0].id);
+            base.stageId = defaultStageId;
           }
         }
       }
     }
     return base;
-  }, [initialValues, leads, stages, courseOptions]);
+  }, [initialValues, leads, stages, courseOptions, settings]);
 
   const handleLeadChange = (selectedLeadId, onChangeCallback) => {
     onChangeCallback('leadId', selectedLeadId);

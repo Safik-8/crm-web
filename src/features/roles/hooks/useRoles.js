@@ -26,7 +26,7 @@ export const useRoles = (companyId = '') => {
 
   const params = {
     page,
-    limit: 100, // Roles are small lists generally
+    limit: 10,
     search: debouncedSearch,
     status,
     companyId

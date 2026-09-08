@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, TrendingUp, Plus, AlertCircle, BarChart3, PieChart as PieIcon, CheckCircle2, Clock, Search, Filter } from 'lucide-react';
+import { Target, TrendingUp, Plus, AlertCircle, BarChart3, PieChart as PieIcon, CheckCircle2, Clock, Search, Filter, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useKpiDashboard } from '../hooks/useKpi';
 import KpiCard from '../components/KpiCard';
@@ -9,6 +9,9 @@ import Skeleton from '../../../shared/components/elements/Skeleton';
 import Button from '../../../shared/components/elements/Button';
 import SelectField from '../../../shared/components/elements/SelectField';
 import TextField from '../../../shared/components/elements/TextField';
+
+import SearchInput from '../../../shared/components/elements/SearchInput';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 
 export default function KpiAnalyticsPage() {
   const { user, hasPermission } = useAuth();
@@ -45,7 +48,7 @@ export default function KpiAnalyticsPage() {
     companyId: selectedCompanyId,
   };
 
-  const { data: dashboardData, isLoading, isFetching, isError, error } = useKpiDashboard(activeTab, filters, {
+  const { data: dashboardData, isLoading, isFetching, isError, error, refetch } = useKpiDashboard(activeTab, filters, {
     enabled: Boolean(user),
   });
 
@@ -125,26 +128,108 @@ export default function KpiAnalyticsPage() {
   }
 
   return (
-    <div className="w-full space-y-6 pb-12">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
       {/* Enterprise Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Target className="text-orange-500" size={24} />
-            <span>KPI Analytics</span>
-          </h1>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            Aggregated performance tracking, target achievement & team leaderboards.
-          </p>
+      <PageHeader
+        icon={Target}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="KPI Analytics"
+        description="Aggregated performance tracking, target achievement & team leaderboards."
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Role-Aware Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 border border-slate-200">
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+          <div className="w-full sm:w-64">
+            <SearchInput
+              placeholder="Search assignee, team..."
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+            />
+          </div>
+
+          {/* KPI Type Filter */}
+          <div className="w-full sm:w-44">
+            <SelectField
+              value={selectedKpiType}
+              onChange={(val) => setSelectedKpiType(val)}
+              options={kpiTypeOptions}
+              searchable={false}
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="w-full sm:w-44">
+            <SelectField
+              value={selectedStatus}
+              onChange={(val) => setSelectedStatus(val)}
+              options={statusOptions}
+              searchable={false}
+            />
+          </div>
+
+          {/* Team Dropdown: Visible on Team Tab when authorized */}
+          {activeTab === 'team' && (isTeamLeader || isBranchManager || isCompanyAdmin || isSuperAdmin) && filterOptions.teamOptions?.length > 0 && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                value={selectedTeamId}
+                onChange={(val) => setSelectedTeamId(val)}
+                options={teamSelectOptions}
+                searchable={teamSelectOptions.length >= 10}
+              />
+            </div>
+          )}
+
+          {/* Branch Dropdown: Visible for Company Admin & Super Admin on Branch/Team Tab */}
+          {(activeTab === 'branch' || activeTab === 'team') && (isCompanyAdmin || isSuperAdmin) && filterOptions.branchOptions?.length > 0 && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                value={selectedBranchId}
+                onChange={(val) => setSelectedBranchId(val)}
+                options={branchSelectOptions}
+                searchable={branchSelectOptions.length >= 10}
+              />
+            </div>
+          )}
+
+          {/* Company Dropdown: Visible for Super Admin on Company Tab */}
+          {activeTab === 'company' && isSuperAdmin && filterOptions.companyOptions?.length > 0 && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                value={selectedCompanyId}
+                onChange={(val) => setSelectedCompanyId(val)}
+                options={companySelectOptions}
+                searchable={companySelectOptions.length >= 10}
+              />
+            </div>
+          )}
         </div>
 
+        {/* Action Button: Assign KPI Target */}
         {canCreate && (
-          <Link to="/kpi-management">
+          <Link to="/kpi-management" className="shrink-0">
             <Button
               variant="contained"
-              color="primary"
-              size="small"
               startIcon={<Plus size={16} />}
+              sx={{
+                backgroundColor: '#F86F03',
+                '&:hover': { backgroundColor: '#E06202' },
+                height: '38px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 700,
+                textTransform: 'none',
+              }}
             >
               Assign KPI Target
             </Button>
@@ -177,76 +262,6 @@ export default function KpiAnalyticsPage() {
           </nav>
         </div>
       )}
-
-      {/* Role-Aware Filter Bar using Built-In Shared Components */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 border border-slate-200/80 shadow-2xs">
-        <div className="flex items-center gap-2 flex-1 min-w-[220px]">
-          <TextField
-            placeholder="Search assignee, team or KPI type..."
-            value={searchQuery}
-            onChange={(val) => setSearchQuery(val)}
-            startIcon={Search}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          {/* KPI Type Filter */}
-          <div className="w-44">
-            <SelectField
-              value={selectedKpiType}
-              onChange={(val) => setSelectedKpiType(val)}
-              options={kpiTypeOptions}
-              searchable={false}
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="w-44">
-            <SelectField
-              value={selectedStatus}
-              onChange={(val) => setSelectedStatus(val)}
-              options={statusOptions}
-              searchable={false}
-            />
-          </div>
-
-          {/* Team Dropdown: Visible on Team Tab when authorized */}
-          {activeTab === 'team' && (isTeamLeader || isBranchManager || isCompanyAdmin || isSuperAdmin) && filterOptions.teamOptions?.length > 0 && (
-            <div className="w-44">
-              <SelectField
-                value={selectedTeamId}
-                onChange={(val) => setSelectedTeamId(val)}
-                options={teamSelectOptions}
-                searchable={teamSelectOptions.length >= 10}
-              />
-            </div>
-          )}
-
-          {/* Branch Dropdown: Visible for Company Admin & Super Admin on Branch/Team Tab */}
-          {(activeTab === 'branch' || activeTab === 'team') && (isCompanyAdmin || isSuperAdmin) && filterOptions.branchOptions?.length > 0 && (
-            <div className="w-44">
-              <SelectField
-                value={selectedBranchId}
-                onChange={(val) => setSelectedBranchId(val)}
-                options={branchSelectOptions}
-                searchable={branchSelectOptions.length >= 10}
-              />
-            </div>
-          )}
-
-          {/* Company Dropdown: Visible for Super Admin on Company Tab */}
-          {activeTab === 'company' && isSuperAdmin && filterOptions.companyOptions?.length > 0 && (
-            <div className="w-44">
-              <SelectField
-                value={selectedCompanyId}
-                onChange={(val) => setSelectedCompanyId(val)}
-                options={companySelectOptions}
-                searchable={companySelectOptions.length >= 10}
-              />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Main Content Area: Cards and Charts with localized loading skeleton */}
       {isLoading || isFetching ? (

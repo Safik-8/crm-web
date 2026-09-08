@@ -98,7 +98,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
   return (
     <>
-      <div className="bg-white border border-slate-100 shadow-sm p-6">
+      <div className="bg-white border border-slate-200 p-6">
         {/* Widget Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
@@ -377,9 +377,30 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
         onClose={() => setIsDrawerOpen(false)}
         title="Branch Team Performance Roster"
         subtitle={`Complete leaderboard of ${processedMembers.length} representatives across all teams`}
-        width={{ xs: '100%', sm: 600, md: 720 }}
+        icon={Users}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        width={{ xs: '100%', sm: 480, md: 520 }}
+        showFooter={true}
+        customFooter={
+          <div className="flex w-full items-center justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => setIsDrawerOpen(false)}
+              sx={{
+                borderColor: '#CBD5E1',
+                color: '#64748B',
+                fontWeight: 600,
+                fontSize: '13px',
+                height: '42px',
+                px: 3,
+              }}
+            >
+              Close Roster
+            </Button>
+          </div>
+        }
       >
-        <div className="flex flex-col h-full space-y-4">
+        <div className="space-y-4">
           {/* Drawer Search & Team Filter */}
           <div className="flex flex-col sm:flex-row items-center gap-2.5">
             <SearchInput
@@ -401,9 +422,9 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
           </div>
 
           {/* Drawer Table */}
-          <div className="flex-1 overflow-y-auto border border-slate-200/80">
+          <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-white">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 z-10">
+              <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200">
                 <tr>
                   <th className="py-3 px-3.5">Rank</th>
                   <th className="py-3 px-3.5">Representative</th>

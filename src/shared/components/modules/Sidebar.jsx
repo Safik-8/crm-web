@@ -35,15 +35,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }));
   };
 
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (navRef.current) {
-        const activeEl = navRef.current.querySelector('.active-nav-link');
-        if (activeEl) {
-          const navRect = navRef.current.getBoundingClientRect();
-          const activeRect = activeEl.getBoundingClientRect();
-          const scrollTop = navRef.current.scrollTop;
+  const checkItemActive = React.useCallback((item) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
+    const hasSpecificMatch = filteredNavGroups.some(g => g.items.some(other => other.path !== item.path && other.path.startsWith(`${item.path}/`) && (location.pathname === other.path || location.pathname.startsWith(`${other.path}/`))));
+    const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || (location.pathname.startsWith(`${item.path}/`) && !hasSpecificMatch));
+    const isDirectActive = location.pathname === item.path;
+    const isChildActive = item.children?.some(child => location.pathname === child.path || (location.pathname.startsWith(`${child.path}/`)));
+    return (isDirectActive || isSubRouteActive || isChildActive) && (!hasChildren || !isTabBranch);
+  }, [location.pathname, location.search, filteredNavGroups]);
 
+  const updateIndicator = React.useCallback(() => {
+    if (navRef.current) {
+      const activeEl = navRef.current.querySelector('.active-nav-link');
+      if (activeEl) {
+        const navRect = navRef.current.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
+        const scrollTop = navRef.current.scrollTop;
+
+        if (activeRect.height > 0) {
           setIndicatorStyle({
             top: activeRect.top - navRect.top + scrollTop,
             left: activeRect.left - navRect.left,
@@ -52,13 +62,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             opacity: 1,
             isChild: activeEl.classList.contains('is-child-link')
           });
-        } else {
-          setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+          return;
         }
       }
-    }, 50);
-    return () => clearTimeout(timeout);
-  }, [location.pathname, location.search, expandedGroups]);
+      setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+    }
+  }, []);
+
+  React.useEffect(() => {
+    updateIndicator();
+    const t1 = setTimeout(updateIndicator, 50);
+    const t2 = setTimeout(updateIndicator, 320);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [location.pathname, location.search, expandedGroups, updateIndicator]);
 
   return (
     <>
@@ -101,7 +120,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <nav ref={navRef} className="flex-1 relative overflow-y-auto h-0 px-2.5 py-3 space-y-4 scrollbar-hide">
           {/* Floating Active Indicator */}
           <div
-            className="absolute bg-orange-50 shadow rounded-lg transition-all duration-300 ease-in-out pointer-events-none z-0"
+            className="absolute bg-orange-50 shadow-xs rounded-lg transition-all duration-300 ease-in-out pointer-events-none z-0"
             style={{
               top: indicatorStyle.top,
               left: indicatorStyle.left,
@@ -120,21 +139,36 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
           {filteredNavGroups.map((group, groupIdx) => {
             const expanded = expandedGroups[group.group] !== false;
+            const isGroupActive = group.items.some(item => checkItemActive(item));
 
             return (
               <div key={groupIdx} className="flex flex-col">
                 {group.group && (
                   <div
                     onClick={() => toggleGroup(group.group)}
-                    className="px-3 mb-1.5 flex items-center justify-between cursor-pointer group/header"
+                    className={cn(
+                      "relative z-10 px-3 py-1.5 mb-1 flex items-center justify-between cursor-pointer rounded-lg transition-colors group/header select-none",
+                      !expanded && isGroupActive
+                        ? "text-orange-600 font-bold active-nav-link"
+                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/70"
+                    )}
                   >
-                    <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover/header:text-slate-500 transition-colors">
-                      {group.group}
-                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className={cn(
+                        "text-[10px] font-extrabold uppercase tracking-wider transition-colors",
+                        !expanded && isGroupActive ? "text-orange-600" : "text-slate-400 group-hover/header:text-slate-600"
+                      )}>
+                        {group.group}
+                      </h3>
+                      {!expanded && isGroupActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      )}
+                    </div>
                     <ChevronDown
                       size={12}
                       className={cn(
-                        "text-slate-400 transition-transform duration-300",
+                        "transition-transform duration-300",
+                        !expanded && isGroupActive ? "text-orange-600 font-bold" : "text-slate-400 group-hover/header:text-slate-600",
                         !expanded && "-rotate-90"
                       )}
                     />
@@ -150,35 +184,31 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {group.items.map((item) => {
                       const Icon = item.icon;
                       const hasChildren = item.children && item.children.length > 0;
-                      const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
-                      const hasSpecificMatch = filteredNavGroups.some(g => g.items.some(other => other.path !== item.path && other.path.startsWith(`${item.path}/`) && (location.pathname === other.path || location.pathname.startsWith(`${other.path}/`))));
-                      const isSubRouteActive = item.path !== '/' && (location.pathname === item.path || (location.pathname.startsWith(`${item.path}/`) && !hasSpecificMatch));
+                      const isItemActiveNow = checkItemActive(item);
 
                       return (
                         <React.Fragment key={item.path}>
                           <NavLink
                             to={item.path}
                             end={!hasChildren}
-                            className={({ isActive }) => {
-                              const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
+                            className={() => {
                               return cn(
                                 'group relative z-10 flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
-                                active
-                                  ? 'text-orange-600 font-semibold active-nav-link'
+                                isItemActiveNow
+                                  ? (expanded ? 'text-orange-600 font-semibold active-nav-link' : 'text-orange-600 font-semibold')
                                   : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
                               );
                             }}
                           >
-                            {({ isActive }) => {
-                              const active = (isActive || isSubRouteActive) && (!hasChildren || !isTabBranch);
+                            {() => {
                               return (
                                 <>
                                   <Icon
                                     size={16}
-                                    strokeWidth={active ? 2.2 : 1.8}
+                                    strokeWidth={isItemActiveNow ? 2.2 : 1.8}
                                     className={cn(
                                       'shrink-0 transition-colors duration-150',
-                                      active ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
+                                      isItemActiveNow ? 'text-orange-500' : 'text-zinc-400 group-hover:text-zinc-600'
                                     )}
                                   />
                                   <span className="truncate font-bold">{item.name}</span>
@@ -189,18 +219,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
                           {hasChildren && item.children.map((child) => {
                             const ChildIcon = child.icon;
+                            const isTabBranch = location.pathname === item.path && (location.search.includes('tab=branch') || location.search.includes('tab=branches'));
                             const isChildActive = location.pathname === item.path && isTabBranch;
 
                             return (
                               <NavLink
                                 key={child.path}
                                 to={child.path}
-                                className={({ isActive }) => {
-                                  const isChildActive = location.pathname === item.path && isTabBranch;
+                                className={() => {
                                   return cn(
                                     'group relative z-10 flex items-center gap-2.5 ml-4 pl-3 pr-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 border-l-2',
                                     isChildActive
-                                      ? 'text-orange-600 font-semibold active-nav-link is-child-link border-transparent'
+                                      ? (expanded ? 'text-orange-600 font-semibold active-nav-link is-child-link border-transparent' : 'text-orange-600 font-semibold is-child-link border-transparent')
                                       : 'text-zinc-500 border-zinc-200/80 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300'
                                   );
                                 }}

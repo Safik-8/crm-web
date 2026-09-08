@@ -12,14 +12,11 @@ import CompanyAdminDashboardView from '../../features/dashboard/pages/CompanyAdm
 import BdeDashboardView from '../../features/dashboard/pages/BdeDashboardView';
 import IseDashboardView from '../../features/dashboard/pages/IseDashboardView';
 import LeadsPage from '../../features/leads/pages/LeadsPage';
+import LeadDeepLinkRedirect from '../../features/leads/pages/LeadDeepLinkRedirect';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
-import TasksPage from '../../features/tasks/pages/TasksPage';
 import CompanyRoutes from '../../features/company/routes/CompanyRoutes';
 import BranchRoutes from '../../features/branch/routes/BranchRoutes';
-import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
-import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
-import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 import SalesPerformancePage from '../../features/salesPerformance/pages/SalesPerformancePage';
 import RevenueReportPage from '../../features/revenueReport/pages/RevenueReportPage';
@@ -33,9 +30,7 @@ import CoursesPage from '../../features/courses/pages/CoursesPage';
 import TeamsPage from '../../features/teams/pages/TeamsPage';
 import MyTeamPage from '../../features/teams/pages/MyTeamPage';
 import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
-import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
-import TargetsPage from '../../features/targets/pages/TargetsPage';
 import NotificationsPage from '../../features/notifications/pages/NotificationsPage';
 import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
 import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
@@ -48,6 +43,7 @@ import { OpportunityDetailPage } from '../../features/opportunities/pages/Opport
 import { OpportunityStageManagement } from '../../features/opportunities/pages/OpportunityStageManagement';
 import AssignmentSettingsPage from '../../features/settings/pages/AssignmentSettingsPage';
 import QualificationCriteriaSettingsPage from '../../features/settings/pages/QualificationCriteriaSettingsPage';
+import SystemSettingsPage from '../../features/settings/pages/SystemSettingsPage';
 import GlobalBranchPage from '../../features/branch/pages/GlobalBranchPage';
 import ProposalsPage from '../../features/proposals/pages/ProposalsPage';
 import { PERMISSIONS } from '../../lib/constants/permissions';
@@ -123,34 +119,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'prospects',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PROSPECTS}>
-            <ProspectsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'activities',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ACTIVITIES}>
-            <ActivitiesPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'sessions',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SESSIONS}>
-            <SessionsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: 'leads',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
             <LeadsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        // Redirect alias: stale notification action URLs stored in the DB may use
+        // the /leads/:id pattern (e.g. from reminderJob before the fix).
+        // This redirect transparently converts them to the canonical
+        // /leads?leadId=<id> deep-link so the drawer opens correctly.
+        path: 'leads/:leadId',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+            <LeadDeepLinkRedirect />
           </ProtectedRoute>
         ),
       },
@@ -202,15 +186,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'tasks',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TASKS}>
-            <TasksPage />
-          </ProtectedRoute>
-        ),
-      },
-
       {
         path: 'reports',
         element: (
@@ -292,14 +267,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'approvals',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.APPROVE_TRANSFERS}>
-            <ApprovalsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: 'users',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_USERS}>
@@ -366,6 +333,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'settings/system',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SYSTEM_SETTINGS}>
+            <SystemSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/system-settings',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SYSTEM_SETTINGS}>
+            <SystemSettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'settings/qualification',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
@@ -406,18 +389,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'audit',
+        path: 'audit-logs',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_AUDIT}>
             <AuditPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'targets',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TARGETS}>
-            <TargetsPage />
           </ProtectedRoute>
         ),
       },

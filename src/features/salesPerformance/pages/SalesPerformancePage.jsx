@@ -1,7 +1,6 @@
-// crm-web/src/features/salesPerformance/pages/SalesPerformancePage.jsx
-
 import React, { useState } from 'react';
-import { Award, UserCheck, PhoneCall, Users, Building2, Building, TrendingUp, Download, Sparkles, FileSpreadsheet, FileText, Printer, ChevronDown } from 'lucide-react';
+import { Award, UserCheck, PhoneCall, Users, Building2, Building, TrendingUp, Download, Sparkles, FileSpreadsheet, FileText, Printer, ChevronDown, RefreshCw } from 'lucide-react';
+import PageHeader from '../../../shared/components/modules/PageHeader';
 import PerformanceFilterBar from '../components/PerformanceFilterBar';
 import PerformanceRankingCard from '../components/PerformanceRankingCard';
 import PerformanceSummaryCards from '../components/PerformanceSummaryCards';
@@ -102,6 +101,16 @@ export default function SalesPerformancePage() {
   const teamQuery = useTeamPerformance(filters, { enabled: isQueryEnabled });
   const branchQuery = useBranchPerformance(filters, { enabled: isQueryEnabled });
   const rankingsQuery = usePerformanceRankings(filters, { enabled: isQueryEnabled });
+
+  const isFetchingAll = bdeQuery.isFetching || iseQuery.isFetching || teamQuery.isFetching || branchQuery.isFetching || rankingsQuery.isFetching;
+
+  const handleRefreshAll = () => {
+    bdeQuery.refetch();
+    iseQuery.refetch();
+    teamQuery.refetch();
+    branchQuery.refetch();
+    rankingsQuery.refetch();
+  };
 
   // Cascading Filter Reset Handler
   const handleFilterChange = (key, val) => {
@@ -286,61 +295,25 @@ export default function SalesPerformancePage() {
     }
   };
 
-
-
   return (
-    <div className="w-full space-y-5 pb-12">
-      {/* Clean World-Class Enterprise Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1 border-b border-slate-200/60">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Sales Performance
-          </h1>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            Monitor conversion efficiency, revenue attribution, team productivity & executive leaderboards.
-          </p>
-        </div>
-
-        {canExportReport && (
-          <div className="relative">
-            <button
-              onClick={() => setIsExportMenuOpen(prev => !prev)}
-              disabled={!isQueryEnabled || isExporting}
-              className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-md border border-slate-200 shadow-2xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-            >
-              <Download size={14} className={isExporting ? 'animate-bounce text-orange-500' : 'text-slate-500'} />
-              <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
-              <ChevronDown size={14} className="text-slate-400" />
-            </button>
-
-            {isExportMenuOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
-                <button
-                  onClick={() => handleExport('excel')}
-                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                  <span>Export as Excel (.xlsx)</span>
-                </button>
-                <button
-                  onClick={() => handleExport('csv')}
-                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-                >
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <span>Export as CSV (.csv)</span>
-                </button>
-                <button
-                  onClick={() => handleExport('pdf')}
-                  className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
-                >
-                  <Printer className="w-4 h-4 text-rose-600" />
-                  <span>Export as PDF (.pdf)</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* Header Section */}
+      <PageHeader
+        icon={Award}
+        iconClassName="bg-orange-50 text-orange-600 border border-orange-100"
+        title="Sales Performance"
+        description="Monitor conversion efficiency, revenue attribution, team productivity & executive leaderboards."
+        actions={
+          <button
+            type="button"
+            onClick={handleRefreshAll}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer"
+            title="Refresh Data"
+          >
+            <RefreshCw size={14} className={isFetchingAll ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Role-Aware Filter Bar */}
       <PerformanceFilterBar
@@ -351,7 +324,13 @@ export default function SalesPerformancePage() {
         branches={branches}
         teams={teams}
         userRoleInfo={userRoleInfo}
-        isFetching={bdeQuery.isFetching || iseQuery.isFetching}
+        isFetching={isFetchingAll}
+        canExportReport={canExportReport}
+        isExporting={isExporting}
+        isQueryEnabled={isQueryEnabled}
+        handleExport={handleExport}
+        isExportMenuOpen={isExportMenuOpen}
+        setIsExportMenuOpen={setIsExportMenuOpen}
       />
 
       {/* Super Admin Prompt when no company is selected */}

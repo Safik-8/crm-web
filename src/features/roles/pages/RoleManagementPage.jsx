@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X, MoreVertical } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole, useToggleRoleStatus } from '../hooks/useRoles';
@@ -12,16 +12,19 @@ import DynamicFormSlideover from '../../../shared/components/elements/DynamicFor
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Checkbox from '../../../shared/components/elements/Checkbox';
+import SearchInput from '../../../shared/components/elements/SearchInput';
 import { toast } from '../../../shared/utils/toast';
 import { useQuery } from '@tanstack/react-query';
 import { companyApi } from '../../company/api/companyApi';
 import Table from '../../../shared/components/elements/Table';
+import Pagination from '../../../shared/components/elements/Pagination';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Select from '@mui/material/Select';
+import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -62,8 +65,7 @@ const ACTIONS = [
   { key: "canView", label: "View" },
   { key: "canCreate", label: "Create" },
   { key: "canEdit", label: "Edit" },
-  { key: "canDelete", label: "Delete" },
-  { key: "canArchive", label: "Archive" }
+  { key: "canDelete", label: "Delete" }
 ];
 
 const RoleManagementPage = () => {
@@ -77,7 +79,7 @@ const RoleManagementPage = () => {
   // Company filter — Super Admin only
   const [companyFilter, setCompanyFilter] = useState('');
 
-  const { roles, loadingState, refetch, search, handleSearchChange } = useRoles(companyFilter);
+  const { roles, pagination, loadingState, refetch, search, handleSearchChange, setPage } = useRoles(companyFilter);
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
@@ -98,6 +100,7 @@ const RoleManagementPage = () => {
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formCompanyId, setFormCompanyId] = useState('');
+  const [formHierarchyBracket, setFormHierarchyBracket] = useState('COMPANY_ADMIN_TO_BRANCH_MANAGER');
   const [formPermissions, setFormPermissions] = useState({});
 
   // Query Companies for Super Admin dropdown selection
@@ -122,6 +125,7 @@ const RoleManagementPage = () => {
         setFormName(selectedRole.name);
         setFormDescription(selectedRole.description || '');
         setFormCompanyId(selectedRole.companyId || '');
+        setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
 
         // Map permissions list to object map
         const permMap = {};
@@ -140,6 +144,7 @@ const RoleManagementPage = () => {
         setFormName('');
         setFormDescription('');
         setFormCompanyId('');
+        setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
         setFormPermissions({});
       }
     }
@@ -186,15 +191,31 @@ const RoleManagementPage = () => {
     setIsStatusOpen(true);
   };
 
-  // Toggle permission checkbox in matrix
+  // Toggle permission checkbox in matrix with view dependencies
   const handlePermissionChange = (module, action, checked) => {
-    setFormPermissions(prev => ({
-      ...prev,
-      [module]: {
-        ...(prev[module] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false }),
-        [action]: checked
+    setFormPermissions(prev => {
+      const current = prev[module] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false };
+      let updatedModule = { ...current, [action]: checked };
+
+      if (action === 'canView' && !checked) {
+        // Unchecking View automatically deselects all other actions for this module
+        updatedModule = {
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+          canArchive: false
+        };
+      } else if (action !== 'canView' && checked) {
+        // Checking Create, Edit, Delete, or Archive automatically checks View
+        updatedModule.canView = true;
       }
-    }));
+
+      return {
+        ...prev,
+        [module]: updatedModule
+      };
+    });
   };
 
   // Select all or deselect all permissions for a module
@@ -225,6 +246,7 @@ const RoleManagementPage = () => {
     const data = {
       name: formName,
       description: formDescription,
+      hierarchyBracket: formHierarchyBracket,
       companyId: formCompanyId ? parseInt(formCompanyId, 10) : null,
       permissions: payloadPermissions
     };
@@ -305,6 +327,99 @@ const RoleManagementPage = () => {
 
   const isSuperOrCompanyAdmin = isSuperAdmin || user?.primaryRole === 'COMPANY_ADMIN';
 
+  const RoleActionsMenu = ({ role }) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
+    const handleOpen = (e) => {
+      e.stopPropagation();
+      setAnchorEl(e.currentTarget);
+    };
+
+    const handleClose = () => {
+      setAnchorEl(null);
+    };
+
+    if (!isSuperOrCompanyAdmin) return null;
+
+    const userRank = user?.primaryRoleRank || 0;
+    const isEditDisabled = role.rank >= userRank;
+    const isStatusDisabled = role.isSystem || role.rank >= userRank;
+
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+          title="Actions"
+        >
+          <MoreVertical size={16} />
+        </button>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          elevation={0}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              handleEditClick(role);
+            }}
+            disabled={isEditDisabled}
+            className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
+            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <Edit2 size={14} className="text-slate-400" />
+            <span>Edit Role</span>
+          </MenuItem>
+
+          {!role.isSystem && (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                handleToggleStatusClick(role);
+              }}
+              disabled={isStatusDisabled}
+              className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800 border-t border-slate-100/50"
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+            >
+              <Power size={14} className={role.status === 'ACTIVE' ? 'text-amber-500' : 'text-emerald-500'} />
+              <span>{role.status === 'ACTIVE' ? 'Deactivate Role' : 'Activate Role'}</span>
+            </MenuItem>
+          )}
+
+          {!role.isSystem && (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                handleDeleteClick(role);
+              }}
+              disabled={isStatusDisabled}
+              className="px-3.5 py-2 text-[12px] font-bold hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 border-t border-slate-100/50"
+              sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+            >
+              <Trash2 size={14} className="text-rose-500" />
+              <span>Delete Role</span>
+            </MenuItem>
+          )}
+        </Menu>
+      </>
+    );
+  };
+
   const columns = [
     {
       header: 'Role Name',
@@ -376,42 +491,8 @@ const RoleManagementPage = () => {
       header: 'Actions',
       align: 'right',
       cell: (role) => (
-        <div className="flex items-center justify-end gap-1.5">
-          {isSuperOrCompanyAdmin && (
-            <>
-              <button
-                onClick={() => handleEditClick(role)}
-                disabled={role.rank >= (user?.primaryRoleRank || 0)}
-                className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all disabled:opacity-40"
-                title="Edit Role"
-              >
-                <Edit2 size={15} />
-              </button>
-
-              {!role.isSystem && (
-                <>
-                  <button
-                    onClick={() => handleToggleStatusClick(role)}
-                    className={`p-1.5 rounded-lg transition-all ${role.status === 'ACTIVE'
-                      ? 'text-slate-400 hover:text-red-500 hover:bg-red-50'
-                      : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'
-                      }`}
-                    title={role.status === 'ACTIVE' ? 'Deactivate Role' : 'Activate Role'}
-                  >
-                    <Power size={15} />
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteClick(role)}
-                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                    title="Delete Role"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </>
-              )}
-            </>
-          )}
+        <div className="flex items-center justify-end">
+          <RoleActionsMenu role={role} />
         </div>
       ),
       skeleton: () => <Skeleton className="h-8 w-24 rounded-lg ml-auto" />,
@@ -419,177 +500,174 @@ const RoleManagementPage = () => {
   ];
 
   return (
-    <GenericPage
-      title="Role & Permission Settings"
-      description="Manage role-based security configurations, custom roles, and functional permission matrices."
-      icon={Shield}
-      hideHeader={true}
-    >
-      <div className="flex flex-col gap-4">
-        {/* ── Desktop section header ─────────────────────────────────────── */}
-        <PageHeader
-          title="Role & Permission Settings"
-          description="Manage role-based security configurations"
-          icon={Shield}
-          className="hidden lg:flex"
-          actions={
-            <button
-              onClick={refetch}
-              className="text-slate-400 hover:text-primary transition-colors focus:outline-none"
-              title="Refresh Data"
-            >
-              <RefreshCcw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-            </button>
-          }
-        />
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+      {/* ── Section Header ─────────────────────────────────────── */}
+      <PageHeader
+        title="Role & Permission Settings"
+        description="Manage role-based security configurations and permission matrices."
+        icon={Shield}
+        actions={
+          <button
+            onClick={refetch}
+            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
+            title="Refresh Data"
+          >
+            <RefreshCcw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-        <div className="bg-white border border-slate-200 p-4">
-
-          {/* Top filter and action bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full bg-white border border-slate-200 p-3 mb-4">
-            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
-              <div className="w-full sm:w-64">
-                <input
-                  type="text"
-                  placeholder="Search roles..."
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Company filter — Super Admin only */}
-              {isSuperAdmin && (
-                <div className="w-full sm:w-52">
-                  <SelectField
-                    placeholder="All Companies"
-                    value={companyFilter}
-                    onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
-                    allowEmptyOption
-                    searchable
-                    options={companiesList.map((c) => ({
-                      value: String(c.id),
-                      label: c.name,
-                    }))}
-                  />
-                </div>
-              )}
+        {/* Top filter and action bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+            <div className="w-full sm:w-64">
+              <SearchInput
+                placeholder="Search..."
+                value={search}
+                onChange={handleSearchChange}
+              />
             </div>
 
-            {isSuperOrCompanyAdmin && (
-              <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
-                <Button
-                  onClick={handleCreateClick}
-                  variant="contained"
-                  size="medium"
-                  startIcon={<Plus size={18} />}
-                  className="group shadow-sm hover:shadow-md transition-all"
-                >
-                  Add Role
-                </Button>
+            {/* Company filter — Super Admin only */}
+            {isSuperAdmin && (
+              <div className="w-full sm:w-52">
+                <SelectField
+                  placeholder="All Companies"
+                  value={companyFilter}
+                  onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
+                  allowEmptyOption
+                  searchable
+                  options={companiesList.map((c) => ({
+                    value: String(c.id),
+                    label: c.name,
+                  }))}
+                />
               </div>
             )}
           </div>
 
-          {/* Mobile Cards (visible on smaller screens, hidden on md+) */}
-          <div className="block md:hidden space-y-4">
-            {loadingState === 'loading' ? (
-              <div className="py-8 text-center text-slate-400 font-medium">
-                Loading roles...
-              </div>
-            ) : roles.length === 0 ? (
-              <div className="bg-white border border-slate-200 p-8 text-center">
-                <AlertCircle className="text-slate-300 mx-auto mb-2" size={32} />
-                <p className="font-bold text-slate-700">No Roles Found</p>
-                <p className="text-xs text-slate-400">Add a custom role or refine your search.</p>
-              </div>
-            ) : (
-              roles.map((role) => (
-                <div key={role.id} className="bg-white border border-slate-200 p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg ${role.isSystem ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
-                        <Shield size={14} />
-                      </div>
-                      <span className="font-bold text-slate-800 text-sm">{role.name}</span>
+          {isSuperOrCompanyAdmin && (
+            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
+              <Button
+                onClick={handleCreateClick}
+                variant="contained"
+                size="medium"
+                startIcon={<Plus size={18} />}
+                className="group shadow-sm hover:shadow-md transition-all"
+              >
+                Add Role
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Cards (visible on smaller screens, hidden on md+) */}
+        <div className="block md:hidden space-y-4">
+          {loadingState === 'loading' ? (
+            <div className="py-8 text-center text-slate-400 font-medium">
+              Loading roles...
+            </div>
+          ) : roles.length === 0 ? (
+            <div className="bg-white border border-slate-200 p-8 text-center">
+              <AlertCircle className="text-slate-300 mx-auto mb-2" size={32} />
+              <p className="font-bold text-slate-700">No Roles Found</p>
+              <p className="text-xs text-slate-400">Add a custom role or refine your search.</p>
+            </div>
+          ) : (
+            roles.map((role) => (
+              <div key={role.id} className="bg-white border border-slate-200 p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${role.isSystem ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
+                      <Shield size={14} />
                     </div>
-                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${role.isSystem
-                      ? 'bg-slate-50 text-slate-600 border-slate-200/60'
-                      : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                    <span className="font-bold text-slate-800 text-sm">{role.name}</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${role.isSystem
+                    ? 'bg-slate-50 text-slate-600 border-slate-200/60'
+                    : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                    }`}>
+                    {role.isSystem ? 'System' : 'Custom'}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-500 font-medium line-clamp-2">
+                  {role.description || 'No description provided'}
+                </p>
+
+                <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">Rank:</span>
+                    <span className="text-xs font-bold text-slate-700">{role.rank}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">Users:</span>
+                    <span className="text-xs font-bold text-slate-700">{role._count?.userRoles ?? 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">Status:</span>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${role.status === 'ACTIVE'
+                      ? 'bg-green-50 text-green-700 border border-green-100'
+                      : 'bg-slate-50 text-slate-500 border border-slate-200'
                       }`}>
-                      {role.isSystem ? 'System' : 'Custom'}
+                      {role.status}
                     </span>
                   </div>
-
-                  <p className="text-xs text-slate-500 font-medium line-clamp-2">
-                    {role.description || 'No description provided'}
-                  </p>
-
-                  <div className="flex justify-between items-center border-t border-slate-100 pt-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-400">Rank:</span>
-                      <span className="text-xs font-bold text-slate-700">{role.rank}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-400">Users:</span>
-                      <span className="text-xs font-bold text-slate-700">{role._count?.userRoles ?? 0}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-400">Status:</span>
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${role.status === 'ACTIVE'
-                        ? 'bg-green-50 text-green-700 border border-green-100'
-                        : 'bg-slate-50 text-slate-500 border border-slate-200'
-                        }`}>
-                        {role.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {isSuperOrCompanyAdmin && (
-                    <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-                      <button
-                        onClick={() => handleToggleStatusClick(role)}
-                        disabled={role.isSystem || role.rank >= user?.primaryRoleRank}
-                        className="p-2 text-slate-500 hover:text-orange-500 hover:bg-slate-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
-                        title="Toggle Status"
-                      >
-                        <Power size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleEditClick(role)}
-                        disabled={role.rank >= user?.primaryRoleRank}
-                        className="p-2 text-slate-500 hover:text-orange-500 hover:bg-slate-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
-                        title="Edit Role"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(role)}
-                        disabled={role.isSystem || role.rank >= user?.primaryRoleRank}
-                        className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
-                        title="Delete Role"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
                 </div>
-              ))
-            )}
-          </div>
 
-          {/* Desktop Table (hidden on mobile, visible on md+) */}
-          <div className="hidden md:block w-full relative z-10 bg-white">
-            <Table
-              columns={columns}
-              data={roles}
-              loadingState={loadingState}
-              emptyTitle="No Roles Found"
-              emptyDescription="Add a custom role or refine your search filters."
-              emptyIcon={Shield}
-              skeletonRows={5}
-            />
-          </div>
+                {isSuperOrCompanyAdmin && (
+                  <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                    <button
+                      onClick={() => handleToggleStatusClick(role)}
+                      disabled={role.isSystem || role.rank >= user?.primaryRoleRank}
+                      className="p-2 text-slate-500 hover:text-orange-500 hover:bg-slate-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
+                      title="Toggle Status"
+                    >
+                      <Power size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleEditClick(role)}
+                      disabled={role.rank >= user?.primaryRoleRank}
+                      className="p-2 text-slate-500 hover:text-orange-500 hover:bg-slate-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
+                      title="Edit Role"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(role)}
+                      disabled={role.isSystem || role.rank >= user?.primaryRoleRank}
+                      className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-slate-100 disabled:opacity-40"
+                      title="Delete Role"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table (hidden on mobile, visible on md+) */}
+        <div className="hidden md:block w-full relative z-10 bg-white">
+          <Table
+            columns={columns}
+            data={roles}
+            loadingState={loadingState}
+            emptyTitle="No Roles Found"
+            emptyDescription="Add a custom role or refine your search filters."
+            emptyIcon={Shield}
+            skeletonRows={5}
+          />
+        </div>
+
+        {/* Pagination Bar */}
+        <Pagination
+          pagination={pagination}
+          onPageChange={setPage}
+          isLoading={loadingState === 'loading'}
+          entityName="roles"
+        />
 
           {/* Create/Edit Slideover */}
           <DynamicFormSlideover
@@ -622,6 +700,21 @@ const RoleManagementPage = () => {
                 onChange={setFormDescription}
                 placeholder="Describe role responsibilities..."
               />
+
+              {!selectedRole && (
+                <SelectField
+                  id="hierarchy-bracket"
+                  label="Hierarchy Level (Authority Position)"
+                  value={formHierarchyBracket}
+                  onChange={(val) => setFormHierarchyBracket(val)}
+                  options={[
+                    { value: 'COMPANY_ADMIN_TO_BRANCH_MANAGER', label: 'Above Branch Manager' },
+                    { value: 'BRANCH_MANAGER_TO_BDE', label: 'Below Branch Manager / Above BDE' },
+                    { value: 'BDE_TO_ISE', label: 'Below BDE / Above ISE' },
+                    { value: 'BELOW_ISE', label: 'Below ISE' },
+                  ]}
+                />
+              )}
 
               {isSuperAdmin && !selectedRole && (
                 <SelectField
@@ -818,9 +911,7 @@ const RoleManagementPage = () => {
               </Button>
             </DialogActions>
           </Dialog>
-        </div>
-      </div>
-    </GenericPage>
+    </div>
   );
 };
 
