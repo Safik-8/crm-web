@@ -13,7 +13,7 @@ import FollowupList from '../../../followups/components/FollowupList';
  * @param {Object} props
  * @param {number} props.leadId - Target lead ID
  */
-const FollowupsTab = ({ leadId }) => {
+const FollowupsTab = ({ leadId, initialFilter }) => {
   const { user } = useAuth();
 
   // Super Admin has full system access; all other roles (including Managers & Admins)
@@ -24,8 +24,6 @@ const FollowupsTab = ({ leadId }) => {
   const canEdit   = isSuperAdmin || !!(user?.permissions?.FOLLOWUP?.canEdit);
   const canDelete = isSuperAdmin || !!(user?.permissions?.FOLLOWUP?.canDelete);
 
-
-
   return (
     <div style={{ paddingTop: '4px', paddingBottom: '8px' }}>
       <FollowupList
@@ -33,6 +31,7 @@ const FollowupsTab = ({ leadId }) => {
         canCreate={canCreate}
         canEdit={canEdit}
         canDelete={canDelete}
+        initialFilter={initialFilter}
       />
     </div>
   );

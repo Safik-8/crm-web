@@ -18,14 +18,15 @@ const LeadDeepLinkRedirect = () => {
   const { leadId } = useParams();
   const [searchParams] = useSearchParams();
 
-  // Preserve any extra query params that might have been appended (e.g. ?tab=)
   const tab = searchParams.get('tab');
+  const filter = searchParams.get('filter') || searchParams.get('status');
 
-  const to = tab
-    ? `/leads?leadId=${leadId}&tab=${encodeURIComponent(tab)}`
-    : `/leads?leadId=${leadId}`;
+  const params = new URLSearchParams();
+  params.set('leadId', leadId);
+  if (tab) params.set('tab', tab);
+  if (filter) params.set('filter', filter);
 
-  return <Navigate to={to} replace />;
+  return <Navigate to={`/leads?${params.toString()}`} replace />;
 };
 
 export default LeadDeepLinkRedirect;

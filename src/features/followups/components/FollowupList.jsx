@@ -1,6 +1,6 @@
 // src/features/followups/components/FollowupList.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, AlertTriangle } from 'lucide-react';
 
 import FollowupCard from './FollowupCard';
@@ -15,17 +15,33 @@ import {
   useDeleteFollowupMutation,
 } from '../hooks/useFollowups';
 
+const VALID_FILTERS = ['ALL', 'PENDING', 'COMPLETED', 'MISSED', 'CANCELLED'];
+
 /**
  * FollowupList — Main container component rendering follow-ups tab content within LeadDetailDrawer.
  *
  * @param {Object}  props
- * @param {number}  props.leadId    - ID of target lead
- * @param {boolean} props.canCreate - Role capability to create
- * @param {boolean} props.canEdit   - Role capability to edit/complete/cancel
- * @param {boolean} props.canDelete - Role capability to delete
+ * @param {number}  props.leadId        - ID of target lead
+ * @param {boolean} props.canCreate     - Role capability to create
+ * @param {boolean} props.canEdit       - Role capability to edit/complete/cancel
+ * @param {boolean} props.canDelete     - Role capability to delete
+ * @param {string}  [props.initialFilter] - Default active filter (e.g. 'MISSED', 'PENDING')
  */
-const FollowupList = ({ leadId, canCreate, canEdit, canDelete }) => {
-  const [filterStatus, setFilterStatus] = useState('ALL');
+const FollowupList = ({ leadId, canCreate, canEdit, canDelete, initialFilter = 'ALL' }) => {
+  const resolveFilter = (f) => {
+    if (!f) return 'ALL';
+    const upper = String(f).toUpperCase();
+    return VALID_FILTERS.includes(upper) ? upper : 'ALL';
+  };
+
+  const [filterStatus, setFilterStatus] = useState(() => resolveFilter(initialFilter));
+
+  useEffect(() => {
+    if (initialFilter) {
+      setFilterStatus(resolveFilter(initialFilter));
+    }
+  }, [initialFilter]);
+
   const [isFormOpen, setIsFormOpen]     = useState(false);
   const [editingFollowup, setEditingFollowup] = useState(null);
   const [completingFollowup, setCompletingFollowup] = useState(null);

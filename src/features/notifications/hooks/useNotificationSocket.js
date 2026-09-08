@@ -4,6 +4,7 @@ import { useSocket } from '../../../shared/hooks/useSocket';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { toast } from 'sonner';
 import { queryClient } from '../../../lib/queryClient';
+import { resolveNotificationActionUrl } from '../utils/resolveNotificationUrl';
 
 export const useNotificationSocket = () => {
   const { socket } = useSocket();
@@ -20,14 +21,15 @@ export const useNotificationSocket = () => {
       const isSelfTriggered = notification.senderId && user?.id && Number(notification.senderId) === Number(user.id);
 
       if (!isSelfTriggered) {
+        const targetUrl = resolveNotificationActionUrl(notification);
         // Trigger SaaS-grade toast for alerts from other users, assignments, or background jobs
         toast(notification.title || 'New Notification', {
           description: notification.message,
           duration: 5000,
-          action: notification.actionUrl ? {
+          action: targetUrl ? {
             label: 'View',
             onClick: () => {
-              navigate(notification.actionUrl);
+              navigate(targetUrl);
             },
           } : undefined,
         });

@@ -23,6 +23,7 @@ import { useNotificationHistory } from '../hooks/useNotificationHistory';
 import PriorityBadge from '../components/PriorityBadge';
 import ModuleBadge from '../components/ModuleBadge';
 import NotificationSkeleton from '../components/NotificationSkeleton';
+import { resolveNotificationActionUrl } from '../utils/resolveNotificationUrl';
 import NotificationConfigModal from '../components/NotificationConfigModal';
 import { useLoader } from '../../../shared/context/LoaderContext';
 
@@ -71,12 +72,13 @@ const NotificationRowActions = ({ n, isRead, navigate, handleMarkAsRead, handleD
           className: "mt-1 shadow-lg border border-slate-200 rounded-lg bg-white min-w-[160px] py-1 text-slate-700 font-sans"
         }}
       >
-        {n.actionUrl && (
+        {Boolean(n.actionUrl || n.leadId || n.relatedRecordId) && (
           <MenuItem
             onClick={() => {
               handleClose();
               if (!isRead) handleMarkAsRead(n.id);
-              navigate(n.actionUrl);
+              const targetUrl = resolveNotificationActionUrl(n);
+              if (targetUrl) navigate(targetUrl);
             }}
             className="px-3.5 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors text-slate-700"
             sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}

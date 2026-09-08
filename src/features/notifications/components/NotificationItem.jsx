@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import PriorityBadge from './PriorityBadge';
 import ModuleBadge from './ModuleBadge';
+import { resolveNotificationActionUrl } from '../utils/resolveNotificationUrl';
 
 const PREFIX_CONFIG = {
   '[SCHEDULED]': { Icon: CalendarPlus, colour: 'text-indigo-500', bg: 'bg-indigo-50', title: 'Follow-up Scheduled' },
@@ -87,9 +88,10 @@ const NotificationItem = memo(({ notification, onMarkAsRead, onDelete, onClosePa
 
   const handleClick = () => {
     if (!isRead && onMarkAsRead) onMarkAsRead(id);
-    if (actionUrl) {
+    const targetUrl = resolveNotificationActionUrl(notification);
+    if (targetUrl) {
       if (onClosePanel) onClosePanel();
-      navigate(actionUrl);
+      navigate(targetUrl);
     }
   };
 

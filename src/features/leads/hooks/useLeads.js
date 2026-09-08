@@ -67,6 +67,11 @@ export const useLeadQuery = (id, initialData) => {
     enabled: !!id,
     staleTime: 60000,
     placeholderData: initialData ? (prev) => prev || { data: { lead: initialData } } : undefined,
+    retry: (failureCount, error) => {
+      const status = error?.response?.status || error?.status;
+      if (status === 404 || status === 403) return false;
+      return failureCount < 2;
+    },
   });
 };
 

@@ -163,7 +163,7 @@ const RowActionsMenu = ({
 
 export const LeadsPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const { user: currentUser, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
@@ -193,13 +193,13 @@ export const LeadsPage = () => {
     if (targetLeadId) {
       const numericId = Number(targetLeadId);
       if (!isNaN(numericId) && numericId > 0) {
-        // Read optional tab hint from URL; fall back to undefined so the drawer
-        // uses its own default ('comments') when no tab is specified.
+        // Read optional tab & filter hints from URL or route state
         const tabHint = searchParams.get('tab') || location.state?.openLeadTab || undefined;
+        const filterHint = searchParams.get('filter') || searchParams.get('status') || location.state?.openLeadFilter || undefined;
         setSelectedLeadForView((prev) =>
-          prev?.id === numericId && prev?.initialTab === tabHint
+          prev?.id === numericId && prev?.initialTab === tabHint && prev?.initialFilter === filterHint
             ? prev
-            : { id: numericId, initialTab: tabHint }
+            : { id: numericId, initialTab: tabHint, initialFilter: filterHint }
         );
       }
     }
@@ -1314,7 +1314,19 @@ export const LeadsPage = () => {
         <LeadDetailDrawer
           lead={selectedLeadForView}
           initialTab={selectedLeadForView.initialTab}
-          onClose={() => setSelectedLeadForView(null)}
+          initialFilter={selectedLeadForView.initialFilter}
+          onClose={() => {
+            setSelectedLeadForView(null);
+            if (searchParams.get('leadId') || searchParams.get('detailId') || searchParams.get('tab') || searchParams.get('filter') || searchParams.get('status')) {
+              const newParams = new URLSearchParams(searchParams);
+              newParams.delete('leadId');
+              newParams.delete('detailId');
+              newParams.delete('tab');
+              newParams.delete('filter');
+              newParams.delete('status');
+              setSearchParams(newParams, { replace: true });
+            }
+          }}
         />
       )}
 
