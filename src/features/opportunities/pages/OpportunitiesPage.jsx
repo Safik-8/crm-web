@@ -275,7 +275,6 @@ export const OpportunitiesPage = () => {
   const handleStageChange = (opportunityId, newStageId) => {
     const targetStageId = Number(newStageId);
     const targetStageObj = stages.find((s) => Number(s.id) === targetStageId);
-    console.log('[DEBUG] handleStageChange:', { opportunityId, newStageId, targetStageId, targetStageObj, stages });
 
     const isWon = targetStageObj?.stageType === 'WON' || targetStageObj?.code === 'WON' || targetStageObj?.name?.toLowerCase() === 'won';
     const isLost = targetStageObj?.stageType === 'LOST' || targetStageObj?.code === 'LOST' || targetStageObj?.name?.toLowerCase() === 'lost';

@@ -15,12 +15,8 @@ import LeadsPage from '../../features/leads/pages/LeadsPage';
 import LeadDeepLinkRedirect from '../../features/leads/pages/LeadDeepLinkRedirect';
 import CustomersPage from '../../features/customers/pages/CustomersPage';
 import DealsPage from '../../features/deals/pages/DealsPage';
-import TasksPage from '../../features/tasks/pages/TasksPage';
 import CompanyRoutes from '../../features/company/routes/CompanyRoutes';
 import BranchRoutes from '../../features/branch/routes/BranchRoutes';
-import ProspectsPage from '../../features/prospects/pages/ProspectsPage';
-import ActivitiesPage from '../../features/activities/pages/ActivitiesPage';
-import SessionsPage from '../../features/sessions/pages/SessionsPage';
 import ReportsPage from '../../features/reports/pages/ReportsPage';
 import SalesPerformancePage from '../../features/salesPerformance/pages/SalesPerformancePage';
 import RevenueReportPage from '../../features/revenueReport/pages/RevenueReportPage';
@@ -34,9 +30,7 @@ import CoursesPage from '../../features/courses/pages/CoursesPage';
 import TeamsPage from '../../features/teams/pages/TeamsPage';
 import MyTeamPage from '../../features/teams/pages/MyTeamPage';
 import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
-import ApprovalsPage from '../../features/approvals/pages/ApprovalsPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
-import TargetsPage from '../../features/targets/pages/TargetsPage';
 import NotificationsPage from '../../features/notifications/pages/NotificationsPage';
 import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
 import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
@@ -125,30 +119,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'prospects',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PROSPECTS}>
-            <ProspectsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'activities',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ACTIVITIES}>
-            <ActivitiesPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'sessions',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SESSIONS}>
-            <SessionsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: 'leads',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
@@ -216,15 +186,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'tasks',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TASKS}>
-            <TasksPage />
-          </ProtectedRoute>
-        ),
-      },
-
       {
         path: 'reports',
         element: (
@@ -302,14 +263,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TEAM_REPORTS}>
             <ReportsPage title="Team Reports" />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'approvals',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.APPROVE_TRANSFERS}>
-            <ApprovalsPage />
           </ProtectedRoute>
         ),
       },
@@ -440,14 +393,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_AUDIT}>
             <AuditPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'targets',
-        element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_TARGETS}>
-            <TargetsPage />
           </ProtectedRoute>
         ),
       },

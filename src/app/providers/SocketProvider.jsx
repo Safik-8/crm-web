@@ -20,9 +20,10 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_API_URL
-      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-      : 'http://localhost:5000';
+    const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    const socketUrl = rawApiUrl
+      ? rawApiUrl.replace(/\/api\/?$/, '')
+      : (window.location.origin.includes(':5173') ? 'http://localhost:5000' : window.location.origin);
 
     const socketInstance = io(socketUrl, {
       auth: {

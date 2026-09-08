@@ -174,32 +174,6 @@ const SEARCH_NAV_ITEMS = [
       hasPermission('view:pipeline')
   },
   {
-    id: 'tasks',
-    title: 'Tasks & Activities',
-    subtitle: 'Schedule follow-ups, calls, meetings & tasks',
-    category: 'Activities',
-    icon: CheckSquare,
-    path: '/tasks',
-    keywords: ['task', 'tasks', 'activity', 'followup', 'call', 'meeting', 'reminder'],
-    permission: (user, hasPermission) => 
-      user?.primaryRole === 'SUPER_ADMIN' || 
-      hasPermission('TASK', 'canView') || 
-      hasPermission('view:task')
-  },
-  {
-    id: 'targets',
-    title: 'Targets & Goals',
-    subtitle: 'Performance targets, metrics & goal tracking',
-    category: 'Performance',
-    icon: Target,
-    path: '/targets',
-    keywords: ['target', 'targets', 'kpi', 'goal', 'quota', 'performance', 'metric'],
-    permission: (user, hasPermission) => 
-      user?.primaryRole === 'SUPER_ADMIN' || 
-      hasPermission('TARGET', 'canView') || 
-      hasPermission('view:target')
-  },
-  {
     id: 'kpi-management',
     title: 'KPI Management',
     subtitle: 'Set and assign company/branch KPI targets',
@@ -233,19 +207,6 @@ const SEARCH_NAV_ITEMS = [
     icon: FileText,
     path: '/reports',
     keywords: ['report', 'reports', 'analytics', 'bi', 'summary', 'export', 'charts'],
-    permission: (user, hasPermission) => 
-      user?.primaryRole === 'SUPER_ADMIN' || 
-      hasPermission('REPORT', 'canView') || 
-      hasPermission('view:report')
-  },
-  {
-    id: 'daily-report',
-    title: 'Daily Summary Report',
-    subtitle: 'Daily operational summary & activity logs',
-    category: 'Reports',
-    icon: FileText,
-    path: '/reports/daily',
-    keywords: ['daily report', 'daily summary', 'activity summary'],
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       hasPermission('REPORT', 'canView') || 
