@@ -249,8 +249,10 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       const res = await updateLeadMutation.mutateAsync({ id: lead.id, data: payload });
       setShowDuplicateDialog(false);
       setDuplicateWarning(null);
-      if (onUpdated) onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
       onClose();
+      if (onUpdated) {
+        onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
+      }
     } catch (err) {
       if (err?.code === 'DUPLICATE_LEAD_WARNING') {
         setDuplicateWarning(err.details);

@@ -336,6 +336,7 @@ const LeadsKanbanPage = () => {
 
   // Called by LeadEditModal on successful update
   const handleLeadUpdated = useCallback((updatedLead) => {
+    setEditingLead(null);
     updateLeadLocal(updatedLead.id, updatedLead);
     // If the detail drawer is open for this lead, refresh it too
     setSelectedLead((prev) => prev?.id === updatedLead.id ? { ...prev, ...updatedLead } : prev);
@@ -492,6 +493,7 @@ const LeadsKanbanPage = () => {
   );
 
   const handleLeadCreated = (lead) => {
+    setShowForm(false);
     if (!lead) { refetch(); return; }
     const prospectStage = orderedStages.find((s) => s.isDefault);
     if (prospectStage) addLeadToColumn(prospectStage.id, lead);

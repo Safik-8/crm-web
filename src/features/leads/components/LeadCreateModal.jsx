@@ -254,8 +254,8 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       const res = await createLeadMutation.mutateAsync(payload);
       setShowDuplicateDialog(false);
       setDuplicateWarning(null);
-      if (onCreated) onCreated(res?.data?.lead || res?.lead || res);
       onClose();
+      if (onCreated) onCreated(res?.data?.lead || res?.lead || res);
     } catch (err) {
       if (err?.code === 'DUPLICATE_LEAD_WARNING') {
         setDuplicateWarning(err.details);
