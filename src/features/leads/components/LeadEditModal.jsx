@@ -216,7 +216,13 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
 
   const handleSubmit = async (e, override = false) => {
     if (e) e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      if (override) {
+        setShowDuplicateDialog(false);
+        setDuplicateWarning(null);
+      }
+      return;
+    }
 
     const payload = {
       name: values.name.trim(),
@@ -239,23 +245,21 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
       overrideDuplicate: override
     };
 
-    updateLeadMutation.mutate(
-      { id: lead.id, data: payload },
-      {
-        onSuccess: (res) => {
-          if (onUpdated) onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
-          setShowDuplicateDialog(false);
-          setDuplicateWarning(null);
-          onClose();
-        },
-        onError: (err) => {
-          if (err?.code === 'DUPLICATE_LEAD_WARNING') {
-            setDuplicateWarning(err.details);
-            setShowDuplicateDialog(true);
-          }
-        }
+    try {
+      const res = await updateLeadMutation.mutateAsync({ id: lead.id, data: payload });
+      setShowDuplicateDialog(false);
+      setDuplicateWarning(null);
+      if (onUpdated) onUpdated(res?.data?.lead || res?.lead || { ...lead, ...payload });
+      onClose();
+    } catch (err) {
+      if (err?.code === 'DUPLICATE_LEAD_WARNING') {
+        setDuplicateWarning(err.details);
+        setShowDuplicateDialog(true);
+      } else {
+        setShowDuplicateDialog(false);
+        setDuplicateWarning(null);
       }
-    );
+    }
   };
 
   const formData = formDataRes?.data || formDataRes || {};

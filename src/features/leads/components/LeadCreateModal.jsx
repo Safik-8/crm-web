@@ -221,7 +221,13 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
 
   const handleSubmit = async (e, override = false) => {
     if (e) e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      if (override) {
+        setShowDuplicateDialog(false);
+        setDuplicateWarning(null);
+      }
+      return;
+    }
 
     const payload = {
       name: values.name.trim(),
@@ -244,20 +250,21 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       overrideDuplicate: override
     };
 
-    createLeadMutation.mutate(payload, {
-      onSuccess: (res) => {
-        if (onCreated) onCreated(res?.data?.lead || res?.lead);
+    try {
+      const res = await createLeadMutation.mutateAsync(payload);
+      setShowDuplicateDialog(false);
+      setDuplicateWarning(null);
+      if (onCreated) onCreated(res?.data?.lead || res?.lead || res);
+      onClose();
+    } catch (err) {
+      if (err?.code === 'DUPLICATE_LEAD_WARNING') {
+        setDuplicateWarning(err.details);
+        setShowDuplicateDialog(true);
+      } else {
         setShowDuplicateDialog(false);
         setDuplicateWarning(null);
-        onClose();
-      },
-      onError: (err) => {
-        if (err?.code === 'DUPLICATE_LEAD_WARNING') {
-          setDuplicateWarning(err.details);
-          setShowDuplicateDialog(true);
-        }
       }
-    });
+    }
   };
 
   const formData = formDataRes?.data || formDataRes || {};

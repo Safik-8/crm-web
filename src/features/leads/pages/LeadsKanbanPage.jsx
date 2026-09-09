@@ -656,53 +656,25 @@ const LeadsKanbanPage = () => {
                       </div>
                     </div>
                   ))
-                ) : totalLeadsCount === 0 && !loading && !isRefetching ? (
-                  // Empty states
-                  hasActiveFilters ? (
-                    <div className="flex flex-col items-center justify-center w-full py-20 text-center animate-in fade-in duration-300 min-w-[60vw]">
-                      <div className="h-14 w-14 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400 mb-4 mx-auto shadow-sm border border-zinc-200/60">
-                        <AlertCircle size={24} />
-                      </div>
-                      <h2 className="text-[14px] font-semibold text-zinc-800 mb-1 tracking-tight">No Matching Leads</h2>
-                      <p className="text-[12px] text-zinc-500 max-w-xs mb-5 mx-auto leading-relaxed">
-                        No leads match your active filters. Try resetting or clearing some constraints.
-                      </p>
-                      <button
-                        onClick={handleResetFilters}
-                        className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black text-white text-[12px] font-semibold transition-all shadow-sm active:scale-95"
-                      >
-                        Clear Filters
-                      </button>
+                ) : orderedStages.length === 0 && !loading && !isRefetching ? (
+                  // No stages configured
+                  <div className="flex flex-col items-center justify-center w-full py-20 text-center animate-in fade-in duration-300 min-w-[60vw]">
+                    <div className="h-14 w-14 bg-orange-50 rounded-2xl flex items-center justify-center text-primary mb-4 mx-auto shadow-sm border border-orange-100">
+                      <Kanban size={24} />
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center w-full py-20 text-center animate-in fade-in duration-300 min-w-[60vw]">
-                      <div className="h-14 w-14 bg-orange-50 rounded-2xl flex items-center justify-center text-primary mb-4 mx-auto shadow-sm border border-orange-100">
-                        <Kanban size={24} />
-                      </div>
-                      <h2 className="text-[14px] font-semibold text-zinc-800 mb-1 tracking-tight">Your Pipeline is Empty</h2>
-                      <p className="text-[12px] text-zinc-500 max-w-xs mb-5 mx-auto leading-relaxed">
-                        Get started by adding your first lead, or import records from Excel.
-                      </p>
-                      {canCreate && (
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            onClick={() => setShowImport(true)}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-zinc-200 text-zinc-600 text-[12px] font-semibold hover:bg-zinc-50 bg-white transition-all shadow-sm"
-                          >
-                            <Upload size={13} /> Import Excel
-                          </button>
-                          <button
-                            onClick={() => setShowForm(true)}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
-                          >
-                            <Plus size={13} /> Add Lead
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
+                    <h2 className="text-[14px] font-semibold text-zinc-800 mb-1 tracking-tight">No Stages Configured</h2>
+                    <p className="text-[12px] text-zinc-500 max-w-xs mb-5 mx-auto leading-relaxed">
+                      This pipeline has no stages configured yet. Go to stage configuration to setup stages.
+                    </p>
+                    <button
+                      onClick={() => navigate(`/pipelines/${pipelineId}/stages`)}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+                    >
+                      Configure Stages
+                    </button>
+                  </div>
                 ) : (
-                  // Board columns — stay mounted during refetch
+                  // Board columns — always visible with stage header and empty drop zones
                   orderedStages.map((stage) => (
                     <KanbanColumn
                       key={stage.id}
