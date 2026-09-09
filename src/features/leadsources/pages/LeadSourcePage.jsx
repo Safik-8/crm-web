@@ -1,6 +1,6 @@
 // src/features/leadsources/pages/LeadSourcePage.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, Power, Compass, MoreVertical } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -34,6 +34,9 @@ export const LeadSourcePage = () => {
   const [selectedSource, setSelectedSource] = useState(null);
   const [sourceToToggle, setSourceToToggle] = useState(null);
 
+  // Reset to page 1 whenever search or filter changes
+  useEffect(() => { setPage(1); }, [searchTerm, statusFilter]);
+
   // Queries & Mutations
   const queryParams = {
     page,
@@ -43,9 +46,8 @@ export const LeadSourcePage = () => {
   };
 
   const { data: sourcesRes, isLoading, isFetching, isError, error, refetch } = useLeadSourcesQuery(queryParams);
-  const rawSources = sourcesRes?.sources || sourcesRes?.data?.sources || (Array.isArray(sourcesRes?.data) ? sourcesRes.data : []);
-  const sources = Array.isArray(rawSources) ? rawSources : [];
-  const pagination = sourcesRes?.pagination || sourcesRes?.data?.pagination || { page, limit, total: sources.length, totalPages: Math.ceil(sources.length / limit) || 1 };
+  const sources = sourcesRes?.data?.sources ?? [];
+  const pagination = sourcesRes?.data?.pagination ?? { page, limit, total: 0, totalPages: 1 };
   const toggleMutation = useToggleLeadSourceStatusMutation();
   const createMutation = useCreateLeadSourceMutation();
   const updateMutation = useUpdateLeadSourceMutation();
@@ -218,6 +220,7 @@ export const LeadSourcePage = () => {
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
+    setPage(1);
   };
 
   return (
