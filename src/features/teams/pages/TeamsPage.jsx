@@ -1,7 +1,7 @@
 // src/features/teams/pages/TeamsPage.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Users2, Plus, RefreshCw, Search } from 'lucide-react';
+import { Users2, Plus, RefreshCw, Search, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
@@ -226,140 +226,139 @@ const TeamsPage = () => {
   return (
     <>
       <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
-        {/* Header Title Section */}
+        {/* Header Title Section with Primary Action */}
         <PageHeader
           title="Team Manager"
           description="Organize, delegate, and manage branch level business execution teams"
           icon={Users2}
           actions={
-            <button
-              onClick={() => refetch()}
-              className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
-              title="Refresh Data"
-            >
-              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-            </button>
+            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <button
+                onClick={() => refetch()}
+                className="p-2.5 text-slate-400 hover:text-orange-500 hover:bg-slate-100 transition-all focus:outline-none cursor-pointer border border-slate-200/80 bg-slate-50 rounded-xl"
+                title="Refresh Data"
+              >
+                <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+              </button>
+
+              {canCreate && (
+                <button
+                  type="button"
+                  onClick={handleOpenCreateForm}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-[#F97316] hover:bg-[#EA580C] text-white text-[13px] font-semibold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                >
+                  <Plus size={16} />
+                  <span>Add Team</span>
+                </button>
+              )}
+            </div>
           }
         />
 
         {/* Filter and Search Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
-            {/* Search Input */}
-            <div className="w-full sm:w-64">
-              <SearchInput
-                placeholder="Search..."
-                value={search}
-                onChange={handleSearchChange}
-              />
-            </div>
-
-            {/* View Toggle Tabs */}
-            <div className="flex bg-slate-100 p-1 rounded-lg">
-              <button
-                type="button"
-                onClick={() => { setView('active'); setPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  view === 'active'
-                    ? 'bg-white text-slate-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                onClick={() => { setView('archived'); setPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  view === 'archived'
-                    ? 'bg-white text-slate-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Archived
-              </button>
-              <button
-                type="button"
-                onClick={() => { setView('all'); setPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  view === 'all'
-                    ? 'bg-white text-slate-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                All
-              </button>
-            </div>
-
-            {/* Company Filter (Super Admin only) */}
-            {canFilterByCompany && (
-              <div className="w-full sm:w-44">
-                <SelectField
-                  id="companyFilter"
-                  value={companyId}
-                  onChange={(val) => handleFilterChange('companyId', val)}
-                  options={companies.map(c => ({ value: c.id, label: c.name }))}
-                  placeholder="All Companies"
-                  allowEmptyOption={true}
-                  searchable
-                />
-              </div>
-            )}
-
-            {/* Branch Filter */}
-            {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
-              <div className="w-full sm:w-44">
-                <SelectField
-                  id="branchFilter"
-                  value={branchId}
-                  onChange={(val) => handleFilterChange('branchId', val)}
-                  options={branches.map(b => ({ value: b.id, label: b.name }))}
-                  placeholder="All Branches"
-                  allowEmptyOption={true}
-                  searchable
-                />
-              </div>
-            )}
-
-            {/* Status Filter */}
-            <div className="w-full sm:w-36">
-              <SelectField
-                id="statusFilter"
-                value={status}
-                onChange={(val) => handleFilterChange('status', val)}
-                options={[
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'INACTIVE', label: 'Inactive' }
-                ]}
-                placeholder="All Statuses"
-                allowEmptyOption={true}
-              />
-            </div>
-
-            {/* Clear Filters Button */}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-              >
-                Clear Filters
-              </button>
-            )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white border border-slate-200 p-3.5 flex-wrap">
+          {/* Search Input */}
+          <div className="w-full sm:w-64">
+            <SearchInput
+              placeholder="Search teams..."
+              value={search}
+              onChange={handleSearchChange}
+              className="w-full"
+            />
           </div>
 
-          {/* Action Button */}
-          {canCreate && (
-            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
-              <Button
-                onClick={handleOpenCreateForm}
-                variant="contained"
-                size="medium"
-                startIcon={<Plus size={18} />}
-                className="group shadow-sm hover:shadow-md transition-all"
-              >
-                Add Team
-              </Button>
+          {/* View Toggle Tabs */}
+          <div className="flex items-center w-full sm:w-auto h-[40px] bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => { setView('active'); setPage(1); }}
+              className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                view === 'active'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => { setView('archived'); setPage(1); }}
+              className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                view === 'archived'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Archived
+            </button>
+            <button
+              type="button"
+              onClick={() => { setView('all'); setPage(1); }}
+              className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                view === 'all'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              All
+            </button>
+          </div>
+
+          {/* Company Filter (Super Admin only) */}
+          {canFilterByCompany && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                id="companyFilter"
+                value={companyId}
+                onChange={(val) => handleFilterChange('companyId', val)}
+                options={companies.map(c => ({ value: c.id, label: c.name }))}
+                placeholder="All Companies"
+                allowEmptyOption={true}
+                searchable
+              />
             </div>
+          )}
+
+          {/* Branch Filter */}
+          {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                id="branchFilter"
+                value={branchId}
+                onChange={(val) => handleFilterChange('branchId', val)}
+                options={branches.map(b => ({ value: b.id, label: b.name }))}
+                placeholder="All Branches"
+                allowEmptyOption={true}
+                searchable
+              />
+            </div>
+          )}
+
+          {/* Status Filter */}
+          <div className="w-full sm:w-36">
+            <SelectField
+              id="statusFilter"
+              value={status}
+              onChange={(val) => handleFilterChange('status', val)}
+              options={[
+                { value: 'ACTIVE', label: 'Active' },
+                { value: 'INACTIVE', label: 'Inactive' }
+              ]}
+              placeholder="All Statuses"
+              allowEmptyOption={true}
+            />
+          </div>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 h-[42px] px-3 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-[10px] transition-all cursor-pointer"
+            >
+              <RotateCcw size={13} />
+              <span>Clear Filters</span>
+            </button>
           )}
         </div>
 

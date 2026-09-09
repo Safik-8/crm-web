@@ -22,7 +22,7 @@ import PageHeader from '../../../shared/components/modules/PageHeader';
  * Main listing page for branches, scoped to a company via route param.
  * Orchestrates table, drawer, and modal interactions with full RBAC & caching.
  */
-const BranchSettingsPage = ({ overrideCompanyId, onSelectCompany, companies = [], isSuperAdmin: isSuperAdminProp }) => {
+const BranchSettingsPage = ({ overrideCompanyId, onSelectCompany, companies = [], isSuperAdmin: isSuperAdminProp, inlineMode = false }) => {
     const { companyId: routeCompanyId } = useParams();
     const companyId = overrideCompanyId || routeCompanyId;
     const navigate = useNavigate();
@@ -139,27 +139,29 @@ const BranchSettingsPage = ({ overrideCompanyId, onSelectCompany, companies = []
     };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
-            {/* Header Title Section */}
-            <PageHeader
-                title="Branch Registry"
-                description="Manage geographical and functional hubs across companies"
-                icon={GitBranch}
-                actions={
-                    <button
-                        onClick={() => refetch()}
-                        disabled={isLoading}
-                        className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
-                        title="Refresh Data"
-                    >
-                        <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} />
-                    </button>
-                }
-            />
+        <div className={inlineMode ? "space-y-4 animate-in fade-in duration-300" : "max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300"}>
+            {/* Header Title Section (hidden in inlineMode to prevent duplicate headers) */}
+            {!inlineMode && (
+                <PageHeader
+                    title="Branch Registry"
+                    description="Manage geographical and functional hubs across companies"
+                    icon={GitBranch}
+                    actions={
+                        <button
+                            onClick={() => refetch()}
+                            disabled={isLoading}
+                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-100 transition-all focus:outline-none cursor-pointer"
+                            title="Refresh Data"
+                        >
+                            <RefreshCcw size={15} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
+                    }
+                />
+            )}
 
             {/* Filter and Search Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-                <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+                <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
                     {/* Search Input */}
                     <div className="w-full sm:w-64">
                         <SearchInput
@@ -214,13 +216,13 @@ const BranchSettingsPage = ({ overrideCompanyId, onSelectCompany, companies = []
 
                 {/* Create Action Button */}
                 {branchPerms.canCreate && (
-                    <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
+                    <div className="w-full sm:w-auto shrink-0 flex">
                         <Button
                             onClick={handleAddBranch}
                             variant="contained"
                             size="medium"
                             startIcon={<Plus size={18} />}
-                            className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                            className="w-full sm:w-auto justify-center group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
                         >
                             Add Branch
                         </Button>

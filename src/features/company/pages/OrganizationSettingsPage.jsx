@@ -112,27 +112,27 @@ const OrganizationSettingsPage = () => {
           <div className="bg-white border border-slate-200 p-4">
             {/* Top navigation tabs */}
             <div className="mb-6 flex">
-              <div className="inline-flex items-center p-1 bg-slate-100 border border-slate-200">
+              <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center p-1 bg-slate-100 border border-slate-200">
                 <button
                   onClick={() => handleTabChange(0)}
-                  className={`flex items-center gap-2 px-5 py-2 text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 0
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 text-xs sm:text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 0
                     ? 'bg-white text-slate-800 border border-slate-200/80 shadow-xs'
                     : 'text-slate-500 hover:text-slate-700 border border-transparent'
                     }`}
                 >
                   <Building2 size={16} className={activeTab === 0 ? 'text-primary' : 'text-slate-400'} />
-                  Company Profile
+                  <span>Company Profile</span>
                 </button>
                 {canViewBranches && (
                   <button
                     onClick={() => handleTabChange(1)}
-                    className={`flex items-center gap-2 px-5 py-2 text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 1
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 text-xs sm:text-[13px] font-bold transition-all focus:outline-none cursor-pointer ${activeTab === 1
                       ? 'bg-white text-slate-800 border border-slate-200/80 shadow-xs'
                       : 'text-slate-500 hover:text-slate-700 border border-transparent'
                       }`}
                   >
                     <GitBranch size={16} className={activeTab === 1 ? 'text-primary' : 'text-slate-400'} />
-                    Branches
+                    <span>Branches</span>
                   </button>
                 )}
               </div>

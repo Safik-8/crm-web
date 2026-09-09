@@ -518,8 +518,8 @@ const RoleManagementPage = () => {
       />
 
         {/* Top filter and action bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
             <div className="w-full sm:w-64">
               <SearchInput
                 placeholder="Search..."
@@ -547,13 +547,13 @@ const RoleManagementPage = () => {
           </div>
 
           {isSuperOrCompanyAdmin && (
-            <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
+            <div className="w-full sm:w-auto shrink-0 flex">
               <Button
                 onClick={handleCreateClick}
                 variant="contained"
                 size="medium"
                 startIcon={<Plus size={18} />}
-                className="group shadow-sm hover:shadow-md transition-all"
+                className="w-full sm:w-auto justify-center group shadow-sm hover:shadow-md transition-all"
               >
                 Add Role
               </Button>
