@@ -1,6 +1,8 @@
 // src/features/leadstatuses/pages/LeadStatusPage.jsx
 import React, { useState } from 'react';
-import { Plus, Pencil, Power, Trash2, Tags, ArrowUpDown, Lock, Check } from 'lucide-react';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { Plus, Pencil, Power, Trash2, Tags, ArrowUpDown, Lock, Check, MoreVertical } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import {
   useLeadStatusesQuery,
@@ -15,6 +17,102 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import LeadStatusFormSlideover from '../components/LeadStatusFormSlideover';
 import LeadStatusReorderModal from '../components/LeadStatusReorderModal';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+
+const LeadStatusActionMenu = ({ row, canUserEdit, canUserDelete, onEdit, onToggle, onDelete }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => {
+    e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  if (!canUserEdit && !canUserDelete) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+        title="Actions"
+      >
+        <MoreVertical size={16} />
+      </button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        elevation={0}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[160px] py-1 text-slate-700 font-sans"
+        }}
+      >
+        {canUserEdit && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              onEdit(row);
+            }}
+            className="px-3.5 py-2 text-[12px] font-semibold hover:bg-slate-50 transition-colors text-slate-700 hover:text-orange-600"
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Pencil size={14} className="text-orange-500" />
+            <span>Edit Status</span>
+          </MenuItem>
+        )}
+        {canUserEdit && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              if (!(row.isDefault && row.isActive)) {
+                onToggle(row);
+              }
+            }}
+            disabled={row.isDefault && row.isActive}
+            className={`px-3.5 py-2 text-[12px] font-semibold transition-colors ${
+              row.isActive
+                ? 'hover:bg-amber-50 text-slate-700 hover:text-amber-600'
+                : 'hover:bg-emerald-50 text-slate-700 hover:text-emerald-600'
+            }`}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Power size={14} className={row.isActive ? 'text-amber-500' : 'text-emerald-500'} />
+            <span>{row.isActive ? 'Deactivate' : 'Activate'}</span>
+          </MenuItem>
+        )}
+        {canUserDelete && !row.isSystem && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              if (!row.isDefault) {
+                onDelete(row);
+              }
+            }}
+            disabled={row.isDefault}
+            className="px-3.5 py-2 text-[12px] font-semibold hover:bg-rose-50 transition-colors text-slate-700 hover:text-rose-600"
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Trash2 size={14} className="text-rose-500" />
+            <span>Delete Status</span>
+          </MenuItem>
+        )}
+      </Menu>
+    </>
+  );
+};
 
 export const LeadStatusPage = () => {
   const { user, hasPermission } = useAuth();
@@ -195,50 +293,15 @@ export const LeadStatusPage = () => {
         const canUserDelete = isSuperAdmin || (!isGlobal && canDelete);
 
         return (
-          <div className="flex items-center justify-end gap-2">
-            {canUserEdit && (
-              <>
-                <button
-                  onClick={() => handleEditClick(row)}
-                  className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-all"
-                  title="Edit Lead Status"
-                >
-                  <Pencil size={15} />
-                </button>
-                <button
-                  onClick={() => handleToggleClick(row)}
-                  disabled={row.isDefault && row.isActive}
-                  className={`p-1.5 rounded-lg transition-all ${row.isDefault && row.isActive
-                    ? 'text-slate-300 cursor-not-allowed opacity-40'
-                    : row.isActive
-                      ? 'text-red-500 hover:bg-red-50'
-                      : 'text-emerald-500 hover:bg-emerald-50'
-                    }`}
-                  title={
-                    row.isDefault && row.isActive
-                      ? 'Cannot deactivate default status'
-                      : row.isActive
-                        ? 'Deactivate Lead Status'
-                        : 'Activate Lead Status'
-                  }
-                >
-                  <Power size={15} />
-                </button>
-              </>
-            )}
-            {canUserDelete && !row.isSystem && (
-              <button
-                onClick={() => handleDeleteClick(row)}
-                disabled={row.isDefault}
-                className={`p-1.5 rounded-lg transition-all ${row.isDefault
-                  ? 'text-slate-300 cursor-not-allowed opacity-40'
-                  : 'text-red-500 hover:bg-red-50 hover:text-red-700'
-                  }`}
-                title={row.isDefault ? 'Cannot delete default status' : 'Delete Lead Status'}
-              >
-                <Trash2 size={15} />
-              </button>
-            )}
+          <div className="flex items-center justify-end">
+            <LeadStatusActionMenu
+              row={row}
+              canUserEdit={canUserEdit}
+              canUserDelete={canUserDelete}
+              onEdit={handleEditClick}
+              onToggle={handleToggleClick}
+              onDelete={handleDeleteClick}
+            />
           </div>
         );
       }
@@ -262,8 +325,8 @@ export const LeadStatusPage = () => {
       />
 
       {/* Filter, Search & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0">
           {/* Search Input */}
           <div className="w-full sm:w-64">
             <SearchInput
@@ -274,7 +337,7 @@ export const LeadStatusPage = () => {
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center w-full sm:w-auto h-[40px] bg-slate-100 p-1 rounded-xl border border-slate-200/80">
             {[
               { id: 'all', label: 'All Statuses' },
               { id: 'active', label: 'Active' },
@@ -284,10 +347,10 @@ export const LeadStatusPage = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   statusFilter === tab.id
-                    ? 'bg-white text-slate-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {tab.label}
@@ -297,14 +360,14 @@ export const LeadStatusPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
           {canEdit && statuses && statuses.length > 0 && (isSuperAdmin || statuses.some(s => s.companyId !== null)) && (
             <Button
               onClick={() => setIsReorderOpen(true)}
               variant="outlined"
               size="medium"
               startIcon={<ArrowUpDown size={16} />}
-              className="px-3.5 py-2 text-slate-600 border-slate-200 hover:bg-slate-50 font-bold"
+              className="w-full sm:w-auto justify-center px-3.5 py-2 text-slate-600 border-slate-200 hover:bg-slate-50 font-bold"
             >
               Reorder
             </Button>
@@ -316,7 +379,7 @@ export const LeadStatusPage = () => {
               color="primary"
               size="medium"
               startIcon={<Plus size={16} />}
-              className="group shadow-sm hover:shadow-md transition-all"
+              className="w-full sm:w-auto justify-center group shadow-sm hover:shadow-md transition-all"
             >
               Add Status
             </Button>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import {
   getQualificationCriteria,
   getQualificationSettings,
@@ -29,7 +31,9 @@ import {
   ShieldCheck,
   RefreshCcw,
   Lock,
-  Building
+  Building,
+  MoreVertical,
+  Eye
 } from 'lucide-react';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
@@ -57,6 +61,79 @@ const FIELD_TYPE_OPTIONS = [
   { value: 'select', label: 'Dropdown Choice' },
   { value: 'number', label: 'Numeric Rating' },
 ];
+
+const FactorActionMenu = ({ item, canEdit, canDelete, onEdit, onDelete }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => {
+    e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  if (!canEdit && !canDelete) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+        title="Actions"
+      >
+        <MoreVertical size={16} />
+      </button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        elevation={0}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+        }}
+      >
+        {canEdit && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              onEdit(item);
+            }}
+            className="px-3.5 py-2 text-[12px] font-semibold hover:bg-slate-50 transition-colors text-slate-700 hover:text-orange-600"
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Edit2 size={14} className="text-orange-500" />
+            <span>Edit Factor</span>
+          </MenuItem>
+        )}
+        {canDelete && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              onDelete(item);
+            }}
+            className="px-3.5 py-2 text-[12px] font-semibold hover:bg-rose-50 transition-colors text-slate-700 hover:text-rose-600"
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Trash2 size={14} className="text-rose-500" />
+            <span>Deactivate</span>
+          </MenuItem>
+        )}
+      </Menu>
+    </>
+  );
+};
 
 const QualificationCriteriaSettingsPage = () => {
   const { hasPermission, user } = useAuth();
@@ -388,105 +465,121 @@ const QualificationCriteriaSettingsPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-7xl mx-auto space-y-5 animate-in fade-in duration-300">
       {/* ── Level 1: Page Header ── */}
-      <div className="bg-white border border-slate-200 p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
-            <Target size={24} className="text-orange-600" />
-          </div>
-          <div>
-            <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
-              Lead Qualification Criteria Rules
-            </h1>
-            <p className="text-xs md:text-sm text-slate-500 font-normal mt-0.5">
-              Configure dynamic qualification factors, point weights, and score thresholds for your sales pipeline.
-            </p>
-          </div>
-        </div>
+      <PageHeader
+        title="Lead Qualification Criteria"
+        description="Configure dynamic qualification factors, point weights, and score thresholds for your sales pipeline"
+        icon={Target}
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+            <button
+              type="button"
+              onClick={fetchMatrix}
+              className="p-2.5 text-slate-400 hover:text-orange-500 hover:bg-slate-100 transition-all focus:outline-none cursor-pointer border border-slate-200/80 bg-slate-50 rounded-xl"
+              title="Refresh Data"
+            >
+              <RefreshCcw size={15} className={loading ? 'animate-spin' : ''} />
+            </button>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 sm:justify-start lg:justify-end">
-          {isSuperAdmin && (
-            <div className="w-full sm:w-60 shrink-0">
+            {canEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={openAddModal}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-4 bg-white hover:bg-orange-50/50 text-orange-600 hover:text-orange-700 border border-orange-200 hover:border-orange-300 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <Plus size={15} />
+                  <span>Add Factor</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveMatrix}
+                  disabled={isSaving || !isValidMatrix}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-[#F97316] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                >
+                  {isSaving ? (
+                    <RefreshCcw size={15} className="animate-spin" />
+                  ) : (
+                    <Save size={15} />
+                  )}
+                  <span>Save Matrix</span>
+                </button>
+              </>
+            )}
+
+            {!canEdit && (
+              <span className="inline-flex items-center gap-1.5 h-[40px] px-3.5 bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl">
+                <Lock size={13} /> Read-Only View
+              </span>
+            )}
+          </div>
+        }
+      />
+
+      {/* ── Level 1.5: Company Scope & Weight Health Toolbar ── */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+        {/* Left: Scope Selection / Badge */}
+        <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin ? (
+            <div className="w-full sm:w-64">
               <SelectField
                 id="superadmin-qualification-company-select"
                 label=""
                 value={selectedCompanyId ? String(selectedCompanyId) : ""}
                 onChange={(val) => setSelectedCompanyId(val ? Number(val) : null)}
                 options={companyOptions}
-                placeholder="Select company..."
+                placeholder="Select company scope..."
                 isLoading={loadingCompanies}
                 className="!mb-0"
               />
             </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 rounded-xl">
+              <Building size={14} className="text-orange-500" />
+              <span>{currentUser?.companyName || 'Company Scope'}</span>
+            </div>
           )}
 
-          <button
-            onClick={fetchMatrix}
-            className="col-span-2 sm:col-span-1 h-[42px] px-4 flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-lg transition-all disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
-            title="Refresh Data"
+          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200/80 rounded-lg">
+            <Target size={13} className="text-slate-500" />
+            {criteria.length} Active Factors
+          </span>
+        </div>
+
+        {/* Right: Allocation Health & Auto-Balance */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+          <span
+            className={`inline-flex items-center gap-1.5 h-[40px] px-3.5 text-xs font-bold border rounded-xl transition-all ${isValidMatrix
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80'
+                : 'bg-amber-50 text-amber-800 border-amber-200/80'
+              }`}
           >
-            <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
-            <span className="ml-1.5 sm:hidden">Refresh</span>
-          </button>
+            {isValidMatrix ? (
+              <>
+                <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                <span>100 / 100 PTS • Balanced</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+                <span>{totalPoints} / 100 PTS • Unbalanced</span>
+              </>
+            )}
+          </span>
 
-          {canEdit && (
-            <>
-              {!isValidMatrix && (
-                <Button
-                  onClick={handleAutoBalance}
-                  isLoading={isAutoBalancing}
-                  variant="outlined"
-                  color="warning"
-                  size="medium"
-                  startIcon={<Sparkles size={16} />}
-                >
-                  Auto-Balance Weights
-                </Button>
-              )}
-
-              <Button
-                onClick={openAddModal}
-                variant="outlined"
-                size="medium"
-                startIcon={<Plus size={16} />}
-                className="w-full sm:w-auto whitespace-nowrap"
-                sx={{
-                  borderColor: '#F86F03',
-                  color: '#F86F03',
-                  '&:hover': {
-                    borderColor: '#E06202',
-                    backgroundColor: 'rgba(248, 111, 3, 0.06)',
-                  },
-                }}
-              >
-                Add Factor
-              </Button>
-
-              <Button
-                onClick={handleSaveMatrix}
-                disabled={isSaving || !isValidMatrix}
-                isLoading={isSaving}
-                variant="contained"
-                size="medium"
-                startIcon={<Save size={16} />}
-                className="w-full sm:w-auto whitespace-nowrap"
-                sx={{
-                  backgroundColor: '#F86F03',
-                  '&:hover': {
-                    backgroundColor: '#E06202',
-                  },
-                }}
-              >
-                Save Matrix
-              </Button>
-            </>
-          )}
-
-          {!canEdit && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold rounded-lg">
-              <Lock size={12} /> Read-Only View
-            </span>
+          {canEdit && !isValidMatrix && (
+            <button
+              type="button"
+              onClick={handleAutoBalance}
+              disabled={isAutoBalancing}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-4 bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all cursor-pointer whitespace-nowrap"
+              title="Automatically distribute remaining weight across active factors to equal 100 points"
+            >
+              <Sparkles size={14} className={isAutoBalancing ? 'animate-spin text-amber-600' : 'text-amber-600'} />
+              <span>Auto-Balance</span>
+            </button>
           )}
         </div>
       </div>
@@ -505,8 +598,8 @@ const QualificationCriteriaSettingsPage = () => {
               </div>
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${isValidMatrix
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
                   }`}
               >
                 {isValidMatrix ? (
@@ -750,25 +843,14 @@ const QualificationCriteriaSettingsPage = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="col-span-4 md:col-span-2 lg:col-span-1 flex items-center justify-end gap-1">
-                  {canEdit && (
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
-                      title="Edit Factor"
-                    >
-                      <Edit2 size={15} />
-                    </button>
-                  )}
-                  {canDelete && (
-                    <button
-                      onClick={() => promptDelete(item)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                      title="Deactivate Factor"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  )}
+                <div className="col-span-4 md:col-span-2 lg:col-span-1 flex items-center justify-end">
+                  <FactorActionMenu
+                    item={item}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    onEdit={openEditModal}
+                    onDelete={promptDelete}
+                  />
                 </div>
               </div>
             );
@@ -782,119 +864,331 @@ const QualificationCriteriaSettingsPage = () => {
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           title={editingItem ? 'EDIT QUALIFICATION FACTOR' : 'ADD NEW QUALIFICATION FACTOR'}
-          subtitle="Configure factor rules, input type, points weight, and mandatory flags."
+          subtitle="Configure scoring rules, point weights, and mandatory gate status."
           icon={Target}
           onSubmit={handleModalSave}
-          submitText="Save Factor"
+          submitText={editingItem ? 'Save Changes' : 'Save Factor'}
           cancelText="Cancel"
-          size="sm"
+          size="md"
         >
-          <div className="space-y-4">
-            <TextField
-              id="factor-label"
-              label="Factor Label"
-              required
-              value={formData.label}
-              onChange={(val) => setFormData({ ...formData, label: val })}
-              placeholder="e.g. Budget Available (₹)"
-            />
+          <div className="space-y-5">
+            {/* Quick Inspiration Presets (Add Mode) */}
+            {!editingItem && (
+              <div className="bg-slate-50 border border-slate-200/80 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-orange-500" />
+                    Quick Factor Templates
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">Click to auto-fill</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: '💰 Budget Confirmed', type: 'boolean', pts: 15, desc: 'Lead has an approved budget for this purchase.' },
+                    { label: '👔 Decision Maker Fit', type: 'select', pts: 20, desc: 'Authority level of primary contact.' },
+                    { label: '⏱️ Buying Timeline', type: 'select', pts: 15, desc: 'Expected implementation or purchase timeframe.' },
+                    { label: '🎯 Clear Pain Point', type: 'boolean', pts: 20, desc: 'Lead explicitly articulated a real operational problem.' },
+                    { label: '🏢 Company Size Fit', type: 'select', pts: 15, desc: 'Employee headcount and business revenue tier fit.' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          label: preset.label.replace(/^[\p{Emoji}\s]+/u, '').trim(),
+                          fieldType: preset.type,
+                          maxPoints: preset.pts,
+                          description: preset.desc,
+                        }));
+                      }}
+                      className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 hover:border-orange-300 hover:bg-orange-50/50 hover:text-orange-700 text-slate-700 transition-all cursor-pointer shadow-2xs"
+                    >
+                      {preset.label} <span className="text-slate-400 font-normal">({preset.pts} pts)</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField
-                id="factor-type"
-                label="Input Type"
-                value={formData.fieldType}
-                onChange={(val) => setFormData({ ...formData, fieldType: val })}
-                options={FIELD_TYPE_OPTIONS}
-              />
-
-              <TextField
-                id="factor-maxpoints"
-                label="Max Weight (Pts)"
-                required
-                type="number"
-                value={formData.maxPoints}
-                onChange={(val) => setFormData({ ...formData, maxPoints: Number(val) || 0 })}
-              />
+            {/* Factor Label Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                Factor Label <span className="text-red-500 font-bold">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Target size={15} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={formData.label}
+                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                  placeholder="e.g. Budget Available (₹), Decision Maker Access..."
+                  className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-white border border-slate-200 outline-none hover:border-slate-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                />
+              </div>
             </div>
 
-            <TextField
-              id="factor-description"
-              label="Description"
-              value={formData.description}
-              onChange={(val) => setFormData({ ...formData, description: val })}
-              placeholder="Help text for sales reps..."
-            />
-
-            <Checkbox
-              id="factor-mandatory"
-              label="Mandatory field for qualification"
-              checked={formData.isRequired}
-              onChange={(checked) => setFormData({ ...formData, isRequired: checked })}
-            />
-
-            {/* Options Builder */}
-            {formData.fieldType === 'select' && (
-              <div className="space-y-2 pt-3 border-t border-slate-100">
-                <label className="text-xs font-bold text-slate-700 block">
-                  Dropdown Options & Points (Max {formData.maxPoints} pts)
-                </label>
-                <div className="space-y-2">
-                  {formData.options.map((opt, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <TextField
-                          id={`opt-label-${idx}`}
-                          value={opt.label}
-                          onChange={(val) => {
-                            const newOpts = [...formData.options];
-                            newOpts[idx].label = val;
-                            newOpts[idx].value = val.toUpperCase().replace(/\s+/g, '_');
-                            setFormData({ ...formData, options: newOpts });
-                          }}
-                          placeholder="Option Label (e.g. High)"
-                        />
+            {/* Input Type Selection: 3 Interactive Cards */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Evaluation Input Type
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {[
+                  {
+                    type: 'boolean',
+                    title: 'Yes / No Checkbox',
+                    desc: 'Full points if checked',
+                    icon: CheckSquare,
+                  },
+                  {
+                    type: 'select',
+                    title: 'Dropdown Choice',
+                    desc: 'Tiered option breakdown',
+                    icon: ListFilter,
+                  },
+                  {
+                    type: 'number',
+                    title: 'Numeric Score',
+                    desc: 'Manual points rating',
+                    icon: Hash,
+                  },
+                ].map((card) => {
+                  const IconComp = card.icon;
+                  const isSelected = formData.fieldType === card.type;
+                  return (
+                    <button
+                      key={card.type}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, fieldType: card.type })}
+                      className={`p-3 border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${isSelected
+                          ? 'bg-orange-50/70 border-orange-500 text-orange-950 shadow-2xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`w-6 h-6 flex items-center justify-center ${isSelected ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <IconComp size={13} />
+                        </div>
+                        {isSelected && <span className="w-2 h-2 bg-orange-500" />}
                       </div>
-                      <div className="w-24">
-                        <TextField
-                          id={`opt-pts-${idx}`}
-                          type="number"
-                          value={opt.points}
-                          onChange={(val) => {
-                            const newOpts = [...formData.options];
-                            newOpts[idx].points = Number(val) || 0;
-                            setFormData({ ...formData, options: newOpts });
-                          }}
-                          placeholder="Pts"
-                        />
+                      <div>
+                        <div className="text-xs font-bold">{card.title}</div>
+                        <div className="text-[10px] text-slate-500">{card.desc}</div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newOpts = formData.options.filter((_, i) => i !== idx);
-                          setFormData({ ...formData, options: newOpts });
-                        }}
-                        className="p-1 text-slate-400 hover:text-red-500"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Max Weight Points Stepper */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    Max Weight (Pts) <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 border border-orange-200/60">
+                    {formData.maxPoints} pts
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    value={formData.maxPoints}
+                    onChange={(e) => setFormData({ ...formData, maxPoints: Number(e.target.value) || 0 })}
+                    className="w-full px-3.5 py-2.5 text-sm font-semibold bg-white border border-slate-200 outline-none hover:border-slate-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+                {/* Quick Point Pills */}
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  {[5, 10, 15, 20, 25].map((pts) => (
+                    <button
+                      key={pts}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, maxPoints: pts })}
+                      className={`px-2 py-0.5 text-[10px] font-bold transition-all cursor-pointer border ${formData.maxPoints === pts
+                          ? 'bg-slate-800 border-slate-800 text-white'
+                          : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                      {pts}p
+                    </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Description Field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Rep Guidance / Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Help text or question shown to sales reps during qualification..."
+                  className="w-full p-2.5 text-xs bg-white border border-slate-200 outline-none hover:border-slate-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Mandatory Qualification Gate Card */}
+            <div
+              onClick={() => setFormData({ ...formData, isRequired: !formData.isRequired })}
+              className={`p-3.5 border flex items-center justify-between gap-4 transition-all cursor-pointer ${formData.isRequired
+                  ? 'bg-red-50/60 border-red-300 ring-1 ring-red-500/20'
+                  : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 flex items-center justify-center shrink-0 ${formData.isRequired ? 'bg-red-100 text-red-700' : 'bg-slate-200/80 text-slate-500'}`}>
+                  <Lock size={15} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-800">Mandatory Qualification Gate</span>
+                    {formData.isRequired && (
+                      <span className="px-1.5 py-0.2 text-[9px] font-extrabold bg-red-600 text-white uppercase tracking-wider">
+                        Hard Gate
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    If enabled, leads failing this factor cannot be qualified, regardless of overall total score.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer border transition-colors duration-200 ease-in-out ${formData.isRequired ? 'bg-red-500 border-red-600' : 'bg-slate-300 border-slate-400'
+                  }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform bg-white shadow transition duration-200 ease-in-out ${formData.isRequired ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                />
+              </div>
+            </div>
+
+            {/* Options Builder (for Select Type) */}
+            {formData.fieldType === 'select' && (
+              <div className="space-y-2.5 pt-3 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Tiered Dropdown Options
+                    </label>
+                    <p className="text-[11px] text-slate-400">
+                      Each option awards specific points (Max: {formData.maxPoints} pts)
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setFormData({
                         ...formData,
-                        options: [...formData.options, { value: 'NEW_OPTION', label: 'New Option', points: 5 }],
+                        options: [...formData.options, { value: `OPTION_${formData.options.length + 1}`, label: 'New Option', points: Math.min(5, formData.maxPoints) }],
                       });
                     }}
-                    className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 pt-1 cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-2.5 py-1 border border-orange-200 transition-all cursor-pointer"
                   >
-                    <Plus size={12} /> Add Option
+                    <Plus size={12} /> Add Tier Option
                   </button>
+                </div>
+
+                <div className="space-y-2 bg-slate-50/70 border border-slate-200/80 p-3">
+                  {formData.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-slate-200/80 shadow-2xs">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={opt.label}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newOpts = [...formData.options];
+                            newOpts[idx].label = val;
+                            newOpts[idx].value = val.toUpperCase().replace(/\s+/g, '_');
+                            setFormData({ ...formData, options: newOpts });
+                          }}
+                          placeholder="Option Label (e.g. Enterprise Tier)"
+                          className="w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border border-slate-200 outline-none focus:border-orange-500 focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                      <div className="w-24 flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max={formData.maxPoints}
+                          value={opt.points}
+                          onChange={(e) => {
+                            const newOpts = [...formData.options];
+                            newOpts[idx].points = Number(e.target.value) || 0;
+                            setFormData({ ...formData, options: newOpts });
+                          }}
+                          className="w-full px-2 py-1.5 text-xs font-bold bg-slate-50/50 border border-slate-200 outline-none focus:border-orange-500 focus:bg-white text-center transition-all"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">pts</span>
+                      </div>
+                      {formData.options.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newOpts = formData.options.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, options: newOpts });
+                          }}
+                          className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* Live Evaluation Preview Card */}
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100/60 border border-slate-200 p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Eye size={13} className="text-slate-400" />
+                  Rep Evaluation Preview
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Lead Drawer Card
+                </span>
+              </div>
+
+              <div className="bg-white p-3 border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-800 truncate">
+                      {formData.label.trim() || 'Untitled Factor'}
+                    </span>
+                    {formData.isRequired && (
+                      <span className="text-red-500 text-xs font-bold" title="Mandatory">*</span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-400 truncate max-w-[260px]">
+                    {formData.description.trim() || 'No description provided'}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="px-2 py-0.5 text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                    +{formData.maxPoints} pts
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </DynamicFormModal>
       )}

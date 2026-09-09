@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  ClipboardList, 
-  ShieldAlert, 
-  Download, 
-  RotateCcw, 
-  Eye, 
-  Activity, 
-  Lock, 
-  FileText, 
-  UserCheck, 
-  Calendar, 
-  Filter, 
+import {
+  ClipboardList,
+  ShieldAlert,
+  Download,
+  RotateCcw,
+  Eye,
+  Activity,
+  Lock,
+  FileText,
+  UserCheck,
+  Calendar,
+  Filter,
   RefreshCw,
   Globe,
   Laptop,
@@ -113,11 +113,11 @@ const AuditPage = () => {
 
   // Role Checks
   const userRole = (
-    user?.primaryRole || 
-    user?.role || 
-    user?.roleName || 
-    user?.userRoles?.find((ur) => ur?.isPrimary)?.role?.name || 
-    user?.userRoles?.[0]?.role?.name || 
+    user?.primaryRole ||
+    user?.role ||
+    user?.roleName ||
+    user?.userRoles?.find((ur) => ur?.isPrimary)?.role?.name ||
+    user?.userRoles?.[0]?.role?.name ||
     ''
   ).toUpperCase().replace(/\s+/g, '_');
 
@@ -425,7 +425,7 @@ const AuditPage = () => {
     const typeUpper = (actionType || 'UPDATE').toUpperCase().trim();
     const typeLower = typeUpper.toLowerCase();
     let bg = 'bg-slate-100 text-slate-700 border-slate-200';
-    
+
     if (typeLower === 'create') bg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
     if (typeLower === 'update') bg = 'bg-blue-50 text-blue-700 border-blue-200';
     if (typeLower === 'delete') bg = 'bg-red-50 text-red-700 border-red-200';
@@ -492,13 +492,25 @@ const AuditPage = () => {
       cols.push({
         header: 'Company',
         isActionColumn: false,
-        className: 'w-[140px]',
-        headerClassName: 'w-[140px]',
-        cell: (row) => (
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 border border-slate-200 rounded-md">
-            {row.company?.name || 'Global / System'}
-          </span>
-        ),
+        className: 'min-w-[160px]',
+        headerClassName: 'min-w-[160px]',
+        cell: (row) => {
+          const compName = row.company?.name || 'Global / System';
+          const isGlobal = !row.company?.name;
+          return (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap max-w-[170px] select-none ${
+                isGlobal
+                  ? 'bg-slate-100 text-slate-600 border-slate-200'
+                  : 'bg-orange-50 text-orange-700 border-orange-200'
+              }`}
+              title={compName}
+            >
+              <Building2 size={12} className="shrink-0 opacity-70" />
+              <span className="truncate">{compName}</span>
+            </span>
+          );
+        },
       });
     }
 
@@ -512,9 +524,8 @@ const AuditPage = () => {
         const isSystem = !row.performedBy;
         return (
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs overflow-hidden shrink-0 border ${
-              isSystem ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-100 border-slate-300 text-slate-700'
-            }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs overflow-hidden shrink-0 border ${isSystem ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-100 border-slate-300 text-slate-700'
+              }`}>
               {isSystem ? (
                 <Cpu size={15} />
               ) : row.performedBy?.profilePhoto ? (
@@ -544,7 +555,7 @@ const AuditPage = () => {
         className: 'w-[120px]',
         headerClassName: 'w-[120px]',
         cell: (row) => (
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 border border-slate-200 rounded-md">
+          <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 border border-slate-200 whitespace-nowrap">
             {row.moduleName || 'SYSTEM'}
           </span>
         ),
@@ -579,13 +590,12 @@ const AuditPage = () => {
           const isSystemIp = row.ipAddress === 'SYSTEM';
           const displayIp = isSystemIp ? 'Internal System' : (row.ipAddress || 'Unknown');
           return (
-            <span className={`text-xs font-mono font-medium px-2.5 py-1 border rounded-md ${
-              isSystemIp
+            <span className={`text-xs font-mono font-medium px-2.5 py-1 border rounded-md ${isSystemIp
                 ? 'bg-purple-50 text-purple-700 border-purple-200'
                 : row.ipAddress === 'Localhost'
                   ? 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold'
                   : 'bg-slate-50 text-slate-700 border-slate-200'
-            }`}>
+              }`}>
               {displayIp}
             </span>
           );
@@ -728,19 +738,19 @@ const AuditPage = () => {
       {/* ── SEPARATE FILTER & SEARCH CARD (WITH VISUAL SPACING) ── */}
       <div className="bg-white border border-slate-200 p-4 space-y-3">
         {/* Row 1: Search Input & Action Buttons */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           <SearchInput
             value={filters.search}
             onChange={(val) => handleFilterChange('search', val)}
             placeholder="Search action, IP, or user..."
             className="w-full flex-1"
           />
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto shrink-0">
             {hasAccess && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="flex items-center gap-1.5 h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[12px] transition-all cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[12px] rounded-xl transition-all cursor-pointer"
               >
                 <RotateCcw size={14} />
                 <span>Reset Filters</span>
@@ -755,7 +765,7 @@ const AuditPage = () => {
                   setIsExportDrawerOpen(true);
                 }}
                 disabled={exporting}
-                className="flex items-center gap-1.5 h-11 px-4 text-xs font-bold text-white bg-[#F86F03] hover:bg-[#DE5D02] rounded-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 h-11 px-4 text-xs font-bold text-white bg-[#F86F03] hover:bg-[#DE5D02] rounded-xl transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Export Audit Logs Report"
               >
                 <Download size={15} />
@@ -768,17 +778,17 @@ const AuditPage = () => {
         {/* Divider Line */}
         <div className="border-t border-slate-100" />
 
-        {/* Row 2: Aligned Filter Controls (flex items-end ensures pixel-perfect bottom baseline alignment) */}
-        <div className="flex flex-wrap items-end gap-2.5">
+        {/* Row 2: Aligned Filter Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap items-end gap-2.5">
           {/* Filters Badge */}
-          <div className="flex items-center gap-1.5 h-[38px] px-3.5 bg-slate-100/70 border border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider shrink-0 rounded-xl">
+          <div className="hidden lg:flex items-center gap-1.5 h-[38px] px-3.5 bg-slate-100/70 border border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider shrink-0 rounded-xl">
             <Filter size={14} className="text-primary" />
             <span>Filters</span>
           </div>
 
           {/* SUPER ADMIN ONLY FILTER: Company Dropdown */}
           {isSuperAdmin && (
-            <div className="flex-1 min-w-[160px] sm:max-w-[200px]">
+            <div className="w-full lg:flex-1 lg:min-w-[160px] lg:max-w-[200px]">
               <SelectField
                 id="companyFilter"
                 value={filters.companyId}
@@ -792,7 +802,7 @@ const AuditPage = () => {
           )}
 
           {/* Searchable Module Dropdown */}
-          <div className="flex-1 min-w-[160px] sm:max-w-[200px]">
+          <div className="w-full lg:flex-1 lg:min-w-[160px] lg:max-w-[200px]">
             <SelectField
               id="moduleFilter"
               value={filters.moduleName}
@@ -805,7 +815,7 @@ const AuditPage = () => {
           </div>
 
           {/* Searchable Action Type Dropdown */}
-          <div className="flex-1 min-w-[160px] sm:max-w-[200px]">
+          <div className="w-full lg:flex-1 lg:min-w-[160px] lg:max-w-[200px]">
             <SelectField
               id="actionTypeFilter"
               value={filters.actionType}
@@ -818,7 +828,7 @@ const AuditPage = () => {
           </div>
 
           {/* IP Address Filter Input */}
-          <div className="flex-1 min-w-[140px] sm:max-w-[170px]">
+          <div className="w-full lg:flex-1 lg:min-w-[140px] lg:max-w-[170px]">
             <input
               type="text"
               placeholder="IP Address..."
@@ -829,7 +839,7 @@ const AuditPage = () => {
           </div>
 
           {/* Start Date Input */}
-          <div className="flex-1 min-w-[140px] sm:max-w-[160px]">
+          <div className="w-full lg:flex-1 lg:min-w-[140px] lg:max-w-[160px]">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Start Date</label>
             <input
               type="date"
@@ -841,7 +851,7 @@ const AuditPage = () => {
           </div>
 
           {/* End Date Input */}
-          <div className="flex-1 min-w-[140px] sm:max-w-[160px]">
+          <div className="w-full lg:flex-1 lg:min-w-[140px] lg:max-w-[160px]">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">End Date</label>
             <input
               type="date"
@@ -899,11 +909,11 @@ const AuditPage = () => {
             <Skeleton className="h-32 w-full bg-slate-100" />
           </div>
         ) : selectedLog ? (
-          <div className="space-y-5 py-2">
+          <div className="space-y-4 py-2">
             {/* Event Header Banner Card */}
-            <div className="p-4 bg-slate-50 border border-slate-200 flex items-center justify-between rounded-xl">
+            <div className="p-4 bg-slate-50 border border-slate-200 flex items-center justify-between rounded-none">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-600 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 bg-orange-500/10 border border-orange-500/20 text-orange-600 flex items-center justify-center font-bold rounded-none">
                   <Activity size={20} />
                 </div>
                 <div>
@@ -911,13 +921,13 @@ const AuditPage = () => {
                   <span className="text-base font-bold text-slate-900 font-mono">{selectedLog.action}</span>
                 </div>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 border border-primary/20 rounded-md">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 border border-primary/20 rounded-none">
                 {selectedLog.moduleName || 'SYSTEM'}
               </span>
             </div>
 
             {/* Metadata Summary Grid */}
-            <div className="grid grid-cols-2 gap-3 p-4 bg-white border border-slate-200 text-xs shadow-2xs rounded-xl">
+            <div className="grid grid-cols-2 gap-3 p-4 bg-white border border-slate-200 text-xs shadow-2xs rounded-none">
               <div>
                 <span className="text-slate-400 block text-[11px] font-semibold uppercase flex items-center gap-1">
                   <Tag size={12} /> Log ID
@@ -947,16 +957,15 @@ const AuditPage = () => {
             </div>
 
             {/* Actor & Organization Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-white border border-slate-200 text-xs shadow-2xs rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-white border border-slate-200 text-xs shadow-2xs rounded-none">
               <div className="space-y-1.5 min-w-0">
                 <span className="text-slate-400 font-semibold block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                   <User size={13} className="text-slate-500" />
                   Performed By Actor
                 </span>
                 <div className="flex items-center gap-2.5 pt-1 min-w-0">
-                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs overflow-hidden shrink-0 ${
-                    !selectedLog.performedBy ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-100 border-slate-300 text-slate-700'
-                  }`}>
+                  <div className={`w-8 h-8 border flex items-center justify-center font-bold text-xs overflow-hidden shrink-0 rounded-none ${!selectedLog.performedBy ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-slate-100 border-slate-300 text-slate-700'
+                    }`}>
                     {!selectedLog.performedBy ? (
                       <Cpu size={16} />
                     ) : selectedLog.performedBy?.profilePhoto ? (
@@ -987,7 +996,7 @@ const AuditPage = () => {
             </div>
 
             {/* Network & Client Telemetry */}
-            <div className="p-4 bg-white border border-slate-200 text-xs shadow-2xs rounded-xl space-y-2.5">
+            <div className="p-4 bg-white border border-slate-200 text-xs shadow-2xs space-y-2.5 rounded-none">
               <span className="text-slate-400 font-semibold block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                 <Laptop size={13} className="text-slate-500" />
                 Network & Client Telemetry
@@ -997,11 +1006,10 @@ const AuditPage = () => {
                   <Globe size={14} className="text-slate-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <span className="text-[10px] text-slate-400 font-semibold uppercase block leading-none">IP Address</span>
-                    <span className={`inline-block font-mono font-semibold text-xs px-2 py-0.5 rounded border mt-1 ${
-                      selectedLog.ipAddress === 'SYSTEM' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                      selectedLog.ipAddress === 'Localhost' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                      'bg-slate-50 text-slate-700 border-slate-200'
-                    }`}>
+                    <span className={`inline-block font-mono font-semibold text-xs px-2 py-0.5 border mt-1 rounded-none ${selectedLog.ipAddress === 'SYSTEM' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        selectedLog.ipAddress === 'Localhost' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                          'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}>
                       {selectedLog.ipAddress === 'SYSTEM' ? 'Internal System' : (selectedLog.ipAddress || 'Unknown')}
                     </span>
                   </div>
@@ -1038,12 +1046,12 @@ const AuditPage = () => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-red-600 flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 h-2.5 bg-red-500 rounded-none"></div>
                     Previous State (Data Before Change)
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono">Original Record Values</span>
                 </div>
-                <pre className="p-4 bg-[#0F172A] text-slate-100 border border-slate-800 text-[11px] font-mono max-h-64 overflow-auto whitespace-pre-wrap leading-relaxed shadow-inner rounded-xl">
+                <pre className="p-4 bg-[#0F172A] text-slate-100 border border-slate-800 text-[11px] font-mono max-h-64 overflow-auto whitespace-pre-wrap leading-relaxed shadow-inner rounded-none">
                   {safeJsonFormat(selectedLog.oldValue, 'No Data Available (Initial creation or system event)')}
                 </pre>
               </div>
@@ -1052,12 +1060,12 @@ const AuditPage = () => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-none"></div>
                     Updated State (Data After Change)
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono">Saved Database Values</span>
                 </div>
-                <pre className="p-4 bg-[#0F172A] text-slate-100 border border-slate-800 text-[11px] font-mono max-h-64 overflow-auto whitespace-pre-wrap leading-relaxed shadow-inner rounded-xl">
+                <pre className="p-4 bg-[#0F172A] text-slate-100 border border-slate-800 text-[11px] font-mono max-h-64 overflow-auto whitespace-pre-wrap leading-relaxed shadow-inner rounded-none">
                   {safeJsonFormat(selectedLog.newValue, 'No Data Available (Deletion or read event)')}
                 </pre>
               </div>

@@ -7,7 +7,25 @@ import { SearchableSelect } from '../../../shared/components/elements/Searchable
 import { Toggle } from '../../../shared/components/elements/Toggle';
 import Button from '../../../shared/components/elements/Button';
 import { toast } from '../../../shared/utils/toast';
-import { GitBranch, Building2, Save, Info, Settings, AlertCircle } from 'lucide-react';
+import {
+  GitBranch,
+  Building2,
+  Save,
+  Info,
+  Settings,
+  AlertCircle,
+  Users,
+  User,
+  Gauge,
+  Shuffle,
+  BarChart3,
+  Award,
+  Sparkles,
+  CheckCircle2,
+  HelpCircle,
+  Layers,
+  Check
+} from 'lucide-react';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 
 export const AssignmentSettingsPage = () => {
@@ -133,33 +151,74 @@ export const AssignmentSettingsPage = () => {
     });
   };
 
-  const algorithmOptions = [
-    { id: 'ROUND_ROBIN', name: 'Round Robin' },
-    { id: 'LEAST_WORKLOAD', name: 'Least Workload' },
-    { id: 'PRIORITY_BASED', name: 'Priority-Based' }
+  const ALGORITHM_CONFIGS = [
+    {
+      id: 'ROUND_ROBIN',
+      name: 'Round Robin',
+      badge: 'Equal Distribution',
+      subtitle: 'Strict sequential rotation',
+      icon: Shuffle,
+      color: 'text-blue-600 bg-blue-50 border-blue-200',
+      description: 'Rotates each incoming lead to the next eligible sales candidate in strict circular queue order, ensuring equal distribution.',
+      howItWorksPerson: 'Eligible salespeople in this branch are ordered sequentially. Each incoming lead goes to the next person in queue, skipping anyone who has hit their daily limit.',
+      howItWorksTeam: 'Active teams are queued sequentially. Leads route to the next team container in order, which the team manager then distributes to their reps.',
+      scenario: 'Lead 1 → Candidate A  |  Lead 2 → Candidate B  |  Lead 3 → Candidate C  |  Lead 4 → Loops back to Candidate A'
+    },
+    {
+      id: 'LEAST_WORKLOAD',
+      name: 'Least Workload',
+      badge: 'Load Balancing',
+      subtitle: 'Dynamic workload leveler',
+      icon: BarChart3,
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+      description: 'Dynamically routes leads to the candidate with the lowest number of active leads received today to prevent bottlenecks.',
+      howItWorksPerson: 'The system queries total leads received today across reps. The lead is assigned to the salesperson currently having the lowest daily lead count.',
+      howItWorksTeam: 'Total workload per team (direct team assignments + all team members combined) is calculated. The team with the fewest total leads today is selected.',
+      scenario: 'If Rep A has received 2 leads today and Rep B has 6 leads, the next incoming lead is dispatched to Rep A to equalize workload.'
+    },
+    {
+      id: 'PRIORITY_BASED',
+      name: 'Priority Based',
+      badge: 'Seniority Cascading',
+      subtitle: 'Rank & seniority hierarchy',
+      icon: Award,
+      color: 'text-purple-600 bg-purple-50 border-purple-200',
+      description: 'Dispatches leads to senior, top-ranking sales representatives first until their daily capacity is exhausted before cascading down.',
+      howItWorksPerson: 'Highest-ranking roles receive leads first. They continue getting leads until they hit their daily lead limit. Lower-ranked reps only receive leads once senior reps are capped.',
+      howItWorksTeam: 'Teams are ranked by their managing BDE role rank. The highest-ranked team receives priority until capped, then overflows to next tier.',
+      scenario: 'Senior Executives (Rank 40) receive all inbound leads first. Only upon reaching their daily cap (e.g. 50 leads) do leads cascade to Junior Reps (Rank 20).'
+    }
   ];
 
-  return (
-    <div className="max-w-7xl mx-auto space-y-4">
+  const currentAlgorithmConfig = ALGORITHM_CONFIGS.find(a => a.id === assignmentAlgorithm) || ALGORITHM_CONFIGS[0];
 
-      {/* Header section */}
+  return (
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 animate-in fade-in duration-300">
+
+      {/* ── UNIFORM PAGE HEADER ── */}
       <PageHeader
-        title="Lead Distribution Rules"
-        description="Configure auto-routing parameters, daily limits, and resolution levels per branch."
+        title="Lead Distribution & Assignment Rules"
+        description="Configure automated inbound lead routing algorithms, daily workload limits, and resolution hierarchy per branch."
         icon={Settings}
-        className="border bg-white border-zinc-200/80 p-4 shrink-0"
-        iconClassName="bg-orange-100 text-orange-600"
       />
 
-      {/* Selectors section */}
+      {/* ── SCOPE SELECTORS CARD (Super Admin & Company Admin) ── */}
       {(isSuperAdmin || isCompanyAdmin) && (
-        <div className="bg-white border border-zinc-200/80  p-5  space-y-4">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Branch Scope</h2>
+        <div className="bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Layers size={16} className="text-orange-500" />
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Branch Scope Selection</h2>
+            </div>
+            <span className="text-xs text-slate-400 font-medium">Configure rules for specific operational branches</span>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {isSuperAdmin && (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Building2 size={12} /> Company
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 size={13} className="text-slate-500" />
+                  Target Company <span className="text-red-500">*</span>
                 </label>
                 <SearchableSelect
                   options={companyOptions}
@@ -173,9 +232,11 @@ export const AssignmentSettingsPage = () => {
                 />
               </div>
             )}
+
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                <GitBranch size={12} /> Branch
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <GitBranch size={13} className="text-slate-500" />
+                Target Branch <span className="text-red-500">*</span>
               </label>
               <SearchableSelect
                 options={branchOptions}
@@ -190,268 +251,375 @@ export const AssignmentSettingsPage = () => {
         </div>
       )}
 
-      {/* Settings Form */}
+      {/* ── SETTINGS FORM & CONFIGURATION ── */}
       {activeBranchId ? (
         isLoadingDetails ? (
-          <div className="flex flex-col items-center justify-center p-20 bg-white border border-zinc-200/80  ">
+          <div className="flex flex-col items-center justify-center p-20 bg-white border border-slate-200">
             <svg className="animate-spin h-8 w-8 text-orange-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className="text-sm font-semibold text-zinc-500">Loading branch settings...</span>
+            <span className="text-sm font-semibold text-slate-600">Loading branch distribution parameters...</span>
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6" noValidate>
 
-            {hasNoMembers && (
-              <div className="bg-red-50 border border-red-200/60  p-5 flex gap-3.5">
-                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+            {/* Branch Health & Quick Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white border border-slate-200 p-3.5 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-red-800">Automatic Lead Assignment Restricted</h3>
-                  <p className="text-xs font-semibold text-red-600 mt-1 leading-relaxed">
-                    This branch does not have any active users or teams. You cannot enable automatic lead assignment until you onboard salespeople or set up active teams for this branch.
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Branch Sales Reps</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{userCount} Users</p>
+                </div>
+                <div className="p-2 bg-blue-50 border border-blue-100 text-blue-600">
+                  <User size={16} />
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Configured Teams</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{teamCount} Teams</p>
+                </div>
+                <div className="p-2 bg-purple-50 border border-purple-100 text-purple-600">
+                  <Users size={16} />
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Routing Status</p>
+                  <p className={`text-sm font-bold mt-0.5 ${autoAssignmentEnabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {autoAssignmentEnabled ? '● ACTIVE' : '○ DISABLED'}
+                  </p>
+                </div>
+                <div className={`p-2 border ${autoAssignmentEnabled ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                  <Sparkles size={16} />
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resolution Mode</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">
+                    {assignmentResolutionLevel === 'PERSON' ? 'Individual' : 'Team Pool'}
+                  </p>
+                </div>
+                <div className="p-2 bg-orange-50 border border-orange-100 text-orange-600">
+                  <Layers size={16} />
+                </div>
+              </div>
+            </div>
+
+            {/* Warning when branch has no active members */}
+            {hasNoMembers && (
+              <div className="bg-red-50 border border-red-200 p-4 flex gap-3 text-red-800 text-xs">
+                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
+                <div>
+                  <h4 className="font-bold text-red-900 text-sm">Automatic Lead Assignment Restricted</h4>
+                  <p className="mt-1 leading-relaxed text-red-700 font-medium">
+                    This branch does not have any active salespeople or teams. You cannot activate automated lead routing until you onboard team members or configure sales teams for this branch.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Form Fields Card */}
-            <div className="bg-white border border-zinc-200/80   overflow-hidden">
-              <div className="p-6 border-b border-zinc-100 bg-zinc-50/50">
-                <Toggle
-                  id="autoAssignmentEnabled"
-                  label="Enable Automatic Lead Assignment"
-                  checked={autoAssignmentEnabled}
-                  onChange={(val) => setAutoAssignmentEnabled(val)}
-                  disabled={hasNoMembers}
-                />
-                <p className="text-xs text-zinc-400 mt-1.5 font-medium ml-1">
-                  When enabled, incoming unassigned leads belonging to this branch are routed automatically to people or teams using the resolved algorithm configuration below.
-                </p>
-              </div>
-
-              {/* Child settings wrapper with visual de-emphasis if auto-assignment is disabled */}
-              <div className={`p-6 space-y-6 transition-all duration-300 ${!autoAssignmentEnabled ? 'opacity-55 filter grayscale-[30%] pointer-events-none' : ''}`}>
-
-                {/* Daily Lead Limit */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-b border-zinc-100 pb-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-zinc-800">Daily Lead Limit</h3>
-                    <p className="text-xs font-semibold text-zinc-400 mt-1">Maximum leads a single person or team can receive per calendar day (minimum 50).</p>
+            {/* Master Activation Banner */}
+            <div className={`border p-6 transition-all duration-200 ${autoAssignmentEnabled
+                ? 'bg-gradient-to-r from-emerald-50/70 via-white to-white border-emerald-200 shadow-sm'
+                : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-bold text-slate-900">
+                      Automated Lead Distribution Engine
+                    </span>
+                    <span className={`px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider border ${autoAssignmentEnabled
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}>
+                      {autoAssignmentEnabled ? 'ENABLED' : 'PAUSED'}
+                    </span>
                   </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <input
-                      type="number"
-                      placeholder="50"
-                      value={maxDailyLeadsPerUser}
-                      onChange={(e) => setMaxDailyLeadsPerUser(e.target.value)}
-                      className={`w-full bg-[#F8FAFC] border rounded-[10px] px-3.5 py-[10px] text-[13px] font-medium outline-none focus:ring-3 transition-all ${maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50
-                          ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500/14'
-                          : 'border-[#E2E8F0] text-slate-900 focus:border-orange-500 focus:ring-orange-500/14'
-                        }`}
-                    />
+                  <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                    When enabled, unassigned incoming leads belonging to this branch are automatically distributed to candidates according to the rule strategy and capacity thresholds below.
+                  </p>
+                </div>
+
+                <div className="shrink-0">
+                  <Toggle
+                    id="autoAssignmentEnabled"
+                    checked={autoAssignmentEnabled}
+                    onChange={(val) => setAutoAssignmentEnabled(val)}
+                    disabled={hasNoMembers}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Child Settings Wrapper */}
+            <div className={`space-y-6 transition-all duration-300 ${!autoAssignmentEnabled ? 'opacity-50 pointer-events-none filter grayscale-[20%]' : ''}`}>
+
+              {/* ── CARD 1: DAILY LEAD CAPACITY (LIMITS) ── */}
+              <div className="bg-white border border-slate-200 p-6 shadow-sm space-y-4">
+                <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-slate-100 text-slate-700 border border-slate-200">
+                      <Gauge size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Daily Lead Capacity & Throttling
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                        Cap the maximum number of leads any single salesperson or team can receive per calendar day.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-400 font-mono">Min: 50 Leads</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start pt-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                      Max Daily Leads Per Candidate
+                    </label>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      Once a candidate reaches this quota today, the algorithm automatically skips them and routes to next available candidate.
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-3">
+                    <div className="relative max-w-xs">
+                      <input
+                        type="number"
+                        min="50"
+                        placeholder="50"
+                        value={maxDailyLeadsPerUser}
+                        onChange={(e) => setMaxDailyLeadsPerUser(e.target.value)}
+                        className={`w-full bg-slate-50 border pl-3.5 pr-24 py-2 text-sm font-semibold outline-none transition-all placeholder:text-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50
+                            ? 'border-red-500 text-red-900 focus:border-red-500 bg-red-50/30'
+                            : 'border-slate-200 text-slate-900 focus:border-orange-500 focus:bg-white'
+                          }`}
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 border border-slate-200 pointer-events-none select-none">
+                        leads/day
+                      </span>
+                    </div>
+
                     {maxDailyLeadsPerUser.trim() !== '' && Number(maxDailyLeadsPerUser) < 50 && (
-                      <p className="text-red-500 text-[11px] font-semibold mt-1">
-                        ⚠️ Daily lead limit must be at least 50.
+                      <p className="text-red-600 text-xs font-bold flex items-center gap-1">
+                        <AlertCircle size={13} /> Daily lead limit must be at least 50.
                       </p>
                     )}
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-100 rounded-lg p-2.5">
-                      <Info size={13} className="text-zinc-500 shrink-0" />
+
+                    <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                      <Info size={14} className="text-slate-400 shrink-0" />
                       <span>
                         {maxDailyLeadsPerUser.trim() === ''
-                          ? 'No override is set. Using system-wide default limit: 50 leads per day.'
-                          : 'Currently overriding the system default.'}
+                          ? 'No override is set. System default of 50 leads per day is active.'
+                          : `Active branch override: Maximum ${maxDailyLeadsPerUser} leads per candidate daily.`}
                       </span>
                     </div>
                   </div>
                 </div>
-
-                {/* Assignment Algorithm */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-b border-zinc-100 pb-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-zinc-800">Assignment Algorithm</h3>
-                    <p className="text-xs font-semibold text-zinc-400 mt-1">Rule selection that decides which candidate in the pool is selected first.</p>
-                  </div>
-                  <div className="md:col-span-2 space-y-4">
-                    <SearchableSelect
-                      options={algorithmOptions}
-                      value={assignmentAlgorithm}
-                      onChange={(val) => setAssignmentAlgorithm(val)}
-                      placeholder="Select Algorithm..."
-                      searchable={false}
-                    />
-                    <div className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200  p-5 space-y-4 ">
-                      {assignmentAlgorithm === 'ROUND_ROBIN' && (
-                        <>
-                          <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
-                            <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">ROUND ROBIN</span>
-                            <span className="text-slate-800 font-bold text-sm">Sequential Rotation</span>
-                          </div>
-
-                          <p className="leading-relaxed">
-                            Distributes incoming leads sequentially in a strict queue order to ensure equal opportunity.
-                          </p>
-
-                          <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
-                            <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
-                            {assignmentResolutionLevel === 'PERSON' ? (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                Eligible salespeople are sorted by ID. The system tracks the last assigned salesperson and routes the next incoming lead to the next person in sequence (skipping anyone who has hit their daily limit).
-                              </p>
-                            ) : (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                Active teams are sorted by ID. The system tracks the last assigned team and routes the next incoming lead to the next team container in sequence (skipping any team that has hit its daily limit).
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
-                            <strong className="block mb-1 font-bold">Example scenario:</strong>
-                            Lead 1 &rarr; {assignmentResolutionLevel === 'PERSON' ? 'Person' : 'Team'} A <br />
-                            Lead 2 &rarr; {assignmentResolutionLevel === 'PERSON' ? 'Person' : 'Team'} B <br />
-                            Lead 3 &rarr; {assignmentResolutionLevel === 'PERSON' ? 'Person' : 'Team'} C <br />
-                            Lead 4 &rarr; Loops back to {assignmentResolutionLevel === 'PERSON' ? 'Person' : 'Team'} A
-                          </div>
-                        </>
-                      )}
-
-                      {assignmentAlgorithm === 'LEAST_WORKLOAD' && (
-                        <>
-                          <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
-                            <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">LEAST WORKLOAD</span>
-                            <span className="text-slate-800 font-bold text-sm">Dynamic Load Balancing</span>
-                          </div>
-
-                          <p className="leading-relaxed">
-                            Routes new leads dynamically to the candidate with the lowest number of assignments today to prevent workload imbalance.
-                          </p>
-
-                          <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
-                            <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
-                            {assignmentResolutionLevel === 'PERSON' ? (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                The system counts leads assigned to each salesperson today. The new lead goes to the individual salesperson who currently has the fewest leads today.
-                              </p>
-                            ) : (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                The system counts the workload of each team (team workload = direct team assignments + sum of all individual team members' assignments today). The team with the lowest total workload receives the lead.
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
-                            <strong className="block mb-1 font-bold">Example scenario:</strong>
-                            If Candidate A has received 2 leads today and Candidate B has 5 leads, the next incoming lead is assigned to Candidate A to balance their daily load.
-                          </div>
-                        </>
-                      )}
-
-                      {assignmentAlgorithm === 'PRIORITY_BASED' && (
-                        <>
-                          <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
-                            <span className="bg-orange-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase">PRIORITY BASED</span>
-                            <span className="text-slate-800 font-bold text-sm">Rank / Seniority Cascading</span>
-                          </div>
-
-                          <p className="leading-relaxed">
-                            Prioritizes routing leads to the highest-ranking reps or teams based on their role level/seniority.
-                          </p>
-
-                          <div className="bg-white border border-slate-100 rounded-lg p-3 space-y-1">
-                            <p className="text-slate-700 font-bold text-xs uppercase tracking-wider">How it works in current mode:</p>
-                            {assignmentResolutionLevel === 'PERSON' ? (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                Leads are routed to the salesperson with the highest role rank first. Leads will continue going to the highest-ranking person until they hit their daily lead limit. Lower-ranked salespeople only receive leads once higher-ranked ones are capped.
-                              </p>
-                            ) : (
-                              <p className="text-slate-500 text-xs leading-relaxed">
-                                Ranks are determined by the team's owning BDE's role rank. The team owned by the BDE with the highest role rank receives priority, cascading to lower-priority teams only when the top team reaches its daily limit.
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="bg-orange-50/40 border border-orange-100/50 rounded-lg p-3 text-xs text-orange-800">
-                            <strong className="block mb-1 font-bold">Example scenario:</strong>
-                            A Senior Person (rank 40) receives all incoming leads first. Only when they reach their daily limit (e.g. 50 leads) will leads begin routing to Junior Salespeople (rank 20).
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Resolution Level */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                  <div>
-                    <h3 className="text-sm font-bold text-zinc-800">Resolution Level</h3>
-                    <p className="text-xs font-semibold text-zinc-400 mt-1">Determine whether leads are assigned to individual people or teams.</p>
-                  </div>
-                  <div className="md:col-span-2 space-y-4">
-                    <div className="grid grid-cols-2 p-1 bg-slate-100/80  border border-slate-200/50">
-                      <button
-                        type="button"
-                        onClick={() => setAssignmentResolutionLevel('PERSON')}
-                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${assignmentResolutionLevel === 'PERSON'
-                            ? 'bg-white text-slate-800  border border-slate-200/20'
-                            : 'text-slate-400 hover:text-slate-600'
-                          }`}
-                      >
-                        Assign to Person
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAssignmentResolutionLevel('TEAM')}
-                        className={`py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${assignmentResolutionLevel === 'TEAM'
-                            ? 'bg-white text-slate-800  border border-slate-200/20'
-                            : 'text-slate-400 hover:text-slate-600'
-                          }`}
-                      >
-                        Assign to Team
-                      </button>
-                    </div>
-
-                    <div className="text-xs font-semibold text-zinc-500 bg-zinc-50 border border-zinc-100  p-3.5 space-y-2">
-                      {assignmentResolutionLevel === 'PERSON' ? (
-                        <>
-                          <p className="text-slate-800 font-bold">Assign to Person Mode:</p>
-                          <p className="leading-relaxed">
-                            Leads are auto-routed directly to individual BDE/ISE salespeople. The algorithm evaluates individuals across all active teams in the branch as a single flat pool.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-slate-800 font-bold">Assign to Team Mode:</p>
-                          <p className="leading-relaxed">
-                            Leads are auto-routed to a team as a whole (no individual person is picked). Leads landing on the team can then be managed manually by the BDE owner.
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
               </div>
+
+              {/* ── CARD 2: ASSIGNMENT ALGORITHM SELECTION ── */}
+              <div className="bg-white border border-slate-200 p-6 shadow-sm space-y-5">
+                <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-slate-100 text-slate-700 border border-slate-200">
+                      <Shuffle size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Lead Distribution Algorithm
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                        Select the strategy rule that decides which candidate in the pool receives the next lead.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5">
+                    Active: {currentAlgorithmConfig.name}
+                  </span>
+                </div>
+
+                {/* 3 Strategy Selection Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {ALGORITHM_CONFIGS.map((algo) => {
+                    const isSelected = assignmentAlgorithm === algo.id;
+                    const Icon = algo.icon;
+                    return (
+                      <div
+                        key={algo.id}
+                        onClick={() => setAssignmentAlgorithm(algo.id)}
+                        className={`p-4 border transition-all cursor-pointer relative flex flex-col justify-between ${isSelected
+                            ? 'bg-orange-50/20 border-orange-500 shadow-xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                          }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className={`p-2 border ${algo.color}`}>
+                              <Icon size={16} />
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${isSelected
+                                ? 'bg-orange-100 text-orange-800 border-orange-300'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                              }`}>
+                              {algo.badge}
+                            </span>
+                          </div>
+
+                          <h4 className="text-sm font-bold text-slate-900 mt-1">
+                            {algo.name}
+                          </h4>
+                          <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                            {algo.description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className={`font-bold ${isSelected ? 'text-orange-600' : 'text-slate-400'}`}>
+                            {isSelected ? '✓ Selected Strategy' : 'Click to select'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Dynamic Strategy Explanation & Scenario Walkthrough */}
+                <div className="bg-slate-50 border border-slate-200 p-5 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                      <HelpCircle size={14} className="text-orange-500" />
+                      Detailed Engine Behavior ({currentAlgorithmConfig.name})
+                    </span>
+                    <span className="text-[11px] font-mono font-semibold text-slate-500">
+                      Scope: {assignmentResolutionLevel === 'PERSON' ? 'Individual Salesperson' : 'Team Pool'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {assignmentResolutionLevel === 'PERSON'
+                      ? currentAlgorithmConfig.howItWorksPerson
+                      : currentAlgorithmConfig.howItWorksTeam}
+                  </p>
+
+                  {/* Scenario box */}
+                  <div className="bg-white border border-slate-200 p-3 text-xs text-slate-700">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Live Routing Simulation:
+                    </span>
+                    <p className="font-mono text-slate-800 text-[11px] leading-relaxed">
+                      {currentAlgorithmConfig.scenario}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── CARD 3: TARGET RESOLUTION LEVEL ── */}
+              <div className="bg-white border border-slate-200 p-6 shadow-sm space-y-4">
+                <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-slate-100 text-slate-700 border border-slate-200">
+                      <Users size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Resolution Hierarchy Level
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                        Determine whether leads are assigned to individual people directly or placed into team containers.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  {/* Option 1: Person */}
+                  <div
+                    onClick={() => setAssignmentResolutionLevel('PERSON')}
+                    className={`p-4 border transition-all cursor-pointer space-y-2 ${assignmentResolutionLevel === 'PERSON'
+                        ? 'bg-orange-50/20 border-orange-500 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User size={16} className={assignmentResolutionLevel === 'PERSON' ? 'text-orange-600' : 'text-slate-400'} />
+                        <span className="text-sm font-bold text-slate-900">Direct Salesperson (Individual)</span>
+                      </div>
+                      <div className={`w-4 h-4 border flex items-center justify-center ${assignmentResolutionLevel === 'PERSON' ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300'}`}>
+                        {assignmentResolutionLevel === 'PERSON' && <Check size={12} strokeWidth={3} />}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                      Leads are auto-routed directly into individual BDE/ISE salespeople accounts across the branch as a flat candidate pool.
+                    </p>
+                  </div>
+
+                  {/* Option 2: Team */}
+                  <div
+                    onClick={() => setAssignmentResolutionLevel('TEAM')}
+                    className={`p-4 border transition-all cursor-pointer space-y-2 ${assignmentResolutionLevel === 'TEAM'
+                        ? 'bg-orange-50/20 border-orange-500 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users size={16} className={assignmentResolutionLevel === 'TEAM' ? 'text-orange-600' : 'text-slate-400'} />
+                        <span className="text-sm font-bold text-slate-900">Sales Team Pool</span>
+                      </div>
+                      <div className={`w-4 h-4 border flex items-center justify-center ${assignmentResolutionLevel === 'TEAM' ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300'}`}>
+                        {assignmentResolutionLevel === 'TEAM' && <Check size={12} strokeWidth={3} />}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                      Leads are auto-routed to a team container as a whole. The managing BDE then claims or delegates the lead internally to their subordinates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            {/* Save Action */}
-            <div className="flex justify-end gap-3 shrink-0">
-              <Button
-                type="submit"
-                variant="contained"
-                isLoading={updateBranchMutation.isLoading}
-                startIcon={<Save size={16} />}
-              >
-                Save Settings
-              </Button>
+            {/* ── STICKY/BOTTOM SAVE ACTION BAR ── */}
+            <div className="bg-white border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                <span>Saved parameters immediately take effect for all subsequent incoming leads.</span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 shrink-0">
+                <Button
+                  type="submit"
+                  variant="contained"
+                  isLoading={updateBranchMutation.isLoading}
+                  startIcon={<Save size={16} />}
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-2 text-xs shadow-md shadow-orange-600/20 active:scale-95 transition-all"
+                >
+                  Save Distribution Settings
+                </Button>
+              </div>
             </div>
 
           </form>
         )
       ) : (
-        <div className="flex flex-col items-center justify-center p-12 bg-white border border-dashed border-zinc-300  text-center space-y-3">
-          <AlertCircle size={32} className="text-zinc-300" />
-          <h3 className="text-sm font-bold text-zinc-700">No Branch Selected</h3>
-          <p className="text-xs font-medium text-zinc-400">Please choose a branch from the selector above to view and configure its lead assignment parameters.</p>
+        <div className="flex flex-col items-center justify-center p-16 bg-white border border-dashed border-slate-300 text-center space-y-3">
+          <div className="p-3 bg-slate-100 border border-slate-200 text-slate-400">
+            <GitBranch size={24} />
+          </div>
+          <h3 className="text-sm font-bold text-slate-800">No Branch Selected</h3>
+          <p className="text-xs font-medium text-slate-400 max-w-sm">
+            Please choose an operational branch from the selector above to configure its automated lead distribution rules.
+          </p>
         </div>
       )}
 

@@ -37,8 +37,8 @@ const UserDetailModal = ({ isOpen, onClose, user = null }) => {
       <div className="space-y-6 pb-6">
         
         {/* Banner Card */}
-        <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-2xl flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-lg font-black shadow-md uppercase overflow-hidden shrink-0">
+        <div className="p-4 bg-slate-50 border border-slate-200 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center bg-orange-500 text-white text-lg font-black shadow-sm uppercase overflow-hidden shrink-0">
             {user.profilePhoto ? (
               <img
                 src={user.profilePhoto}
@@ -57,7 +57,7 @@ const UserDetailModal = ({ isOpen, onClose, user = null }) => {
               {user.name || `${user.firstName} ${user.lastName}`}
             </h4>
             <div className="flex items-center gap-2 mt-1">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-600 uppercase tracking-wider">
+              <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-600 border border-orange-200 uppercase tracking-wider">
                 {roleName}
               </span>
               <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">

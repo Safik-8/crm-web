@@ -228,10 +228,9 @@ export const LeadSourcePage = () => {
         description="Manage global default and company-specific lead acquisition channels"
         icon={Compass}
       />
-
       {/* Filter, Search & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0">
           {/* Search Input */}
           <div className="w-full sm:w-64">
             <SearchInput
@@ -242,7 +241,7 @@ export const LeadSourcePage = () => {
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center w-full sm:w-auto h-[40px] bg-slate-100 p-1 rounded-xl border border-slate-200/80">
             {[
               { id: 'all', label: 'All Sources' },
               { id: 'active', label: 'Active' },
@@ -252,10 +251,10 @@ export const LeadSourcePage = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   statusFilter === tab.id
-                    ? 'bg-white text-slate-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {tab.label}
@@ -265,20 +264,19 @@ export const LeadSourcePage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-          {hasPermission('LEAD_SOURCE', 'canCreate') && (
+        {hasPermission('LEAD_SOURCE', 'canCreate') && (
+          <div className="w-full sm:w-auto shrink-0 flex">
             <Button
               onClick={handleAddClick}
               variant="contained"
-              color="primary"
               size="medium"
-              startIcon={<Plus size={16} />}
-              className="group shadow-sm hover:shadow-md transition-all"
+              startIcon={<Plus size={18} />}
+              className="w-full sm:w-auto justify-center group shadow-sm hover:shadow-md transition-all"
             >
               Add Source
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Table section */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Edit2, Key, Power, Eye, MoreVertical, Trash2 } from 'lucide-react';
+import { Edit2, Key, Power, Eye, MoreVertical, Trash2, GitBranch } from 'lucide-react';
 import Table from '../../../shared/components/elements/Table';
 import Button from '../../../shared/components/elements/Button';
 import Skeleton from '../../../shared/components/elements/Skeleton';
@@ -72,7 +72,7 @@ const RowActionsMenu = ({
           <Eye size={14} className="text-slate-400" />
           <span>View Details</span>
         </MenuItem>
- 
+
         {canEdit && (
           <>
             <MenuItem
@@ -83,7 +83,7 @@ const RowActionsMenu = ({
               <Edit2 size={13} className="text-slate-400" />
               <span>Edit User</span>
             </MenuItem>
- 
+
             <MenuItem
               onClick={() => handleAction(onResetPassword)}
               className="px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors text-slate-600 hover:text-slate-800"
@@ -92,14 +92,13 @@ const RowActionsMenu = ({
               <Key size={13} className="text-slate-400" />
               <span>Reset Password</span>
             </MenuItem>
- 
+
             <MenuItem
               onClick={() => handleAction(onToggleStatus)}
-              className={`px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors border-t border-slate-100/50 ${
-                isActive
+              className={`px-3.5 py-2 text-[12px] font-bold hover:bg-slate-50 transition-colors border-t border-slate-100/50 ${isActive
                   ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50/30'
                   : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/30'
-              }`}
+                }`}
               sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
               <Power size={13} className={isActive ? 'text-rose-400' : 'text-emerald-400'} />
@@ -209,7 +208,7 @@ const UserListTable = ({
       cell: (row) => {
         const primaryRole = row.userRoles?.find(ur => ur.isPrimary) || row.userRoles?.[0];
         const roleName = primaryRole?.role?.name || 'MEMBER';
-        
+
         let badgeColor = 'bg-slate-50 text-slate-600 border-slate-200/50';
         if (roleName === 'SUPER_ADMIN') badgeColor = 'bg-purple-50 text-purple-600 border-purple-200/50';
         else if (roleName === 'COMPANY_ADMIN') badgeColor = 'bg-blue-50 text-blue-600 border-blue-200/50';
@@ -235,28 +234,46 @@ const UserListTable = ({
       header: 'Company',
       accessorKey: 'company',
       align: 'left',
-      className: 'text-[13px] font-semibold text-slate-600',
-      cell: (row) => (
-        <span className="font-bold text-slate-700 text-[13px]">
-          {row.company?.name || 'Global / All'}
-        </span>
-      ),
+      className: 'min-w-[170px] whitespace-nowrap',
+      cell: (row) => {
+        const compName = row.company?.name || 'Global / All';
+        return (
+          <span className="font-semibold text-slate-800 text-[13px] truncate block" title={compName}>
+            {compName}
+          </span>
+        );
+      },
       skeleton: () => <Skeleton className="h-4 w-28 rounded-md" />
     }] : []),
     {
       header: 'Branch',
       accessorKey: 'branch',
       align: 'left',
-      className: 'text-[13px] font-semibold text-slate-600',
-      cell: (row) => row.branch?.name || 'Global / Company Wide',
+      className: 'min-w-[170px] whitespace-nowrap',
+      cell: (row) => {
+        const branchName = row.branch?.name || 'Global / Company Wide';
+        const isAssigned = !!row.branch?.name;
+        return (
+          <div className="flex items-center gap-1.5 min-w-0" title={branchName}>
+            <GitBranch size={13} className={isAssigned ? 'text-orange-500 shrink-0' : 'text-slate-300 shrink-0'} />
+            <span className={`text-[13px] truncate ${isAssigned ? 'font-semibold text-slate-800' : 'font-medium text-slate-400'}`}>
+              {branchName}
+            </span>
+          </div>
+        );
+      },
       skeleton: () => <Skeleton className="h-4 w-28 rounded-md" />
     },
     {
       header: 'Reporting Manager',
       accessorKey: 'reportingManager',
       align: 'left',
-      className: 'text-[13px] text-slate-600 font-medium',
-      cell: (row) => row.reportingManager?.name || (
+      className: 'min-w-[170px] whitespace-nowrap',
+      cell: (row) => row.reportingManager?.name ? (
+        <span className="text-[13px] text-slate-700 font-semibold truncate block" title={row.reportingManager.name}>
+          {row.reportingManager.name}
+        </span>
+      ) : (
         <span className="text-slate-300 font-semibold">—</span>
       ),
       skeleton: () => <Skeleton className="h-4 w-24 rounded-md" />
@@ -273,9 +290,9 @@ const UserListTable = ({
           <span
             className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider
                         ${isActive
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/30'
-                          : 'bg-rose-50 text-rose-600 border border-rose-200/30'
-                        }`}
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/30'
+                : 'bg-rose-50 text-rose-600 border border-rose-200/30'
+              }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
             {row.status}
