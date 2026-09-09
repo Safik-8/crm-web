@@ -268,6 +268,7 @@ const BranchSettingsPage = ({ overrideCompanyId, onSelectCompany, companies = []
                 onClose={() => setIsFormOpen(false)}
                 branch={selectedBranch}
                 companyId={companyId}
+                companies={companies}
                 onSuccess={handleFormSuccess}
             />
 

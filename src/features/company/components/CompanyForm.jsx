@@ -53,25 +53,25 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         await updateCompanyMutation.mutateAsync({
           id: company.id,
           data: {
-            name: formValues.name,
-            logo: formValues.logo,
-            industry: formValues.industry,
-            website: formValues.website,
-            address: formValues.address,
-            status: formValues.status
+            name: formValues.name?.trim(),
+            logo: formValues.logo || null,
+            industry: formValues.industry?.trim() || null,
+            website: formValues.website?.trim() || null,
+            address: formValues.address?.trim() || null,
+            status: formValues.status || 'ACTIVE'
           }
         });
       } else {
         await createCompanyMutation.mutateAsync({
-          name: formValues.name,
-          code: formValues.code,
-          logo: formValues.logo,
-          industry: formValues.industry,
-          website: formValues.website,
-          address: formValues.address,
-          status: formValues.status,
-          adminName: formValues.adminName,
-          adminEmail: formValues.adminEmail,
+          name: formValues.name?.trim(),
+          code: formValues.code?.trim().toUpperCase(),
+          logo: formValues.logo || null,
+          industry: formValues.industry?.trim() || null,
+          website: formValues.website?.trim() || null,
+          address: formValues.address?.trim() || null,
+          status: formValues.status || 'ACTIVE',
+          adminName: formValues.adminName?.trim(),
+          adminEmail: formValues.adminEmail?.trim().toLowerCase(),
           adminPassword: formValues.adminPassword
         });
       }
@@ -83,8 +83,8 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
     } catch (error) {
       toast.dismiss(loadingToastId);
       if (error && (error.statusCode === 409 || error.status === 409)) {
-        const errorDetail = error.details?.field || 'code';
-        if (errorDetail === 'email') {
+        const errorDetail = error.details?.field || error.details || 'code';
+        if (errorDetail === 'email' || errorDetail === 'adminEmail') {
           toast.error('Email Already Registered');
           throw { adminEmail: 'A user with this email address already exists.' };
         } else {
@@ -99,7 +99,8 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   };
 
   const validateEntityCode = (val) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(val)) return 'Code can only contain letters, numbers, hyphens, and underscores.';
+    if (!val || !val.trim()) return 'Company code is required.';
+    if (!/^[a-zA-Z0-9_-]+$/.test(val.trim())) return 'Code can only contain letters, numbers, hyphens, and underscores.';
     return null;
   };
 
@@ -305,7 +306,11 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         type: 'text',
         placeholder: 'Enter admin first and last name...',
         required: true,
-        sx: professionalInputSx
+        sx: professionalInputSx,
+        validate: (val) => {
+          if (!val || !val.trim()) return 'Admin full name is required.';
+          return null;
+        }
       },
       {
         key: 'adminEmail',
@@ -313,17 +318,27 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         type: 'text',
         placeholder: 'admin@company.com',
         required: true,
-        sx: professionalInputSx
+        sx: professionalInputSx,
+        validate: (val) => {
+          if (!val || !val.trim()) return 'Admin email is required.';
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return 'Enter a valid email address.';
+          return null;
+        }
       },
       {
         key: 'adminPassword',
         label: 'Admin Password',
         type: 'password',
-        placeholder: 'Minimum 6 characters...',
+        placeholder: 'e.g. Admin@123',
         required: true,
         sx: professionalInputSx,
         validate: (val) => {
-          if (val && val.trim().length < 6) return 'Admin password must be at least 6 characters.';
+          if (!val || !val.trim()) return 'Admin password is required.';
+          if (val.length < 8) return 'Password must be at least 8 characters.';
+          if (!/[A-Z]/.test(val)) return 'Password must contain at least one uppercase letter (A-Z).';
+          if (!/[a-z]/.test(val)) return 'Password must contain at least one lowercase letter (a-z).';
+          if (!/[0-9]/.test(val)) return 'Password must contain at least one number (0-9).';
+          if (!/[^A-Za-z0-9]/.test(val)) return 'Password must contain at least one special character (!@#$%^&*).';
           return null;
         }
       }

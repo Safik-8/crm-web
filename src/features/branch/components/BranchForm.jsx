@@ -36,7 +36,7 @@ const professionalInputSx = {
  * Slide-over drawer form to create or edit a branch.
  * Integrated with TanStack Query and professional UI styling.
  */
-const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
+const BranchForm = ({ isOpen, onClose, branch, companyId, companies = [], onSuccess }) => {
   const isEdit = !!branch;
   const createBranchMutation = useCreateBranch();
   const updateBranchMutation = useUpdateBranch();
@@ -48,20 +48,26 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
         await updateBranchMutation.mutateAsync({
           id: branch.id,
           data: {
-            name: values.name,
-            address: values.address,
-            location: values.location,
-            status: values.status
+            name: values.name?.trim(),
+            address: values.address?.trim() || null,
+            location: values.location?.trim() || null,
+            status: values.status || 'ACTIVE'
           }
         });
       } else {
+        const targetCompanyId = Number(values.companyId || companyId);
+        if (!targetCompanyId || isNaN(targetCompanyId) || targetCompanyId <= 0) {
+          toast.error('Please select a company for this branch.');
+          throw { companyId: 'Target company is required.' };
+        }
+
         await createBranchMutation.mutateAsync({
-          companyId: Number(companyId),
-          name: values.name,
-          code: values.code,
-          address: values.address,
-          location: values.location,
-          status: values.status
+          companyId: targetCompanyId,
+          name: values.name?.trim(),
+          code: values.code?.trim().toUpperCase(),
+          address: values.address?.trim() || null,
+          location: values.location?.trim() || null,
+          status: values.status || 'ACTIVE'
         });
       }
 
@@ -75,11 +81,11 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
     } catch (error) {
       toast.dismiss(loadingToastId);
       
-      if (error && error.statusCode === 409) {
+      if (error && (error.statusCode === 409 || error.status === 409)) {
         toast.error('Code Already Exists', {
-          description: 'The provided branch code is already in use.',
+          description: 'The provided branch code is already in use in this company.',
         });
-        throw { code: 'This branch code is already active in the system.' };
+        throw { code: 'This branch code is already active in this company.' };
       } else {
         enhancedToast.operationError(
           isEdit ? 'update' : 'create',
@@ -113,6 +119,20 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
         </div>
       )
     },
+    ...(!isEdit && (!companyId || companyId === '') && companies && companies.length > 0 ? [
+      {
+        key: 'companyId',
+        label: 'Target Company',
+        type: 'select',
+        required: true,
+        placeholder: 'Select target company...',
+        options: companies.map(c => ({ value: String(c.id), label: `${c.name} (${c.code})` })),
+        validate: (val) => {
+          if (!val) return 'Target company selection is required.';
+          return null;
+        }
+      }
+    ] : []),
     {
       key: 'name',
       label: 'Branch Name',
@@ -127,7 +147,11 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
           required={true}
           sx={professionalInputSx}
         />
-      )
+      ),
+      validate: (val) => {
+        if (!val || !val.trim()) return 'Branch name is required.';
+        return null;
+      }
     },
     {
       key: 'code',
@@ -154,7 +178,12 @@ const BranchForm = ({ isOpen, onClose, branch, companyId, onSuccess }) => {
             }
           }}
         />
-      )
+      ),
+      validate: (val) => {
+        if (!isEdit && (!val || !val.trim())) return 'Branch code is required.';
+        if (!isEdit && !/^[a-zA-Z0-9_-]+$/.test(val.trim())) return 'Code can only contain letters, numbers, hyphens, and underscores.';
+        return null;
+      }
     },
 
     // ── Section 2: Location Information ──

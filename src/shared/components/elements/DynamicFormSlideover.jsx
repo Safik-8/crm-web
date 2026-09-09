@@ -62,13 +62,15 @@ export const DynamicFormSlideover = ({
     // 1. Perform field-level check (basic required check)
     fields.forEach((field) => {
       const fieldKey = field.key || field.name || field.id;
+      if (!fieldKey || fieldKey.includes('_header') || fieldKey.includes('_divider')) return;
+
       const val = values[fieldKey];
       if (field.required && (val === undefined || val === null || (typeof val === 'string' && !val.trim()))) {
-        errs[fieldKey] = `${field.label} is required.`;
+        errs[fieldKey] = `${field.label || 'This field'} is required.`;
       }
       // If field-specific validator is present
       if (field.validate && val !== undefined && val !== null && val !== '') {
-        const fieldErr = field.validate(val);
+        const fieldErr = field.validate(val, values);
         if (fieldErr) errs[fieldKey] = fieldErr;
       }
     });
@@ -76,14 +78,14 @@ export const DynamicFormSlideover = ({
     // 2. Perform form-level check (if custom validate function is provided)
     if (validate) {
       const formErrs = validate(values);
-      errs = { ...errs, ...formErrs };
+      if (formErrs && typeof formErrs === 'object') {
+        errs = { ...errs, ...formErrs };
+      }
     }
 
-    const errorKeys = Object.keys(errs);
+    const errorKeys = Object.keys(errs).filter((k) => !!errs[k]);
     if (errorKeys.length > 0) {
-      // ONLY SHOW THE FIRST ERROR
-      const firstKey = errorKeys[0];
-      setErrors({ [firstKey]: errs[firstKey] });
+      setErrors(errs);
 
       // Auto-scroll & focus first invalid input
       setTimeout(() => {
@@ -103,7 +105,7 @@ export const DynamicFormSlideover = ({
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!handleFormValidate()) return;
 
     setBusy(true);
@@ -111,8 +113,43 @@ export const DynamicFormSlideover = ({
       await onSubmit(values);
     } catch (err) {
       console.error('Submission failed:', err);
-      if (typeof err === 'object' && err !== null) {
-        setErrors((prev) => ({ ...prev, ...err }));
+      let mappedErrors = {};
+
+      // 1. Extract structured validation errors from backend (e.g. details: [{ field, message }])
+      if (Array.isArray(err?.details)) {
+        err.details.forEach((item) => {
+          if (item?.field && item?.message) {
+            mappedErrors[item.field] = item.message;
+          }
+        });
+      } else if (err?.details && typeof err.details === 'object') {
+        if (err.details.field) {
+          mappedErrors[err.details.field] = err.message || `${err.details.field} is invalid`;
+        } else {
+          Object.entries(err.details).forEach(([fKey, msg]) => {
+            if (typeof msg === 'string') mappedErrors[fKey] = msg;
+          });
+        }
+      } else if (typeof err === 'object' && err !== null) {
+        // Filter out API HTTP metadata fields so 'code: "VALIDATION_ERROR"' is NEVER assigned as field error
+        const apiMetaKeys = new Set([
+          'statusCode', 'status', 'code', 'message', 'success', 'timestamp', 'stack', 'details', 'name', 'response'
+        ]);
+        Object.entries(err).forEach(([k, v]) => {
+          if (!apiMetaKeys.has(k) && typeof v === 'string') {
+            mappedErrors[k] = v;
+          }
+        });
+      }
+
+      if (Object.keys(mappedErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...mappedErrors }));
+        setTimeout(() => {
+          const firstErrorEl = document.querySelector('.Mui-error, [aria-invalid="true"]');
+          if (firstErrorEl) {
+            firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
       }
     } finally {
       setBusy(false);
