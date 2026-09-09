@@ -120,7 +120,6 @@ const QualifyLeadModal = ({ lead, isOpen, onClose, onQualified }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
-      status: '', // Reset manual override on edit so score auto-computes status
     }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
@@ -132,7 +131,6 @@ const QualifyLeadModal = ({ lead, isOpen, onClose, onQualified }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name !== 'status' && { status: '' }),
     }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
