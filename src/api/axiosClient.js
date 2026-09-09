@@ -87,10 +87,13 @@ axiosClient.interceptors.response.use(
         isRefreshingAxios = true;
 
         try {
-          const refreshRes = await axiosClient.post('/auth/refresh', {}, {
-            headers: { 'Authorization': undefined },
+          // Use a clean axios call without the request interceptor injecting expired token
+          const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, {
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' },
           });
-          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+          const refreshData = refreshRes?.data;
+          const newTok = refreshData?.data?.accessToken || refreshData?.accessToken;
           if (newTok) {
             localStorage.setItem('accessToken', newTok);
           }

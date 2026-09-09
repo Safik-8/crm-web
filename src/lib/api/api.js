@@ -162,12 +162,27 @@ export const apiClient = async (endpoint, options = {}) => {
         isRefreshingFetch = true;
 
         try {
-          const refreshRes = await apiClient('/auth/refresh', {
+          // Build fresh headers without the expired access token
+          const refreshHeaders = { 'Content-Type': 'application/json' };
+
+          const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
             method: 'POST',
-            silent: true,
-            headers: { 'Authorization': undefined },
+            headers: refreshHeaders,
+            credentials: /** @type {RequestCredentials} */ ('include'),
           });
-          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+
+          let refreshData;
+          try {
+            refreshData = await refreshRes.json();
+          } catch {
+            refreshData = null;
+          }
+
+          if (!refreshRes.ok) {
+            throw refreshData || new Error('Refresh failed');
+          }
+
+          const newTok = refreshData?.data?.accessToken || refreshData?.accessToken;
           if (newTok) {
             localStorage.setItem('accessToken', newTok);
           }
