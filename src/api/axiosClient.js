@@ -3,6 +3,8 @@
 import axios from 'axios';
 import { enhancedToast } from '../shared/utils/toast';
 
+import { refreshAuthToken } from '../lib/api/authSession';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create central Axios instance
@@ -13,20 +15,6 @@ const axiosClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-let isRefreshingAxios = false;
-let failedQueueAxios = [];
-
-const processQueueAxios = (error, token = null) => {
-  failedQueueAxios.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueueAxios = [];
-};
 
 // Request interceptor to attach Bearer token if available
 axiosClient.interceptors.request.use(
@@ -59,7 +47,7 @@ axiosClient.interceptors.response.use(
       const { status, data } = error.response;
       
       const isLoginRequest = originalRequest.url && originalRequest.url.includes('/auth/login');
-      const isLoginPage = window.location.pathname === '/login';
+      const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
       const isRefreshRequest = originalRequest.url && originalRequest.url.includes('/auth/refresh');
 
       // ── 1. UN-AUTHENTICATED SESSION TIMEOUT (401) ──
@@ -74,46 +62,13 @@ axiosClient.interceptors.response.use(
 
         originalRequest._retry = true;
 
-        if (isRefreshingAxios) {
-          return new Promise((resolve, reject) => {
-            failedQueueAxios.push({ resolve, reject });
-          })
-            .then((newAccessToken) => {
-              if (newAccessToken) {
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-              }
-              return axiosClient(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
-        }
-
-        isRefreshingAxios = true;
-
         try {
-          // Direct axios call with credentials to send httpOnly refreshToken cookie
-          const refreshRes = await axios.post(
-            `${BASE_URL}/auth/refresh`,
-            {},
-            { withCredentials: true }
-          );
-
-          const newTok = refreshRes.data?.data?.accessToken || refreshRes.data?.accessToken;
-
-          if (newTok) {
-            localStorage.setItem('accessToken', newTok);
-            originalRequest.headers.Authorization = `Bearer ${newTok}`;
+          const newAccessToken = await refreshAuthToken();
+          if (newAccessToken) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           }
-
-          isRefreshingAxios = false;
-          processQueueAxios(null, newTok);
           return axiosClient(originalRequest);
         } catch (refreshError) {
-          isRefreshingAxios = false;
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          processQueueAxios(refreshError);
           window.location.href = '/login?session=expired';
           return Promise.reject(refreshError);
         }

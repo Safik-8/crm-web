@@ -49,19 +49,7 @@ export const registerLoaderBridge = (bridge) => {
  * }} ApiClientOptions
  */
 
-let isRefreshingFetch = false;
-let failedQueueFetch = [];
-
-const processQueueFetch = (error) => {
-  failedQueueFetch.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
-  });
-  failedQueueFetch = [];
-};
+import { refreshAuthToken } from './authSession';
 
 /**
  * Custom fetch wrapper that automatically includes credentials (cookies)
@@ -135,7 +123,7 @@ export const apiClient = async (endpoint, options = {}) => {
     // ── Handle HTTP errors ───────────────────────────────────────────────────
     if (!response.ok) {
       const isLoginRequest = endpoint.includes('/auth/login');
-      const isLoginPage = window.location.pathname === '/login';
+      const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
       const isRefreshRequest = endpoint.includes('/auth/refresh');
 
       if (response.status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
@@ -151,39 +139,10 @@ export const apiClient = async (endpoint, options = {}) => {
 
         options._retry = true;
 
-        if (isRefreshingFetch) {
-          return new Promise((resolve, reject) => {
-            failedQueueFetch.push({ resolve, reject });
-          })
-            .then(() => {
-              return apiClient(endpoint, options);
-            })
-            .catch((err) => {
-              throw err;
-            });
-        }
-
-        isRefreshingFetch = true;
-
         try {
-          const refreshRes = await apiClient('/auth/refresh', {
-            method: 'POST',
-            body: {},
-            silent: true,
-            skipAuth: true,
-          });
-          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
-          if (newTok) {
-            localStorage.setItem('accessToken', newTok);
-          }
-          isRefreshingFetch = false;
-          processQueueFetch(null);
+          await refreshAuthToken();
           return apiClient(endpoint, options);
         } catch (refreshErr) {
-          isRefreshingFetch = false;
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          processQueueFetch(refreshErr);
           loaderBridge.forceHide?.();
           window.location.href = '/login?session=expired';
           throw refreshErr;
