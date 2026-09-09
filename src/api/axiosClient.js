@@ -87,7 +87,9 @@ axiosClient.interceptors.response.use(
         isRefreshingAxios = true;
 
         try {
-          const refreshRes = await axiosClient.post('/auth/refresh');
+          const refreshRes = await axiosClient.post('/auth/refresh', {}, {
+            headers: { 'Authorization': undefined },
+          });
           const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
           if (newTok) {
             localStorage.setItem('accessToken', newTok);

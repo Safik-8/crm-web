@@ -162,7 +162,11 @@ export const apiClient = async (endpoint, options = {}) => {
         isRefreshingFetch = true;
 
         try {
-          const refreshRes = await apiClient('/auth/refresh', { method: 'POST', silent: true });
+          const refreshRes = await apiClient('/auth/refresh', {
+            method: 'POST',
+            silent: true,
+            headers: { 'Authorization': undefined },
+          });
           const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
           if (newTok) {
             localStorage.setItem('accessToken', newTok);
