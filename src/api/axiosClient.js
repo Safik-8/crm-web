@@ -3,6 +3,8 @@
 import axios from 'axios';
 import { enhancedToast } from '../shared/utils/toast';
 
+import { refreshAuthToken } from '../lib/api/authSession';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create central Axios instance
@@ -14,25 +16,12 @@ const axiosClient = axios.create({
   },
 });
 
-let isRefreshingAxios = false;
-let failedQueueAxios = [];
-
-const processQueueAxios = (error, token = null) => {
-  failedQueueAxios.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueueAxios = [];
-};
-
 // Request interceptor to attach Bearer token if available
 axiosClient.interceptors.request.use(
   (config) => {
+    const isRefreshRequest = config.url && config.url.includes('/auth/refresh');
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    if (token && !config.headers.Authorization) {
+    if (token && !config.headers.Authorization && !isRefreshRequest) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -57,48 +46,29 @@ axiosClient.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       
-      const isLoginRequest = originalRequest.url.includes('/auth/login');
-      const isLoginPage = window.location.pathname === '/login';
-      const isRefreshRequest = originalRequest.url.includes('/auth/refresh');
+      const isLoginRequest = originalRequest.url && originalRequest.url.includes('/auth/login');
+      const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+      const isRefreshRequest = originalRequest.url && originalRequest.url.includes('/auth/refresh');
 
       // ── 1. UN-AUTHENTICATED SESSION TIMEOUT (401) ──
       if (status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
         if (originalRequest._retry) {
           // Clear window context and redirect to login
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           window.location.href = '/login?session=expired';
           return Promise.reject(data || new Error('Session expired'));
         }
 
         originalRequest._retry = true;
 
-        if (isRefreshingAxios) {
-          return new Promise((resolve, reject) => {
-            failedQueueAxios.push({ resolve, reject });
-          })
-            .then(() => {
-              return axiosClient(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
-        }
-
-        isRefreshingAxios = true;
-
         try {
-          const refreshRes = await axiosClient.post('/auth/refresh');
-          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
-          if (newTok) {
-            localStorage.setItem('accessToken', newTok);
+          const newAccessToken = await refreshAuthToken();
+          if (newAccessToken) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           }
-          isRefreshingAxios = false;
-          processQueueAxios(null);
           return axiosClient(originalRequest);
         } catch (refreshError) {
-          isRefreshingAxios = false;
-          localStorage.removeItem('accessToken');
-          processQueueAxios(refreshError);
           window.location.href = '/login?session=expired';
           return Promise.reject(refreshError);
         }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Target, ArrowLeft, AlertCircle, Plus } from 'lucide-react';
+import { Target, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../api/axiosClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -11,6 +11,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Alert from '../../../shared/components/elements/Alert';
+import { toast } from '../../../shared/utils/toast';
 
 import PageHeader from '../../../shared/components/modules/PageHeader';
 
@@ -109,6 +110,7 @@ export default function KpiSetupPage() {
     endDate: initialDates.endDate,
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState('');
 
   // Validate Start Date & End Date against Duration rules
@@ -379,6 +381,15 @@ export default function KpiSetupPage() {
       startDate: start,
       endDate: end,
     }));
+
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.duration;
+      delete updated.startDate;
+      delete updated.endDate;
+      return updated;
+    });
+    if (formError) setFormError('');
   };
 
   // Duration dropdown options
@@ -428,6 +439,13 @@ export default function KpiSetupPage() {
       setFormData((prev) => ({ ...prev, [field]: rawVal }));
     }
 
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
     if (formError) setFormError('');
   };
 
@@ -439,46 +457,90 @@ export default function KpiSetupPage() {
       employeeId: '',
       teamId: '',
     }));
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.employeeId;
+      delete updated.teamId;
+      delete updated.assignmentType;
+      return updated;
+    });
+    if (formError) setFormError('');
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (assignmentType === 'INDIVIDUAL' && !formData.employeeId) {
+      errors.employeeId = 'Please select an employee.';
+    }
+
+    if (assignmentType === 'TEAM' && !formData.teamId) {
+      errors.teamId = 'Please select a sales team.';
+    }
+
+    if (!formData.kpiType) {
+      errors.kpiType = 'Please select a KPI metric type.';
+    }
+
+    if (!formData.targetValue || String(formData.targetValue).trim() === '') {
+      errors.targetValue = 'Target value is required.';
+    } else {
+      const val = Number(formData.targetValue);
+      if (isNaN(val) || val <= 0) {
+        errors.targetValue = 'Target value must be a positive number greater than 0.';
+      } else if (formData.kpiType === 'CONVERSION' && (val < 0 || val > 100)) {
+        errors.targetValue = 'Target conversion rate must be between 0% and 100%.';
+      }
+    }
+
+    if (!formData.startDate) {
+      errors.startDate = 'Start date is required.';
+    }
+
+    if (!formData.endDate) {
+      errors.endDate = 'End date is required.';
+    }
+
+    if (formData.startDate && formData.endDate) {
+      const dateError = validateKpiDates(formData.duration, formData.startDate, formData.endDate);
+      if (dateError) {
+        if (formData.duration === 'CUSTOM_RANGE') {
+          errors.endDate = dateError;
+        } else {
+          errors.duration = dateError;
+        }
+      }
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
 
-    if (assignmentType === 'INDIVIDUAL' && !formData.employeeId) {
-      setFormError('Please select an Employee for Individual assignment.');
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorMessage = Object.values(errors)[0];
+      toast.error(firstErrorMessage || 'Please complete all required fields.');
       return;
     }
 
-    if (assignmentType === 'TEAM' && !formData.teamId) {
-      setFormError('Please select a Sales Team for Team assignment.');
-      return;
-    }
-
-    if (!formData.kpiType || !formData.targetValue || !formData.startDate || !formData.endDate) {
-      setFormError('Please fill in all required fields (KPI Type, Target Value, Start Date, End Date).');
-      return;
-    }
-
-    if (Number(formData.targetValue) <= 0) {
-      setFormError('Target Value must be greater than 0.');
-      return;
-    }
-
-    // Strict Date Validation according to Duration rules
-    const dateError = validateKpiDates(formData.duration, formData.startDate, formData.endDate);
-    if (dateError) {
-      setFormError(dateError);
-      return;
-    }
+    setFieldErrors({});
 
     try {
       await createMutation.mutateAsync({
         ...formData,
+        targetValue: Number(formData.targetValue),
         assignmentType,
       });
+      toast.success('KPI target assigned successfully.');
       navigate('/kpi-analytics');
     } catch (err) {
-      setFormError(err.response?.data?.message || err.message || 'Failed to save KPI target.');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to assign KPI target.';
+      setFormError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -507,7 +569,11 @@ export default function KpiSetupPage() {
         description="Assign individual or team performance targets (auto-scoped to your organization branch)."
       />
 
-      {formError && <Alert variant="danger" title="Validation Error" message={formError} />}
+      {formError && (
+        <Alert severity="error" title="Submission Error" onClose={() => setFormError('')}>
+          {formError}
+        </Alert>
+      )}
 
       {/* Main Form Container */}
       <form onSubmit={handleSubmit} className="bg-white border border-slate-200/80 rounded-none p-6 shadow-2xs space-y-6">
@@ -520,6 +586,7 @@ export default function KpiSetupPage() {
             onChange={handleAssignmentTypeChange}
             searchable={true}
             required
+            errorText={fieldErrors.assignmentType}
           />
 
           {/* Dynamic Selector based on Assignment Type */}
@@ -533,6 +600,7 @@ export default function KpiSetupPage() {
               isLoading={isLoadingUsers}
               placeholder="Search employee by name/code..."
               required
+              errorText={fieldErrors.employeeId}
             />
           ) : (
             <SelectField
@@ -544,6 +612,7 @@ export default function KpiSetupPage() {
               isLoading={isLoadingTeams}
               placeholder="Search sales team..."
               required
+              errorText={fieldErrors.teamId}
             />
           )}
 
@@ -555,6 +624,7 @@ export default function KpiSetupPage() {
             onChange={(val) => handleSelectChange('kpiType', val)}
             searchable={true}
             required
+            errorText={fieldErrors.kpiType}
           />
 
           {/* Target Value */}
@@ -567,6 +637,7 @@ export default function KpiSetupPage() {
             value={formData.targetValue}
             onChange={(val) => handleSelectChange('targetValue', val)}
             required
+            errorText={fieldErrors.targetValue}
           />
 
           {/* Duration */}
@@ -577,6 +648,7 @@ export default function KpiSetupPage() {
             onChange={(val) => handleSelectChange('duration', val)}
             searchable={true}
             required
+            errorText={fieldErrors.duration}
           />
 
           {/* Dynamic Period Selectors based on Duration */}
@@ -641,6 +713,7 @@ export default function KpiSetupPage() {
                 value={formData.startDate}
                 onChange={(val) => handleSelectChange('startDate', val)}
                 required
+                errorText={fieldErrors.startDate}
               />
               <TextField
                 label="End Date"
@@ -648,6 +721,7 @@ export default function KpiSetupPage() {
                 value={formData.endDate}
                 onChange={(val) => handleSelectChange('endDate', val)}
                 required
+                errorText={fieldErrors.endDate}
               />
             </div>
           )}
@@ -688,9 +762,8 @@ export default function KpiSetupPage() {
             type="submit"
             size="medium"
             isLoading={createMutation.isPending}
-            startIcon={<Plus size={16} />}
           >
-            Assign KPI Target
+            {createMutation.isPending ? 'Submitting...' : 'Submit'}
           </Button>
         </div>
       </form>
