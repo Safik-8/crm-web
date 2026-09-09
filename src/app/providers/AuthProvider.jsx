@@ -241,12 +241,13 @@ export const AuthProvider = ({ children }) => {
         if (response.data.accessToken) {
           localStorage.setItem('accessToken', response.data.accessToken);
         }
+        // refreshToken is managed securely via httpOnly cookie
+        localStorage.removeItem('refreshToken');
         queryClient.clear();
         setUser(response.data.user);
         setLoading(false);
         return { success: true };
       }
-
 
       setLoading(false);
       return { success: false, message: response?.message || 'Login failed', rawData: response };
@@ -269,13 +270,18 @@ export const AuthProvider = ({ children }) => {
     // `isAuthenticated` becomes false.
     setUser(null);
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     queryClient.clear();
 
     // ── Background API call ──────────────────────────────────────────────────
     // Fire-and-forget: the session cookie is invalidated server-side.
     // We don't await this before navigating — the UX is already instant.
     try {
-      await apiClient('/auth/logout', { method: 'POST', silent: true });
+      await apiClient('/auth/logout', {
+        method: 'POST',
+        silent: true,
+        skipAuth: true
+      });
     } catch (err) {
       // Swallow silently — user is already logged out locally.
       // The server-side session will expire naturally.

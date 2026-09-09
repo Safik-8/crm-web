@@ -31,8 +31,9 @@ const processQueueAxios = (error, token = null) => {
 // Request interceptor to attach Bearer token if available
 axiosClient.interceptors.request.use(
   (config) => {
+    const isRefreshRequest = config.url && config.url.includes('/auth/refresh');
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    if (token && !config.headers.Authorization) {
+    if (token && !config.headers.Authorization && !isRefreshRequest) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -57,15 +58,16 @@ axiosClient.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       
-      const isLoginRequest = originalRequest.url.includes('/auth/login');
+      const isLoginRequest = originalRequest.url && originalRequest.url.includes('/auth/login');
       const isLoginPage = window.location.pathname === '/login';
-      const isRefreshRequest = originalRequest.url.includes('/auth/refresh');
+      const isRefreshRequest = originalRequest.url && originalRequest.url.includes('/auth/refresh');
 
       // ── 1. UN-AUTHENTICATED SESSION TIMEOUT (401) ──
       if (status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
         if (originalRequest._retry) {
           // Clear window context and redirect to login
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           window.location.href = '/login?session=expired';
           return Promise.reject(data || new Error('Session expired'));
         }
@@ -76,7 +78,10 @@ axiosClient.interceptors.response.use(
           return new Promise((resolve, reject) => {
             failedQueueAxios.push({ resolve, reject });
           })
-            .then(() => {
+            .then((newAccessToken) => {
+              if (newAccessToken) {
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              }
               return axiosClient(originalRequest);
             })
             .catch((err) => {
@@ -87,17 +92,27 @@ axiosClient.interceptors.response.use(
         isRefreshingAxios = true;
 
         try {
-          const refreshRes = await axiosClient.post('/auth/refresh');
-          const newTok = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+          // Direct axios call with credentials to send httpOnly refreshToken cookie
+          const refreshRes = await axios.post(
+            `${BASE_URL}/auth/refresh`,
+            {},
+            { withCredentials: true }
+          );
+
+          const newTok = refreshRes.data?.data?.accessToken || refreshRes.data?.accessToken;
+
           if (newTok) {
             localStorage.setItem('accessToken', newTok);
+            originalRequest.headers.Authorization = `Bearer ${newTok}`;
           }
+
           isRefreshingAxios = false;
-          processQueueAxios(null);
+          processQueueAxios(null, newTok);
           return axiosClient(originalRequest);
         } catch (refreshError) {
           isRefreshingAxios = false;
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           processQueueAxios(refreshError);
           window.location.href = '/login?session=expired';
           return Promise.reject(refreshError);
