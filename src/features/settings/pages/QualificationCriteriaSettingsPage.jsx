@@ -42,6 +42,7 @@ import SelectField from '../../../shared/components/elements/SelectField';
 import Checkbox from '../../../shared/components/elements/Checkbox';
 import { DynamicFormModal } from '../../../shared/components/elements/DynamicFormModal';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { toast } from '../../../shared/utils/toast';
 
@@ -455,11 +456,53 @@ const QualificationCriteriaSettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          Loading Qualification Rules...
-        </span>
+      <div className="max-w-7xl mx-auto space-y-5 animate-in fade-in duration-300">
+        {/* Header Skeleton */}
+        <div className="bg-white border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton variant="text" width={240} height={28} />
+            <Skeleton variant="text" width={380} height={16} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton variant="rounded" width={100} height={40} className="rounded-xl" />
+            <Skeleton variant="rounded" width={140} height={40} className="rounded-xl" />
+          </div>
+        </div>
+
+        {/* Thresholds Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white border border-slate-200/80 p-4 space-y-2.5">
+              <Skeleton variant="text" width={120} height={14} />
+              <Skeleton variant="text" width={80} height={28} />
+            </div>
+          ))}
+        </div>
+
+        {/* Criteria Matrix Table Skeleton */}
+        <div className="bg-white border border-slate-200/80 p-6 space-y-4">
+          <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <Skeleton variant="text" width={180} height={22} />
+            <Skeleton variant="rounded" width={80} height={28} className="rounded-lg" />
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4 border border-slate-100 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton variant="circular" width={28} height={28} />
+                  <div className="space-y-1.5">
+                    <Skeleton variant="text" width={160} height={18} />
+                    <Skeleton variant="rounded" width={70} height={16} className="rounded-md" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton variant="rounded" width={80} height={36} className="rounded-lg" />
+                  <Skeleton variant="rounded" width={36} height={36} className="rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

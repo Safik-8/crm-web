@@ -27,6 +27,7 @@ import {
   Check
 } from 'lucide-react';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 
 export const AssignmentSettingsPage = () => {
   const { user: currentUser } = useAuth();
@@ -254,12 +255,39 @@ export const AssignmentSettingsPage = () => {
       {/* ── SETTINGS FORM & CONFIGURATION ── */}
       {activeBranchId ? (
         isLoadingDetails ? (
-          <div className="flex flex-col items-center justify-center p-20 bg-white border border-slate-200">
-            <svg className="animate-spin h-8 w-8 text-orange-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span className="text-sm font-semibold text-slate-600">Loading branch distribution parameters...</span>
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Quick Stats Strip Skeleton */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 p-3.5 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton variant="text" width={100} height={12} />
+                    <Skeleton variant="text" width={70} height={24} />
+                  </div>
+                  <Skeleton variant="rounded" width={32} height={32} className="rounded-lg" />
+                </div>
+              ))}
+            </div>
+
+            {/* Main Settings Card Skeleton */}
+            <div className="bg-white border border-slate-200 p-6 space-y-6">
+              <div className="pb-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="space-y-1.5">
+                  <Skeleton variant="text" width={200} height={24} />
+                  <Skeleton variant="text" width={320} height={16} />
+                </div>
+                <Skeleton variant="rounded" width={50} height={28} className="rounded-full" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="border border-slate-200 p-4 space-y-3 rounded-lg">
+                    <Skeleton variant="circular" width={32} height={32} />
+                    <Skeleton variant="text" width={120} height={20} />
+                    <Skeleton variant="text" width="100%" height={36} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6" noValidate>

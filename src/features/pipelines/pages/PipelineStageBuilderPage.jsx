@@ -18,6 +18,7 @@ import { useStageDelete } from '../hooks/useStageDelete';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import Button from '../../../shared/components/elements/Button';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 import {
   isMandatoryStage, isClosureStage, enforceAnchorPositions, applyConstrainedDragMove
 } from '../utils/stageRules';
@@ -260,8 +261,64 @@ export const PipelineStageBuilderPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        {/* Top Header Card Skeleton */}
+        <div className="bg-white border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton variant="rounded" width={40} height={40} className="rounded-xl" />
+            <div className="space-y-1.5">
+              <Skeleton variant="text" width={240} height={24} />
+              <Skeleton variant="text" width={360} height={16} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton variant="rounded" width={100} height={38} className="rounded-xl" />
+            <Skeleton variant="rounded" width={120} height={38} className="rounded-xl" />
+          </div>
+        </div>
+
+        {/* 2-Column Panels Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Left Panel */}
+          <div className="lg:col-span-5 bg-white border border-slate-200/80 p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <Skeleton variant="text" width={140} height={20} />
+              <Skeleton variant="rounded" width={70} height={24} className="rounded-lg" />
+            </div>
+            <div className="space-y-2.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 border border-slate-100 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" width={18} height={18} className="rounded" />
+                    <Skeleton variant="circular" width={12} height={12} />
+                    <Skeleton variant="text" width={120} height={16} />
+                  </div>
+                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Panel */}
+          <div className="lg:col-span-7 bg-white border border-slate-200/80 p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <Skeleton variant="text" width={160} height={20} />
+              <Skeleton variant="rounded" width={90} height={32} className="rounded-lg" />
+            </div>
+            <div className="space-y-2.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3.5 border border-slate-100 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" width={12} height={16} />
+                    <Skeleton variant="circular" width={12} height={12} />
+                    <Skeleton variant="text" width={150} height={16} />
+                  </div>
+                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
