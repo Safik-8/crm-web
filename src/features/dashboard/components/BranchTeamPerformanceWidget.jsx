@@ -98,7 +98,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
   return (
     <>
-      <div className="bg-white border border-slate-200 p-6">
+      <div className="bg-white border border-slate-200 shadow-sm p-6">
         {/* Widget Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">

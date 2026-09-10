@@ -45,7 +45,7 @@ const IseDashboardView = () => {
 
       {/* Call Queue */}
       {callQueue.length > 0 && (
-        <div className="bg-white border border-slate-200 p-5">
+        <div className="bg-white border border-slate-200 shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
             <Phone size={15} className="text-emerald-500" />
             <h3 className="text-sm font-bold text-slate-700">Call Queue</h3>

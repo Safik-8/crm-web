@@ -415,37 +415,41 @@ const UserProfilePage = () => {
       <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-300">
         {/* Header Skeleton */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-200/80 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row items-center gap-5">
-            <Skeleton variant="circular" width={96} height={96} />
-            <div className="space-y-2.5 flex flex-col items-center sm:items-start">
-              <Skeleton variant="text" width={220} height={32} />
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                <Skeleton variant="rounded" width={110} height={26} className="rounded-full" />
-                <Skeleton variant="rounded" width={170} height={26} className="rounded-full" />
+          <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+            <Skeleton variant="circular" width={96} height={96} className="ring-4 ring-orange-500/10 bg-orange-100/50" />
+            <div className="space-y-2 flex flex-col items-center sm:items-start">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                <Skeleton variant="text" width={220} height={28} />
+                <Skeleton variant="rounded" width={80} height={22} className="rounded-full" />
+              </div>
+              <Skeleton variant="text" width={180} height={16} />
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-0.5">
+                <Skeleton variant="rounded" width={130} height={22} className="rounded-full" />
               </div>
             </div>
           </div>
-          <Skeleton variant="rounded" width={140} height={42} className="rounded-xl" />
+          <Skeleton variant="rounded" width={130} height={40} className="rounded-xl" />
         </div>
 
         {/* Tab Navigation Skeleton */}
-        <div className="flex gap-2 p-1.5 bg-zinc-100 rounded-2xl w-fit">
-          <Skeleton variant="rounded" width={140} height={40} className="rounded-xl" />
-          <Skeleton variant="rounded" width={170} height={40} className="rounded-xl" />
+        <div className="flex gap-2 border-b border-zinc-200/70 pb-px">
+          <Skeleton variant="rounded" width={140} height={36} className="rounded-t-lg" />
+          <Skeleton variant="rounded" width={180} height={36} className="rounded-t-lg" />
+          <Skeleton variant="rounded" width={110} height={36} className="rounded-t-lg" />
         </div>
 
         {/* Profile Content Sections Skeleton */}
         <div className="space-y-6">
           {/* Personal Information Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-zinc-100">
-              <Skeleton variant="circular" width={32} height={32} />
-              <Skeleton variant="text" width={180} height={24} />
+              <Skeleton variant="circular" width={32} height={32} className="bg-orange-100/60" />
+              <Skeleton variant="text" width={180} height={20} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((item) => (
                 <div key={item} className="space-y-2">
-                  <Skeleton variant="text" width={90} height={16} />
+                  <Skeleton variant="text" width={100} height={14} />
                   <Skeleton variant="rounded" width="100%" height={38} className="rounded-xl" />
                 </div>
               ))}
@@ -453,15 +457,15 @@ const UserProfilePage = () => {
           </div>
 
           {/* Organizational / Role Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-zinc-100">
-              <Skeleton variant="circular" width={32} height={32} />
-              <Skeleton variant="text" width={180} height={24} />
+              <Skeleton variant="circular" width={32} height={32} className="bg-blue-100/60" />
+              <Skeleton variant="text" width={200} height={20} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((item) => (
                 <div key={item} className="space-y-2">
-                  <Skeleton variant="text" width={90} height={16} />
+                  <Skeleton variant="text" width={100} height={14} />
                   <Skeleton variant="rounded" width="100%" height={38} className="rounded-xl" />
                 </div>
               ))}
@@ -469,15 +473,15 @@ const UserProfilePage = () => {
           </div>
 
           {/* Address Information Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-zinc-100">
-              <Skeleton variant="circular" width={32} height={32} />
-              <Skeleton variant="text" width={180} height={24} />
+              <Skeleton variant="circular" width={32} height={32} className="bg-emerald-100/60" />
+              <Skeleton variant="text" width={180} height={20} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4].map((item) => (
                 <div key={item} className="space-y-2">
-                  <Skeleton variant="text" width={90} height={16} />
+                  <Skeleton variant="text" width={100} height={14} />
                   <Skeleton variant="rounded" width="100%" height={38} className="rounded-xl" />
                 </div>
               ))}

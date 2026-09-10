@@ -13,6 +13,7 @@ import DynamicFormModal from '../../../shared/components/elements/DynamicFormMod
 
 import Button from '../../../shared/components/elements/Button';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
@@ -181,13 +182,49 @@ const PipelinesPage = () => {
     setDeletingId(null);
   };
 
-  if (loading) return (
-    <div className="space-y-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-24 rounded-2xl bg-slate-100 animate-pulse" />
-      ))}
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        {/* Header Skeleton */}
+        <div className="bg-white border border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton variant="rounded" width={40} height={40} className="rounded-xl" />
+            <div className="space-y-1.5">
+              <Skeleton variant="text" width={160} height={22} />
+              <Skeleton variant="text" width={280} height={14} />
+            </div>
+          </div>
+          <Skeleton variant="rounded" width={140} height={40} className="rounded-xl" />
+        </div>
+
+        {/* Pipeline Cards Grid Skeleton */}
+        <div className="grid p-4 bg-white border border-slate-200 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded border border-slate-200 p-5 flex flex-col gap-4"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton variant="rounded" width={40} height={40} className="rounded-xl" />
+                  <div className="space-y-1.5">
+                    <Skeleton variant="text" width={140} height={18} />
+                    <Skeleton variant="text" width={110} height={12} />
+                  </div>
+                </div>
+                <Skeleton variant="rounded" width={28} height={28} className="rounded-lg" />
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-slate-100">
+                <Skeleton variant="rounded" className="flex-1 h-9 rounded-xl" />
+                <Skeleton variant="rounded" width={80} height={36} className="rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (error) return (
     <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">
@@ -236,10 +273,10 @@ const PipelinesPage = () => {
       )}
 
       {/* Pipeline cards */}
-      <div className="grid p-4 bg-white border border-slate-200 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid p-4 bg-white border border-slate-200 shadow-sm grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {pipelines.map(pipeline => (
           <div key={pipeline.id}
-            className="bg-white rounded border border-slate-200 hover:shadow transition-all group p-5 flex flex-col gap-4">
+            className="bg-white rounded border border-slate-200 shadow-sm hover:shadow transition-all group p-5 flex flex-col gap-4">
             {/* Card top */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">

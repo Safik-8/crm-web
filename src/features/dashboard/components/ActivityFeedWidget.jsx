@@ -3,7 +3,7 @@ import { Activity, User } from 'lucide-react';
 
 const ActivityFeedWidget = ({ activities = [], isLoading = false }) => {
   return (
-    <section aria-label="Recent Activities" className="bg-white border border-slate-200 p-5">
+    <section aria-label="Recent Activities" className="bg-white border border-slate-200 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <Activity size={15} className="text-blue-500" />
         <h3 className="text-sm font-bold text-slate-700">Recent Activities</h3>
