@@ -141,7 +141,7 @@ export const router = createBrowserRouter([
       {
         path: 'opportunities',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_OPPORTUNITIES}>
             <OpportunitiesPage />
           </ProtectedRoute>
         ),
@@ -149,7 +149,7 @@ export const router = createBrowserRouter([
       {
         path: 'opportunities/:id',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_OPPORTUNITIES}>
             <OpportunityDetailPage />
           </ProtectedRoute>
         ),
@@ -197,7 +197,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/sales-performance',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SALES_PERFORMANCE}>
             <SalesPerformancePage />
           </ProtectedRoute>
         ),
@@ -205,7 +205,7 @@ export const router = createBrowserRouter([
       {
         path: 'sales-performance',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SALES_PERFORMANCE}>
             <SalesPerformancePage />
           </ProtectedRoute>
         ),
@@ -213,7 +213,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/revenue',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REVENUE_REPORT}>
             <RevenueReportPage />
           </ProtectedRoute>
         ),
@@ -221,7 +221,7 @@ export const router = createBrowserRouter([
       {
         path: 'revenue-reports',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REPORTS}>
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REVENUE_REPORT}>
             <RevenueReportPage />
           </ProtectedRoute>
         ),

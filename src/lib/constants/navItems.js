@@ -39,7 +39,7 @@ export const navGroups = [
     items: [
       { name: 'Pipelines', path: '/pipelines', icon: Kanban, permission: PERMISSIONS.VIEW_PIPELINES },
       { name: 'Leads', path: '/leads', icon: ClipboardList, permission: PERMISSIONS.VIEW_LEADS },
-      { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_LEADS },
+      { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_OPPORTUNITIES },
       { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
       { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
       { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
@@ -51,8 +51,8 @@ export const navGroups = [
       { name: 'My Performance', path: '/my-performance', icon: Target, permission: PERMISSIONS.VIEW_KPI_OWN },
       { name: 'KPI Analytics', path: '/kpi-analytics', icon: TrendingUp, permission: PERMISSIONS.VIEW_KPI_ALL },
       { name: 'KPI Setup', path: '/kpi-management', icon: Target, permission: PERMISSIONS.CREATE_KPI },
-      { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_REPORTS },
-      { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REPORTS },
+      { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_SALES_PERFORMANCE },
+      { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REVENUE_REPORT },
       { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
     ]
   },
