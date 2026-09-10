@@ -26,6 +26,7 @@ import { DynamicFormModal } from '../../../shared/components/elements/DynamicFor
 import Checkbox from '../../../shared/components/elements/Checkbox';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import SearchInput from '../../../shared/components/elements/SearchInput';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
 import SelectField from '../../../shared/components/elements/SelectField';
@@ -407,8 +408,60 @@ export const OpportunityStageManagement = () => {
 
   if (stagesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        {/* Top Header Card Skeleton */}
+        <div className="bg-white border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton variant="rounded" width={40} height={40} className="rounded-xl" />
+            <div className="space-y-1.5">
+              <Skeleton variant="text" width={240} height={24} />
+              <Skeleton variant="text" width={360} height={16} />
+            </div>
+          </div>
+        </div>
+
+        {/* Two-panel Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Left Panel */}
+          <div className="bg-white border border-slate-200 p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <Skeleton variant="text" width={140} height={20} />
+              <Skeleton variant="rounded" width={70} height={24} className="rounded-lg" />
+            </div>
+            <div className="space-y-2.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 border border-slate-100 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" width={18} height={18} className="rounded" />
+                    <Skeleton variant="circular" width={12} height={12} />
+                    <Skeleton variant="text" width={120} height={16} />
+                  </div>
+                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Panel */}
+          <div className="bg-white border border-slate-200 p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <Skeleton variant="text" width={160} height={20} />
+              <Skeleton variant="rounded" width={90} height={32} className="rounded-lg" />
+            </div>
+            <div className="space-y-2.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3.5 border border-slate-100 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" width={12} height={16} />
+                    <Skeleton variant="circular" width={12} height={12} />
+                    <Skeleton variant="text" width={150} height={16} />
+                  </div>
+                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -483,7 +536,18 @@ export const OpportunityStageManagement = () => {
 
           {/* Master Stage List */}
           <div className="flex-1 overflow-y-auto p-3.5 space-y-2 custom-scrollbar">
-            {displayStages.length > 0 ? (
+            {stagesLoading ? (
+              [1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between px-3.5 py-2.5 border border-slate-200 rounded-md bg-white">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" width={18} height={18} className="rounded" />
+                    <Skeleton variant="circular" width={12} height={12} />
+                    <Skeleton variant="text" width={120} height={18} />
+                  </div>
+                  <Skeleton variant="rounded" width={24} height={24} className="rounded-md" />
+                </div>
+              ))
+            ) : displayStages.length > 0 ? (
               displayStages.map((stage) => {
                 const isSelected = selectedIdsSet.has(stage.id);
                 return (
@@ -581,6 +645,20 @@ export const OpportunityStageManagement = () => {
 
           {/* DnD Area */}
           <div className="flex-1 overflow-y-auto p-3.5 custom-scrollbar">
+            {stagesLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center justify-between px-3.5 py-3 border border-slate-200 rounded-md bg-white">
+                    <div className="flex items-center gap-3">
+                      <Skeleton variant="rounded" width={12} height={16} />
+                      <Skeleton variant="circular" width={12} height={12} />
+                      <Skeleton variant="text" width={140} height={18} />
+                    </div>
+                    <Skeleton variant="rounded" width={24} height={24} className="rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <div className="space-y-2">
                 {/* 1. Qualification Stage (Static, first) */}
@@ -618,6 +696,7 @@ export const OpportunityStageManagement = () => {
                 ))}
               </div>
             </DndContext>
+            )}
           </div>
         </div>
       </div>

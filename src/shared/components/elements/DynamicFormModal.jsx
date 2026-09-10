@@ -82,7 +82,20 @@ export const DynamicFormModal = ({
     }
 
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (Object.keys(errs).length > 0) {
+      setTimeout(() => {
+        const errorElement = document.querySelector('.Mui-error, [aria-invalid="true"], .text-red-500');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const input = errorElement.querySelector('input, select, textarea');
+          if (input && typeof input.focus === 'function') {
+            input.focus();
+          }
+        }
+      }, 50);
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
@@ -95,7 +108,25 @@ export const DynamicFormModal = ({
     } catch (err) {
       console.error('Submission failed:', err);
       if (typeof err === 'object' && err !== null) {
-        setErrors((prev) => ({ ...prev, ...err }));
+        if (Array.isArray(err.details)) {
+          const formatted = {};
+          err.details.forEach((item) => {
+            if (item.field && item.message) {
+              formatted[item.field] = item.message;
+            }
+          });
+          setErrors((prev) => ({ ...prev, ...formatted }));
+        } else if (err.details && typeof err.details === 'object') {
+          setErrors((prev) => ({ ...prev, ...err.details }));
+        } else if (!err.code && !err.statusCode && !err.message) {
+          const filtered = {};
+          Object.keys(err).forEach((key) => {
+            if (!['code', 'statusCode', 'message', 'timestamp', 'name', 'stack'].includes(key)) {
+              filtered[key] = err[key];
+            }
+          });
+          setErrors((prev) => ({ ...prev, ...filtered }));
+        }
       }
     } finally {
       setBusy(false);

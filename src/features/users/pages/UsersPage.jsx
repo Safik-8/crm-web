@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Users2, Plus, RefreshCw, Filter, Search, List, Network } from 'lucide-react';
+import { Users2, Plus, RefreshCw, Filter, Search, List, Network, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery } from '@tanstack/react-query';
@@ -205,20 +205,39 @@ const UsersPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
-      {/* ── Top Page Header ── */}
+      {/* ── Top Page Header with Primary Actions ── */}
       <PageHeader
         title="User Management"
         description="Manage system users, company access scopes, roles, and organizational structure"
         icon={Users2}
         actions={
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
-            title="Refresh List"
-          >
-            <RefreshCw size={14} className={loadingState === 'loading' ? 'animate-spin' : ''} />
-          </button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="p-2.5 text-slate-400 hover:text-orange-500 hover:bg-slate-100 transition-all focus:outline-none cursor-pointer border border-slate-200/80 bg-slate-50 rounded-xl"
+              title="Refresh List"
+            >
+              <RefreshCw size={15} className={loadingState === 'loading' ? 'animate-spin' : ''} />
+            </button>
+
+            <ExportMenu
+              data={users}
+              columns={exportColumns}
+              fileName="users"
+            />
+
+            {canCreate && (
+              <button
+                type="button"
+                onClick={handleOpenCreateForm}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-[#F97316] hover:bg-[#EA580C] text-white text-[13px] font-semibold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+              >
+                <Plus size={16} />
+                <span>Onboard User</span>
+              </button>
+            )}
+          </div>
         }
       />
 
@@ -227,21 +246,19 @@ const UsersPage = () => {
         <div className="flex space-x-6 relative top-[1px]">
           <button
             onClick={() => setViewMode('list')}
-            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
-              viewMode === 'list'
-                ? 'text-orange-600 border-b-2 border-orange-600'
-                : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
-            }`}
+            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${viewMode === 'list'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
           >
             <List size={16} /> User Manager
           </button>
           <button
             onClick={() => setViewMode('orgchart')}
-            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
-              viewMode === 'orgchart'
-                ? 'text-orange-600 border-b-2 border-orange-600'
-                : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
-            }`}
+            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${viewMode === 'orgchart'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
           >
             <Network size={16} /> Org Chart
           </button>
@@ -254,112 +271,92 @@ const UsersPage = () => {
         </div>
       ) : (
         <>
-          {/* ── SEARCH AND FILTER BAR ── */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3.5">
-            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[240px]">
-              {/* Search Input */}
-              <div className="w-full sm:w-64">
-                <SearchInput
-                  value={search}
-                  onChange={handleSearchChange}
-                  placeholder="Search..."
-                  isLoading={loadingState === 'loading'}
-                />
-              </div>
-
-              {/* Company Filter (Super Admin level) */}
-              {canFilterByCompany && (
-                <div className="w-full sm:w-44">
-                  <SelectField
-                    id="companyFilter"
-                    value={companyId}
-                    onChange={(val) => handleFilterChange('companyId', val)}
-                    options={companies.map(c => ({ value: c.id, label: c.name }))}
-                    placeholder="All Companies"
-                    allowEmptyOption={true}
-                    searchable
-                  />
-                </div>
-              )}
-
-              {/* Branch Filter */}
-              {canFilterByBranch && (
-                <div className="w-full sm:w-44">
-                  <SelectField
-                    id="branchFilter"
-                    value={branchId}
-                    onChange={(val) => handleFilterChange('branchId', val)}
-                    options={branches.map(b => ({ value: b.id, label: b.name }))}
-                    placeholder="All Branches"
-                    allowEmptyOption={true}
-                    disabled={!targetCompanyId}
-                    searchable
-                  />
-                </div>
-              )}
-
-              {/* Role Filter */}
-              {canViewRoles && (
-                <div className="w-full sm:w-44">
-                  <SelectField
-                    id="roleFilter"
-                    value={roleId}
-                    onChange={(val) => handleFilterChange('roleId', val)}
-                    options={roles.map(r => ({ value: r.id, label: r.name }))}
-                    placeholder="All Roles"
-                    allowEmptyOption={true}
-                    disabled={!targetCompanyId}
-                    searchable
-                  />
-                </div>
-              )}
-
-              {/* Status Filter */}
-              <div className="w-full sm:w-36">
-                <SelectField
-                  id="statusFilter"
-                  value={status}
-                  onChange={(val) => handleFilterChange('status', val)}
-                  options={[
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' }
-                  ]}
-                  placeholder="All Statuses"
-                  allowEmptyOption={true}
-                />
-              </div>
-
-              {/* Clear Filters Button */}
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
-
-            {/* Main Action Buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-              <ExportMenu
-                data={users}
-                columns={exportColumns}
-                fileName="users"
+          {/* ── SEARCH & FILTER TOOLBAR ── */}
+          <div className="bg-white border border-slate-200 p-3.5 flex flex-wrap items-center gap-3">
+            {/* Search Input */}
+            <div className="w-full sm:w-64">
+              <SearchInput
+                value={search}
+                onChange={handleSearchChange}
+                placeholder="Search users..."
+                isLoading={loadingState === 'loading'}
+                className="w-full"
               />
-              {canCreate && (
-                <Button
-                  onClick={handleOpenCreateForm}
-                  className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
-                  variant="contained"
-                  size="medium"
-                  startIcon={<Plus size={18} />}
-                >
-                  Onboard User
-                </Button>
-              )}
             </div>
+
+            {/* Company Filter (Super Admin level) */}
+            {canFilterByCompany && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  id="companyFilter"
+                  value={companyId}
+                  onChange={(val) => handleFilterChange('companyId', val)}
+                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="All Companies"
+                  allowEmptyOption={true}
+                  searchable
+                />
+              </div>
+            )}
+
+            {/* Branch Filter */}
+            {canFilterByBranch && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  id="branchFilter"
+                  value={branchId}
+                  onChange={(val) => handleFilterChange('branchId', val)}
+                  options={branches.map(b => ({ value: b.id, label: b.name }))}
+                  placeholder="All Branches"
+                  allowEmptyOption={true}
+                  disabled={!targetCompanyId}
+                  searchable
+                />
+              </div>
+            )}
+
+            {/* Role Filter */}
+            {canViewRoles && (
+              <div className="w-full sm:w-44">
+                <SelectField
+                  id="roleFilter"
+                  value={roleId}
+                  onChange={(val) => handleFilterChange('roleId', val)}
+                  options={roles.map(r => ({ value: r.id, label: r.name }))}
+                  placeholder="All Roles"
+                  allowEmptyOption={true}
+                  disabled={!targetCompanyId}
+                  searchable
+                />
+              </div>
+            )}
+
+            {/* Status Filter */}
+            <div className="w-full sm:w-36">
+              <SelectField
+                id="statusFilter"
+                value={status}
+                onChange={(val) => handleFilterChange('status', val)}
+                options={[
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'INACTIVE', label: 'Inactive' }
+                ]}
+                placeholder="All Statuses"
+                allowEmptyOption={true}
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 h-[42px] px-3 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-[10px] transition-all cursor-pointer"
+              >
+                <RotateCcw size={13} />
+                <span>Clear Filters</span>
+              </button>
+            )}
           </div>
 
           {/* ── USERS DATA TABLE ── */}
@@ -390,57 +387,57 @@ const UsersPage = () => {
         </>
       )}
 
-            {/* ── MODALS & DRAWER PORTALS ── */}
+      {/* ── MODALS & DRAWER PORTALS ── */}
 
-            {/* Form Modal (Create / Edit Slide-over) */}
-            <UserFormModal
-              isOpen={isFormOpen}
-              onClose={() => setIsFormOpen(false)}
-              initialValues={selectedUserForEdit}
-              companies={companies}
-              branches={branches}
-              roles={roles}
-              managers={managers}
-              currentUser={currentUser}
-            />
+      {/* Form Modal (Create / Edit Slide-over) */}
+      <UserFormModal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        initialValues={selectedUserForEdit}
+        companies={companies}
+        branches={branches}
+        roles={roles}
+        managers={managers}
+        currentUser={currentUser}
+      />
 
-            {/* User Details Sliding Panel */}
-            <UserDetailModal
-              isOpen={isDetailsOpen}
-              onClose={() => setIsDetailsOpen(false)}
-              user={selectedUserForDetails}
-            />
+      {/* User Details Sliding Panel */}
+      <UserDetailModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        user={selectedUserForDetails}
+      />
 
-            {/* Reset Password Confirmation Dialog */}
-            <ResetPasswordModal
-              isOpen={isResetOpen}
-              onClose={() => setIsResetOpen(false)}
-              user={selectedUserForReset}
-              onConfirm={handleConfirmReset}
-              isLoading={resetPasswordMutation.isPending}
-            />
+      {/* Reset Password Confirmation Dialog */}
+      <ResetPasswordModal
+        isOpen={isResetOpen}
+        onClose={() => setIsResetOpen(false)}
+        user={selectedUserForReset}
+        onConfirm={handleConfirmReset}
+        isLoading={resetPasswordMutation.isPending}
+      />
 
-            {/* Status Toggle (Deactivation/Activation) Confirmation Modal */}
-            <ConfirmModal
-              isOpen={isConfirmStatusOpen}
-              onClose={() => setIsConfirmStatusOpen(false)}
-              title={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate Employee Account?' : 'Activate Employee Account?'}
-              message={
-                selectedUserForStatus?.status === 'ACTIVE'
-                  ? `Are you sure you want to deactivate ${selectedUserForStatus?.name}? This will instantly revoke all their active sessions and prevent them from logging into the system.`
-                  : `Are you sure you want to activate ${selectedUserForStatus?.name}? This will restore their system permissions and login access.`
-              }
-              warningMessage={
-                selectedUserForStatus?.status === 'ACTIVE'
-                  ? 'Active leads, logs, and historical data assigned to this employee will remain unchanged, but they can no longer access the CRM.'
-                  : null
-              }
-              type={selectedUserForStatus?.status === 'ACTIVE' ? 'error' : 'success'}
-              onConfirm={handleConfirmToggleStatus}
-              confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-              isLoading={isTogglingStatus}
-            />
-      </div>
+      {/* Status Toggle (Deactivation/Activation) Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isConfirmStatusOpen}
+        onClose={() => setIsConfirmStatusOpen(false)}
+        title={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate Employee Account?' : 'Activate Employee Account?'}
+        message={
+          selectedUserForStatus?.status === 'ACTIVE'
+            ? `Are you sure you want to deactivate ${selectedUserForStatus?.name}? This will instantly revoke all their active sessions and prevent them from logging into the system.`
+            : `Are you sure you want to activate ${selectedUserForStatus?.name}? This will restore their system permissions and login access.`
+        }
+        warningMessage={
+          selectedUserForStatus?.status === 'ACTIVE'
+            ? 'Active leads, logs, and historical data assigned to this employee will remain unchanged, but they can no longer access the CRM.'
+            : null
+        }
+        type={selectedUserForStatus?.status === 'ACTIVE' ? 'error' : 'success'}
+        onConfirm={handleConfirmToggleStatus}
+        confirmText={selectedUserForStatus?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+        isLoading={isTogglingStatus}
+      />
+    </div>
   );
 };
 

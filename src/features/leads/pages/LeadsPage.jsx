@@ -111,8 +111,10 @@ const RowActionsMenu = ({
           vertical: 'top',
           horizontal: 'right',
         }}
-        PaperProps={{
-          className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+        slotProps={{
+          paper: {
+            className: "mt-1 shadow-lg border border-slate-200/80 rounded-xl bg-white min-w-[150px] py-1 text-slate-700 font-sans"
+          }
         }}
       >
         <MenuItem
@@ -1293,20 +1295,29 @@ export const LeadsPage = () => {
       <LeadCreateModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onCreated={() => refetch()}
+        onCreated={() => {
+          setIsCreateOpen(false);
+          refetch();
+        }}
       />
 
       <LeadImportModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
-        onImported={() => refetch()}
+        onImported={() => {
+          setIsImportOpen(false);
+          refetch();
+        }}
       />
 
       {selectedLeadForEdit && (
         <LeadEditModal
           lead={selectedLeadForEdit}
           onClose={() => setSelectedLeadForEdit(null)}
-          onUpdated={() => refetch()}
+          onUpdated={() => {
+            setSelectedLeadForEdit(null);
+            refetch();
+          }}
         />
       )}
 
@@ -1375,13 +1386,15 @@ export const LeadsPage = () => {
           setFilterName('');
           setFilterModalConfig({ isOpen: false, mode: 'save', filterId: null });
         }}
-        PaperProps={{
-          sx: {
-            borderRadius: '24px',
-            maxWidth: '440px',
-            width: '100%',
-            overflow: 'hidden',
-            margin: '16px'
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: '24px',
+              maxWidth: '440px',
+              width: '100%',
+              overflow: 'hidden',
+              margin: '16px'
+            }
           }
         }}
       >

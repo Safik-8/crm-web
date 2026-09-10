@@ -85,7 +85,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-slate-100 shadow-sm p-6 space-y-4 animate-pulse">
+      <div className="bg-white border border-slate-200 p-6 space-y-4 animate-pulse">
         <div className="h-6 w-48 bg-slate-200" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -102,7 +102,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
         {/* Widget Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
               <Trophy size={18} />
             </div>
             <div>
@@ -206,8 +206,8 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                   key={member.userId}
                   className={`p-4 border transition-all duration-150 flex flex-col gap-3 relative group ${
                     rank === 1
-                      ? 'bg-gradient-to-br from-amber-50/40 to-white border-amber-200/80 shadow-xs'
-                      : 'bg-white border-slate-200/80 hover:border-orange-300 hover:shadow-xs'
+                      ? 'bg-gradient-to-br from-amber-50/40 to-white border-amber-200'
+                      : 'bg-white border-slate-200 hover:border-orange-300'
                   }`}
                 >
                   {/* Top Bar: Avatar, Names, Badges */}
@@ -219,7 +219,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                         </div>
                         {rankBadge && (
                           <span
-                            className={`absolute -top-1.5 -left-1.5 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border shadow-2xs ${rankBadge.bg}`}
+                            className={`absolute -top-1.5 -left-1.5 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border ${rankBadge.bg}`}
                           >
                             {rankBadge.label}
                           </span>

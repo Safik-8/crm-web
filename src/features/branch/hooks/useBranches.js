@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { branchService } from '../services/branchService';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 const DEFAULT_LIMIT = 10;
 
@@ -12,6 +13,9 @@ const DEFAULT_LIMIT = 10;
  * while using TanStack Query for caching and server-state management.
  */
 export const useBranches = (companyId) => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+
   // ── Filter / Sort / Page React States ────────────────────────────────────
   const [search, setSearch]         = useState('');
   const [status, setStatus]         = useState('');
@@ -52,9 +56,9 @@ export const useBranches = (companyId) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['branches', companyId, params],
+    queryKey: ['branches', companyId || 'ALL', params],
     queryFn: () => branchService.getBranches(companyId, params),
-    enabled: !!companyId,
+    enabled: isSuperAdmin || !!companyId,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 

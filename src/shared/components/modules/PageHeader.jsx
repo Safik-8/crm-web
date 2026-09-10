@@ -9,17 +9,17 @@ const PageHeader = ({
   className = ''
 }) => {
   return (
-    <div className={`flex flex-col bg-white p-4 border border-slate-200 md:flex-row md:items-center justify-between gap-4 ${className}`}>
-      <div className="flex items-center gap-4">
+    <div className={`flex flex-col bg-white p-4 border border-slate-200 sm:flex-row sm:items-center justify-between gap-3.5 ${className}`}>
+      <div className="flex items-center gap-3.5 min-w-0">
         {Icon && (
-          <div className={`p-2.5 rounded-lg shrink-0 ${iconClassName || 'bg-gradient-to-br from-primary/10 to-primary/5 text-primary '}`}>
-            <Icon size={24} />
+          <div className={`p-2.5 shrink-0 ${iconClassName || 'bg-orange-50 text-orange-600'}`}>
+            <Icon size={22} />
           </div>
         )}
-        <div>
-          <h1 className="text-lg font-medium text-slate-900 tracking-tight">{title}</h1>
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
           {description && (
-            <p className="text-xs text-slate-500 font-medium mt-1">
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
               {description}
             </p>
           )}
@@ -27,7 +27,7 @@ const PageHeader = ({
       </div>
 
       {actions && (
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0 justify-end">
           {actions}
         </div>
       )}

@@ -53,25 +53,25 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         await updateCompanyMutation.mutateAsync({
           id: company.id,
           data: {
-            name: formValues.name,
-            logo: formValues.logo,
-            industry: formValues.industry,
-            website: formValues.website,
-            address: formValues.address,
-            status: formValues.status
+            name: formValues.name?.trim(),
+            logo: formValues.logo || null,
+            industry: formValues.industry?.trim() || null,
+            website: formValues.website?.trim() || null,
+            address: formValues.address?.trim() || null,
+            status: formValues.status || 'ACTIVE'
           }
         });
       } else {
         await createCompanyMutation.mutateAsync({
-          name: formValues.name,
-          code: formValues.code,
-          logo: formValues.logo,
-          industry: formValues.industry,
-          website: formValues.website,
-          address: formValues.address,
-          status: formValues.status,
-          adminName: formValues.adminName,
-          adminEmail: formValues.adminEmail,
+          name: formValues.name?.trim(),
+          code: formValues.code?.trim().toUpperCase(),
+          logo: formValues.logo || null,
+          industry: formValues.industry?.trim() || null,
+          website: formValues.website?.trim() || null,
+          address: formValues.address?.trim() || null,
+          status: formValues.status || 'ACTIVE',
+          adminName: formValues.adminName?.trim(),
+          adminEmail: formValues.adminEmail?.trim().toLowerCase(),
           adminPassword: formValues.adminPassword
         });
       }
@@ -83,8 +83,8 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
     } catch (error) {
       toast.dismiss(loadingToastId);
       if (error && (error.statusCode === 409 || error.status === 409)) {
-        const errorDetail = error.details?.field || 'code';
-        if (errorDetail === 'email') {
+        const errorDetail = error.details?.field || error.details || 'code';
+        if (errorDetail === 'email' || errorDetail === 'adminEmail') {
           toast.error('Email Already Registered');
           throw { adminEmail: 'A user with this email address already exists.' };
         } else {
@@ -99,7 +99,8 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
   };
 
   const validateEntityCode = (val) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(val)) return 'Code can only contain letters, numbers, hyphens, and underscores.';
+    if (!val || !val.trim()) return 'Company code is required.';
+    if (!/^[a-zA-Z0-9_-]+$/.test(val.trim())) return 'Code can only contain letters, numbers, hyphens, and underscores.';
     return null;
   };
 
@@ -305,7 +306,11 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         type: 'text',
         placeholder: 'Enter admin first and last name...',
         required: true,
-        sx: professionalInputSx
+        sx: professionalInputSx,
+        validate: (val) => {
+          if (!val || !val.trim()) return 'Admin full name is required.';
+          return null;
+        }
       },
       {
         key: 'adminEmail',
@@ -313,17 +318,27 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
         type: 'text',
         placeholder: 'admin@company.com',
         required: true,
-        sx: professionalInputSx
+        sx: professionalInputSx,
+        validate: (val) => {
+          if (!val || !val.trim()) return 'Admin email is required.';
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return 'Enter a valid email address.';
+          return null;
+        }
       },
       {
         key: 'adminPassword',
         label: 'Admin Password',
         type: 'password',
-        placeholder: 'Minimum 6 characters...',
+        placeholder: 'e.g. Admin@123',
         required: true,
         sx: professionalInputSx,
         validate: (val) => {
-          if (val && val.trim().length < 6) return 'Admin password must be at least 6 characters.';
+          if (!val || !val.trim()) return 'Admin password is required.';
+          if (val.length < 8) return 'Password must be at least 8 characters.';
+          if (!/[A-Z]/.test(val)) return 'Password must contain at least one uppercase letter (A-Z).';
+          if (!/[a-z]/.test(val)) return 'Password must contain at least one lowercase letter (a-z).';
+          if (!/[0-9]/.test(val)) return 'Password must contain at least one number (0-9).';
+          if (!/[^A-Za-z0-9]/.test(val)) return 'Password must contain at least one special character (!@#$%^&*).';
           return null;
         }
       }
@@ -369,52 +384,55 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
     return (
       <div className="flex flex-col gap-5 w-full px-0 lg:px-1">
         <div className="bg-white border border-slate-200 overflow-hidden w-full">
-          <div className="py-5 px-6 md:py-6 md:px-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, rgba(248, 111, 3, 0.05) 100%)' }}>
+          <div className="py-5 px-5 sm:px-6 md:py-6 md:px-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 65%, rgba(248, 111, 3, 0.05) 100%)' }}>
             <div className="absolute right-0 top-0 w-[180px] h-full pointer-events-none opacity-30" style={{ backgroundImage: 'radial-gradient(circle, rgba(248, 111, 3, 0.1) 0%, transparent 70%)' }} />
-            <div className="flex items-center gap-6">
+            
+            <div className="flex items-center gap-4 sm:gap-6 w-full lg:w-auto">
               {company.logo ? (
-                <div className="w-[88px] h-[88px] border border-slate-200/80 flex-shrink-0">
+                <div className="w-16 h-16 sm:w-[88px] sm:h-[88px] border border-slate-200/80 flex-shrink-0">
                   <img src={company.logo} alt="Company avatar" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-[88px] h-[88px] flex items-center justify-center bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0">
-                  <Building size={36} />
+                <div className="w-16 h-16 sm:w-[88px] sm:h-[88px] flex items-center justify-center bg-orange-50/70 text-primary border border-orange-200/50 flex-shrink-0">
+                  <Building size={32} />
                 </div>
               )}
-              <div>
-                <h2 className="font-heading font-extrabold text-slate-900 text-2xl md:text-3xl tracking-tight leading-none">{company.name}</h2>
-                <div className="flex items-center gap-3 mt-3">
-                  <span className="inline-flex items-center px-3 py-0.5 text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200/80 uppercase tracking-wider"># {company.code}</span>
-                  <span className="inline-flex items-center px-3 py-0.5 text-[10px] font-black bg-[#ECFDF5] text-[#047857] border border-[#D1FAE5] uppercase tracking-wider">
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading font-extrabold text-slate-900 text-xl sm:text-2xl md:text-3xl tracking-tight leading-tight truncate">{company.name}</h2>
+                <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-3 flex-wrap">
+                  <span className="inline-flex items-center px-2.5 py-0.5 text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200/80 uppercase tracking-wider"># {company.code}</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 text-[10px] font-black bg-[#ECFDF5] text-[#047857] border border-[#D1FAE5] uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-[#10B981] animate-pulse" />
                     {company.status}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="hidden lg:flex items-center gap-12 xl:gap-16 mx-auto">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-4 sm:gap-8 lg:gap-12 xl:gap-16 w-full lg:w-auto pt-2 lg:pt-0 border-t border-slate-100 lg:border-t-0">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-100/50 shrink-0"><Tag size={15} className="stroke-[2.5]" /></div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span className="text-slate-400 font-bold uppercase text-[9.5px] tracking-wider leading-none">Industry Sector</span>
-                  <span className="text-slate-800 font-extrabold text-[13.5px] mt-1 leading-none">{company.industry || 'Not Specified'}</span>
+                  <span className="text-slate-800 font-extrabold text-xs sm:text-[13.5px] mt-1 leading-none truncate">{company.industry || 'Not Specified'}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50/70 text-primary border border-orange-100/50 shrink-0"><Globe size={15} className="stroke-[2.5]" /></div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span className="text-slate-400 font-bold uppercase text-[9.5px] tracking-wider leading-none">Corporate Website</span>
                   {company.website ? (
-                    <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-[#E06202] text-[13.5px] font-extrabold hover:underline inline-flex items-center gap-1 mt-1 leading-none">
+                    <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-[#E06202] text-xs sm:text-[13.5px] font-extrabold hover:underline inline-flex items-center gap-1 mt-1 leading-none truncate">
                       {company.website.replace(/^https?:\/\/(www\.)?/, '')}
-                      <ExternalLink size={11} className="stroke-[2.5]" />
+                      <ExternalLink size={11} className="stroke-[2.5] shrink-0" />
                     </a>
-                  ) : <span className="text-slate-500 font-medium italic text-[13.5px] mt-1 leading-none">Not Specified</span>}
+                  ) : <span className="text-slate-500 font-medium italic text-xs sm:text-[13.5px] mt-1 leading-none">Not Specified</span>}
                 </div>
               </div>
             </div>
+
             {(user?.primaryRole === 'SUPER_ADMIN' || hasPermission('COMPANY', 'canEdit')) && (
-              <button onClick={handleEditClick} type="button" className="inline-flex items-center gap-2 border border-slate-200 text-slate-700 bg-white font-bold text-sm py-2.5 px-5 z-10 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 shrink-0 cursor-pointer">
+              <button onClick={handleEditClick} type="button" className="inline-flex items-center justify-center gap-2 border border-slate-200 text-slate-700 bg-white font-bold text-xs sm:text-sm py-2.5 px-5 z-10 transition-all hover:border-primary hover:text-primary hover:bg-orange-50/40 w-full sm:w-auto shrink-0 cursor-pointer">
                 <Pencil size={14} className="stroke-[2.5]" /> Edit Profile
               </button>
             )}

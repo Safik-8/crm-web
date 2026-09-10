@@ -196,9 +196,9 @@ const UserFormModal = ({
       <form onSubmit={handleSubmit} className="space-y-6 pb-6">
 
         {/* Profile Picture Upload Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
+        <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/70 p-4 border border-slate-200">
           <div className="relative group shrink-0">
-            <div className="w-16 h-16 rounded-2xl bg-orange-100 border-2 border-orange-200/80 text-orange-600 flex items-center justify-center font-bold text-xl overflow-hidden shadow-sm">
+            <div className="w-16 h-16 bg-orange-100 border-2 border-orange-200/80 text-orange-600 flex items-center justify-center font-bold text-xl overflow-hidden shadow-sm">
               {values.profilePhoto ? (
                 <img
                   src={values.profilePhoto}
@@ -216,7 +216,7 @@ const UserFormModal = ({
             </div>
             <label
               htmlFor="user-avatar-upload"
-              className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-md cursor-pointer transition-transform hover:scale-105"
+              className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 hover:bg-orange-600 text-white shadow-md cursor-pointer transition-transform hover:scale-105"
               title="Upload Photo"
             >
               <Camera size={13} />

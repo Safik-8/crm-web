@@ -17,7 +17,7 @@ import PageHeader from '../../../shared/components/modules/PageHeader';
 // ----- Create / Edit Modal -----
 const PipelineModal = ({ onClose, onSubmit, initial }) => {
   const { user } = useAuth();
-  
+
   const inherentCompanyId = user?.company?.id || user?.companyId;
   const inherentBranchId = user?.branch?.id || user?.branchId;
 

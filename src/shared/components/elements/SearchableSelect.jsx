@@ -16,7 +16,7 @@ export const SearchableSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef(null);
-  
+
   // Close the dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -32,9 +32,9 @@ export const SearchableSelect = ({
 
   // Filter options based on search term (only if searchable is true)
   const filteredOptions = searchable
-    ? options.filter(opt => 
-        opt.name?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? options.filter(opt =>
+      opt.name?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : options;
 
   const selectedOption = options.find(opt => opt.id?.toString() === value?.toString() || opt.id === value);
@@ -53,13 +53,11 @@ export const SearchableSelect = ({
             setSearchTerm('');
           }
         }}
-        className={`w-full flex items-center justify-between rounded-[10px] border bg-[#FFFFFF] px-3.5 h-[38px] text-[12px] font-semibold text-left outline-none transition-all shadow-2xs ${
-          hasError
+        className={`w-full flex items-center justify-between rounded-[10px] border bg-[#FFFFFF] px-3.5 h-[38px] text-[12px] font-semibold text-left outline-none transition-all shadow-2xs ${hasError
             ? 'border-red-500 focus:border-red-500 focus:ring-3 focus:ring-red-500/14'
             : 'border-[#E2E8F0] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14'
-        } ${
-          isBtnDisabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-700'
-        } ${isOpen && !isBtnDisabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
+          } ${isBtnDisabled ? 'opacity-50 bg-slate-100 cursor-not-allowed text-slate-500' : 'focus:bg-white cursor-pointer text-slate-700'
+          } ${isOpen && !isBtnDisabled ? 'border-[#F86F03] ring-3 ring-[#F86F03]/14 bg-white' : ''}`}
       >
         <span className={`truncate flex-1 pr-2 ${selectedOption && !isLoading ? 'text-slate-900' : 'text-slate-500 font-medium'}`}>
           {isLoading ? (
@@ -82,7 +80,7 @@ export const SearchableSelect = ({
       {/* Floating Dropdown using identical aesthetic to login form */}
       {isOpen && (
         <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          
+
           {/* Search bar inside dropdown */}
           {searchable && (
             <div className="p-2 border-b border-slate-100 bg-slate-50/50">
@@ -131,13 +129,12 @@ export const SearchableSelect = ({
                       setIsOpen(false);
                       setSearchTerm('');
                     }}
-                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium rounded-lg transition-colors ${
-                      isDisabled
+                    className={`flex items-center justify-between px-4 py-2.5 my-0.5 text-[13px] font-medium rounded-lg transition-colors ${isDisabled
                         ? 'opacity-40 bg-slate-50/50 text-slate-400 cursor-not-allowed'
-                        : isSelected 
-                          ? 'bg-primary/10 text-primary cursor-pointer' 
+                        : isSelected
+                          ? 'bg-primary/10 text-primary cursor-pointer'
                           : 'text-slate-700 hover:bg-slate-100 cursor-pointer'
-                    }`}
+                      }`}
                   >
                     <span>{opt.name}</span>
                     {isSelected && <Check size={16} className="text-primary" />}

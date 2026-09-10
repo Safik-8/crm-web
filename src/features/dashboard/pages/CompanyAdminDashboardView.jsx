@@ -104,14 +104,14 @@ const CompanyAdminDashboardView = () => {
         {KPI_CARDS.map(card => <KpiCard key={card.title} {...card} isLoading={isLoading} />)}
       </div>
 
-      <div className="bg-white border border-slate-100 shadow-sm p-4">
+      <div className="bg-white border border-slate-200 p-4">
         <p className="text-2xl font-extrabold text-purple-600">{metrics.conversionRate ?? 0}%</p>
         <p className="text-sm font-semibold text-slate-600">Conversion Rate</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {branchChartData.length > 0 && (
-          <div className="bg-white border border-slate-100 shadow-sm p-5">
+          <div className="bg-white border border-slate-200 p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">Branch Revenue Rankings</h3>
             <div className="h-64">
               <CrmBarChart

@@ -96,7 +96,7 @@ const ReminderWidget = ({ onViewFollowups }) => {
               <div
                 key={key}
                 className={[
-                  'bg-white border shadow-sm p-4 flex flex-col gap-2 transition-all',
+                  'bg-white border p-4 flex flex-col gap-2 transition-all',
                   isUrgent ? 'border-red-300 bg-red-50/40' : 'border-slate-200',
                   isLoading ? 'animate-pulse' : '',
                 ].join(' ')}

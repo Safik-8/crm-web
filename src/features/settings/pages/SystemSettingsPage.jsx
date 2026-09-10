@@ -17,6 +17,7 @@ import { BrandingSettingsForm } from "../components/BrandingSettingsForm"
 import { TestEmailModal } from "../components/TestEmailModal"
 import ConfirmModal from "../../../shared/components/elements/ConfirmModal"
 import SelectField from "../../../shared/components/elements/SelectField"
+import Skeleton from "../../../shared/components/elements/Skeleton"
 import { ShieldAlert, Loader2, Building, ShieldOff } from "lucide-react"
 
 export const SystemSettingsPage = () => {
@@ -147,9 +148,44 @@ export const SystemSettingsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-slate-500 bg-white border border-slate-200 rounded-none p-12 shadow-xs">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <p className="text-xs font-semibold text-slate-600">Loading system configurations...</p>
+      <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in duration-300">
+        {/* Header Skeleton */}
+        <div className="bg-white border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton variant="text" width={220} height={28} />
+            <Skeleton variant="text" width={320} height={16} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton variant="rounded" width={100} height={40} className="rounded-lg" />
+            <Skeleton variant="rounded" width={120} height={40} className="rounded-lg" />
+          </div>
+        </div>
+
+        {/* 2-Column Settings Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Navigation Skeleton */}
+          <div className="lg:col-span-1 bg-white border border-slate-200/80 p-4 space-y-2">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <Skeleton key={i} variant="rounded" width="100%" height={42} className="rounded-lg" />
+            ))}
+          </div>
+
+          {/* Right Form Card Skeleton */}
+          <div className="lg:col-span-3 bg-white border border-slate-200/80 p-6 space-y-6">
+            <div className="pb-4 border-b border-slate-100">
+              <Skeleton variant="text" width={200} height={24} />
+              <Skeleton variant="text" width={340} height={16} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton variant="text" width={120} height={16} />
+                  <Skeleton variant="rounded" width="100%" height={40} className="rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

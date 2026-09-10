@@ -154,8 +154,12 @@ export const enhancedToast = {
    * @param {string} reason - The reason for failure
    */
   operationError: (operation, entity, reason) => {
-    return toast.error(`Failed to ${operation.toLowerCase()} ${entity.toLowerCase()}`, {
-      description: reason || 'Please try again or contact support if the problem persists.',
+    let formattedReason = reason;
+    if (!reason || reason === 'Validation failed' || reason === 'VALIDATION_ERROR' || (typeof reason === 'string' && reason.toLowerCase().includes('validation failed'))) {
+      formattedReason = 'Please review and complete the highlighted required fields.';
+    }
+    return toast.error(`Unable to ${operation.toLowerCase()} ${entity.toLowerCase()}`, {
+      description: formattedReason || 'Please check the form inputs and try again.',
     });
   },
 
@@ -164,8 +168,8 @@ export const enhancedToast = {
    * @param {string} message - The validation error message
    */
   validationError: (message) => {
-    return toast.warning('Validation Error', {
-      description: message,
+    return toast.warning('Form Validation Notice', {
+      description: message || 'Please check the required fields and correct any highlighted errors.',
     });
   },
 

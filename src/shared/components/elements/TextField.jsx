@@ -27,7 +27,8 @@ const TextField = ({
   inputSx = {},
   ...props
 }) => {
-  const hasError = !!errorText;
+  const resolvedError = errorText || (typeof props.error === 'string' ? props.error : null);
+  const hasError = !!resolvedError || (typeof props.error === 'boolean' ? props.error : !!props.error);
 
   const inputStyles = {
     '& .MuiOutlinedInput-root': {
@@ -108,9 +109,11 @@ const TextField = ({
         value={value}
         onChange={(e) => {
           let val = e.target.value;
+          const idStr = typeof id === 'string' ? id.toLowerCase() : '';
+          const labelStr = typeof label === 'string' ? label.toLowerCase() : '';
           const isMobileField =
-            (id && id.toLowerCase().includes('mobile')) ||
-            (label && label.toLowerCase().includes('mobile')) ||
+            idStr.includes('mobile') ||
+            labelStr.includes('mobile') ||
             type === 'tel';
 
           if (isMobileField) {
@@ -134,7 +137,7 @@ const TextField = ({
         {...props}
       />
       {hasError ? (
-        <FormHelperText>{errorText}</FormHelperText>
+        <FormHelperText>{resolvedError || (typeof props.error === 'string' ? props.error : '')}</FormHelperText>
       ) : (
         props.helperText && <FormHelperText sx={{ color: 'text.secondary' }}>{props.helperText}</FormHelperText>
       )}

@@ -22,6 +22,7 @@ import {
 } from '../services/leadService';
 import { userProfileService } from '../../userprofile/services/userProfileService';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { toast } from '../../../shared/utils/toast';
 
 export const LEAD_KEYS = {
   all: ['leads'],
