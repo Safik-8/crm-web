@@ -31,34 +31,162 @@ import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 
 const MODULES_LIST = [
-  { value: "SYSTEM_SETTINGS", label: "System Settings" },
-  { value: "COMPANY", label: "Company Setup" },
-  { value: "BRANCH", label: "Branch Setup" },
-  { value: "ROLE_PERMISSION", label: "Roles & Permissions" },
-  { value: "USER", label: "User Management" },
-  { value: "TEAM", label: "Team Coordination" },
-  { value: "LEAD", label: "Leads Management" },
-  { value: "QUALIFICATION", label: "Lead Qualification" },
-  { value: "LEAD_ASSIGNMENT", label: "Lead Assignment" },
-  { value: "LEAD_SOURCE", label: "Lead Sources" },
-  { value: "LEAD_STATUS", label: "Lead Statuses" },
-  { value: "PIPELINE", label: "Pipelines" },
-  { value: "OPPORTUNITY_PIPELINE", label: "Opportunity Pipelines" },
-  { value: "TASK", label: "Tasks" },
-  { value: "ACTIVITY", label: "Activities" },
-  { value: "COURSE", label: "Courses" },
-  { value: "TARGET", label: "Targets" },
-  { value: "KPI", label: "KPI & Performance" },
-  { value: "CUSTOMER", label: "Customers" },
-  { value: "DEAL", label: "Deals" },
-  { value: "APPROVAL", label: "Approvals" },
-  { value: "DASHBOARD", label: "Dashboard" },
-  { value: "NOTIFICATION", label: "Notifications" },
-  { value: "AUDIT", label: "Audit Logs" },
-  { value: "OPPORTUNITY", label: "Opportunities Engine" },
-  { value: "REPORT", label: "Reports Engine" },
-  { value: "REVENUE_REPORT", label: "Revenue & Financial Reports" },
-  { value: "SALES_PERFORMANCE", label: "Sales Performance Reports" }
+  { 
+    value: "SYSTEM_SETTINGS", 
+    label: "System Settings", 
+    uiLocation: "/settings/system",
+    controls: "Global system configuration, timezone, branding & default limits"
+  },
+  { 
+    value: "COMPANY", 
+    label: "Company Setup", 
+    uiLocation: "/settings/organization",
+    controls: "Company entities, profile information & branding"
+  },
+  { 
+    value: "BRANCH", 
+    label: "Branch Setup", 
+    uiLocation: "/settings/branch",
+    controls: "Branch locations, managers & branch assignments"
+  },
+  { 
+    value: "ROLE_PERMISSION", 
+    label: "Roles & Permissions", 
+    uiLocation: "/roles",
+    controls: "Custom roles, security brackets & permission matrices"
+  },
+  { 
+    value: "USER", 
+    label: "User Management", 
+    uiLocation: "/users",
+    controls: "Employee directory, user creation & role assignments"
+  },
+  { 
+    value: "TEAM", 
+    label: "Team Coordination", 
+    uiLocation: "/teams & /my-team",
+    controls: "Team pods, BDE leads & ISE member assignments"
+  },
+  { 
+    value: "LEAD", 
+    label: "Leads Management", 
+    uiLocation: "/leads",
+    controls: "Lead records, comments, notes, call logs & quick actions"
+  },
+  { 
+    value: "QUALIFICATION", 
+    label: "Lead Qualification", 
+    uiLocation: "/settings/qualification",
+    controls: "Qualification scoring criteria & lead qualification drawer"
+  },
+  { 
+    value: "LEAD_ASSIGNMENT", 
+    label: "Lead Assignment", 
+    uiLocation: "/assignment-settings",
+    controls: "Round-robin distribution, capacity limits & assign drawer"
+  },
+  { 
+    value: "LEAD_SOURCE", 
+    label: "Lead Sources", 
+    uiLocation: "/settings/lead-sources",
+    controls: "Inbound channels (Website, Ads, Referrals, Social)"
+  },
+  { 
+    value: "LEAD_STATUS", 
+    label: "Lead Statuses", 
+    uiLocation: "/settings/lead-statuses",
+    controls: "Lead status tags (Hot, Warm, Cold, Junk, Disqualified)"
+  },
+  { 
+    value: "PIPELINE", 
+    label: "Pipelines", 
+    uiLocation: "/pipelines",
+    controls: "Pipeline stages, transition rules & Kanban boards"
+  },
+  { 
+    value: "OPPORTUNITY_PIPELINE", 
+    label: "Opportunity Pipelines", 
+    uiLocation: "Opportunities > Manage Stages",
+    controls: "Opportunity lifecycle stage definitions & probabilities"
+  },
+  { 
+    value: "OPPORTUNITY", 
+    label: "Opportunities Engine", 
+    uiLocation: "/opportunities",
+    controls: "Deal conversions, opportunity records & value tracking"
+  },
+  { 
+    value: "CUSTOMER", 
+    label: "Customers", 
+    uiLocation: "/customers",
+    controls: "Converted client accounts, purchase history & directory"
+  },
+  { 
+    value: "DEAL", 
+    label: "Deals", 
+    uiLocation: "/deals",
+    controls: "Closed-won transactions, payment tracking & contracts"
+  },
+  { 
+    value: "COURSE", 
+    label: "Courses", 
+    uiLocation: "/courses",
+    controls: "Product/course catalog, curriculums & pricing packages"
+  },
+  { 
+    value: "APPROVAL", 
+    label: "Approvals", 
+    uiLocation: "Proposals & Deals Drawers",
+    controls: "Discount approvals, manager overrides & proposal sign-offs"
+  },
+  { 
+    value: "DASHBOARD", 
+    label: "Dashboard", 
+    uiLocation: "/dashboard",
+    controls: "Executive, branch, BDE & ISE analytical dashboards"
+  },
+  { 
+    value: "TARGET", 
+    label: "Targets", 
+    uiLocation: "/kpi-management (KPI Setup)",
+    controls: "Monthly/quarterly targets for users, teams & branches"
+  },
+  { 
+    value: "KPI", 
+    label: "KPI & Performance", 
+    uiLocation: "/my-performance & /kpi-analytics",
+    controls: "Personal & team conversion KPI tracking & analytics"
+  },
+  { 
+    value: "NOTIFICATION", 
+    label: "Notifications", 
+    uiLocation: "Topbar Bell & /notifications",
+    controls: "Alert center, system notifications & reminder dispatches"
+  },
+  { 
+    value: "AUDIT", 
+    label: "Audit Logs", 
+    uiLocation: "/audit-logs",
+    controls: "Security audit trails & record change inspection"
+  },
+  { 
+    value: "REPORT", 
+    label: "Reports Engine", 
+    uiLocation: "/reports",
+    controls: "General reporting suite, filtering & data exports"
+  },
+  { 
+    value: "REVENUE_REPORT", 
+    label: "Revenue & Financial Reports", 
+    uiLocation: "/reports/revenue",
+    controls: "Branch revenue trends, turnover & financial forecasting"
+  },
+  { 
+    value: "SALES_PERFORMANCE", 
+    label: "Sales Performance Reports", 
+    uiLocation: "/reports/sales-performance",
+    controls: "BDE/ISE sales leaderboards, call ratios & conversion rates"
+  }
 ];
 
 const ACTIONS = [
@@ -74,7 +202,7 @@ const RoleManagementPage = () => {
   const didHideLoader = useRef(false);
 
   // TanStack Query Hooks
-  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN' || (user?.primaryRoleRank ?? 0) >= 100;
 
   // Company filter — Super Admin only
   const [companyFilter, setCompanyFilter] = useState('');
@@ -736,23 +864,33 @@ const RoleManagementPage = () => {
               <div className="border-t border-slate-100 pt-4 mt-2">
                 <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3">Module Permissions Matrix</h3>
 
-                <div className="border border-slate-200 overflow-hidden">
+                <div className="border border-slate-200 overflow-hidden rounded-lg">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[720px]">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          <th className="py-2.5 px-3">Module</th>
+                          <th className="py-2.5 px-3 min-w-[140px]">Module</th>
+                          <th className="py-2.5 px-3 min-w-[150px]">UI Location</th>
+                          <th className="py-2.5 px-3 min-w-[200px]">What It Controls</th>
                           {ACTIONS.map(act => (
-                            <th key={act.key} className="py-2.5 px-2 text-center">{act.label}</th>
+                            <th key={act.key} className="py-2.5 px-2 text-center w-12">{act.label}</th>
                           ))}
-                          <th className="py-2.5 px-3 text-center">Toggle All</th>
+                          <th className="py-2.5 px-3 text-center w-20">Toggle All</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {MODULES_LIST.map(mod => (
                           <tr key={mod.value} className="hover:bg-slate-50/50">
-                            <td className="py-2.5 px-3 text-xs font-bold text-slate-700">
+                            <td className="py-2.5 px-3 text-xs font-bold text-slate-800 whitespace-nowrap">
                               {mod.label}
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-600">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-orange-50 text-orange-700 border border-orange-200/60 whitespace-nowrap font-mono">
+                                {mod.uiLocation}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500 font-normal leading-snug">
+                              {mod.controls}
                             </td>
                             {ACTIONS.map(act => {
                               const isChecked = !!formPermissions[mod.value]?.[act.key];
@@ -770,7 +908,7 @@ const RoleManagementPage = () => {
                               );
                             })}
                             <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                              <div className="flex justify-center gap-2">
+                              <div className="flex justify-center gap-1.5">
                                 <button
                                   type="button"
                                   disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}

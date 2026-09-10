@@ -42,7 +42,7 @@ const UserFormModal = ({
 
   // Automatically lock Branch Manager to their branch
   useEffect(() => {
-    if (!isEditMode && isOpen && currentUser?.primaryRole === 'BRANCH_MANAGER' && currentUser?.branchId && values.branchId !== currentUser.branchId) {
+    if (!isEditMode && isOpen && (currentUser?.primaryRole === 'BRANCH_MANAGER' || (!((currentUser?.primaryRoleRank ?? 0) >= 80) && (currentUser?.primaryRoleRank ?? 0) >= 60)) && currentUser?.branchId && values.branchId !== currentUser.branchId) {
       handleChange('branchId', currentUser.branchId);
     }
   }, [currentUser, isEditMode, isOpen, handleChange, values.branchId]);
@@ -355,7 +355,7 @@ const UserFormModal = ({
             )}
 
             {/* Company selection: locked for edit, only visible to Super Admin for creation */}
-            {currentUser?.primaryRole === 'SUPER_ADMIN' ? (
+            {(currentUser?.primaryRole === 'SUPER_ADMIN' || (currentUser?.primaryRoleRank ?? 0) >= 100) ? (
               <SelectField
                 id="companyId"
                 label="Company"
@@ -373,7 +373,7 @@ const UserFormModal = ({
             ) : null}
 
             {/* Branch Selection */}
-            {currentUser?.primaryRole === 'BRANCH_MANAGER' && !isEditMode ? null : (
+            {(currentUser?.primaryRole === 'BRANCH_MANAGER' || (!((currentUser?.primaryRoleRank ?? 0) >= 80) && (currentUser?.primaryRoleRank ?? 0) >= 60)) && !isEditMode ? null : (
               <SelectField
                 id="branchId"
                 label="Branch"

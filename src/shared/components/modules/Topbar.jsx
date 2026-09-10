@@ -93,6 +93,7 @@ const SEARCH_NAV_ITEMS = [
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('LEAD_SOURCE', 'canView') || 
       hasPermission('SYSTEM_SETTINGS', 'canView')
   },
   {
@@ -106,6 +107,7 @@ const SEARCH_NAV_ITEMS = [
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('LEAD_STATUS', 'canView') || 
       hasPermission('SYSTEM_SETTINGS', 'canView')
   },
   {

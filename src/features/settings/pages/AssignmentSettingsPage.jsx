@@ -32,9 +32,10 @@ export const AssignmentSettingsPage = () => {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && !!currentUser?.branchId);
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
+  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && (actorRank >= 60 || !!currentUser?.branchId));
 
   // Selection states
   const [selectedCompanyId, setSelectedCompanyId] = useState('');

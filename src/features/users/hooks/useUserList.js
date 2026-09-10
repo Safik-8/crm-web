@@ -88,11 +88,14 @@ export const useUserList = (currentUser = null) => {
    */
   const customClearFilters = () => {
     const defaults = { status: '', roleId: '', companyId: '', branchId: '' };
+    const actorRank = currentUser?.primaryRoleRank ?? 0;
+    const isSuper = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+    const isComp = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuper && actorRank >= 80);
     if (currentUser) {
-      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+      if (!isSuper) {
         defaults.companyId = currentUser.companyId || '';
       }
-      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+      if (!isSuper && !isComp) {
         defaults.branchId = currentUser.branchId || '';
       }
     }
@@ -100,8 +103,9 @@ export const useUserList = (currentUser = null) => {
   };
 
   // Calculate explicit user-applied filters (preventing auto tenant scopes like companyId/branchId from showing Clear Filters button by default)
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
 
   const isFilterApplied = Boolean(
     search ||

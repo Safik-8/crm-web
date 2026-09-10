@@ -137,8 +137,8 @@ const FactorActionMenu = ({ item, canEdit, canDelete, onEdit, onDelete }) => {
 
 const QualificationCriteriaSettingsPage = () => {
   const { hasPermission, user } = useAuth();
-  const userRole = user?.primaryRole || user?.role || "COMPANY_ADMIN";
-  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN";
+  const actorRank = user?.primaryRoleRank ?? 0;
+  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN" || actorRank >= 100;
 
   // Dynamic RBAC Permission Checks
   const canEdit =
@@ -146,14 +146,16 @@ const QualificationCriteriaSettingsPage = () => {
     hasPermission('QUALIFICATION', 'canCreate') ||
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
     user?.primaryRole === 'SUPER_ADMIN' ||
-    user?.primaryRole === 'COMPANY_ADMIN';
+    user?.primaryRole === 'COMPANY_ADMIN' ||
+    actorRank >= 80;
 
   const canDelete =
     hasPermission('QUALIFICATION', 'canDelete') ||
     hasPermission('SYSTEM_SETTINGS', 'canDelete') ||
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
     user?.primaryRole === 'SUPER_ADMIN' ||
-    user?.primaryRole === 'COMPANY_ADMIN';
+    user?.primaryRole === 'COMPANY_ADMIN' ||
+    actorRank >= 80;
 
   // Super Admin Multi-Company Selector State
   const [selectedCompanyId, setSelectedCompanyId] = useState(

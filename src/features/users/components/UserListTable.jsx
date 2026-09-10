@@ -144,8 +144,8 @@ const UserListTable = ({
   onSort
 }) => {
   const { user } = useAuth();
-  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
   const actorRank = user?.primaryRoleRank ?? 0;
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
   const [userToDelete, setUserToDelete] = useState(null);
 
   const columns = [

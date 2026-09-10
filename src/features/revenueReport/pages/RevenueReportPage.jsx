@@ -57,10 +57,10 @@ export default function RevenueReportPage() {
   const primaryRoleRank = user?.primaryRoleRank ?? 0;
 
   const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || primaryRoleRank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || primaryRoleRank === 80;
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || primaryRoleRank === 60;
-  const isBDE = primaryRole === 'BDE' || primaryRoleRank === 40;
-  const isISE = primaryRole === 'ISE' || primaryRoleRank === 20;
+  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && primaryRoleRank >= 80);
+  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && primaryRoleRank >= 60);
+  const isBDE = primaryRole === 'BDE' || (!isSuperAdmin && !isCompanyAdmin && !isBranchManager && primaryRoleRank >= 40);
+  const isISE = !isSuperAdmin && !isCompanyAdmin && !isBranchManager && !isBDE;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBDE, isISE };
 

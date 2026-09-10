@@ -29,9 +29,10 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
   const [notes, setNotes] = useState('');
   const [reason, setReason] = useState('');
 
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER';
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
+  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && actorRank >= 60);
 
   // Reset form states and default scopes on open
   useEffect(() => {

@@ -111,10 +111,13 @@ const TeamsPage = () => {
     setPage(1);
     setStatus('');
     setView('active');
-    if (currentUser?.primaryRole === 'SUPER_ADMIN') {
+    const actorRank = currentUser?.primaryRoleRank ?? 0;
+    const isSuper = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+    const isComp = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuper && actorRank >= 80);
+    if (isSuper) {
       setCompanyId('');
       setBranchId('');
-    } else if (currentUser?.primaryRole === 'COMPANY_ADMIN') {
+    } else if (isComp) {
       setBranchId('');
     }
   }, [currentUser]);
@@ -126,6 +129,11 @@ const TeamsPage = () => {
     }, 100);
     return () => clearTimeout(timer);
   }, [forceHideLoader]);
+
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
+  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
+  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && actorRank >= 60);
 
   // Query Teams List
   const {
@@ -140,7 +148,7 @@ const TeamsPage = () => {
     limit,
     search: debouncedSearch,
     status,
-    companyId: currentUser?.primaryRole === 'SUPER_ADMIN' ? companyId : undefined,
+    companyId: isSuperAdmin ? companyId : undefined,
     branchId,
     view
   });
@@ -153,7 +161,7 @@ const TeamsPage = () => {
   const deleteTeamMutation = useDeleteTeamMutation();
 
   // Fetch Companies (for Super Admin Filter)
-  const canFilterByCompany = currentUser?.primaryRole === 'SUPER_ADMIN';
+  const canFilterByCompany = isSuperAdmin;
   const { data: companiesRes } = useQuery({
     queryKey: ['companies-all-options'],
     queryFn: () => companyService.getCompaniesRaw(),
@@ -162,7 +170,7 @@ const TeamsPage = () => {
   const companies = companiesRes?.data || [];
 
   // Fetch Branches for selected company
-  const canFilterByBranch = currentUser?.primaryRole === 'SUPER_ADMIN' || currentUser?.primaryRole === 'COMPANY_ADMIN';
+  const canFilterByBranch = isSuperAdmin || isCompanyAdmin;
   const targetCompanyId = canFilterByCompany ? companyId : currentUser?.companyId;
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-all-options', targetCompanyId],
@@ -175,7 +183,7 @@ const TeamsPage = () => {
   const handleOpenCreateForm = () => {
     setSelectedTeamForEdit({
       companyId: companyId || currentUser?.companyId || '',
-      branchId: branchId || (currentUser?.primaryRole === 'BRANCH_MANAGER' ? currentUser.branchId : '')
+      branchId: branchId || (isBranchManager ? currentUser.branchId : '')
     });
     setIsFormOpen(true);
   };

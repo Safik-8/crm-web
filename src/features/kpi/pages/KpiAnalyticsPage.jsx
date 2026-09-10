@@ -28,8 +28,8 @@ export default function KpiAnalyticsPage() {
   const rank = user?.primaryRoleRank ?? 0;
 
   const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || rank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || rank === 80;
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || rank === 60;
+  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && rank >= 80);
+  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && rank >= 60);
 
   const canCreate =
     hasPermission('KPI', 'canCreate') ||

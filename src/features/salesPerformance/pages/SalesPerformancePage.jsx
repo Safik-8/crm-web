@@ -35,8 +35,8 @@ export default function SalesPerformancePage() {
   const primaryRoleRank = user?.primaryRoleRank ?? 0;
 
   const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || primaryRoleRank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || primaryRoleRank === 80;
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || primaryRoleRank === 60;
+  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && primaryRoleRank >= 80);
+  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && primaryRoleRank >= 60);
   const isBdeOrIse = !isSuperAdmin && !isCompanyAdmin && !isBranchManager;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBdeOrIse };
