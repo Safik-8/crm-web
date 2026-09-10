@@ -109,7 +109,7 @@ const SuperAdminDashboardView = () => {
       </div>
 
       {/* Conversion Rate Card */}
-      <div className="bg-white border border-slate-100 shadow-sm p-5 flex items-center gap-4">
+      <div className="bg-white border border-slate-200 p-5 flex items-center gap-4">
         <div>
           <p className="text-3xl font-extrabold text-blue-600">{metrics.conversionRate ?? 0}%</p>
           <p className="text-sm font-semibold text-slate-600">Overall Conversion Rate</p>
@@ -123,7 +123,7 @@ const SuperAdminDashboardView = () => {
           (() => {
             const isManyBranches = topBranchChartData.length > 4;
             return (
-              <div className={`bg-white border border-slate-100 shadow-sm p-5 flex flex-col ${isManyBranches ? 'h-96' : 'h-80'}`}>
+              <div className={`bg-white border border-slate-200 p-5 flex flex-col ${isManyBranches ? 'h-96' : 'h-80'}`}>
                 <h3 className="text-sm font-bold text-slate-700 mb-4 shrink-0">Top Branches by Revenue</h3>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">
                   <CrmBarChart
