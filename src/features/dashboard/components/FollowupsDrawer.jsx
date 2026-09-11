@@ -42,10 +42,11 @@ const FollowupsDrawer = ({ isOpen, onClose, initialFilter = 'today' }) => {
   const { hasPermission } = useAuth();
   const navigate = useNavigate();
 
+  const canView   = hasPermission('FOLLOWUP', 'canView') || hasPermission('view:followups');
   const canEdit   = hasPermission('FOLLOWUP', 'canEdit') || hasPermission('create:followup');
   const canDelete = hasPermission('FOLLOWUP', 'canDelete');
 
-  const { data: res, isLoading, refetch } = useFollowupsQuery({ limit: 100 });
+  const { data: res, isLoading, refetch } = useFollowupsQuery({ limit: 100 }, { enabled: Boolean(isOpen && canView) });
   const cancelMutation = useCancelFollowupMutation();
   const deleteMutation = useDeleteFollowupMutation();
 

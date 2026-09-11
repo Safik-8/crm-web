@@ -15,9 +15,9 @@ export const FOLLOWUP_KEYS = {
   detail: (id)     => [...FOLLOWUP_KEYS.all, 'detail', String(id)],
 };
 
-export const useFollowupsQuery        = (p = {})  => useQuery({ queryKey: FOLLOWUP_KEYS.list(p),      queryFn: () => getFollowups(p),       staleTime: 30_000 });
-export const useFollowupsByLeadQuery  = (leadId)  => useQuery({ queryKey: FOLLOWUP_KEYS.byLead(leadId), queryFn: () => getFollowupsByLead(leadId), enabled: !!leadId, staleTime: 30_000 });
-export const useFollowupQuery         = (id)      => useQuery({ queryKey: FOLLOWUP_KEYS.detail(id),    queryFn: () => getFollowupById(id),   enabled: !!id });
+export const useFollowupsQuery        = (p = {}, options = {})  => useQuery({ queryKey: FOLLOWUP_KEYS.list(p),      queryFn: () => getFollowups(p),       staleTime: 30_000, ...options });
+export const useFollowupsByLeadQuery  = (leadId, options = {})  => useQuery({ queryKey: FOLLOWUP_KEYS.byLead(leadId), queryFn: () => getFollowupsByLead(leadId), enabled: !!leadId, staleTime: 30_000, ...options });
+export const useFollowupQuery         = (id, options = {})      => useQuery({ queryKey: FOLLOWUP_KEYS.detail(id),    queryFn: () => getFollowupById(id),   enabled: !!id, ...options });
 
 export const useCreateFollowupMutation = () => {
   const qc = useQueryClient();

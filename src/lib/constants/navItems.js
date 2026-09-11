@@ -69,7 +69,7 @@ export const navGroups = [
       { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
-      { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
+      { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
       { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
     ]
   }
@@ -87,7 +87,12 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
   return items.filter(item => {
     // Check Role constraint if specified (case-insensitive check)
     if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) {
-      return false;
+      const userRank = user?.primaryRoleRank ?? 0;
+      if (item.name === 'Teams' && userRank >= 41) {
+        // Allow custom branch/HQ management roles with rank >= 41
+      } else {
+        return false;
+      }
     }
     // Hide 'My Team' if user has no active team
     if (item.path === '/my-team' && !hasActiveTeam) {
@@ -105,7 +110,14 @@ export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) 
 
   return navGroups.map(group => {
     const filteredItems = group.items.filter(item => {
-      if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) return false;
+      if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) {
+        const userRank = user?.primaryRoleRank ?? 0;
+        if (item.name === 'Teams' && userRank >= 41) {
+          // Allow custom branch/HQ management roles with rank >= 41
+        } else {
+          return false;
+        }
+      }
       if (item.path === '/my-team' && !hasActiveTeam) return false;
       return !item.permission || hasPermission(item.permission);
     });

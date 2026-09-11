@@ -23,11 +23,11 @@ const DashboardPage = () => {
   if (role === 'ISE') return <IseDashboardView />;
 
   // ── Custom roles: pick dashboard by permission, then rank ──
-  if (hasPermission('COMPANY_SETUP', 'canView')) return <CompanyAdminDashboardView />;
-  if (hasPermission('BRANCH_SETUP', 'canView')) return <BranchDashboardView />;
-  if (rank >= 80) return <CompanyAdminDashboardView />;
-  if (rank >= 60) return <BranchDashboardView />;
-  if (rank >= 40) return <BdeDashboardView />;
+  if (hasPermission('COMPANY', 'canView') || hasPermission('view:company_setup')) return <CompanyAdminDashboardView />;
+  if (hasPermission('BRANCH', 'canView') || hasPermission('view:branches')) return <BranchDashboardView />;
+  if (rank >= 61) return <CompanyAdminDashboardView />;
+  if (rank >= 41) return <BranchDashboardView />;
+  if (rank >= 21) return <BdeDashboardView />;
 
   return <IseDashboardView />;
 };
