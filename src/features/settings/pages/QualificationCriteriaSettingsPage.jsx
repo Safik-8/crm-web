@@ -581,7 +581,7 @@ const QualificationCriteriaSettingsPage = () => {
           ) : (
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 rounded-xl">
               <Building size={14} className="text-orange-500" />
-              <span>{currentUser?.companyName || 'Company Scope'}</span>
+              <span>{user?.company?.name || user?.companyName || 'Company Scope'}</span>
             </div>
           )}
 

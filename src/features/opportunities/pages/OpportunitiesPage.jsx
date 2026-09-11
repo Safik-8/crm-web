@@ -209,7 +209,13 @@ export const OpportunitiesPage = () => {
   const stages = oppStagesQuery.data || DEFAULT_STAGES;
 
   // ── Form Data ──────────────────────────────────────────────────────────────
-  const leadsQuery = useLeadsQuery({ limit: 100 });
+  const leadsQuery = useLeadsQuery({
+    isQualified: 'true',
+    withoutOpenOpportunity: 'true',
+    limit: 500,
+    companyId: companyFilter || user?.companyId,
+    ...(branchFilter ? { branchId: branchFilter } : {}),
+  });
   const leads =
     leadsQuery.data?.data?.leads ||
     leadsQuery.data?.leads ||

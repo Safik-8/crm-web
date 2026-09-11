@@ -22,7 +22,7 @@ const StageOrderPanel = ({
   saving,
 }) => {
   return (
-    <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+    <div className="bg-white border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
       {/* Panel Header */}
       <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white flex items-center justify-between gap-4">
         <div className="space-y-0.5 flex-1">

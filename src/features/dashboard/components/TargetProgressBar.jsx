@@ -34,7 +34,7 @@ const TargetProgressBar = ({ kpi, isLoading = false }) => {
   const label = KPI_LABEL_MAP[kpi?.kpiType] ?? kpi?.kpiType ?? 'KPI';
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50">

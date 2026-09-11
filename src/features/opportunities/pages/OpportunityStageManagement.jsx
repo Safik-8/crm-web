@@ -86,25 +86,25 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center justify-between bg-white border px-4 py-3 transition-all ${
+      className={`group flex items-center justify-between bg-white border rounded-none px-4 py-3 transition-all ${
         isDragging
-          ? 'border-orange-400 scale-[1.01] ring-2 ring-orange-100'
+          ? 'border-orange-300 scale-[1.01] ring-2 ring-orange-100'
           : isLocked
           ? 'border-slate-100 bg-slate-50/50'
-          : 'border-slate-200 border-l-[3px] border-l-orange-500 hover:border-slate-300'
+          : 'border-slate-200 border-l-[3px] border-l-orange-300 hover:border-slate-300'
       }`}
     >
       <div className="flex items-center gap-3">
         {/* Drag Handle or Lock */}
         <div
           {...(isLocked ? {} : { ...attributes, ...listeners })}
-          className={`flex-shrink-0 flex items-center justify-center p-1 text-slate-300 ${
+          className={`flex-shrink-0 flex items-center justify-center p-1 ${
             isLocked
-              ? 'cursor-not-allowed opacity-40'
-              : 'cursor-grab hover:text-slate-500 active:cursor-grabbing touch-none'
+              ? 'cursor-not-allowed text-slate-300'
+              : 'text-slate-500 hover:text-slate-800 cursor-grab active:cursor-grabbing touch-none'
           }`}
         >
-          {isLocked ? <Lock size={13} /> : <GripVertical size={14} />}
+          {isLocked ? <Lock size={13} strokeWidth={2.5} /> : <GripVertical size={16} strokeWidth={2.5} />}
         </div>
 
         {/* Color swatch */}
@@ -115,35 +115,35 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
 
         {/* Name and Code */}
         <div>
-          <span className="text-sm font-semibold text-slate-800">{stage.name}</span>
-          <span className="ml-2 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+          <span className="text-sm font-bold text-slate-900">{stage.name}</span>
+          <span className="ml-2 text-[10px] font-mono font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
             {stage.code}
           </span>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-medium text-slate-500 mr-2">
+        <span className="text-xs font-bold text-slate-700 mr-2">
           {stage.defaultProbabilityPct}%
         </span>
         {!isSystem && (
           <button
             type="button"
             onClick={() => onEdit(stage)}
-            className="p-1 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
             title="Edit Stage"
           >
-            <Pencil size={14} />
+            <Pencil size={14} strokeWidth={2.2} />
           </button>
         )}
         {!isSystem && (
           <button
             type="button"
             onClick={() => onRemove(stage.id)}
-            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Deselect Stage"
           >
-            <X size={14} />
+            <X size={14} strokeWidth={2.5} />
           </button>
         )}
       </div>
@@ -410,53 +410,95 @@ export const OpportunityStageManagement = () => {
     return (
       <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
         {/* Top Header Card Skeleton */}
-        <div className="bg-white border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white border border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Skeleton variant="rounded" width={40} height={40} className="rounded-xl" />
+            <Skeleton variant="rounded" width={40} height={40} className="rounded-xl bg-orange-100/60" />
             <div className="space-y-1.5">
-              <Skeleton variant="text" width={240} height={24} />
-              <Skeleton variant="text" width={360} height={16} />
+              <Skeleton variant="text" width={280} height={22} />
+              <Skeleton variant="text" width={420} height={14} />
             </div>
           </div>
         </div>
 
         {/* Two-panel Grid Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {/* Left Panel */}
-          <div className="bg-white border border-slate-200 p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <Skeleton variant="text" width={140} height={20} />
-              <Skeleton variant="rounded" width={70} height={24} className="rounded-lg" />
+          {/* LEFT: Available Stages Panel Skeleton */}
+          <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+            {/* Header */}
+            <div className="p-3.5 sm:p-4 border-b border-slate-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton variant="text" width={130} height={14} />
+                <div className="flex items-center gap-1.5">
+                  <Skeleton variant="rounded" width={80} height={22} className="rounded-md" />
+                  <Skeleton variant="rounded" width={65} height={22} className="rounded-md" />
+                </div>
+              </div>
+
+              {/* Filter / Search / Add Row */}
+              <div className="flex items-center gap-2.5">
+                <Skeleton variant="rounded" className="flex-1 h-9 rounded-md" />
+                <Skeleton variant="rounded" width={75} height={38} className="rounded-md" />
+              </div>
             </div>
-            <div className="space-y-2.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center justify-between p-3 border border-slate-100 rounded-lg">
+
+            {/* Stage List */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-2 custom-scrollbar">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-3.5 py-2.5 border border-slate-200 border-l-[3px] border-l-orange-200 rounded-none bg-white"
+                >
                   <div className="flex items-center gap-3">
-                    <Skeleton variant="rounded" width={18} height={18} className="rounded" />
+                    <Skeleton variant="rounded" width={16} height={16} className="rounded-none" />
                     <Skeleton variant="circular" width={12} height={12} />
-                    <Skeleton variant="text" width={120} height={16} />
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" width={120} height={16} />
+                      <Skeleton variant="rounded" width={50} height={18} className="rounded-none" />
+                    </div>
                   </div>
-                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton variant="rounded" width={22} height={22} className="rounded-none" />
+                    <Skeleton variant="rounded" width={22} height={22} className="rounded-none" />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right Panel */}
-          <div className="bg-white border border-slate-200 p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <Skeleton variant="text" width={160} height={20} />
-              <Skeleton variant="rounded" width={90} height={32} className="rounded-lg" />
+          {/* RIGHT: Pipeline Stage Order DnD Panel Skeleton */}
+          <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+            {/* Header */}
+            <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white flex items-center justify-between gap-4">
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center gap-2">
+                  <Skeleton variant="text" width={110} height={14} />
+                  <Skeleton variant="rounded" width={85} height={20} className="rounded-md" />
+                </div>
+                <Skeleton variant="text" width={320} height={12} />
+              </div>
+              <Skeleton variant="rounded" width={115} height={38} className="rounded-lg" />
             </div>
-            <div className="space-y-2.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center justify-between p-3.5 border border-slate-100 rounded-lg">
+
+            {/* Sortable Stages List */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-2 custom-scrollbar">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-4 py-3 border border-slate-200 border-l-[3px] border-l-orange-200 rounded-none bg-white"
+                >
                   <div className="flex items-center gap-3">
-                    <Skeleton variant="rounded" width={12} height={16} />
-                    <Skeleton variant="circular" width={12} height={12} />
-                    <Skeleton variant="text" width={150} height={16} />
+                    <Skeleton variant="rounded" width={14} height={18} className="rounded-none" />
+                    <Skeleton variant="circular" width={14} height={14} />
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" width={130} height={16} />
+                      <Skeleton variant="rounded" width={45} height={18} className="rounded-none" />
+                    </div>
                   </div>
-                  <Skeleton variant="rounded" width={24} height={24} className="rounded" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton variant="rounded" width={35} height={18} className="rounded-full" />
+                    <Skeleton variant="rounded" width={22} height={22} className="rounded-none" />
+                    <Skeleton variant="rounded" width={22} height={22} className="rounded-none" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -479,7 +521,7 @@ export const OpportunityStageManagement = () => {
       {/* Two-panel Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         {/* LEFT: Available Stages Panel */}
-        <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+        <div className="bg-white border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
           {/* Panel Header */}
           <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white space-y-3">
             <div className="flex items-center justify-between">
@@ -553,9 +595,9 @@ export const OpportunityStageManagement = () => {
                 return (
                   <div
                     key={stage.id}
-                    className={`flex items-center justify-between px-3.5 py-2.5 border rounded-md transition-all ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 border rounded-none transition-all ${
                       isSelected
-                        ? 'bg-orange-50/40 border-orange-200'
+                        ? 'bg-orange-50/20 border-slate-200 border-l-[3px] border-l-orange-300'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -572,8 +614,8 @@ export const OpportunityStageManagement = () => {
                         style={{ backgroundColor: stage.colorCode }}
                       />
                       <div>
-                        <span className="text-sm font-semibold text-slate-800">{stage.name}</span>
-                        <span className="ml-2 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-sm font-bold text-slate-900">{stage.name}</span>
+                        <span className="ml-2 text-[10px] font-mono font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
                           {stage.code}
                         </span>
                       </div>
@@ -583,17 +625,17 @@ export const OpportunityStageManagement = () => {
                       {!stage.isSystem && (
                         <button
                           onClick={() => handleEditClick(stage)}
-                          className="p-1 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                          className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                         >
-                          <Pencil size={14} />
+                          <Pencil size={14} strokeWidth={2.2} />
                         </button>
                       )}
                       {!stage.isSystem && (
                         <button
                           onClick={() => handleDeleteClick(stage)}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                          className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={14} strokeWidth={2.2} />
                         </button>
                       )}
                     </div>
@@ -609,7 +651,7 @@ export const OpportunityStageManagement = () => {
         </div>
 
         {/* RIGHT: Stage Order DnD Panel */}
-        <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+        <div className="bg-white border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
           {/* Panel Header */}
           <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white flex items-center justify-between gap-4">
             <div className="space-y-0.5 flex-1">
