@@ -4,6 +4,8 @@ import { useEffect, useMemo } from 'react';
 import useListManager from '../../../shared/hooks/useListManager';
 import { useUsersQuery, useToggleUserStatusMutation } from './useUsers';
 
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
+
 /**
  * Custom hook to manage the state and logic for User searching, filtering, sorting, and paging.
  * Restructured to consume the shared useListManager framework hook.
@@ -12,18 +14,20 @@ import { useUsersQuery, useToggleUserStatusMutation } from './useUsers';
  * @returns {object} Filter states, loaders, pagination controls, status actions, and sort triggers
  */
 export const useUserList = (currentUser = null) => {
+  const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(currentUser);
+
   const initialFilters = useMemo(() => {
     const defaults = { status: '', roleId: '', companyId: '', branchId: '' };
     if (currentUser) {
-      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+      if (!isSuperAdmin) {
         defaults.companyId = currentUser.companyId || '';
       }
-      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+      if (!isCompanyWide) {
         defaults.branchId = currentUser.branchId || '';
       }
     }
     return defaults;
-  }, [currentUser]);
+  }, [currentUser, isSuperAdmin, isCompanyWide]);
 
   const {
     search,
@@ -89,10 +93,10 @@ export const useUserList = (currentUser = null) => {
   const customClearFilters = () => {
     const defaults = { status: '', roleId: '', companyId: '', branchId: '' };
     if (currentUser) {
-      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+      if (!isSuperAdmin) {
         defaults.companyId = currentUser.companyId || '';
       }
-      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+      if (!isCompanyWide) {
         defaults.branchId = currentUser.branchId || '';
       }
     }
@@ -100,15 +104,14 @@ export const useUserList = (currentUser = null) => {
   };
 
   // Calculate explicit user-applied filters (preventing auto tenant scopes like companyId/branchId from showing Clear Filters button by default)
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN';
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
 
   const isFilterApplied = Boolean(
     search ||
     filters.status ||
     filters.roleId ||
     (isSuperAdmin && filters.companyId) ||
-    ((isSuperAdmin || isCompanyAdmin) && filters.branchId && filters.branchId !== (currentUser?.branchId || ''))
+    (isCompanyWide && filters.branchId && filters.branchId !== (currentUser?.branchId || ''))
   );
 
   return {

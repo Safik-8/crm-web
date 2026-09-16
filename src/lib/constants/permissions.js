@@ -66,4 +66,14 @@ export const PERMISSIONS = {
   // Daily Report (ISE)
   VIEW_DAILY_REPORT: 'view:daily_report',
   CREATE_DAILY_REPORT: 'create:daily_report',
+
+  // Opportunities Engine Permissions
+  VIEW_OPPORTUNITIES: 'view:opportunities',
+  CREATE_OPPORTUNITY: 'create:opportunity',
+  EDIT_OPPORTUNITY: 'edit:opportunity',
+  DELETE_OPPORTUNITY: 'delete:opportunity',
+
+  // Specific Report Permissions
+  VIEW_SALES_PERFORMANCE: 'view:sales_performance',
+  VIEW_REVENUE_REPORT: 'view:revenue_report',
 };

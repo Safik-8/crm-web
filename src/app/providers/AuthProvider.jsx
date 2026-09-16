@@ -42,7 +42,7 @@ const RBAC_ADAPTER_MAP = {
   'view:roles': { module: 'ROLE_PERMISSION', action: 'canView' },
   'view:leads': { module: 'LEAD', action: 'canView' },
   'view:customers': { module: 'CUSTOMER', action: 'canView' }, // Fixed from PIPELINE
-  'view:deals': { module: 'PIPELINE', action: 'canView' },
+  'view:deals': { module: 'DEAL', action: 'canView' },
   'view:audit': { module: 'AUDIT', action: 'canView' },
   'view:targets': { module: 'TARGET', action: 'canView' },
   'view:notifications': { module: 'NOTIFICATION', action: 'canView' },
@@ -141,9 +141,9 @@ export const AuthProvider = ({ children }) => {
     ) {
       const rank = Number(user.primaryRoleRank || 0);
       const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;
-      const isCompanyAdmin = isSuperAdmin || user.primaryRole === 'COMPANY_ADMIN' || rank >= 80;
-      const isManagerOrAdmin = isCompanyAdmin || user.primaryRole === 'BRANCH_MANAGER' || rank >= 60;
-      const isBdeOrLeader = isManagerOrAdmin || user.primaryRole === 'BDE' || rank >= 40 || Boolean(user.isTeamLeader);
+      const isCompanyAdmin = isSuperAdmin || user.primaryRole === 'COMPANY_ADMIN' || rank >= 61;
+      const isManagerOrAdmin = isCompanyAdmin || user.primaryRole === 'BRANCH_MANAGER' || rank >= 41;
+      const isBdeOrLeader = isManagerOrAdmin || user.primaryRole === 'BDE' || rank >= 21 || Boolean(user.isTeamLeader);
 
       if (moduleOrPermissionStr === 'view:kpi:company') return isCompanyAdmin;
       if (moduleOrPermissionStr === 'view:kpi:branch') return isManagerOrAdmin;
@@ -174,6 +174,23 @@ export const AuthProvider = ({ children }) => {
       if (actionKey === 'canCreate' || actionKey === 'canManage') return isManagerOrAdmin;
       if (actionKey === 'canViewAll') return isBdeOrLeader;
       return true; // canViewOwn / canView is true for all authenticated users
+    }
+
+    // Special logic for Notifications: every user and role can see their own notifications
+    if (
+      moduleOrPermissionStr === 'NOTIFICATION' ||
+      moduleOrPermissionStr === 'view:notifications' ||
+      moduleOrPermissionStr === 'read:notification' ||
+      moduleOrPermissionStr === 'delete:notification'
+    ) {
+      return true;
+    }
+
+    // Special logic for Audit Logs: strictly Super Admin and Company Admin only
+    if (moduleOrPermissionStr === 'AUDIT' || moduleOrPermissionStr === 'view:audit') {
+      const role = (user.primaryRole || user.role || '').toUpperCase();
+      const rank = Number(user.primaryRoleRank ?? 0);
+      return role === 'SUPER_ADMIN' || role === 'COMPANY_ADMIN' || rank >= 80;
     }
 
     // Mode A: Direct check - hasPermission('MODULE_NAME', 'canAction')

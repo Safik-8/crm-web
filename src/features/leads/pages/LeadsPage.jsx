@@ -28,6 +28,7 @@ import {
   Users
 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import useListManager from '../../../shared/hooks/useListManager';
 import { useFormatters } from '../../../shared/hooks/useFormatters';
@@ -491,12 +492,10 @@ export const LeadsPage = () => {
 
 
 
-  // Role-based scope permissions
-  const role = currentUser?.primaryRole;
-  const isSuperAdmin = role === 'SUPER_ADMIN';
-  const isCompanyAdmin = role === 'COMPANY_ADMIN' || (currentUser?.primaryRoleRank >= 80 && !currentUser?.branchId);
+  // Role-based scope permissions via Universal 4-Tier Hierarchy
+  const { isSuperAdmin, isCompanyWide, isCompanyAdmin } = getRoleHierarchy(currentUser);
   const canSelectCompany = isSuperAdmin;
-  const canSelectBranch = isSuperAdmin || isCompanyAdmin;
+  const canSelectBranch = isCompanyWide;
 
   // Fetch Companies (for Super Admin)
   const { data: companiesRes } = useQuery({

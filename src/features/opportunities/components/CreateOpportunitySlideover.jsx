@@ -16,7 +16,6 @@ export const CreateOpportunitySlideover = ({
 }) => {
   const { user } = useAuth();
   const { settings } = useSettings();
-  const isManagerOrAdmin = (user?.rank && user.rank >= 60) || ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'].includes(user?.role);
 
   // Deduplicate and format course options cleanly
   const courseOptions = React.useMemo(() => {

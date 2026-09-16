@@ -7,6 +7,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Table from '../../../shared/components/elements/Table';
@@ -120,13 +121,12 @@ const CustomersPage = () => {
     ];
   }, [customers]);
 
-  const actorRank = user?.primaryRoleRank ?? 0;
-  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = user?.primaryRole === 'COMPANY_ADMIN' || actorRank >= 80;
-  const canToggleStatus = hasPermission('CUSTOMER', 'canEdit') && (isSuperAdmin || isCompanyAdmin || actorRank >= 60);
-  const canFilterOwner = isSuperAdmin || isCompanyAdmin || actorRank >= 60;
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const canToggleStatus = hasPermission('CUSTOMER', 'canEdit') && (isCompanyWide || isBranchLevel);
+  const canFilterOwner = isCompanyWide || isBranchLevel;
   const canFilterCompany = isSuperAdmin;
-  const canFilterBranch = isSuperAdmin || isCompanyAdmin;
+  const canFilterBranch = isCompanyWide;
 
   const fetchCustomers = async (currentPage = page) => {
     setLoadingState('loading');

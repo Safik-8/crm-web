@@ -39,7 +39,7 @@ export const navGroups = [
     items: [
       { name: 'Pipelines', path: '/pipelines', icon: Kanban, permission: PERMISSIONS.VIEW_PIPELINES },
       { name: 'Leads', path: '/leads', icon: ClipboardList, permission: PERMISSIONS.VIEW_LEADS },
-      { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_LEADS },
+      { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_OPPORTUNITIES },
       { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
       { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
       { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
@@ -51,8 +51,8 @@ export const navGroups = [
       { name: 'My Performance', path: '/my-performance', icon: Target, permission: PERMISSIONS.VIEW_KPI_OWN },
       { name: 'KPI Analytics', path: '/kpi-analytics', icon: TrendingUp, permission: PERMISSIONS.VIEW_KPI_ALL },
       { name: 'KPI Setup', path: '/kpi-management', icon: Target, permission: PERMISSIONS.CREATE_KPI },
-      { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_REPORTS },
-      { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REPORTS },
+      { name: 'Sales Performance', path: '/reports/sales-performance', icon: TrendingUp, permission: PERMISSIONS.VIEW_SALES_PERFORMANCE },
+      { name: 'Revenue Reports', path: '/reports/revenue', icon: DollarSign, permission: PERMISSIONS.VIEW_REVENUE_REPORT },
       { name: 'Reports', path: '/reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
     ]
   },
@@ -69,8 +69,8 @@ export const navGroups = [
       { name: 'Lead Sources', path: '/settings/lead-sources', icon: Compass, permission: PERMISSIONS.VIEW_LEAD_SOURCES },
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
-      { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES },
-      { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
+      { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
+      { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
     ]
   }
 ];
@@ -87,7 +87,12 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
   return items.filter(item => {
     // Check Role constraint if specified (case-insensitive check)
     if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) {
-      return false;
+      const userRank = user?.primaryRoleRank ?? 0;
+      if (item.name === 'Teams' && userRank >= 41) {
+        // Allow custom branch/HQ management roles with rank >= 41
+      } else {
+        return false;
+      }
     }
     // Hide 'My Team' if user has no active team
     if (item.path === '/my-team' && !hasActiveTeam) {
@@ -105,7 +110,14 @@ export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) 
 
   return navGroups.map(group => {
     const filteredItems = group.items.filter(item => {
-      if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) return false;
+      if (item.roles && !item.roles.some(r => r.toUpperCase() === userRole)) {
+        const userRank = user?.primaryRoleRank ?? 0;
+        if (item.name === 'Teams' && userRank >= 41) {
+          // Allow custom branch/HQ management roles with rank >= 41
+        } else {
+          return false;
+        }
+      }
       if (item.path === '/my-team' && !hasActiveTeam) return false;
       return !item.permission || hasPermission(item.permission);
     });

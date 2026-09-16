@@ -11,6 +11,7 @@ import { Menu, MenuItem, Dialog } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useDealsQuery, useDealsStatsQuery, useDealDetailQuery } from '../hooks/useDeals';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { companyApi } from '../../company/api/companyApi';
 import { apiClient } from '../../../lib/api/api';
@@ -247,9 +248,9 @@ const DealsPage = () => {
   const { forceHideLoader } = useLoader();
   const { formatCurrency, formatDate } = useFormatters();
 
-  const isSuperAdmin   = user?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = !isSuperAdmin && (user?.primaryRoleRank ?? 0) >= 80;
-  const canSeeAll      = isSuperAdmin || isCompanyAdmin;
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const canSeeAll      = isCompanyWide;
 
   // ── filter state ──────────────────────────────────────────────────────────
   const [search,      setSearch]      = useState('');
@@ -305,12 +306,12 @@ const DealsPage = () => {
   const { data: usersRaw } = useQuery({
     queryKey : ['users-active-deals', user?.companyId],
     queryFn  : async () => {
-      if ((user?.primaryRoleRank ?? 0) < 60) return [];
+      if (!isCompanyWide && !isBranchLevel) return [];
       const res = await apiClient(`/users?status=ACTIVE&limit=100`, { method: 'GET' });
       const items = res?.data?.items || res?.data || res?.items || res || [];
       return Array.isArray(items) ? items : [];
     },
-    enabled  : !!user && (user?.primaryRoleRank ?? 0) >= 60,
+    enabled  : !!user && (isCompanyWide || isBranchLevel),
     staleTime: 60000,
   });
   const activeUsers = usersRaw || [];
@@ -729,7 +730,7 @@ const DealsPage = () => {
           </div>
 
           {/* Owner Filter (Admin / Manager only) */}
-          {(user?.primaryRoleRank ?? 0) >= 60 && (
+          {(isCompanyWide || isBranchLevel) && (
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
               <SelectField

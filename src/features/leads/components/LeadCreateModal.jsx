@@ -11,6 +11,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Drawer from '../../../shared/components/elements/Drawer';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useSettings } from '../../settings/hooks/useSettings';
 
 export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId }) => {
@@ -18,8 +19,8 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
   const { settings } = useSettings();
   const createLeadMutation = useCreateLeadMutation();
 
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (currentUser?.primaryRoleRank >= 80 && !currentUser?.branchId);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
 
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [selectedBranchId, setSelectedBranchId] = useState('');
@@ -627,7 +628,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
                   Cancel
                 </button>
 
-                {currentUser?.primaryRoleRank >= 60 ? (
+                {currentUser?.primaryRoleRank >= 41 ? (
                   <button
                     type="button"
                     onClick={() => handleSubmit(null, true)}
