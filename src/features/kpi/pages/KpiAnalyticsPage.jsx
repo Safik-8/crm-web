@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, TrendingUp, Plus, AlertCircle, BarChart3, PieChart as PieIcon, CheckCircle2, Clock, Search, Filter, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useKpiDashboard } from '../hooks/useKpi';
 import KpiCard from '../components/KpiCard';
 import { CrmBarChart, CrmLineChart, CrmPieChart, ChartEmptyState } from '../../../shared/components/charts';
@@ -24,12 +25,9 @@ export default function KpiAnalyticsPage() {
   const [selectedBranchId, setSelectedBranchId] = useState('ALL');
   const [selectedCompanyId, setSelectedCompanyId] = useState('ALL');
 
-  const primaryRole = user?.primaryRole || '';
-  const rank = user?.primaryRoleRank ?? 0;
-
-  const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || rank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && rank >= 80);
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && rank >= 60);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isTeamLevel, isPersonal, role: primaryRole } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide;
+  const isBranchManager = isBranchLevel || isCompanyWide;
 
   const canCreate =
     hasPermission('KPI', 'canCreate') ||
@@ -107,7 +105,7 @@ export default function KpiAnalyticsPage() {
   const targets = rawData.targets || [];
   const charts = rawData.charts || {};
 
-  const isIse = primaryRole === 'ISE';
+  const isIse = isPersonal || primaryRole === 'ISE';
   const canDrill = !isIse;
 
   const barSeries = [

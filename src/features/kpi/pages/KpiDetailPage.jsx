@@ -4,6 +4,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Target, ArrowLeft, Calendar, User, Users, Building2, TrendingUp, AlertCircle, CheckCircle2, Clock, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useKpiDetail } from '../hooks/useKpi';
 import GlobalLoader from '../../../shared/components/elements/GlobalLoader';
 import Skeleton from '../../../shared/components/elements/Skeleton';
@@ -14,8 +15,8 @@ export default function KpiDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
 
-  const primaryRole = user?.primaryRole || '';
-  const isIse = primaryRole === 'ISE';
+  const { isPersonal } = getRoleHierarchy(user);
+  const isIse = isPersonal;
 
   const { data: detailResponse, isLoading, isError, error } = useKpiDetail(id, {
     enabled: Boolean(id) && !isIse,

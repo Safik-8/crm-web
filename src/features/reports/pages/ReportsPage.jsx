@@ -419,7 +419,7 @@ const ReportsPage = () => {
             const endStr = currentFilters.endDate ? new Date(currentFilters.endDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '';
 
             let viewDesc = `Showing data for ${branchName} (Organization View)`;
-            if (user?.primaryRoleRank < 60) {
+            if (user?.primaryRoleRank < 41) {
               viewDesc = `Showing data for ${user.branch?.name || 'Your Branch'} → ${user.name}`;
             } else if (currentFilters.viewMode === 'TEAM') {
               const teamName = getOptionName('teams', currentFilters.teamId) || 'Selected Team';
@@ -449,14 +449,14 @@ const ReportsPage = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const defaultMode = user?.primaryRoleRank < 60 ? 'INDIVIDUAL' : (user?.primaryRoleRank >= 60 && user?.primaryRoleRank < 80 ? 'TEAM' : 'ORGANIZATION');
+                    const defaultMode = user?.primaryRoleRank < 41 ? 'INDIVIDUAL' : (user?.primaryRoleRank >= 41 && user?.primaryRoleRank < 61 ? 'TEAM' : 'ORGANIZATION');
                     const updated = {
                       ...currentFilters,
                       viewMode: defaultMode,
                       startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
                       endDate: new Date().toISOString().split('T')[0],
                       teamId: '',
-                      employeeId: (user?.primaryRoleRank < 60) ? user.id : '',
+                      employeeId: (user?.primaryRoleRank < 41) ? user.id : '',
                       statusId: '',
                       status: '',
                       paymentStatus: '',

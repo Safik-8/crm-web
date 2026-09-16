@@ -40,9 +40,9 @@ const UserFormModal = ({
     }
   }, [currentUser, isEditMode, isOpen, handleChange, values.companyId]);
 
-  // Automatically lock Branch Manager to their branch
+  // Automatically lock branch-scoped actors (rank <= 60) to their branch
   useEffect(() => {
-    if (!isEditMode && isOpen && (currentUser?.primaryRole === 'BRANCH_MANAGER' || (!((currentUser?.primaryRoleRank ?? 0) >= 80) && (currentUser?.primaryRoleRank ?? 0) >= 60)) && currentUser?.branchId && values.branchId !== currentUser.branchId) {
+    if (!isEditMode && isOpen && ((currentUser?.primaryRoleRank ?? 0) <= 60) && currentUser?.branchId && values.branchId !== currentUser.branchId) {
       handleChange('branchId', currentUser.branchId);
     }
   }, [currentUser, isEditMode, isOpen, handleChange, values.branchId]);
@@ -60,7 +60,7 @@ const UserFormModal = ({
   // 1. Fetch Branches for selected company
   const formActorRank = currentUser?.primaryRoleRank ?? 0;
   const formCanSelectCompany = formActorRank >= 100; // rank-based, works for any custom role
-  const formCanViewRoles = formActorRank >= 80;  // rank-based: Company Admin+ can use roleApi
+  const formCanViewRoles = formActorRank >= 61;  // rank-based: Company-wide (rank >= 61) can use roleApi
   const targetCompanyId = formCanSelectCompany ? values.companyId : currentUser?.companyId;
 
   const { data: branchesRes } = useQuery({
@@ -71,8 +71,8 @@ const UserFormModal = ({
   const filteredBranches = Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || []);
 
   // 2. Fetch Roles for selected company
-  // rank >= 80 (Company Admin+): use roleApi (full list, scoped by company)
-  // rank < 80 (Branch Manager, BDE, ISE): use getAssignableRoles (no ROLE_PERMISSION required)
+  // rank >= 61 (Company Admin / Tier 1): use roleApi (full list, scoped by company)
+  // rank <= 60 (Branch Manager, BDE, ISE): use getAssignableRoles (no ROLE_PERMISSION required)
   const { data: rolesAdminRes } = useQuery({
     queryKey: ['roles-form-options', targetCompanyId],
     queryFn: () => roleApi.getRoles({ companyId: targetCompanyId, limit: 100 }),
@@ -112,9 +112,9 @@ const UserFormModal = ({
     if (managerRank <= selectedRoleRank) return false;
 
     // 2. Branch Alignment Check
-    // If the manager is tied to a specific branch, it must match the form's branch.
-    // If the manager has no branchId (like Company Admin), they are company-wide.
-    if (m.branchId && values.branchId && Number(m.branchId) !== Number(values.branchId)) {
+    // If the manager is branch-scoped (rank <= 60), their branch must match the form's branch.
+    // Managers with rank >= 61 have company-wide authority and can manage any branch.
+    if (managerRank <= 60 && m.branchId && values.branchId && Number(m.branchId) !== Number(values.branchId)) {
       return false;
     }
 
@@ -373,7 +373,7 @@ const UserFormModal = ({
             ) : null}
 
             {/* Branch Selection */}
-            {(currentUser?.primaryRole === 'BRANCH_MANAGER' || (!((currentUser?.primaryRoleRank ?? 0) >= 80) && (currentUser?.primaryRoleRank ?? 0) >= 60)) && !isEditMode ? null : (
+            {((currentUser?.primaryRoleRank ?? 0) <= 60) && !isEditMode ? null : (
               <SelectField
                 id="branchId"
                 label="Branch"
@@ -382,7 +382,7 @@ const UserFormModal = ({
                 errorText={errors.branchId}
                 options={filteredBranches.map(b => ({ value: b.id, label: b.name }))}
                 required
-                disabled={!values.companyId || isBranchScoped || (currentUser?.primaryRoleRank ?? 0) < 80}
+                disabled={!values.companyId || isBranchScoped || (currentUser?.primaryRoleRank ?? 0) < 61}
                 searchable={true}
               />
             )}

@@ -391,7 +391,7 @@ export const router = createBrowserRouter([
       {
         path: 'audit-logs',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_AUDIT}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'COMPANY_ADMIN']}>
             <AuditPage />
           </ProtectedRoute>
         ),
@@ -399,7 +399,7 @@ export const router = createBrowserRouter([
       {
         path: 'notifications',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_NOTIFICATIONS}>
+          <ProtectedRoute>
             <NotificationsPage />
           </ProtectedRoute>
         ),

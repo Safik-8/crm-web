@@ -21,6 +21,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../api/axiosClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useExport } from '../../../shared/hooks/useExport';
 import { salesPerformanceService } from '../services/salesPerformanceService';
 
@@ -30,14 +31,11 @@ export default function SalesPerformancePage() {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const { exportCSV, exportExcel, exportPDFFromData, isExporting } = useExport();
 
-  // Role Scoping Matrix Identification
-  const primaryRole = user?.primaryRole || '';
-  const primaryRoleRank = user?.primaryRoleRank ?? 0;
-
-  const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || primaryRoleRank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && primaryRoleRank >= 80);
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && primaryRoleRank >= 60);
-  const isBdeOrIse = !isSuperAdmin && !isCompanyAdmin && !isBranchManager;
+  // Role Scoping Matrix Identification via Universal 4-Tier Hierarchy
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isPersonal } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide;
+  const isBranchManager = isBranchLevel;
+  const isBdeOrIse = !isSuperAdmin && !isCompanyWide && !isBranchLevel;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBdeOrIse };
   const canViewReport = hasPermission('SALES_PERFORMANCE', 'canView') || hasPermission('REPORT', 'canView') || isSuperAdmin || isCompanyAdmin || isBranchManager;

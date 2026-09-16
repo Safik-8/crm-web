@@ -51,6 +51,7 @@ import { useLeadsQuery } from '../../leads/hooks/useLeads';
 import { useCoursesQuery } from '../../courses/hooks/useCourses';
 
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { PERMISSIONS } from '../../../lib/constants/permissions';
 
 const DEFAULT_STAGES = [
@@ -131,10 +132,10 @@ export const OpportunitiesPage = () => {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
 
-  const isSuperAdmin = user?.primaryRoleRank >= 100 || user?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = !isSuperAdmin && user?.primaryRoleRank >= 80;
+  const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
   const canFilterByCompany = isSuperAdmin;
-  const canFilterByBranch = isSuperAdmin || isCompanyAdmin;
+  const canFilterByBranch = isCompanyWide;
   const canCreateOpportunity = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
 
   const [viewMode, setViewMode] = useState('kanban');

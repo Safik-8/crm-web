@@ -3,7 +3,6 @@ import { CircularProgress } from '@mui/material';
 import { X, Pencil, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useUpdateLeadMutation, useLeadFormDataQuery } from '../hooks/useLeads';
-import { useAuth } from '../../../app/providers/AuthProvider';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
 import { getPipelines } from '../../pipelines/services/pipelineService';
@@ -11,13 +10,17 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Drawer from '../../../shared/components/elements/Drawer';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
+import { useSettings } from '../../settings/hooks/useSettings';
 
-export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }) => {
+export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
   const { user: currentUser } = useAuth();
+  const { settings } = useSettings();
   const updateLeadMutation = useUpdateLeadMutation();
 
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN';
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (currentUser?.primaryRoleRank >= 80 && !currentUser?.branchId);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
 
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [selectedBranchId, setSelectedBranchId] = useState('');
@@ -624,7 +627,7 @@ export const LeadEditModal = ({ lead, assignableUsers = [], onClose, onUpdated }
                   Cancel
                 </button>
 
-                {currentUser?.primaryRoleRank >= 60 ? (
+                {currentUser?.primaryRoleRank >= 41 ? (
                   <button
                     type="button"
                     onClick={() => handleSubmit(null, true)}

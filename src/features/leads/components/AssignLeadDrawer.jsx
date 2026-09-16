@@ -3,6 +3,7 @@ import Drawer from '../../../shared/components/elements/Drawer';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 import Button from '../../../shared/components/elements/Button';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useTeamsQuery } from '../../teams/hooks/useTeams';
 import { userService } from '../../users/services/userService';
 import { branchService } from '../../branch/services/branchService';
@@ -29,10 +30,9 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
   const [notes, setNotes] = useState('');
   const [reason, setReason] = useState('');
 
-  const actorRank = currentUser?.primaryRoleRank ?? 0;
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && actorRank >= 60);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
 
   // Reset form states and default scopes on open
   useEffect(() => {

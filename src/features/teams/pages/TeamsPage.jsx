@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Users2, Plus, RefreshCw, Search, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -113,7 +114,7 @@ const TeamsPage = () => {
     setView('active');
     const actorRank = currentUser?.primaryRoleRank ?? 0;
     const isSuper = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
-    const isComp = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuper && actorRank >= 80);
+    const isComp = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuper && actorRank >= 61);
     if (isSuper) {
       setCompanyId('');
       setBranchId('');
@@ -130,10 +131,9 @@ const TeamsPage = () => {
     return () => clearTimeout(timer);
   }, [forceHideLoader]);
 
-  const actorRank = currentUser?.primaryRoleRank ?? 0;
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && actorRank >= 60);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
 
   // Query Teams List
   const {

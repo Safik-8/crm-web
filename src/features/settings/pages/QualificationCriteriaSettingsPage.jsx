@@ -43,6 +43,7 @@ import Checkbox from '../../../shared/components/elements/Checkbox';
 import { DynamicFormModal } from '../../../shared/components/elements/DynamicFormModal';
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { toast } from '../../../shared/utils/toast';
 
 const PALETTE = [
@@ -137,25 +138,25 @@ const FactorActionMenu = ({ item, canEdit, canDelete, onEdit, onDelete }) => {
 
 const QualificationCriteriaSettingsPage = () => {
   const { hasPermission, user } = useAuth();
-  const actorRank = user?.primaryRoleRank ?? 0;
-  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN" || actorRank >= 100;
+  const currentUser = user;
+  const { isSuperAdmin, isCompanyWide, rank: actorRank, role: userRole } = getRoleHierarchy(user);
 
   // Dynamic RBAC Permission Checks
   const canEdit =
     hasPermission('QUALIFICATION', 'canEdit') ||
     hasPermission('QUALIFICATION', 'canCreate') ||
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
-    user?.primaryRole === 'SUPER_ADMIN' ||
-    user?.primaryRole === 'COMPANY_ADMIN' ||
-    actorRank >= 80;
+    isSuperAdmin ||
+    isCompanyWide ||
+    actorRank >= 61;
 
   const canDelete =
     hasPermission('QUALIFICATION', 'canDelete') ||
     hasPermission('SYSTEM_SETTINGS', 'canDelete') ||
     hasPermission('SYSTEM_SETTINGS', 'canEdit') ||
-    user?.primaryRole === 'SUPER_ADMIN' ||
-    user?.primaryRole === 'COMPANY_ADMIN' ||
-    actorRank >= 80;
+    isSuperAdmin ||
+    isCompanyWide ||
+    actorRank >= 61;
 
   // Super Admin Multi-Company Selector State
   const [selectedCompanyId, setSelectedCompanyId] = useState(

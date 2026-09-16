@@ -42,6 +42,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api/api';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useExport } from '../../../shared/hooks/useExport';
 import { revenueReportService } from '../services/revenueReportService';
 
@@ -52,15 +53,12 @@ export default function RevenueReportPage() {
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
   const isExportMenuOpen = Boolean(exportMenuAnchorEl);
 
-  // Role Scoping Matrix Identification
-  const primaryRole = user?.primaryRole || '';
-  const primaryRoleRank = user?.primaryRoleRank ?? 0;
-
-  const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || primaryRoleRank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && primaryRoleRank >= 80);
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && primaryRoleRank >= 60);
-  const isBDE = primaryRole === 'BDE' || (!isSuperAdmin && !isCompanyAdmin && !isBranchManager && primaryRoleRank >= 40);
-  const isISE = !isSuperAdmin && !isCompanyAdmin && !isBranchManager && !isBDE;
+  // Role Scoping Matrix Identification via Universal 4-Tier Hierarchy
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isTeamLevel, isPersonal } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
+  const isBDE = isTeamLevel;
+  const isISE = isPersonal;
 
   const userRoleInfo = { isSuperAdmin, isCompanyAdmin, isBranchManager, isBDE, isISE };
 

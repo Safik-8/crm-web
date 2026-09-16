@@ -313,8 +313,8 @@ const UserListTable = ({
         const rowRank = getRowRank(row);
         // Can delete row if:
         // 1. Row is NOT current user's own account (row.id !== user?.id)
-        // 2. Actor is SUPER_ADMIN OR (actorRank >= 80 AND actorRank > rowRank)
-        const canDeleteThisRow = row.id !== user?.id && (isSuperAdmin || (actorRank >= 80 && actorRank > rowRank));
+        // 2. Actor is SUPER_ADMIN OR (actorRank >= 61 AND actorRank > rowRank)
+        const canDeleteThisRow = row.id !== user?.id && (isSuperAdmin || (actorRank >= 61 && actorRank > rowRank));
 
         return (
           <div className="flex justify-end">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { branchService } from '../../branch/services/branchService';
 import { companyService } from '../../company/services/companyService';
 import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
@@ -32,10 +33,9 @@ export const AssignmentSettingsPage = () => {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const actorRank = currentUser?.primaryRoleRank ?? 0;
-  const isSuperAdmin = currentUser?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
-  const isCompanyAdmin = currentUser?.primaryRole === 'COMPANY_ADMIN' || (!isSuperAdmin && actorRank >= 80);
-  const isBranchManager = currentUser?.primaryRole === 'BRANCH_MANAGER' || (!isSuperAdmin && !isCompanyAdmin && (actorRank >= 60 || !!currentUser?.branchId));
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
 
   // Selection states
   const [selectedCompanyId, setSelectedCompanyId] = useState('');

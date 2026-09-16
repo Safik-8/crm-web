@@ -70,7 +70,7 @@ export const navGroups = [
       { name: 'Lead Statuses', path: '/settings/lead-statuses', icon: Tags, permission: PERMISSIONS.VIEW_LEAD_STATUSES },
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
-      { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, permission: PERMISSIONS.VIEW_AUDIT, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
+      { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
     ]
   }
 ];

@@ -20,7 +20,7 @@ const CommentThread = ({ leadId }) => {
     hasPermission('PIPELINE', 'canEdit') ||
     user?.primaryRole === 'SUPER_ADMIN' ||
     user?.primaryRole === 'COMPANY_ADMIN' ||
-    (user?.primaryRoleRank >= 40);
+    (user?.primaryRoleRank >= 21);
 
   const { data: comments = [], isLoading: loading, refetch } = useQuery({
     queryKey: ['lead-comments', leadId],

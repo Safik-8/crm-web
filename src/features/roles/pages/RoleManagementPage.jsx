@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X, MoreVertical, Info } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X, MoreVertical, Info, Sparkles, RotateCcw, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole, useToggleRoleStatus } from '../hooks/useRoles';
 import { roleApi } from '../api/roleApi';
 import RoleScopePreview from '../components/RoleScopePreview';
-import RoleSummaryBox from '../components/RoleSummaryBox';
 import GenericPage from '../../../shared/components/templates/GenericPage';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import Button from '../../../shared/components/elements/Button';
@@ -32,172 +31,192 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 
+const MODULE_GROUPS = [
+  { id: 'crm', label: 'CRM' },
+  { id: 'settings', label: 'Settings' },
+  { id: 'reports', label: 'Reports' },
+];
+
 const MODULES_LIST = [
   {
     value: "SYSTEM_SETTINGS",
     label: "System Settings",
+    group: "settings",
     uiLocation: "/settings/system",
     controls: "Global system configuration, timezone, branding & default limits"
   },
   {
     value: "COMPANY",
     label: "Company Setup",
+    group: "settings",
     uiLocation: "/settings/organization",
     controls: "Company entities, profile information & branding"
   },
   {
     value: "BRANCH",
     label: "Branch Setup",
+    group: "settings",
     uiLocation: "/settings/branch",
     controls: "Branch locations, managers & branch assignments"
   },
   {
     value: "USER",
     label: "User Management",
+    group: "settings",
     uiLocation: "/users",
     controls: "Employee directory, user creation & role assignments"
   },
   {
     value: "TEAM",
     label: "Team Coordination",
+    group: "crm",
     uiLocation: "/teams & /my-team",
     controls: "Team pods, BDE leads & ISE member assignments"
   },
   {
     value: "LEAD",
     label: "Leads Management",
+    group: "crm",
     uiLocation: "/leads",
     controls: "Lead records, comments, notes, call logs & quick actions"
   },
   {
     value: "FOLLOWUP",
     label: "Follow-ups & Reminders",
+    group: "crm",
     uiLocation: "Dashboard & Leads > Follow-ups",
     controls: "Schedule, complete, view & manage lead follow-ups and due reminders"
   },
   {
     value: "TASK",
     label: "Tasks Management",
+    group: "crm",
     uiLocation: "Dashboard & Leads > Tasks",
     controls: "Create, track, reassign & manage follow-up tasks and deadlines"
   },
   {
     value: "ACTIVITY",
     label: "Activity History",
+    group: "crm",
     uiLocation: "Leads & Deals > Activity Log",
     controls: "View timeline of customer interactions, stage transitions & notes"
   },
   {
     value: "QUALIFICATION",
     label: "Lead Qualification",
+    group: "settings",
     uiLocation: "/settings/qualification",
     controls: "Qualification scoring criteria & lead qualification drawer"
   },
   {
     value: "LEAD_ASSIGNMENT",
     label: "Lead Assignment",
+    group: "settings",
     uiLocation: "/assignment-settings",
     controls: "Round-robin distribution, capacity limits & assign drawer"
   },
   {
     value: "LEAD_SOURCE",
     label: "Lead Sources",
+    group: "settings",
     uiLocation: "/settings/lead-sources",
     controls: "Inbound channels (Website, Ads, Referrals, Social)"
   },
   {
     value: "LEAD_STATUS",
     label: "Lead Statuses",
+    group: "settings",
     uiLocation: "/settings/lead-statuses",
     controls: "Lead status tags (Hot, Warm, Cold, Junk, Disqualified)"
   },
   {
     value: "PIPELINE",
     label: "Pipelines",
+    group: "crm",
     uiLocation: "/pipelines",
     controls: "Pipeline stages, transition rules & Kanban boards"
   },
   {
     value: "OPPORTUNITY_PIPELINE",
     label: "Opportunity Pipelines",
+    group: "crm",
     uiLocation: "Opportunities > Manage Stages",
     controls: "Opportunity lifecycle stage definitions & probabilities"
   },
   {
     value: "OPPORTUNITY",
     label: "Opportunities Engine",
+    group: "crm",
     uiLocation: "/opportunities",
     controls: "Deal conversions, opportunity records & value tracking"
   },
   {
     value: "CUSTOMER",
     label: "Customers",
+    group: "crm",
     uiLocation: "/customers",
     controls: "Converted client accounts, purchase history & directory"
   },
   {
     value: "DEAL",
     label: "Deals",
+    group: "crm",
     uiLocation: "/deals",
     controls: "Closed-won transactions, payment tracking & contracts"
   },
   {
     value: "COURSE",
     label: "Courses",
+    group: "crm",
     uiLocation: "/courses",
     controls: "Product/course catalog, curriculums & pricing packages"
   },
   {
     value: "APPROVAL",
     label: "Approvals",
+    group: "crm",
     uiLocation: "Proposals & Deals Drawers",
     controls: "Discount approvals, manager overrides & proposal sign-offs"
   },
   {
     value: "DASHBOARD",
     label: "Dashboard",
+    group: "reports",
     uiLocation: "/dashboard",
     controls: "Executive, branch, BDE & ISE analytical dashboards"
   },
   {
     value: "TARGET",
     label: "Targets",
+    group: "reports",
     uiLocation: "/kpi-management (KPI Setup)",
     controls: "Monthly/quarterly targets for users, teams & branches"
   },
   {
     value: "KPI",
     label: "KPI & Performance",
+    group: "reports",
     uiLocation: "/my-performance & /kpi-analytics",
     controls: "Personal & team conversion KPI tracking & analytics"
   },
   {
-    value: "NOTIFICATION",
-    label: "Notifications",
-    uiLocation: "Topbar Bell & /notifications",
-    controls: "Alert center, system notifications & reminder dispatches"
-  },
-  {
-    value: "AUDIT",
-    label: "Audit Logs",
-    uiLocation: "/audit-logs",
-    controls: "Security audit trails & record change inspection"
-  },
-  {
     value: "REPORT",
     label: "Reports Engine",
+    group: "reports",
     uiLocation: "/reports",
     controls: "General reporting suite, filtering & data exports"
   },
   {
     value: "REVENUE_REPORT",
     label: "Revenue & Financial Reports",
+    group: "reports",
     uiLocation: "/reports/revenue",
     controls: "Branch revenue trends, turnover & financial forecasting"
   },
   {
     value: "SALES_PERFORMANCE",
     label: "Sales Performance Reports",
+    group: "reports",
     uiLocation: "/reports/sales-performance",
     controls: "BDE/ISE sales leaderboards, call ratios & conversion rates"
   }
@@ -257,6 +276,126 @@ const HIERARCHY_DETAILS = {
   }
 };
 
+const RECOMMENDED_PERMISSIONS_MAP = {
+  COMPANY_ADMIN_TO_BRANCH_MANAGER: {
+    SYSTEM_SETTINGS: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    COMPANY: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    BRANCH: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    USER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    TEAM: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    ACTIVITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    LEAD_ASSIGNMENT: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    LEAD_SOURCE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    LEAD_STATUS: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    PIPELINE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    COURSE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    APPROVAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TARGET: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    KPI: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    REPORT: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    REVENUE_REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
+  },
+  BRANCH_MANAGER_TO_BDE: {
+    SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    COMPANY: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    BRANCH: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    USER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TEAM: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    ACTIVITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    LEAD_ASSIGNMENT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    APPROVAL: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TARGET: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    KPI: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REVENUE_REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
+  },
+  BDE_TO_ISE: {
+    SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    COMPANY: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    BRANCH: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    USER: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TEAM: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    ACTIVITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    LEAD_ASSIGNMENT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TARGET: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    KPI: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REVENUE_REPORT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
+  },
+  BELOW_ISE: {
+    SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    COMPANY: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    BRANCH: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    USER: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TEAM: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    ACTIVITY: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_ASSIGNMENT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    CUSTOMER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    DEAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    TARGET: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    KPI: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REPORT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REVENUE_REPORT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    SALES_PERFORMANCE: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
+  }
+};
+
+const isModuleRecommended = (moduleValue, bracket) => {
+  const rec = RECOMMENDED_PERMISSIONS_MAP[bracket]?.[moduleValue];
+  return Boolean(rec && (rec.canView || rec.canCreate || rec.canEdit || rec.canDelete));
+};
+
 const RoleManagementPage = () => {
   const { user } = useAuth();
   const { forceHideLoader } = useLoader();
@@ -291,6 +430,7 @@ const RoleManagementPage = () => {
   const [formCompanyId, setFormCompanyId] = useState('');
   const [formHierarchyBracket, setFormHierarchyBracket] = useState('COMPANY_ADMIN_TO_BRANCH_MANAGER');
   const [formPermissions, setFormPermissions] = useState({});
+  const [collapsedModuleGroups, setCollapsedModuleGroups] = useState({ settings: true, reports: true });
 
   // Query Companies for Super Admin dropdown selection
   const { data: companiesData } = useQuery({
@@ -324,17 +464,20 @@ const RoleManagementPage = () => {
         else if (r <= 19) bracket = 'BELOW_ISE';
         setFormHierarchyBracket(bracket);
 
-        // Map permissions list to object map
+        // Map permissions list to object map (scoped strictly to active MODULES_LIST)
+        const activeModuleSet = new Set(MODULES_LIST.map(m => m.value));
         const permMap = {};
         const rawPerms = selectedRole.rolePermissions || selectedRole.permissions || [];
         rawPerms.forEach(p => {
-          permMap[p.module] = {
-            canView: Boolean(p.canView),
-            canCreate: Boolean(p.canCreate),
-            canEdit: Boolean(p.canEdit),
-            canDelete: Boolean(p.canDelete),
-            canArchive: Boolean(p.canArchive)
-          };
+          if (activeModuleSet.has(p.module)) {
+            permMap[p.module] = {
+              canView: Boolean(p.canView),
+              canCreate: Boolean(p.canCreate),
+              canEdit: Boolean(p.canEdit),
+              canDelete: Boolean(p.canDelete),
+              canArchive: Boolean(p.canArchive)
+            };
+          }
         });
         setFormPermissions(permMap);
       } else {
@@ -429,16 +572,57 @@ const RoleManagementPage = () => {
     }));
   };
 
+  // 1-Click Auto-Fill Recommended Permissions based on selected hierarchy bracket
+  const handleApplyRecommendedPermissions = () => {
+    const template = RECOMMENDED_PERMISSIONS_MAP[formHierarchyBracket];
+    if (!template) return;
+
+    const newPerms = {};
+    MODULES_LIST.forEach(mod => {
+      const t = template[mod.value];
+      newPerms[mod.value] = {
+        canView: Boolean(t?.canView),
+        canCreate: Boolean(t?.canCreate),
+        canEdit: Boolean(t?.canEdit),
+        canDelete: Boolean(t?.canDelete),
+        canArchive: Boolean(t?.canArchive)
+      };
+    });
+
+    setFormPermissions(newPerms);
+    const bracketTitle = HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Selected Scope';
+    toast.success(`Applied recommended permissions for ${bracketTitle}`);
+  };
+
+  // 1-Click Clear all permissions in the matrix
+  const handleRevokeAllPermissions = () => {
+    const cleared = {};
+    MODULES_LIST.forEach(mod => {
+      cleared[mod.value] = {
+        canView: false,
+        canCreate: false,
+        canEdit: false,
+        canDelete: false,
+        canArchive: false
+      };
+    });
+    setFormPermissions(cleared);
+    toast.info('Cleared all matrix permissions');
+  };
+
   const handleFormSubmit = async () => {
     if (!formName.trim()) {
       toast.error('Role name is required');
       return;
     }
 
-    const payloadPermissions = Object.keys(formPermissions).map(mod => ({
-      module: mod,
-      ...formPermissions[mod]
-    }));
+    const activeModuleSet = new Set(MODULES_LIST.map(m => m.value));
+    const payloadPermissions = Object.keys(formPermissions)
+      .filter(mod => activeModuleSet.has(mod))
+      .map(mod => ({
+        module: mod,
+        ...formPermissions[mod]
+      }));
 
     const data = {
       name: formName,
@@ -527,6 +711,9 @@ const RoleManagementPage = () => {
   };
 
   const isSuperOrCompanyAdmin = isSuperAdmin || user?.primaryRole === 'COMPANY_ADMIN';
+  const activeModuleCount = Object.values(formPermissions).filter((p) => p?.canView).length;
+  const footerScopeLabel = HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Selected Scope';
+  const footerRoleName = formName.trim() || 'Untitled role';
 
   const RoleActionsMenu = ({ role }) => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -1015,30 +1202,55 @@ const RoleManagementPage = () => {
               </div>
             )}
 
-            {/* Card 3 — Configuration Summary & Review (3 Blue Badge) */}
-            <RoleSummaryBox
-              roleName={formName}
-              hierarchyBracket={formHierarchyBracket}
-              rank={selectedRole?.rank}
-              permissions={formPermissions}
-              totalModulesCount={MODULES_LIST.length}
-              stepNumber={3}
-            />
-
-            {/* Card 4 — Module Permissions Matrix (4 Emerald Badge) */}
+            {/* Card 3 — Module Permissions Matrix */}
             <div className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 shadow-2xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3.5 border-b border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 mb-3.5 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-bold">4</span>
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-bold">3</span>
                   <div>
-                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-                      Module Permissions Matrix
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                        Module Permissions Matrix
+                      </h3>
+                      {(!selectedRole || !selectedRole.isSystem) && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${HIERARCHY_DETAILS[formHierarchyBracket]?.badgeColor || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                          {HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Selected Scope'}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                      Grant granular action privileges. Enabling Create, Edit, or Delete automatically enables View access.
+                      {(!selectedRole || !selectedRole.isSystem)
+                        ? "Grant granular action privileges. Use 1-click Auto-Fill to populate standard permissions for this hierarchy rank."
+                        : "Granular action privileges assigned to this system role."}
                     </p>
                   </div>
                 </div>
+
+                {/* Smart Auto-Fill & Bulk Controls (Custom Roles Only) */}
+                {(!selectedRole || !selectedRole.isSystem) && (
+                  <div className="flex items-center gap-2 self-start md:self-center flex-wrap">
+                    <button
+                      type="button"
+                      disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
+                      onClick={handleApplyRecommendedPermissions}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-2xs hover:shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      title="Populate recommended permissions for the selected bracket"
+                    >
+                      <Sparkles size={13} />
+                      <span>Auto-Fill Recommended</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
+                      onClick={handleRevokeAllPermissions}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      title="Clear all permissions in matrix"
+                    >
+                      <RotateCcw size={12} />
+                      <span>Clear All</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
@@ -1056,65 +1268,120 @@ const RoleManagementPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {MODULES_LIST.map(mod => (
-                        <tr key={mod.value} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-2.5 px-3.5 text-xs font-bold text-slate-800 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5">
-                              <span>{mod.label}</span>
-                              <Tooltip title={mod.controls} arrow placement="top">
-                                <span className="cursor-help text-slate-400 hover:text-indigo-600 transition-colors">
-                                  <Info size={13} />
-                                </span>
-                              </Tooltip>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3 text-[11px] text-slate-600">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200/60 whitespace-nowrap font-mono">
-                              {mod.uiLocation}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-[11px] text-slate-500 font-normal leading-snug">
-                            {mod.controls}
-                          </td>
-                          {ACTIONS.map(act => {
-                            const isChecked = !!formPermissions[mod.value]?.[act.key];
-                            const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
-                            return (
-                              <td key={act.key} className="py-2 px-2 text-center">
-                                <Checkbox
-                                  id={`permission-${mod.value}-${act.key}`}
-                                  checked={isChecked}
-                                  disabled={isPermissionDisabled}
-                                  onChange={(checked) => handlePermissionChange(mod.value, act.key, checked)}
-                                  sx={{ p: 0, width: 'auto' }}
-                                />
+                      {MODULE_GROUPS.map((group) => {
+                        const groupModules = MODULES_LIST.filter((m) => m.group === group.id);
+                        const isGroupCollapsed = Boolean(collapsedModuleGroups[group.id]);
+                        const groupViewCount = groupModules.filter((m) => formPermissions[m.value]?.canView).length;
+
+                        return (
+                          <React.Fragment key={group.id}>
+                            <tr className="bg-slate-50">
+                              <td colSpan={8} className="p-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setCollapsedModuleGroups((prev) => ({
+                                    ...prev,
+                                    [group.id]: !prev[group.id]
+                                  }))}
+                                  className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-left hover:bg-slate-100/80 transition-colors cursor-pointer"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <ChevronDown
+                                      size={16}
+                                      className={`text-slate-500 shrink-0 transition-transform ${isGroupCollapsed ? '-rotate-90' : ''}`}
+                                    />
+                                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
+                                      {group.label}
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-slate-400">
+                                      {groupModules.length} modules
+                                    </span>
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-500">
+                                    {groupViewCount} ticked
+                                  </span>
+                                </button>
                               </td>
-                            );
-                          })}
-                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                            <div className="flex justify-center gap-1.5">
-                              <button
-                                type="button"
-                                disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
-                                onClick={() => handleToggleRowPermissions(mod.value, true)}
-                                className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer"
-                                title="Grant All"
-                              >
-                                <Check size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
-                                onClick={() => handleToggleRowPermissions(mod.value, false)}
-                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-rose-50 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer"
-                                title="Revoke All"
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </tr>
+                            {!isGroupCollapsed && groupModules.map((mod) => {
+                              const isCustomRole = !selectedRole || !selectedRole.isSystem;
+                              const isRecommended = isCustomRole && isModuleRecommended(mod.value, formHierarchyBracket);
+
+                              return (
+                                <tr
+                                  key={mod.value}
+                                  className={`transition-colors ${isRecommended ? 'hover:bg-emerald-50/40' : 'hover:bg-slate-50/80'
+                                    }`}
+                                >
+                                  <td className="py-2.5 px-3.5 text-xs font-bold text-slate-800">
+                                    <div className="flex flex-col gap-1 items-start">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>{mod.label}</span>
+                                        <Tooltip title={mod.controls} arrow placement="top">
+                                          <span className="cursor-help text-slate-400 hover:text-indigo-600 transition-colors">
+                                            <Info size={13} />
+                                          </span>
+                                        </Tooltip>
+                                      </div>
+                                      {isRecommended && (
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                          <Sparkles size={10} className="text-emerald-500" />
+                                          Recommended
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-3 text-[11px] text-slate-600">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200/60 whitespace-nowrap font-mono">
+                                      {mod.uiLocation}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 text-[11px] text-slate-500 font-normal leading-snug">
+                                    {mod.controls}
+                                  </td>
+                                  {ACTIONS.map((act) => {
+                                    const isChecked = !!formPermissions[mod.value]?.[act.key];
+                                    const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
+                                    return (
+                                      <td key={act.key} className="py-2 px-2 text-center">
+                                        <Checkbox
+                                          id={`permission-${mod.value}-${act.key}`}
+                                          checked={isChecked}
+                                          disabled={isPermissionDisabled}
+                                          onChange={(checked) => handlePermissionChange(mod.value, act.key, checked)}
+                                          sx={{ p: 0, width: 'auto' }}
+                                        />
+                                      </td>
+                                    );
+                                  })}
+                                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                                    <div className="flex justify-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
+                                        onClick={() => handleToggleRowPermissions(mod.value, true)}
+                                        className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-all disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer"
+                                        title="Grant All"
+                                      >
+                                        <Check size={14} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
+                                        onClick={() => handleToggleRowPermissions(mod.value, false)}
+                                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-rose-50 rounded transition-all disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+                                        title="Revoke All"
+                                      >
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1123,22 +1390,43 @@ const RoleManagementPage = () => {
           </div>
         </DialogContent>
 
-        {/* Modal Footer */}
-        <DialogActions sx={{ px: 3, py: 2.5, borderTop: '1px solid #e2e8f0', bgcolor: '#f8fafc', gap: 1.5 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setIsFormOpen(false)}
-            disabled={createRoleMutation.isPending || updateRoleMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleFormSubmit}
-            isLoading={createRoleMutation.isPending || updateRoleMutation.isPending}
-          >
-            {selectedRole ? "Save Changes" : "Create Role"}
-          </Button>
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2,
+            borderTop: '1px solid #e2e8f0',
+            bgcolor: '#fff',
+            gap: 1.5,
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 2
+          }}
+        >
+          <p className="text-[12px] font-semibold text-slate-600 m-0 min-w-0 truncate max-w-full sm:max-w-[58%]">
+            <span className="text-slate-800">{footerRoleName}</span>
+            <span className="text-slate-300 mx-1.5">·</span>
+            <span>{footerScopeLabel}</span>
+            <span className="text-slate-300 mx-1.5">·</span>
+            <span>{activeModuleCount} modules</span>
+          </p>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              variant="outlined"
+              onClick={() => setIsFormOpen(false)}
+              disabled={createRoleMutation.isPending || updateRoleMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleFormSubmit}
+              isLoading={createRoleMutation.isPending || updateRoleMutation.isPending}
+            >
+              {selectedRole ? "Save Changes" : "Create Role"}
+            </Button>
+          </div>
         </DialogActions>
       </Dialog>
 
