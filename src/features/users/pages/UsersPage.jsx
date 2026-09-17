@@ -115,7 +115,8 @@ const UsersPage = () => {
 
   // Can the current user edit (or reset password / toggle status)?
   const canEdit = hasPermission('USER', 'canEdit');
-  const canCreate = hasPermission('USER', 'canCreate');
+  const actorRank = currentUser?.primaryRoleRank ?? 0;
+  const canCreate = hasPermission('USER', 'canCreate') && (actorRank > 20 || currentUser?.primaryRole === 'SUPER_ADMIN' || currentUser?.primaryRole === 'COMPANY_ADMIN');
 
   // ── DROPDOWNS DATA FETCHING (TENANT AWARE) ──────────────────
   const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(currentUser);

@@ -77,9 +77,6 @@ export const updateLead = (leadId, data) =>
 export const deleteLead = (leadId) =>
   apiClient(`/leads/${leadId}`, { method: 'DELETE' });
 
-export const deleteAllLeads = () =>
-  apiClient('/leads/temp-delete-all', { method: 'DELETE' });
-
 /**
  * Update the Kanban pipeline stage of a lead (drag-and-drop).
  * Optionally pass reason (required when moving to LOST stage).
