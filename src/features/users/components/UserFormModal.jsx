@@ -40,12 +40,15 @@ const UserFormModal = ({
     }
   }, [currentUser, isEditMode, isOpen, handleChange, values.companyId]);
 
-  // Automatically lock branch-scoped actors (rank <= 60) to their branch
+  // Helper to determine if actor is branch-scoped
+  const isBranchScopedActor = ((currentUser?.primaryRoleRank ?? 0) <= 60) || Boolean(currentUser?.branchId) || isBranchScoped;
+
+  // Automatically lock branch-scoped actors to their branch
   useEffect(() => {
-    if (!isEditMode && isOpen && ((currentUser?.primaryRoleRank ?? 0) <= 60) && currentUser?.branchId && values.branchId !== currentUser.branchId) {
+    if (!isEditMode && isOpen && isBranchScopedActor && currentUser?.branchId && values.branchId !== currentUser.branchId) {
       handleChange('branchId', currentUser.branchId);
     }
-  }, [currentUser, isEditMode, isOpen, handleChange, values.branchId]);
+  }, [currentUser, isEditMode, isOpen, handleChange, values.branchId, isBranchScopedActor]);
 
   // Fetch Companies (for Super Admin)
   const { data: companiesRes } = useQuery({
@@ -85,9 +88,23 @@ const UserFormModal = ({
     enabled: isOpen && !formCanViewRoles
   });
 
-  const filteredRoles = formCanViewRoles
+  const rawRoles = formCanViewRoles
     ? (Array.isArray(rolesAdminRes?.data?.roles) ? rolesAdminRes.data.roles : (Array.isArray(rolesAdminRes?.data) ? rolesAdminRes.data : []))
     : (Array.isArray(rolesAssignableRes?.data?.roles) ? rolesAssignableRes.data.roles : []);
+
+  // Filter out equal or higher rank roles (only Super Admin can assign equal rank 100) and deduplicate by name
+  const isSuperAdminActor = currentUser?.primaryRole === 'SUPER_ADMIN' || formActorRank >= 100;
+  const uniqueRolesMap = new Map();
+  rawRoles.forEach(r => {
+    const isAllowed = isSuperAdminActor || (r.rank ?? 0) < formActorRank;
+    if (isAllowed) {
+      // If a company-specific role exists, prefer it over global template (companyId === null)
+      if (!uniqueRolesMap.has(r.name) || r.companyId === targetCompanyId) {
+        uniqueRolesMap.set(r.name, r);
+      }
+    }
+  });
+  const filteredRoles = Array.from(uniqueRolesMap.values()).sort((a, b) => (b.rank || 0) - (a.rank || 0));
 
   // 3. Fetch Managers for selected company
   const { data: managersRes } = useQuery({
@@ -373,7 +390,7 @@ const UserFormModal = ({
             ) : null}
 
             {/* Branch Selection */}
-            {((currentUser?.primaryRoleRank ?? 0) <= 60) && !isEditMode ? null : (
+            {isBranchScopedActor && !isEditMode ? null : (
               <SelectField
                 id="branchId"
                 label="Branch"

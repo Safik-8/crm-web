@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleApi } from '../api/roleApi';
 
-export const useRoles = (companyId = '') => {
+export const useRoles = (companyId = '', options = {}) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -32,6 +32,8 @@ export const useRoles = (companyId = '') => {
     companyId
   };
 
+  const isEnabled = options.enabled !== undefined ? options.enabled : true;
+
   const {
     data,
     isLoading,
@@ -42,19 +44,22 @@ export const useRoles = (companyId = '') => {
   } = useQuery({
     queryKey: ['roles', params],
     queryFn: () => roleApi.getRoles(params),
+    enabled: isEnabled,
     staleTime: 2 * 60 * 1000,
   });
 
   const rolesList = Array.isArray(data?.data?.roles) ? data.data.roles : [];
   const paginationInfo = data?.data?.pagination || {
     page: 1,
-    limit: 100,
+    limit: 10,
     total: 0,
     totalPages: 1
   };
 
   let loadingState = 'success';
-  if (isLoading || isFetching) {
+  if (!isEnabled) {
+    loadingState = 'empty';
+  } else if (isLoading || isFetching) {
     loadingState = 'loading';
   } else if (isError) {
     loadingState = 'error';
