@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CircularProgress } from '@mui/material';
-import { X, Pencil, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge } from 'lucide-react';
+import { Pencil, User, Phone, Mail, DollarSign, MapPin, FileText, Compass, Award, Activity, UserCheck, Building, GitMerge } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useUpdateLeadMutation, useLeadFormDataQuery } from '../hooks/useLeads';
 import { companyService } from '../../company/services/companyService';
@@ -14,10 +13,18 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useSettings } from '../../settings/hooks/useSettings';
 
-export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
+export const LeadEditModal = ({
+  isOpen,
+  onClose,
+  lead,
+  onUpdated,
+  assignableUsers = []
+}) => {
   const { user: currentUser } = useAuth();
   const { settings } = useSettings();
   const updateLeadMutation = useUpdateLeadMutation();
+
+  const isModalOpen = isOpen !== undefined ? isOpen : Boolean(lead);
 
   const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
   const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
@@ -82,64 +89,64 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
       });
       setErrors({});
     }
-  }, [lead]);
+  }, [lead, isModalOpen]);
 
-  const targetCompanyId = isSuperAdmin ? selectedCompanyId : currentUser?.companyId;
-  const targetBranchId = (isSuperAdmin || isCompanyAdmin) ? selectedBranchId : currentUser?.branchId;
+  const targetCompanyId = isSuperAdmin ? selectedCompanyId : (lead?.companyId || currentUser?.companyId);
+  const targetBranchId = (isSuperAdmin || isCompanyAdmin) ? selectedBranchId : (lead?.branchId || currentUser?.branchId);
 
   // 1. Fetch Companies list (for Super Admin only)
   const { data: companiesRes, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies-all-options'],
     queryFn: () => companyService.getCompaniesRaw(),
-    enabled: isSuperAdmin && !!lead
+    enabled: isSuperAdmin && !!lead && isModalOpen
   });
   const companiesOptions = (
     Array.isArray(companiesRes)
       ? companiesRes
       : Array.isArray(companiesRes?.data)
-      ? companiesRes.data
-      : []
+        ? companiesRes.data
+        : []
   ).map((c) => ({ id: c.id, name: c.name }));
 
   // 2. Fetch Branches list (for Super Admin & Company Admin)
   const { data: branchesRes, isLoading: isLoadingBranches } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
-    enabled: !!targetCompanyId && (isSuperAdmin || isCompanyAdmin) && !!lead
+    enabled: !!targetCompanyId && (isSuperAdmin || isCompanyAdmin) && isModalOpen
   });
   const branchesOptions = (
     Array.isArray(branchesRes)
       ? branchesRes
       : Array.isArray(branchesRes?.data)
-      ? branchesRes.data
-      : Array.isArray(branchesRes?.data?.branches)
-      ? branchesRes.data.branches
-      : []
+        ? branchesRes.data
+        : Array.isArray(branchesRes?.data?.branches)
+          ? branchesRes.data.branches
+          : []
   ).map((b) => ({ id: b.id, name: b.name }));
 
   // 3. Fetch Pipelines list (for all roles)
   const { data: pipelinesRes, isLoading: isLoadingPipelines } = useQuery({
     queryKey: ['pipelines-form-options', targetCompanyId, targetBranchId],
     queryFn: () => getPipelines({ companyId: targetCompanyId, branchId: targetBranchId }),
-    enabled: !!targetCompanyId && !!lead
+    enabled: !!targetCompanyId && !!lead && isModalOpen
   });
   const pipelinesOptions = (
     Array.isArray(pipelinesRes)
       ? pipelinesRes
       : Array.isArray(pipelinesRes?.data)
-      ? pipelinesRes.data
-      : Array.isArray(pipelinesRes?.data?.pipelines)
-      ? pipelinesRes.data.pipelines
-      : Array.isArray(pipelinesRes?.pipelines)
-      ? pipelinesRes.pipelines
-      : []
+        ? pipelinesRes.data
+        : Array.isArray(pipelinesRes?.data?.pipelines)
+          ? pipelinesRes.data.pipelines
+          : Array.isArray(pipelinesRes?.pipelines)
+            ? pipelinesRes.pipelines
+            : []
   ).map((p) => ({ id: p.id, name: p.name }));
 
   // 4. Fetch dropdown options (Sources, Courses, Statuses, Users)
   const { data: formDataRes, isLoading: isLoadingFormData, isError } = useLeadFormDataQuery({
     companyId: targetCompanyId,
     branchId: targetBranchId
-  });
+  }, { enabled: isModalOpen && !!targetCompanyId });
 
   const validate = () => {
     const errs = {};
@@ -272,7 +279,7 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
   const coursesOptions = (formData.courses || []).map((c) => ({ id: c.id, name: c.name }));
   const statusesOptions = (formData.statuses || []).map((s) => ({ id: s.id, name: s.name }));
 
-  const usersOptions = assignableUsers.length > 0
+  const usersOptions = (assignableUsers && assignableUsers.length > 0)
     ? assignableUsers.map((u) => ({ id: u.id, name: `${u.name}${u.role ? ` (${u.role})` : ''}` }))
     : (formData.users || []).map((u) => ({ id: u.id, name: `${u.name} (${u.role || 'User'})` }));
 
@@ -282,25 +289,57 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
     { id: 'LOW', name: 'Low' }
   ];
 
+  const getCustomFooter = () => {
+    return (
+      <div className="flex w-full items-center justify-end gap-2">
+        <Button
+          variant="text"
+          onClick={onClose}
+          disabled={updateLeadMutation.isPending}
+          sx={{
+            color: '#475569',
+            fontWeight: 600,
+            fontSize: '13px',
+            '&:hover': { bgcolor: 'transparent', color: '#0F172A' }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="lead-edit-form"
+          variant="contained"
+          color="primary"
+          startIcon={<Pencil size={15} />}
+          isLoading={updateLeadMutation.isPending}
+          disabled={isError}
+        >
+          Save Changes
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Drawer
-      isOpen={Boolean(lead)}
+      isOpen={isModalOpen}
       onClose={() => !updateLeadMutation.isPending && onClose()}
       title="Edit Lead Details"
-      subtitle={lead?.name ? `Modify details and assignees for ${lead.name}` : 'Modify lead details'}
-      width={{ xs: '100%', sm: 540, md: 620 }}
+      subtitle={lead?.name ? `Modify details and assignees for ${lead.name}` : 'Modify lead details.'}
+      width={{ xs: '100%', sm: 480, md: 520 }}
+      icon={Pencil}
+      showFooter={true}
+      customFooter={getCustomFooter()}
     >
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-white">
+      <form id="lead-edit-form" onSubmit={handleSubmit} noValidate className="space-y-6">
+        {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
+        {(isSuperAdmin || isCompanyAdmin) && (
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+              Territory Scope
+            </h3>
 
-        {/* Scrollable Form Body */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5">
-          {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
-          {(isSuperAdmin || isCompanyAdmin) && (
-            <div className="space-y-3.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-                Territory Scope
-              </span>
-
+            <div className={isSuperAdmin ? "grid grid-cols-1 sm:grid-cols-2 gap-4" : "space-y-3.5"}>
               {isSuperAdmin && (
                 <SelectField
                   id="lead-company"
@@ -346,14 +385,16 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
                 searchable={true}
               />
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Section 1: Contact Details */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Contact Details
-            </span>
-            
+        {/* Section 1: Contact Details */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Contact Details
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-name"
               label="Lead Name"
@@ -375,7 +416,9 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               errorText={errors.mobile}
               startIcon={Phone}
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-email"
               label="Email Address"
@@ -396,13 +439,15 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               startIcon={Phone}
             />
           </div>
+        </div>
 
-          {/* Section 2: Engagement parameters */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Engagement & Routing
-            </span>
+        {/* Section 2: Engagement parameters */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Engagement & Routing
+          </h3>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               id="lead-source"
               label="Lead Source"
@@ -432,33 +477,23 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               isLoading={isLoadingFormData}
               disabled={!targetCompanyId}
             />
+          </div>
 
-            {(() => {
-              const isConverted = (lead?.opportunities && lead.opportunities.length > 0) || lead?.isConverted;
-              return (
-                <div className="space-y-1">
-                  <SelectField
-                    id="lead-status"
-                    label="Status"
-                    placeholder="Select Status..."
-                    allowEmptyOption={!isConverted}
-                    value={isConverted ? 'CONVERTED' : values.statusId}
-                    onChange={(val) => !isConverted && handleFieldChange('statusId', val)}
-                    options={isConverted ? [{ value: 'CONVERTED', label: '⚡ CONVERTED (Locked to Opportunity)' }] : statusesOptions}
-                    errorText={errors.statusId}
-                    startIcon={Activity}
-                    searchable={!isConverted}
-                    isLoading={isLoadingFormData}
-                    disabled={!targetCompanyId || isConverted}
-                  />
-                  {isConverted && (
-                    <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-md font-medium">
-                      🔒 Lead is converted to an Opportunity deal. Status is locked to CONVERTED.
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <SelectField
+              id="lead-status"
+              label="Status"
+              placeholder="Select Status..."
+              allowEmptyOption
+              value={values.statusId}
+              onChange={(val) => handleFieldChange('statusId', val)}
+              options={statusesOptions}
+              errorText={errors.statusId}
+              startIcon={Activity}
+              searchable={true}
+              isLoading={isLoadingFormData}
+              disabled={!targetCompanyId}
+            />
 
             <SelectField
               id="lead-priority"
@@ -470,7 +505,9 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               errorText={errors.priority}
               searchable={false}
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
               id="lead-budget"
               label="Budget"
@@ -497,101 +534,74 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               startIcon={GitMerge}
               searchable={true}
             />
-
-            <SelectField
-              id="lead-assignee"
-              label="Assign To"
-              placeholder="Select Representative..."
-              allowEmptyOption
-              value={values.assignedToId}
-              onChange={(val) => handleFieldChange('assignedToId', val)}
-              options={usersOptions}
-              errorText={errors.assignedToId}
-              startIcon={UserCheck}
-              searchable={true}
-              isLoading={isLoadingFormData}
-              disabled={!targetCompanyId || !targetBranchId}
-            />
           </div>
 
-          {/* Section 3: Geographic info */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Location Info
-            </span>
+          <SelectField
+            id="lead-assignee"
+            label="Assign To"
+            placeholder="Select Representative..."
+            allowEmptyOption
+            value={values.assignedToId}
+            onChange={(val) => handleFieldChange('assignedToId', val)}
+            options={usersOptions}
+            errorText={errors.assignedToId}
+            startIcon={UserCheck}
+            searchable={true}
+            isLoading={isLoadingFormData}
+            disabled={!targetCompanyId || !targetBranchId}
+          />
+        </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <TextField
-                id="lead-city"
-                label="City"
-                placeholder="Delhi"
-                value={values.city}
-                onChange={(val) => handleFieldChange('city', val)}
-                startIcon={MapPin}
-              />
-              <TextField
-                id="lead-state"
-                label="State"
-                placeholder="Delhi"
-                value={values.state}
-                onChange={(val) => handleFieldChange('state', val)}
-                startIcon={MapPin}
-              />
-              <TextField
-                id="lead-country"
-                label="Country"
-                placeholder="India"
-                value={values.country}
-                onChange={(val) => handleFieldChange('country', val)}
-                startIcon={MapPin}
-              />
-            </div>
-          </div>
+        {/* Section 3: Geographic info */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Location Info
+          </h3>
 
-          {/* Section 4: Notes */}
-          <div className="space-y-3.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1">
-              Remarks / Notes
-            </span>
-
+          <div className="grid grid-cols-3 gap-3">
             <TextField
-              id="lead-notes"
-              label="Notes"
-              placeholder="Enter notes or updates summary..."
-              multiline
-              rows={4}
-              value={values.notes}
-              onChange={(val) => handleFieldChange('notes', val)}
-              startIcon={FileText}
+              id="lead-city"
+              label="City"
+              placeholder="Delhi"
+              value={values.city}
+              onChange={(val) => handleFieldChange('city', val)}
+              startIcon={MapPin}
+            />
+            <TextField
+              id="lead-state"
+              label="State"
+              placeholder="Delhi"
+              value={values.state}
+              onChange={(val) => handleFieldChange('state', val)}
+              startIcon={MapPin}
+            />
+            <TextField
+              id="lead-country"
+              label="Country"
+              placeholder="India"
+              value={values.country}
+              onChange={(val) => handleFieldChange('country', val)}
+              startIcon={MapPin}
             />
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-4 py-2.5 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
-          <Button
-            variant="text"
-            onClick={onClose}
-            disabled={updateLeadMutation.isPending}
-            sx={{
-              color: '#475569',
-              fontWeight: 600,
-              fontSize: '13px',
-              '&:hover': { bgcolor: 'transparent', color: '#0F172A' }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            startIcon={<Pencil size={15} />}
-            isLoading={updateLeadMutation.isPending}
-            disabled={isError}
-          >
-            Save Changes
-          </Button>
+        {/* Section 4: Notes */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            Remarks / Notes
+          </h3>
+
+          <TextField
+            id="lead-notes"
+            label="Notes"
+            placeholder="Enter notes or updates summary..."
+            multiline
+            rows={3}
+            value={values.notes}
+            onChange={(val) => handleFieldChange('notes', val)}
+            startIcon={FileText}
+          />
         </div>
       </form>
 
@@ -607,7 +617,7 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
               <p className="text-sm text-slate-600 leading-relaxed mb-5">
                 A lead with this contact information already exists in your company registry:
               </p>
-              
+
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs space-y-2 mb-6">
                 <div className="flex justify-between"><span className="text-slate-400 font-medium">Lead Name:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.name}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400 font-medium">Current Owner:</span><span className="text-slate-700 font-semibold">{duplicateWarning.existingLead?.owner}</span></div>

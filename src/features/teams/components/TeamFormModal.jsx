@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users2 } from 'lucide-react';
+import { Users2, Building2, GitBranch } from 'lucide-react';
 import DynamicFormSlideover from '../../../shared/components/elements/DynamicFormSlideover';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
-import { SearchableSelect } from '../../../shared/components/elements/SearchableSelect';
 import Button from '../../../shared/components/elements/Button';
 import Checkbox from '../../../shared/components/elements/Checkbox';
 import { useCreateTeamMutation, useUpdateTeamMutation } from '../hooks/useTeams';
@@ -14,13 +13,14 @@ import { teamService } from '../services/teamService';
 import { userService } from '../../users/services/userService';
 import { branchService } from '../../branch/services/branchService';
 import { companyService } from '../../company/services/companyService';
-import { toast } from '../../../shared/utils/toast';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 
 const TeamFormModal = ({
   isOpen,
   onClose,
   initialValues = null,
   companies = [],
+  branches = [],
   currentUser = null
 }) => {
   const isEditMode = !!initialValues && !!initialValues.id;
@@ -39,9 +39,11 @@ const TeamFormModal = ({
   const [status, setStatus] = useState('ACTIVE');
   const [errors, setErrors] = useState({});
 
-  // Scoping helper
-  const formActorRank = currentUser?.primaryRoleRank ?? 0;
-  const canSelectCompany = formActorRank >= 100;
+  // Role Hierarchy & Scoping
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const canSelectCompany = isSuperAdmin;
+  const canSelectBranch = isSuperAdmin || isCompanyWide;
+  const isBranchManager = isBranchLevel;
   const targetCompanyId = canSelectCompany ? companyId : currentUser?.companyId;
 
   // Sync state with initial values
@@ -51,24 +53,26 @@ const TeamFormModal = ({
         setName(initialValues.name || '');
         setCode(initialValues.code || '');
         setCompanyId(initialValues.companyId || currentUser?.companyId || '');
-        setBranchId(initialValues.branchId || '');
+        setBranchId(initialValues.branchId || (isBranchManager ? currentUser?.branchId : ''));
         setBdeId(initialValues.bdeId || '');
         setStatus(initialValues.status || 'ACTIVE');
         const membersList = initialValues.members || [];
-        const isesList = membersList.filter(m => m.memberRole === 'ISE' && !m.removedAt).map(m => m.userId);
+        const isesList = membersList
+          .filter(m => !m.removedAt && m.userId !== initialValues.bdeId)
+          .map(m => m.userId);
         setIseIds(isesList);
       } else {
         setName('');
         setCode('');
         setCompanyId(currentUser?.companyId || '');
-        setBranchId((currentUser?.primaryRole === 'BRANCH_MANAGER' || (formActorRank >= 60 && formActorRank < 80)) ? currentUser.branchId : '');
+        setBranchId(isBranchManager ? (currentUser?.branchId || '') : (initialValues?.branchId || ''));
         setBdeId('');
         setStatus('ACTIVE');
         setIseIds([]);
       }
       setErrors({});
     }
-  }, [isOpen, initialValues, currentUser]);
+  }, [isOpen, initialValues, currentUser, isBranchManager]);
 
   // Fetch Companies (for Super Admin)
   const { data: companiesRes } = useQuery({
@@ -76,23 +80,26 @@ const TeamFormModal = ({
     queryFn: () => companyService.getCompaniesRaw(),
     enabled: canSelectCompany && isOpen
   });
-  const companyOptions = (companiesRes?.data || []).map(c => ({
+  const companyOptions = (companiesRes?.data || companies || []).map(c => ({
     value: c.id,
     label: c.name
   }));
 
   // Fetch Branches for target company
-  const { data: branchesRes } = useQuery({
+  const { data: branchesRes, isLoading: isLoadingBranches } = useQuery({
     queryKey: ['branches-form-options', targetCompanyId],
     queryFn: () => branchService.getBranchesRaw(targetCompanyId),
     enabled: !!targetCompanyId && isOpen
   });
-  const branchOptions = (Array.isArray(branchesRes?.data) ? branchesRes.data : (branchesRes?.data?.branches || [])).map(b => ({
+  const rawBranches = Array.isArray(branchesRes?.data)
+    ? branchesRes.data
+    : (branchesRes?.data?.branches || branchesRes?.branches || branchesRes?.data?.data || (targetCompanyId === currentUser?.companyId ? branches : []));
+  const branchOptions = rawBranches.map(b => ({
     value: b.id,
-    label: b.name
+    label: b.code ? `${b.name} (${b.code})` : b.name
   }));
 
-  // Fetch BDE users for selected branch
+  // Fetch users for selected branch
   const { data: usersRes, isLoading: isLoadingBdes, refetch: refetchUsers } = useQuery({
     queryKey: ['branch-bdes-options', branchId],
     queryFn: () => userService.getUsers({ branchId, status: 'ACTIVE', limit: 150 }),
@@ -100,7 +107,7 @@ const TeamFormModal = ({
     staleTime: 0
   });
 
-  // Fetch all teams to identify active BDE owners
+  // Fetch all teams to identify active BDE owners and members (exclude archived/inactive teams)
   const { data: allTeamsRes, refetch: refetchTeams } = useQuery({
     queryKey: ['all-teams-bde-filter'],
     queryFn: () => teamService.getTeams({ limit: 1000 }),
@@ -118,31 +125,73 @@ const TeamFormModal = ({
 
   const allTeams = allTeamsRes?.data?.teams || allTeamsRes?.teams || [];
 
-  const assignedBdeIds = allTeams
-    .filter(t => !isEditMode || t.id !== initialValues?.id)
-    .map(t => t.bdeId);
+  // Only consider active, non-deleted teams when filtering occupied BDEs & members
+  const activeOtherTeams = allTeams.filter(t => !t.isDeleted && t.status === 'ACTIVE' && (!isEditMode || t.id !== initialValues?.id));
 
-  const assignedIseIds = allTeams
-    .filter(t => !isEditMode || t.id !== initialValues?.id)
-    .flatMap(t => (t.members || []).filter(m => m.memberRole === 'ISE' && !m.removedAt).map(m => m.userId));
+  const assignedBdeIds = activeOtherTeams.map(t => t.bdeId);
+
+  const assignedIseIds = activeOtherTeams.flatMap(t => 
+    (t.members || []).filter(m => !m.removedAt && m.userId !== t.bdeId).map(m => m.userId)
+  );
 
   const allUsers = usersRes?.data?.users || usersRes?.data || [];
 
+  // Team Leader: Strictly BDE only
   const bdeOptions = allUsers
+    .filter(u => u.status === 'ACTIVE' || !u.status)
     .filter(u => u.userRoles?.some(ur => ur.role?.name === 'BDE'))
-    .filter(u => !assignedBdeIds.includes(u.id))
+    .filter(u => !assignedBdeIds.includes(u.id) || u.id === initialValues?.bdeId)
     .map(u => ({
-      id: u.id,
-      name: `${u.name} (${u.employeeId || 'No ID'})`
+      value: u.id,
+      label: `${u.name} (${u.employeeId || 'No ID'})`
     }));
 
+  // Helper to check member eligibility (ISE or Custom Role with rank <= 40)
+  const isEligibleMemberUser = (u) => {
+    if (u.status && u.status !== 'ACTIVE') return false;
+    const primaryRole = u.userRoles?.[0]?.role;
+    const roleName = primaryRole?.name || u.primaryRole || '';
+    const roleRank = Number(primaryRole?.rank ?? u.primaryRoleRank ?? 0);
+
+    // Exclude system management roles and BDE leaders
+    if (['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER', 'BDE'].includes(roleName)) {
+      return false;
+    }
+
+    // Allow ISE or Custom Roles with rank <= 40
+    return roleName === 'ISE' || (roleRank <= 40 && roleRank >= 0);
+  };
+
+  const getRoleBadgeLabel = (u) => {
+    return u.userRoles?.[0]?.role?.name || u.primaryRole || 'Member';
+  };
+
+  // Team Members: ISE + Custom Roles (Rank <= 40)
   const iseOptions = allUsers
-    .filter(u => u.userRoles?.some(ur => ur.role?.name === 'ISE'))
-    .filter(u => !assignedIseIds.includes(u.id))
+    .filter(isEligibleMemberUser)
+    .filter(u => !assignedIseIds.includes(u.id) || iseIds.includes(u.id))
     .map(u => ({
       id: u.id,
-      name: `${u.name} (${u.employeeId || 'No ID'})`
+      name: `${u.name} (${getRoleBadgeLabel(u)}${u.employeeId ? ` - ${u.employeeId}` : ''})`
     }));
+
+  // Handle Cascading Changes
+  const handleCompanyChange = (val) => {
+    setCompanyId(val);
+    setBranchId('');
+    setBdeId('');
+    setIseIds([]);
+    if (errors.companyId) setErrors(prev => ({ ...prev, companyId: null }));
+    if (errors.branchId) setErrors(prev => ({ ...prev, branchId: null }));
+  };
+
+  const handleBranchChange = (val) => {
+    setBranchId(val);
+    setBdeId('');
+    setIseIds([]);
+    if (errors.branchId) setErrors(prev => ({ ...prev, branchId: null }));
+    if (errors.bdeId) setErrors(prev => ({ ...prev, bdeId: null }));
+  };
 
   const validate = () => {
     const tempErrors = {};
@@ -151,14 +200,14 @@ const TeamFormModal = ({
     if (!isEditMode && canSelectCompany && !companyId) tempErrors.companyId = 'Company selection is required';
     if (!isEditMode && !branchId) tempErrors.branchId = 'Branch selection is required';
     if (!bdeId) {
-      tempErrors.bdeId = 'At least 1 BDE is must';
+      tempErrors.bdeId = 'Team Leader (BDE) is required';
     } else if (iseIds.includes(Number(bdeId)) || iseIds.includes(String(bdeId))) {
-      tempErrors.bdeId = 'The Team Owner (BDE) cannot also be assigned as an ISE member';
+      tempErrors.bdeId = 'The Team Leader (BDE) cannot also be assigned as a team member';
     }
 
     const uniqueIseIds = [...new Set(iseIds)];
     if (uniqueIseIds.length !== iseIds.length) {
-      tempErrors.iseIds = 'Duplicate ISE assignments are not allowed';
+      tempErrors.iseIds = 'Duplicate member assignments are not allowed';
     }
 
     setErrors(tempErrors);
@@ -263,12 +312,6 @@ const TeamFormModal = ({
       onSubmit={() => handleFormSubmit({ preventDefault: () => {} })}
     >
       <div className="space-y-6">
-        
-        {!branchId && !isEditMode && (
-          <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold leading-relaxed">
-            ⚠️ No branch context detected. Please close this drawer, select a branch from the filter dropdown on the main page, and then click "Add Team" again.
-          </div>
-        )}
 
         {/* Section 1: Basic Info */}
         <div className="space-y-4">
@@ -304,7 +347,54 @@ const TeamFormModal = ({
           />
         </div>
 
+        {/* Section 2: Branch & Scope */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
+            Branch Scope
+          </h3>
 
+          {/* Company select for Super Admin */}
+          {canSelectCompany && (
+            <SelectField
+              id="teamCompanySelect"
+              label="Company"
+              placeholder="Select a company..."
+              value={companyId}
+              onChange={handleCompanyChange}
+              options={companyOptions}
+              disabled={isEditMode}
+              errorText={errors.companyId}
+              searchable={true}
+              required
+            />
+          )}
+
+          {/* Branch select for Super Admin / Company Admin */}
+          {canSelectBranch ? (
+            <SelectField
+              id="teamBranchSelect"
+              label="Branch Scope"
+              placeholder={targetCompanyId ? "Select a branch..." : "Please select a company first"}
+              value={branchId}
+              onChange={handleBranchChange}
+              options={branchOptions}
+              disabled={isEditMode || !targetCompanyId}
+              errorText={errors.branchId}
+              searchable={true}
+              required
+            />
+          ) : (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5">
+              <GitBranch size={16} className="text-orange-500" />
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Branch Scope</p>
+                <p className="text-xs font-bold text-slate-700">
+                  {currentUser?.branch?.name || (branchOptions.find(b => b.value === branchId)?.label) || 'Current Assigned Branch'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Section 3: BDE Assignee */}
         <div className="space-y-4">
@@ -329,18 +419,18 @@ const TeamFormModal = ({
           />
         </div>
 
-        {/* Section 3b: ISE Members Assignment */}
+        {/* Section 3b: Team Members Assignment */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5">
-            Assign Team Members (ISEs)
+            Assign Team Members (ISE & Custom Roles)
           </h3>
           
           {!branchId ? (
-            <p className="text-xs italic text-slate-400">Please select a branch to view available ISEs.</p>
+            <p className="text-xs italic text-slate-400">Please select a branch to view available team members.</p>
           ) : isLoadingBdes ? (
             <p className="text-xs italic text-slate-400">Loading members...</p>
           ) : iseOptions.length === 0 ? (
-            <p className="text-xs italic text-slate-400">No active ISEs found in this branch.</p>
+            <p className="text-xs italic text-slate-400">No active eligible team members (ISE or Custom Roles) available in this branch.</p>
           ) : (
             <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-xl p-2 bg-slate-50/50 space-y-1">
               {iseOptions.map(ise => {
