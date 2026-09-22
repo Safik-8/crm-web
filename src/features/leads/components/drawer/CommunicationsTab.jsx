@@ -1,7 +1,5 @@
-// src/features/leads/components/drawer/CommunicationsTab.jsx
-
 import React, { useState } from 'react';
-import { Phone, Mail, Calendar, MessageSquare, Trash2, Send, Clock, RotateCw } from 'lucide-react';
+import { Phone, PhoneIncoming, PhoneOff, Mail, Calendar, MessageSquare, Trash2, Send, Clock, RotateCw, CheckCircle2, XCircle } from 'lucide-react';
 import Button from '../../../../shared/components/elements/Button';
 import { SearchableSelect } from '../../../../shared/components/elements/SearchableSelect';
 import {
@@ -22,6 +20,7 @@ const CommunicationsTab = ({ leadId }) => {
   const deleteLogMutation = useDeleteCommunicationLogMutation();
 
   const [type, setType] = useState('CALL');
+  const [callOutcome, setCallOutcome] = useState('RECEIVED'); // 'RECEIVED' | 'NOT_RECEIVED'
   const [summary, setSummary] = useState('');
   const [date, setDate] = useState(() => {
     // Current local ISO string format for datetime-local input
@@ -40,12 +39,14 @@ const CommunicationsTab = ({ leadId }) => {
       leadId,
       data: {
         communicationType: type,
+        ...(type === 'CALL' && { callOutcome }),
         summary: summary.trim(),
         interactionDate: new Date(date).toISOString()
       }
     }, {
       onSuccess: () => {
         setSummary('');
+        setCallOutcome('RECEIVED');
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         setDate(now.toISOString().slice(0, 16));
@@ -105,6 +106,40 @@ const CommunicationsTab = ({ leadId }) => {
           </div>
         </div>
 
+        {/* Call Outcome Selector (Only for CALL channel) */}
+        {type === 'CALL' && (
+          <div className="flex flex-col gap-1.5 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/70 animate-in fade-in duration-200">
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider pl-0.5">Call Outcome</span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCallOutcome('RECEIVED')}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  callOutcome === 'RECEIVED'
+                    ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-200'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50/50 hover:text-emerald-700 hover:border-emerald-200'
+                }`}
+              >
+                <PhoneIncoming size={13} className={callOutcome === 'RECEIVED' ? 'text-white' : 'text-emerald-600'} />
+                <span>Call Received</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCallOutcome('NOT_RECEIVED')}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  callOutcome === 'NOT_RECEIVED'
+                    ? 'bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-rose-50/50 hover:text-rose-700 hover:border-rose-200'
+                }`}
+              >
+                <PhoneOff size={13} className={callOutcome === 'NOT_RECEIVED' ? 'text-white' : 'text-rose-500'} />
+                <span>Not Received</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Summary Input */}
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-0.5">Interaction Summary</span>
@@ -156,6 +191,8 @@ const CommunicationsTab = ({ leadId }) => {
           logs.map((log) => {
             const config = getLogTypeConfig(log.communicationType);
             const Icon = config.icon;
+            const isCall = log.communicationType?.toUpperCase() === 'CALL';
+
             return (
               <div key={log.id} className="border border-slate-100 bg-slate-50/50 hover:bg-slate-50 p-3 text-xs rounded-xl flex gap-3 relative group animate-in fade-in duration-200">
                 <div className={`p-2 rounded-lg border h-8 w-8 shrink-0 flex items-center justify-center ${config.color}`}>
@@ -168,6 +205,27 @@ const CommunicationsTab = ({ leadId }) => {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${config.pill}`}>
                       {log.communicationType}
                     </span>
+
+                    {/* Call Classification & Outcome Badges */}
+                    {isCall && log.callNature && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wide border ${
+                        log.callNature === 'COLD_CALL'
+                          ? 'bg-sky-50 text-sky-700 border-sky-200'
+                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      }`}>
+                        {log.callNature === 'COLD_CALL' ? '❄️ Cold Call' : '🔄 Follow-up Call'}
+                      </span>
+                    )}
+
+                    {isCall && log.callOutcome && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wide border ${
+                        log.callOutcome === 'RECEIVED'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
+                        {log.callOutcome === 'RECEIVED' ? '✓ Received' : '✕ Not Received'}
+                      </span>
+                    )}
                   </div>
                   
                   {log.summary ? (

@@ -130,7 +130,7 @@ const CourseFormModal = ({
           }
         }}
       >
-        {isEditMode ? 'Save Changes' : 'Create Course'}
+        {isEditMode ? 'Save Changes' : 'Create Service'}
       </Button>
     </div>
   );
@@ -140,8 +140,8 @@ const CourseFormModal = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title={isEditMode ? 'Edit Course Catalog' : 'Add New Course'}
-      description={isEditMode ? 'Modify details of the selected course.' : 'Add a new training course to the system catalog.'}
+      title={isEditMode ? 'Edit Service' : 'Add New Service'}
+      description={isEditMode ? 'Modify details of the selected service.' : 'Add a new service offering to the company catalog.'}
       icon={BookOpen}
       customFooter={customFooter}
     >
@@ -171,16 +171,16 @@ const CourseFormModal = ({
           </div>
         )}
 
-        {/* SECTION 2: Course Information */}
+        {/* SECTION 2: Service Information */}
         <div className="border-b border-slate-100 pb-5">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">
-            Course Information
+            Service Information
           </h3>
           <div className="space-y-4">
             <TextField
               id="name"
-              label="Course Name"
-              placeholder="e.g. Full Stack Web Development"
+              label="Service Name"
+              placeholder="e.g. Enterprise Cloud Consultation"
               value={values.name}
               onChange={(val) => handleChange('name', val)}
               errorText={errors.name}
@@ -191,7 +191,7 @@ const CourseFormModal = ({
             {isEditMode && (
               <TextField
                 id="code"
-                label="Course Code"
+                label="Service Code"
                 value={values.code}
                 disabled
               />
@@ -200,7 +200,7 @@ const CourseFormModal = ({
             <TextField
               id="description"
               label="Description"
-              placeholder="Enter brief description of course topics, target audience..."
+              placeholder="Enter brief description of service deliverables, features..."
               value={values.description}
               onChange={(val) => handleChange('description', val)}
               errorText={errors.description}

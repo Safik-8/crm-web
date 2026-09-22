@@ -103,10 +103,10 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
           <DetailRow label="Account Created" value={formatDate(customer.createdAt)} icon={Calendar} />
         </InfoCard>
 
-        {/* Section 2: Pipeline & Product Details */}
-        <InfoCard title="Sales Pipeline & Product" icon={ShoppingBag} accentClass="border-l-indigo-500">
-          <DetailRow label="Course Registered" value={customer.purchasedProduct?.name} icon={ShoppingBag} />
-          <DetailRow label="Course Code" value={customer.purchasedProduct?.code} icon={Tag} />
+        {/* Section 2: Pipeline & Service Details */}
+        <InfoCard title="Sales Pipeline & Service" icon={ShoppingBag} accentClass="border-l-indigo-500">
+          <DetailRow label="Service Subscribed" value={customer.purchasedProduct?.name} icon={ShoppingBag} />
+          <DetailRow label="Service Code" value={customer.purchasedProduct?.code} icon={Tag} />
           <DetailRow label="Opportunity Tracker" value={customer.opportunity?.opportunityName} icon={Briefcase} />
           <DetailRow label="Estimated Value" value={formatCurrency(customer.opportunity?.expectedRevenue)} icon={IndianRupee} />
           <DetailRow label="Closing Stage" value={customer.opportunity?.stage?.name} icon={Tag} />

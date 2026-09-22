@@ -197,7 +197,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
         [],
         ['Applied Filters'],
         ['Status Filter', filters?.status || filters?.statusId || filters?.paymentStatus || 'All'],
-        ['Course/Product Filter', getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || 'All'],
+        ['Service Filter', getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || 'All'],
         ['Lead Source Filter', getScopeName('leadSources', filters?.sourceId) || 'All'],
         ['Deal Outcome Filter', filters?.outcome || 'All'],
         [],
@@ -325,7 +325,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
           Scope: `${companyName} -> ${getScopeName('branches', filters?.branchId) || 'All Branches'} -> ${getScopeName('teams', filters?.teamId) || 'All Teams'}`,
           'Date Range': filters?.startDate && filters?.endDate ? `${filters.startDate} to ${filters.endDate}` : 'All Time',
           Status: filters?.status || filters?.statusId || filters?.paymentStatus || null,
-          Course: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
+          Service: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
         },
         summaryCards: [
           { label: 'Total Records', value: `${exportItems.length} Rows` },
@@ -886,7 +886,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
 
                   {filters?.status && <div><span className="text-slate-400 block mb-0.5">Status</span> <span className="text-slate-800">{filters.status}</span></div>}
                   {filters?.paymentStatus && <div><span className="text-slate-400 block mb-0.5">Payment Status</span> <span className="text-slate-800">{filters.paymentStatus}</span></div>}
-                  {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Product / Course</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Courses'}</span></div>}
+                  {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Service</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Services'}</span></div>}
                   {filters?.outcome && <div><span className="text-slate-400 block mb-0.5">Outcome</span> <span className="text-slate-800">{filters.outcome}</span></div>}
                 </div>
               </div>

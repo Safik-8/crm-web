@@ -236,12 +236,12 @@ export const OpportunityDetailDrawer = ({
                 )}
               </div>
 
-              {/* Product / Course */}
+              {/* Service */}
               <div>
-                <span className="text-slate-400 font-medium block mb-1">Product / Course</span>
+                <span className="text-slate-400 font-medium block mb-1">Service</span>
                 <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                  <span className="truncate">{opportunity.product?.name || 'General Course'}</span>
+                  <span className="truncate">{opportunity.product?.name || 'General Service'}</span>
                 </span>
               </div>
 
