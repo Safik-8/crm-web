@@ -24,7 +24,7 @@ import PageHeader from '../../../shared/components/modules/PageHeader';
 
 const exportColumns = [
   { header: 'Code', accessorKey: 'code' },
-  { header: 'Course Name', accessorKey: 'name' },
+  { header: 'Service Name', accessorKey: 'name' },
   { header: 'Category', accessorKey: 'category' },
   { header: 'Price', accessorKey: 'price' },
   { header: 'Duration', accessorKey: 'duration' },
@@ -173,8 +173,8 @@ const CoursesPage = () => {
       <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
         {/* Top Header Card */}
         <PageHeader
-          title="Course Management"
-          description="Manage academic programs, course modules, pricing, and curriculum."
+          title="Services Management"
+          description="Manage company service offerings, packages, pricing, and details."
           icon={BookOpen}
           actions={
             <button onClick={() => refetch()} className="text-slate-400 hover:text-orange-500 transition-colors" title="Refresh">
@@ -191,7 +191,7 @@ const CoursesPage = () => {
               <SearchInput
                 value={search}
                 onChange={handleSearchChange}
-                placeholder="Search..."
+                placeholder="Search services..."
                 isLoading={loadingState === 'loading'}
               />
             </div>
@@ -252,7 +252,7 @@ const CoursesPage = () => {
             <ExportMenu
               data={courses}
               columns={exportColumns}
-              fileName="courses"
+              fileName="services"
             />
 
             {canCreate && (
@@ -261,7 +261,7 @@ const CoursesPage = () => {
                 variant="contained"
                 startIcon={<Plus size={16} />}
               >
-                Add Course
+                Add Service
               </Button>
             )}
           </div>
@@ -291,7 +291,7 @@ const CoursesPage = () => {
           pagination={pagination}
           onPageChange={setPage}
           isLoading={loadingState === 'loading'}
-          entityName="courses"
+          entityName="services"
         />
 
         {/* Modals & Slide-overs */}
@@ -316,11 +316,11 @@ const CoursesPage = () => {
         <ConfirmModal
           isOpen={isConfirmStatusOpen}
           onClose={() => setIsConfirmStatusOpen(false)}
-          title={selectedCourseForStatus?.status === 'ACTIVE' ? 'Deactivate Course?' : 'Activate Course?'}
+          title={selectedCourseForStatus?.status === 'ACTIVE' ? 'Deactivate Service?' : 'Activate Service?'}
           message={
             selectedCourseForStatus?.status === 'ACTIVE'
-              ? `Are you sure you want to deactivate course '${selectedCourseForStatus?.name}'? When deactivated, sales agents cannot assign this course to new leads.`
-              : `Are you sure you want to activate course '${selectedCourseForStatus?.name}'? This will allow agents to select it for new lead registrations.`
+              ? `Are you sure you want to deactivate service '${selectedCourseForStatus?.name}'? When deactivated, sales agents cannot assign this service to new leads.`
+              : `Are you sure you want to activate service '${selectedCourseForStatus?.name}'? This will allow agents to select it for new lead registrations.`
           }
           type={selectedCourseForStatus?.status === 'ACTIVE' ? 'error' : 'success'}
           onConfirm={handleConfirmToggleStatus}
@@ -332,9 +332,9 @@ const CoursesPage = () => {
         <ConfirmModal
           isOpen={isConfirmDeleteOpen}
           onClose={() => setIsConfirmDeleteOpen(false)}
-          title="Delete Course Catalog Entry?"
-          message={`Are you sure you want to delete '${selectedCourseForDelete?.name}'? This will remove the course record from standard catalog interfaces.`}
-          warningMessage="This is a soft-delete: historical reports, leads, and quotations referencing this course will remain valid and intact."
+          title="Delete Service Entry?"
+          message={`Are you sure you want to delete '${selectedCourseForDelete?.name}'? This will remove the service record from standard catalog interfaces.`}
+          warningMessage="This is a soft-delete: historical reports, leads, and quotations referencing this service will remain valid and intact."
           type="error"
           onConfirm={handleConfirmDelete}
           confirmText="Delete"

@@ -165,7 +165,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
 
   const interestDetails = [
     { icon: Compass, label: 'Source', value: lead.source?.name || '—' },
-    { icon: Award, label: 'Interested Course', value: lead.course?.name || lead.interestedFor || lead.interested_for || '—' },
+    { icon: Award, label: 'Interested Service', value: lead.course?.name || lead.interestedFor || lead.interested_for || '—' },
     { icon: DollarSign, label: 'Budget', value: lead.budget !== null && lead.budget !== undefined ? `₹${lead.budget.toLocaleString('en-IN')}` : '—' },
     { icon: ShieldAlert, label: 'Priority', value: lead.priority || 'MEDIUM' },
   ];

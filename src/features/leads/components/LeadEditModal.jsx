@@ -14,7 +14,7 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useSettings } from '../../settings/hooks/useSettings';
 
-export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
+export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated, assignableUsers = [] }) => {
   const { user: currentUser } = useAuth();
   const { settings } = useSettings();
   const updateLeadMutation = useUpdateLeadMutation();
@@ -176,7 +176,7 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
     }
 
     if (!values.courseId) {
-      errs.courseId = 'Interested course is required';
+      errs.courseId = 'Interested service is required';
     }
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -420,8 +420,8 @@ export const LeadEditModal = ({ isOpen, onClose, lead, onUpdated }) => {
 
             <SelectField
               id="lead-course"
-              label="Interested Course/Product"
-              placeholder="Select Course..."
+              label="Interested Service"
+              placeholder="Select Service..."
               required
               value={values.courseId}
               onChange={(val) => handleFieldChange('courseId', val)}

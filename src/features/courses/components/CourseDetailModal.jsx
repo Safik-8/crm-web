@@ -29,8 +29,8 @@ const CourseDetailModal = ({ isOpen, onClose, course = null }) => {
     <DynamicFormSlideover
       isOpen={isOpen}
       onClose={onClose}
-      title="Course Catalog Sheet"
-      subtitle={`Detailed specifications for course code: ${course.code}`}
+      title="Service Details Sheet"
+      subtitle={`Detailed specifications for service code: ${course.code}`}
       icon={BookOpen}
       showFooter={true}
       cancelText="Close Details"
@@ -40,7 +40,7 @@ const CourseDetailModal = ({ isOpen, onClose, course = null }) => {
         {/* Banner Card */}
         <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-2xl flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-lg font-black shadow-md uppercase">
-            {course.name?.charAt(0) || 'C'}
+            {course.name?.charAt(0) || 'S'}
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="font-extrabold text-slate-800 text-[15px] leading-tight truncate">
@@ -57,14 +57,14 @@ const CourseDetailModal = ({ isOpen, onClose, course = null }) => {
           </div>
         </div>
 
-        {/* Section 1: Course Specifications */}
+        {/* Section 1: Service Specifications */}
         <div className="space-y-1">
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-2">
-            Catalog details
+            Service details
           </h3>
           <DetailItem
             icon={Tag}
-            label="Course Code"
+            label="Service Code"
             value={course.code}
           />
           <DetailItem

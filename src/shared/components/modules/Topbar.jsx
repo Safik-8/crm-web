@@ -33,7 +33,8 @@ const ROUTE_LABELS = {
   'approvals': 'Transfer Approvals',
   'users': 'User Management',
   'teams': 'Teams',
-  'courses': 'Courses',
+  'courses': 'Services',
+  'services': 'Services',
   'roles': 'Roles & Permissions',
   'profile': 'My Profile',
   'settings': 'Settings',
@@ -269,13 +270,13 @@ const SEARCH_NAV_ITEMS = [
       hasPermission('view:team')
   },
   {
-    id: 'courses',
-    title: 'Course / Product Catalog',
-    subtitle: 'Manage product catalog, pricing & courses',
+    id: 'services',
+    title: 'Service Catalog',
+    subtitle: 'Manage company services, packages & pricing',
     category: 'Catalog',
     icon: BookOpen,
-    path: '/courses',
-    keywords: ['course', 'courses', 'product', 'catalog', 'pricing', 'training'],
+    path: '/services',
+    keywords: ['service', 'services', 'course', 'courses', 'product', 'catalog', 'pricing'],
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       hasPermission('COURSE', 'canView') || 

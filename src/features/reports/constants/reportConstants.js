@@ -22,7 +22,7 @@ export const CATEGORY_METADATA = {
 export const SYSTEM_REPORTS_METADATA = {
   LEAD_REPORT: {
     title: 'Leads Summary & Distribution',
-    description: 'Detailed analysis of leads by status, courses, and sources.',
+    description: 'Detailed analysis of leads by status, services, and sources.',
     category: 'LEADS',
     columns: [
       { header: 'Name', accessorKey: 'name' },
@@ -30,7 +30,7 @@ export const SYSTEM_REPORTS_METADATA = {
       { header: 'Email', accessorKey: 'email' },
       { header: 'Status', accessorKey: 'status', cell: (row) => row.status?.name || 'N/A' },
       { header: 'Source', accessorKey: 'source', cell: (row) => row.source?.name || 'N/A' },
-      { header: 'Interested Course', accessorKey: 'course', cell: (row) => row.course?.name || 'N/A' },
+      { header: 'Interested Service', accessorKey: 'course', cell: (row) => row.course?.name || 'N/A' },
       { header: 'Qualified', accessorKey: 'isQualified', cell: (row) => row.isQualified ? 'Yes' : 'No' },
       { header: 'Created At', accessorKey: 'createdAt', cell: (row) => new Date(row.createdAt).toLocaleDateString() }
     ]
@@ -42,7 +42,7 @@ export const SYSTEM_REPORTS_METADATA = {
     columns: [
       { header: 'Opportunity Name', accessorKey: 'opportunityName' },
       { header: 'Lead', accessorKey: 'lead', cell: (row) => row.lead?.name || 'N/A' },
-      { header: 'Product/Course', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
+      { header: 'Service', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
       { header: 'Stage', accessorKey: 'stage', cell: (row) => row.stage?.name || 'N/A' },
       { header: 'Expected Revenue', accessorKey: 'expectedRevenue', cell: (row) => `₹${Number(row.expectedRevenue || 0).toLocaleString('en-IN')}` },
       { header: 'Probability', accessorKey: 'probabilityPercentage', cell: (row) => `${row.probabilityPercentage}%` },
@@ -66,12 +66,12 @@ export const SYSTEM_REPORTS_METADATA = {
   },
   REVENUE_REPORT: {
     title: 'Revenue Breakdown & Payments',
-    description: 'Branch revenues, product performance, and payment statuses.',
+    description: 'Branch revenues, service performance, and payment statuses.',
     category: 'FINANCE',
     columns: [
       { header: 'Deal Number', accessorKey: 'deal', cell: (row) => row.deal?.dealNumber || 'N/A' },
       { header: 'Customer', accessorKey: 'customer', cell: (row) => row.customer?.customerName || 'N/A' },
-      { header: 'Course/Product', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
+      { header: 'Service', accessorKey: 'product', cell: (row) => row.product?.name || 'N/A' },
       { header: 'Revenue Amount', accessorKey: 'revenueAmount', cell: (row) => `₹${Number(row.revenueAmount || 0).toLocaleString('en-IN')}` },
       { header: 'Payment Status', accessorKey: 'paymentStatus' },
       { header: 'Revenue Date', accessorKey: 'revenueDate', cell: (row) => new Date(row.revenueDate).toLocaleDateString() }

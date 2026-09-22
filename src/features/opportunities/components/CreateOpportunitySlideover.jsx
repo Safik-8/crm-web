@@ -193,9 +193,9 @@ export const CreateOpportunitySlideover = ({
     {
       key: 'productId',
       name: 'productId',
-      label: 'Course / Product',
+      label: 'Service',
       type: 'select',
-      placeholder: 'Select Course / Product (Auto-fills if specified on Lead)',
+      placeholder: 'Select Service (Auto-fills if specified on Lead)',
       options: courseOptions,
     },
     {

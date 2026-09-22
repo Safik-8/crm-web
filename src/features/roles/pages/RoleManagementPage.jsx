@@ -166,10 +166,10 @@ const MODULES_LIST = [
   },
   {
     value: "COURSE",
-    label: "Courses",
+    label: "Services",
     group: "crm",
-    uiLocation: "/courses",
-    controls: "Product/course catalog, curriculums & pricing packages"
+    uiLocation: "/services",
+    controls: "Services catalog, service packages & pricing"
   },
   {
     value: "APPROVAL",

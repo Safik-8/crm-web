@@ -286,7 +286,7 @@ const MyTeamPage = () => {
       ),
     },
     {
-      header: 'Course',
+      header: 'Service',
       cell: (row) => (
         <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-lg border border-slate-200/50">
           <Award size={11} className="text-slate-400" />
