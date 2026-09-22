@@ -24,12 +24,7 @@ const MyTeamRouteGuard = ({ children }) => {
     );
   }
 
-  // 3. Team check: Redirect away to root if user has no active team or on API failure
-  if (isError || !activeTeam?.id) {
-    return <Navigate to="/" replace />;
-  }
-
-  // 4. Render MyTeam page when user has permission AND active team
+  // 3. Render MyTeam page (MyTeamPage handles displaying team data or the unassigned empty state)
   return children;
 };
 

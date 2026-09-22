@@ -1,28 +1,61 @@
 // FrontEnd/src/features/kpi/pages/KpiDetailPage.jsx
 
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Target, ArrowLeft, Calendar, User, Users, Building2, TrendingUp, AlertCircle, CheckCircle2, Clock, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Target, ArrowLeft, Calendar, User, Users, Building2, TrendingUp, AlertCircle, CheckCircle2, Clock, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
-import { useKpiDetail } from '../hooks/useKpi';
+import { useKpiDetail, useDeleteKpiTarget } from '../hooks/useKpi';
 import GlobalLoader from '../../../shared/components/elements/GlobalLoader';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import Button from '../../../shared/components/elements/Button';
+import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
+import KpiEditDrawer from '../components/KpiEditDrawer';
 import { CrmBarChart, CrmLineChart } from '../../../shared/components/charts';
+import { toast } from '../../../shared/utils/toast';
 
 export default function KpiDetailPage() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, hasPermission } = useAuth();
+  const deleteMutation = useDeleteKpiTarget();
 
-  const { isPersonal } = getRoleHierarchy(user);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isPersonal } = getRoleHierarchy(user);
   const isIse = isPersonal;
+  // Use tier-aware flags: isCompanyWide includes Super Admin + Company Admin, isBranchLevel is ONLY Branch Manager tier
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
 
-  const { data: detailResponse, isLoading, isError, error } = useKpiDetail(id, {
+  const { data: detailResponse, isLoading, isError, error, refetch } = useKpiDetail(id, {
     enabled: Boolean(id) && !isIse,
   });
 
   const target = detailResponse?.data || detailResponse || {};
+
+  // Strict manager scope: Only Branch Managers/Admins can edit/delete targets within their own branch
+  const targetBranchId = target.branchId || target.employee?.branchId || target.team?.branchId;
+  // Branch Managers must have a matching branchId. If target has no branchId, only Company Admin/Super Admin can manage it.
+  const isTargetInMyBranch = targetBranchId ? targetBranchId === user?.branchId : false;
+
+  const canEditTarget =
+    isSuperAdmin ||
+    (isCompanyAdmin && user?.companyId === target.companyId) ||
+    (isBranchManager && isTargetInMyBranch);
+
+  const handleDeleteConfirm = async () => {
+    const toastId = toast.loading('Deleting target...');
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Target deleted successfully', { id: toastId });
+      setIsDeleteOpen(false);
+      navigate('/kpi-analytics');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to delete target', { id: toastId });
+    }
+  };
 
   if (isIse) {
     return (
@@ -124,33 +157,98 @@ export default function KpiDetailPage() {
 
   const progressPct = Math.min(100, Math.max(0, achievementPercentage));
 
-  const chartData = [
-    { period: 'Start', Target: 0, Achieved: 0 },
-    { period: 'Mid Period', Target: Math.round(targetValue / 2), Achieved: Math.round(achievedValue / 2) },
-    { period: 'Current Live', Target: targetValue, Achieved: achievedValue },
+  const barChartData = [
+    {
+      name: 'Target Goal',
+      Value: targetValue,
+      formatted: formattedTarget,
+    },
+    {
+      name: 'Live Achieved',
+      Value: achievedValue,
+      formatted: formattedAchieved,
+    },
+    {
+      name: 'Remaining Gap',
+      Value: remainingValue,
+      formatted: formattedRemaining,
+    },
   ];
 
-  const lineSeries = [
-    { dataKey: 'Target', name: 'Target Line', stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '4 4' },
-    { dataKey: 'Achieved', name: 'Live Achievement', stroke: '#f97316', strokeWidth: 3 },
+  const barSeries = [
+    {
+      dataKey: 'Value',
+      fill: '#f97316',
+      radius: [6, 6, 0, 0],
+    },
   ];
+
+  const cellColors = [
+    '#6366f1', // Indigo for Target Goal
+    statusColor === 'GREEN' ? '#10b981' : '#f97316', // Emerald or Orange for Achieved
+    '#94a3b8', // Slate for Remaining Gap
+  ];
+
+  const isTeam = target.scopeType === 'TEAM' || Boolean((target.teamId || target.team) && !target.employeeId);
 
   return (
     <div className="w-full space-y-6 pb-12">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200/60">
         <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            {isTeam ? (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-none">
+                <Users size={13} className="text-orange-600" />
+                <span>Sales Team Target</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200/60 px-2.5 py-0.5 rounded-none">
+                <User size={13} className="text-slate-500" />
+                <span>Individual Rep Target</span>
+              </span>
+            )}
+            <span className="text-[11px] font-semibold text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-none">
+              {duration}
+            </span>
+          </div>
+
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <Target className="text-orange-500" size={24} />
             <span>{kpiType} Target Detail</span>
           </h1>
           <p className="text-xs text-slate-500 font-normal mt-0.5">
-            Detailed breakdown, target metrics, timeline & achievement trajectory.
+            Detailed breakdown, target metrics, timeline & live achievement.
           </p>
         </div>
 
-        <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${currentStatus.color}`}>
-          {currentStatus.label}
+        <div className="flex items-center gap-2">
+          <div className={`px-3 py-1.5 rounded-none text-xs font-bold border ${currentStatus.color}`}>
+            {currentStatus.label}
+          </div>
+
+          {canEditTarget && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Edit2 size={14} />}
+                onClick={() => setIsEditOpen(true)}
+              >
+                Edit Target
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<Trash2 size={14} className="text-rose-500" />}
+                onClick={() => setIsDeleteOpen(true)}
+                className="text-rose-600 border-rose-200 hover:bg-rose-50"
+              >
+                Delete
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -200,18 +298,35 @@ export default function KpiDetailPage() {
             Assignment Details
           </h3>
           <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Assigned Employee:</span>
-              <span className="font-semibold text-slate-800">{employee?.name || 'N/A (General Target)'}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Employee Code:</span>
-              <span className="font-semibold text-slate-800">{employee?.employeeCode || 'N/A'}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Team:</span>
-              <span className="font-semibold text-slate-800">{team?.name || 'N/A'}</span>
-            </div>
+            {isTeam ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Assigned Team:</span>
+                  <span className="font-semibold text-slate-800">{team?.name || 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Team Code:</span>
+                  <span className="font-semibold text-slate-800">{team?.code || 'N/A'}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Assigned Employee:</span>
+                  <span className="font-semibold text-slate-800">{employee?.name || 'N/A (General Target)'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Employee Code:</span>
+                  <span className="font-semibold text-slate-800">{employee?.employeeId || 'N/A'}</span>
+                </div>
+                {team?.name && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Team:</span>
+                    <span className="font-semibold text-slate-800">{team.name}</span>
+                  </div>
+                )}
+              </>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-slate-500 font-medium">Branch:</span>
               <span className="font-semibold text-slate-800">{branch?.name || 'N/A'}</span>
@@ -244,20 +359,62 @@ export default function KpiDetailPage() {
         </div>
       </div>
 
-      {/* Trajectory Line Chart */}
+      {/* Target vs Achievement Comparative Breakdown Bar Chart */}
       <div className="bg-white border border-slate-200/80 rounded-none p-5 shadow-2xs space-y-4">
-        <h3 className="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100">
-          Achievement Trajectory
-        </h3>
-        <div className="h-64 w-full">
-          <CrmLineChart
-            data={chartData}
-            xKey="period"
-            lines={lineSeries}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm">
+              Target Performance Breakdown (Goal vs Achieved vs Gap)
+            </h3>
+            <p className="text-xs text-slate-400 font-normal">
+              Direct comparison of assigned goal, live achievement, and remaining gap.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200/60 px-2.5 py-1">
+            {achievementPercentage}% Achieved
+          </span>
+        </div>
+
+        <div className="h-72 w-full pt-2">
+          <CrmBarChart
+            data={barChartData}
+            xKey="name"
+            bars={barSeries}
+            cellColors={cellColors}
             height="100%"
+            barSize={48}
+            formatYAxis={(val) =>
+              kpiType === 'REVENUE' || kpiType === 'SALES'
+                ? `₹${Number(val) >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`
+                : val
+            }
           />
         </div>
       </div>
+
+      {/* Edit Target Drawer — only mount when user has edit permission */}
+      {canEditTarget && (
+        <KpiEditDrawer
+          target={target}
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* Delete Confirmation Modal — only mount when user has edit permission */}
+      {canEditTarget && (
+        <ConfirmModal
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Target"
+          message={`Are you sure you want to delete this ${target.kpiType} target? This action will cancel active tracking.`}
+          confirmText="Delete Target"
+          type="error"
+          isLoading={deleteMutation.isPending}
+        />
+      )}
     </div>
   );
 }

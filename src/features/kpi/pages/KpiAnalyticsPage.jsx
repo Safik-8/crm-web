@@ -26,8 +26,9 @@ export default function KpiAnalyticsPage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState('ALL');
 
   const { isSuperAdmin, isCompanyWide, isBranchLevel, isTeamLevel, isPersonal, role: primaryRole } = getRoleHierarchy(user);
-  const isCompanyAdmin = isCompanyWide;
-  const isBranchManager = isBranchLevel || isCompanyWide;
+  // Use tier-aware flags: isCompanyWide includes Super Admin + Company Admin, isBranchLevel is ONLY Branch Manager tier
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
 
   const canCreate =
     hasPermission('KPI', 'canCreate') ||
@@ -35,7 +36,6 @@ export default function KpiAnalyticsPage() {
     isSuperAdmin ||
     isCompanyAdmin ||
     isBranchManager;
-  const canViewAll = hasPermission('KPI', 'canViewAll') || hasPermission('view:kpi_analytics');
 
   const filters = {
     search: searchQuery,
@@ -176,8 +176,8 @@ export default function KpiAnalyticsPage() {
             />
           </div>
 
-          {/* Team Dropdown: Visible on Team Tab when authorized */}
-          {activeTab === 'team' && (isTeamLeader || isBranchManager || isCompanyAdmin || isSuperAdmin) && filterOptions.teamOptions?.length > 0 && (
+          {/* Team Dropdown: Visible on Team Tab when there are multiple teams */}
+          {activeTab === 'team' && (isTeamLeader || isBranchManager || isCompanyAdmin || isSuperAdmin) && filterOptions.teamOptions?.length > 1 && (
             <div className="w-full sm:w-44">
               <SelectField
                 value={selectedTeamId}
@@ -236,7 +236,8 @@ export default function KpiAnalyticsPage() {
       </div>
 
       {/* Dynamic Tabs per role */}
-      {availableTabs.length > 1 && (
+      {/* Dynamic Tabs per role — hidden during loading to prevent tab flash when isTeamLeader resolves from API */}
+      {!isLoading && availableTabs.length > 1 && (
         <div className="border-b border-slate-200/80">
           <nav className="flex space-x-6 overflow-x-auto scrollbar-hide">
             {availableTabs.map((tab) => (

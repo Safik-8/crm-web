@@ -82,7 +82,8 @@ const MyTeamPage = () => {
 
   const leads          = leadsRes?.data?.leads || leadsRes?.leads || [];
   const canEditTeam    = hasPermission('TEAM', 'canEdit');
-  const canAssignLeads = canEditTeam && (hasPermission('LEAD', 'canEdit') || hasPermission('LEAD', 'canCreate'));
+  const hasAssignmentPerm = hasPermission('LEAD_ASSIGNMENT', 'canEdit') || hasPermission('LEAD_ASSIGNMENT', 'canCreate');
+  const canAssignLeads = (canEditTeam || hasAssignmentPerm) && (hasPermission('LEAD', 'canEdit') || hasPermission('LEAD', 'canCreate') || hasAssignmentPerm);
   const canViewLeads   = hasPermission('LEAD', 'canView');
 
   const activeMembers = useMemo(
@@ -120,6 +121,7 @@ const MyTeamPage = () => {
       m.user?.name?.toLowerCase().includes(q) ||
       m.user?.email?.toLowerCase().includes(q) ||
       m.user?.employeeId?.toLowerCase().includes(q) ||
+      m.user?.userRoles?.[0]?.role?.name?.toLowerCase().includes(q) ||
       m.memberRole?.toLowerCase().includes(q)
     );
   }, [activeMembers, search]);
@@ -221,7 +223,7 @@ const MyTeamPage = () => {
       header: 'Role',
       cell: (row) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-          {row.memberRole}
+          {row.user?.userRoles?.[0]?.role?.name || row.memberRole}
         </span>
       ),
     },
