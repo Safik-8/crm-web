@@ -302,9 +302,9 @@ export const KanbanFilterSidebar = ({
         <FilterSection title="Lead Scope / Conversion">
           <SearchableDropdown
             options={[
-              { id: 'all', name: '🌐 All Prospects & Opportunities (Default)' },
-              { id: 'false', name: '🟢 Active Prospects Only' },
-              { id: 'only', name: '⚡ Converted / Opportunities Only' },
+              { id: 'all', name: 'All Prospects & Opportunities (Default)' },
+              { id: 'false', name: 'Active Prospects Only' },
+              { id: 'only', name: 'Converted / Opportunities Only' },
             ]}
             value={draftFilters.includeConverted || 'all'}
             onChange={(val) => setDraftFilters({ includeConverted: val })}

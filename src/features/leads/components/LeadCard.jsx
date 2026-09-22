@@ -187,14 +187,19 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
       {/* Body */}
       <div className="px-3.5 pt-3 pb-3">
 
-        {/* Name */}
+        {/* Name & Lead ID */}
         <div
-          className="cursor-pointer pr-5"
+          className="cursor-pointer pr-5 flex items-center justify-between gap-1.5"
           onClick={(e) => { e.stopPropagation(); onClick?.(); }}
         >
           <p className="font-semibold text-zinc-900 text-[13.5px] leading-snug tracking-tight truncate group-hover:text-primary transition-colors duration-150">
             {lead.name}
           </p>
+          {(lead.leadNumber || lead.id) && (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/80 shrink-0">
+              {lead.leadNumber || `#${lead.id}`}
+            </span>
+          )}
         </div>
 
         {/* Badges container: Qualification, Course, Priority & Converted */}

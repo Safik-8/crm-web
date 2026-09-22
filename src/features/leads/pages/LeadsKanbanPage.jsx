@@ -610,23 +610,14 @@ const LeadsKanbanPage = () => {
               <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
             </button>
             {canCreate && (
-              <>
-                <button
-                  onClick={() => setShowImport(true)}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-600 text-[11px] sm:text-[12px] font-semibold hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150"
-                >
-                  <Upload size={13} />
-                  <span className="hidden sm:inline">Import</span>
-                </button>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-primary text-white text-[11px] sm:text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all duration-150 active:scale-[0.97]"
-                >
-                  <Plus size={13} />
-                  <span className="hidden sm:inline">Add Lead</span>
-                  <span className="sm:hidden">Add</span>
-                </button>
-              </>
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-primary text-white text-[11px] sm:text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all duration-150 active:scale-[0.97]"
+              >
+                <Plus size={13} />
+                <span className="hidden sm:inline">Add Lead</span>
+                <span className="sm:hidden">Add</span>
+              </button>
             )}
           </div>
         </div>

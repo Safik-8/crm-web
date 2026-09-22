@@ -168,17 +168,26 @@ export const AssignLeadDrawer = ({ isOpen, onClose, leads = [], onSuccess }) => 
 
   const userOptions = useMemo(() => {
     if ((isCompanyAdmin || isSuperAdmin) && !selectedBranchId) return [];
-    return allUsersList.map(u => {
-      const roleName = u.userRoles?.[0]?.role?.name || '';
-      const suffix = roleName ? ` (${roleName})` : '';
-      const statusSuffix = u.status === 'INACTIVE' ? ' (Inactive)' : '';
-      return {
-        id: u.id.toString(),
-        name: `${u.name}${suffix}${statusSuffix}`,
-        disabled: u.status === 'INACTIVE'
-      };
-    });
-  }, [allUsersList, isCompanyAdmin, isSuperAdmin, selectedBranchId]);
+    const actorRank = currentUser?.primaryRoleRank ?? (isSuperAdmin ? 100 : isCompanyAdmin ? 80 : isBranchManager ? 60 : 40);
+    return allUsersList
+      .filter((u) => {
+        if (isSuperAdmin) return true;
+        const primaryRole = u.userRoles?.find(r => r.isPrimary) || u.userRoles?.[0] || u.role;
+        const userRank = primaryRole?.role?.rank ?? primaryRole?.rank ?? 0;
+        return userRank < actorRank;
+      })
+      .map(u => {
+        const primaryRole = u.userRoles?.find(r => r.isPrimary) || u.userRoles?.[0] || u.role;
+        const roleName = primaryRole?.role?.name ?? primaryRole?.name ?? '';
+        const suffix = roleName ? ` (${roleName})` : '';
+        const statusSuffix = u.status === 'INACTIVE' ? ' (Inactive)' : '';
+        return {
+          id: u.id.toString(),
+          name: `${u.name}${suffix}${statusSuffix}`,
+          disabled: u.status === 'INACTIVE'
+        };
+      });
+  }, [allUsersList, isCompanyAdmin, isSuperAdmin, selectedBranchId, currentUser, isBranchManager]);
 
   const validate = () => {
     const errs = {};

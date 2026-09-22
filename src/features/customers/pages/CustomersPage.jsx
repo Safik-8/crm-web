@@ -95,6 +95,9 @@ const CustomersPage = () => {
   const [companies, setCompanies] = useState([]);
   const [branches, setBranches] = useState([]);
   const [owners, setOwners] = useState([]);
+  const [isCompaniesLoading, setIsCompaniesLoading] = useState(false);
+  const [isBranchesLoading, setIsBranchesLoading] = useState(false);
+  const [isOwnersLoading, setIsOwnersLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
 
@@ -127,6 +130,8 @@ const CustomersPage = () => {
   const canFilterOwner = isCompanyWide || isBranchLevel;
   const canFilterCompany = isSuperAdmin;
   const canFilterBranch = isCompanyWide;
+  const isBranchDisabled = canFilterCompany && !companyId;
+  const isOwnerDisabled = canFilterCompany && !companyId;
 
   const fetchCustomers = async (currentPage = page) => {
     setLoadingState('loading');
@@ -181,14 +186,30 @@ const CustomersPage = () => {
   }, [forceHideLoader]);
 
   useEffect(() => {
+    if (canFilterCompany) {
+      setBranchId('');
+      setOwnerId('');
+    }
+  }, [companyId, canFilterCompany]);
+
+  useEffect(() => {
+    if (canFilterBranch) {
+      setOwnerId('');
+    }
+  }, [branchId, canFilterBranch]);
+
+  useEffect(() => {
     const loadCompanies = async () => {
       if (!canFilterCompany) return;
+      setIsCompaniesLoading(true);
       try {
         const response = await companyApi.getCompanies();
         const list = Array.isArray(response?.data) ? response.data : Array.isArray(response?.data?.companies) ? response.data.companies : [];
         setCompanies(list);
       } catch (error) {
         console.error(error);
+      } finally {
+        setIsCompaniesLoading(false);
       }
     };
     loadCompanies();
@@ -197,17 +218,21 @@ const CustomersPage = () => {
   useEffect(() => {
     const loadBranches = async () => {
       if (!canFilterBranch) return;
-      const targetCompanyId = canFilterCompany ? companyId : user?.companyId;
-      if (!targetCompanyId) {
+      if (canFilterCompany && !companyId) {
         setBranches([]);
+        setIsBranchesLoading(false);
         return;
       }
+      setIsBranchesLoading(true);
+      const targetCompanyId = canFilterCompany ? companyId : user?.companyId;
       try {
-        const response = await branchService.getBranchesRaw(targetCompanyId);
+        const response = await branchService.getBranchesRaw(targetCompanyId || undefined);
         const list = Array.isArray(response?.data) ? response.data : Array.isArray(response?.data?.branches) ? response.data.branches : [];
         setBranches(list);
       } catch (error) {
-        console.error(error);
+        console.error('Failed to load branches:', error);
+      } finally {
+        setIsBranchesLoading(false);
       }
     };
     loadBranches();
@@ -216,16 +241,37 @@ const CustomersPage = () => {
   useEffect(() => {
     const loadOwners = async () => {
       if (!canFilterOwner) return;
+      if (canFilterCompany && !companyId) {
+        setOwners([]);
+        setIsOwnersLoading(false);
+        return;
+      }
+      setIsOwnersLoading(true);
+      const targetCompanyId = canFilterCompany ? (companyId || undefined) : user?.companyId;
+      const targetBranchId = isBranchLevel ? user?.branchId : (branchId || undefined);
       try {
-        const response = await userService.getUsers({ companyId: user?.companyId || '', limit: 200, status: 'ACTIVE' });
-        const list = Array.isArray(response?.data?.users) ? response.data.users : Array.isArray(response?.data) ? response.data : [];
+        const response = await userService.getUsers({ 
+          companyId: targetCompanyId || '', 
+          branchId: targetBranchId || '', 
+          limit: 200, 
+          status: 'ACTIVE' 
+        });
+        const list = Array.isArray(response?.data?.users) 
+          ? response.data.users 
+          : Array.isArray(response?.data?.items)
+            ? response.data.items
+            : Array.isArray(response?.data) 
+              ? response.data 
+              : [];
         setOwners(list);
       } catch (error) {
-        console.error(error);
+        console.error('Failed to load owners:', error);
+      } finally {
+        setIsOwnersLoading(false);
       }
     };
     loadOwners();
-  }, [canFilterOwner, user?.companyId]);
+  }, [canFilterOwner, canFilterCompany, isBranchLevel, companyId, branchId, user?.companyId, user?.branchId]);
 
   const openDetails = async (customer) => {
     try {
@@ -640,6 +686,56 @@ const CustomersPage = () => {
         }
       >
         <div className="space-y-5 pb-6">
+          {/* Company Filter (Super Admin only) */}
+          {canFilterCompany && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
+              <SelectField
+                placeholder="All companies"
+                value={companyId}
+                onChange={(value) => setCompanyId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All companies' }, ...companies.map((company) => ({ value: String(company.id), label: company.name }))]}
+                allowEmptyOption={true}
+                searchable={true}
+                isLoading={isCompaniesLoading}
+              />
+            </div>
+          )}
+
+          {/* Branch Filter (Admin / Super Admin only) */}
+          {canFilterBranch && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
+              <SelectField
+                placeholder={isBranchDisabled ? 'Select company first' : 'All branches'}
+                value={branchId}
+                onChange={(value) => setBranchId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All branches' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))]}
+                allowEmptyOption={true}
+                searchable={true}
+                disabled={isBranchDisabled}
+                isLoading={isBranchesLoading}
+              />
+            </div>
+          )}
+
+          {/* Owner Filter (Admin / Manager only) */}
+          {canFilterOwner && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
+              <SelectField
+                placeholder={isOwnerDisabled ? 'Select company first' : 'All owners'}
+                value={ownerId}
+                onChange={(value) => setOwnerId(value === undefined ? '' : value)}
+                options={[{ value: '', label: 'All owners' }, ...owners.map((owner) => ({ value: String(owner.id), label: owner.name || owner.email }))]}
+                allowEmptyOption={true}
+                searchable={true}
+                disabled={isOwnerDisabled}
+                isLoading={isOwnersLoading}
+              />
+            </div>
+          )}
+
           {/* Status Filter */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
@@ -682,51 +778,6 @@ const CustomersPage = () => {
                 <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
                   className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 text-slate-700" />
               </div>
-            </div>
-          )}
-
-          {/* Owner Filter (Admin / Manager only) */}
-          {canFilterOwner && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
-              <SelectField
-                placeholder="All owners"
-                value={ownerId}
-                onChange={(value) => setOwnerId(value === undefined ? '' : value)}
-                options={[{ value: '', label: 'All owners' }, ...owners.map((owner) => ({ value: String(owner.id), label: owner.name || owner.email }))]}
-                allowEmptyOption={true}
-                searchable={true}
-              />
-            </div>
-          )}
-
-          {/* Company Filter (Super Admin only) */}
-          {canFilterCompany && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
-              <SelectField
-                placeholder="All companies"
-                value={companyId}
-                onChange={(value) => setCompanyId(value === undefined ? '' : value)}
-                options={[{ value: '', label: 'All companies' }, ...companies.map((company) => ({ value: String(company.id), label: company.name }))]}
-                allowEmptyOption={true}
-                searchable={true}
-              />
-            </div>
-          )}
-
-          {/* Branch Filter (Admin / Super Admin only) */}
-          {canFilterBranch && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
-              <SelectField
-                placeholder="All branches"
-                value={branchId}
-                onChange={(value) => setBranchId(value === undefined ? '' : value)}
-                options={[{ value: '', label: 'All branches' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))]}
-                allowEmptyOption={true}
-                searchable={true}
-              />
             </div>
           )}
         </div>
