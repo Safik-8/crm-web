@@ -54,7 +54,7 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
 
   const allTeams = allTeamsRes?.data?.teams || allTeamsRes?.teams || [];
   const assignedBdeIds = allTeams
-    .filter((t) => t.id !== teamId)
+    .filter((t) => !t.isDeleted && t.status === 'ACTIVE' && t.id !== teamId)
     .map((t) => t.bdeId);
 
   const allUsers = usersRes?.data?.users || usersRes?.data || [];
@@ -289,12 +289,12 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
             {/* Section 3: Active Members */}
             <div className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-2">
-                Active Team Members ({activeMembers.filter(m => m.memberRole === 'ISE').length})
+                Active Team Members ({activeMembers.filter(m => m.userId !== team.bdeId).length})
               </h3>
-              {activeMembers.filter(m => m.memberRole === 'ISE').length > 0 ? (
+              {activeMembers.filter(m => m.userId !== team.bdeId).length > 0 ? (
                 <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
                   {activeMembers
-                    .filter((m) => m.memberRole === 'ISE')
+                    .filter((m) => m.userId !== team.bdeId)
                     .map((member) => (
                       <div key={member.id} className="p-3 flex items-center justify-between">
                         <div className="min-w-0 flex-1">
@@ -303,7 +303,7 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700">
-                            {member.memberRole}
+                            {member.user?.userRoles?.[0]?.role?.name || member.memberRole}
                           </span>
                           {canEdit && !team.isDeleted && (
                             <button
@@ -328,23 +328,27 @@ const TeamDetailModal = ({ isOpen, onClose, teamId = null }) => {
             {/* Section 4: Historical Members */}
             <div className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-2">
-                Historical Membership History ({historicalMembers.length})
+                Historical Membership History ({historicalMembers.filter(m => m.userId !== team.bdeId).length})
               </h3>
-              {historicalMembers.length > 0 ? (
+              {historicalMembers.filter(m => m.userId !== team.bdeId).length > 0 ? (
                 <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-                  {historicalMembers.map((member) => (
-                    <div key={member.id} className="p-3 flex items-center justify-between opacity-70">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-slate-700 line-through decoration-slate-400">{member.user?.name}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Assigned: {new Date(member.assignedDate).toLocaleDateString()} | Left: {new Date(member.removedAt).toLocaleDateString()}
-                        </p>
+                  {historicalMembers
+                    .filter((m) => m.userId !== team.bdeId)
+                    .map((member) => (
+                      <div key={member.id} className="p-3 flex items-center justify-between opacity-70">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-700 line-through decoration-slate-400">
+                            {member.user?.name || 'Former Member'}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Assigned: {member.assignedDate ? new Date(member.assignedDate).toLocaleDateString() : 'N/A'} | Left: {member.removedAt ? new Date(member.removedAt).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600">
+                          {member.user?.userRoles?.[0]?.role?.name || member.memberRole} (EX)
+                        </span>
                       </div>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-600">
-                        {member.memberRole} (EX)
-                      </span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <p className="text-xs font-semibold text-slate-400 italic py-2 pl-1">

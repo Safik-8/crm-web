@@ -55,7 +55,7 @@ const RBAC_ADAPTER_MAP = {
   'view:lead_statuses': { module: 'LEAD_STATUS', action: 'canView' },
   'view:lead_assignment': { module: 'LEAD_ASSIGNMENT', action: 'canView' },
   'view:kpi': { module: 'KPI', action: 'canView' },
-  'manage:kpi': { module: 'KPI', action: 'canManage' },
+  'manage:kpi': { module: 'KPI', action: 'canCreate' },
 
   // Action Permissions
   'action:approve_transfers': { module: 'APPROVAL', action: 'canEdit' }, // Fixed from BRANCH
@@ -134,7 +134,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, canManage, assign:kpi:*, view:kpi:*)
+    // KPI Module Permission Handling (canCreate, canViewOwn, canViewAll, canView, assign:kpi:*, view:kpi:*)
     if (
       moduleOrPermissionStr === 'KPI' ||
       (typeof moduleOrPermissionStr === 'string' && moduleOrPermissionStr.includes('kpi'))
@@ -149,12 +149,12 @@ export const AuthProvider = ({ children }) => {
       if (moduleOrPermissionStr === 'view:kpi:branch') return isManagerOrAdmin;
       if (moduleOrPermissionStr === 'view:kpi:team') return isBdeOrLeader;
       if (moduleOrPermissionStr === 'assign:kpi:team') {
-        const dbPerm = user.permissions?.KPI?.canManage || user.permissions?.KPI?.canCreate;
+        const dbPerm = user.permissions?.KPI?.canCreate;
         if (dbPerm !== undefined) return Boolean(dbPerm) && isBdeOrLeader;
         return isBdeOrLeader;
       }
       if (moduleOrPermissionStr === 'assign:kpi:individual') {
-        const dbPerm = user.permissions?.KPI?.canManage || user.permissions?.KPI?.canCreate;
+        const dbPerm = user.permissions?.KPI?.canCreate;
         if (dbPerm !== undefined) return Boolean(dbPerm);
         return isBdeOrLeader;
       }
@@ -164,14 +164,14 @@ export const AuthProvider = ({ children }) => {
         if (moduleOrPermissionStr === 'create:kpi' || moduleOrPermissionStr === 'create:kpi:target') actionKey = 'canCreate';
         else if (moduleOrPermissionStr === 'view:kpi_own') actionKey = 'canViewOwn';
         else if (moduleOrPermissionStr === 'view:kpi_analytics') actionKey = 'canViewAll';
-        else if (moduleOrPermissionStr === 'manage:kpi') actionKey = 'canManage';
+        else if (moduleOrPermissionStr === 'manage:kpi') actionKey = 'canCreate';
         else actionKey = 'canView';
       }
 
       const dbValue = user.permissions?.KPI?.[actionKey] ?? user.permissions?.KPI?.[actionKey === 'canViewOwn' || actionKey === 'canViewAll' ? 'canView' : actionKey];
       if (dbValue !== undefined) return Boolean(dbValue);
 
-      if (actionKey === 'canCreate' || actionKey === 'canManage') return isManagerOrAdmin;
+      if (actionKey === 'canCreate' || actionKey === 'canEdit') return isManagerOrAdmin;
       if (actionKey === 'canViewAll') return isBdeOrLeader;
       return true; // canViewOwn / canView is true for all authenticated users
     }

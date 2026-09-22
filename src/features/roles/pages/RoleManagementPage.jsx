@@ -407,7 +407,10 @@ const RoleManagementPage = () => {
   // Company filter — Super Admin only
   const [companyFilter, setCompanyFilter] = useState('');
 
-  const { roles, pagination, loadingState, refetch, search, handleSearchChange, setPage } = useRoles(companyFilter);
+  const { roles, pagination, loadingState, refetch, search, handleSearchChange, setPage } = useRoles(
+    companyFilter,
+    { enabled: isSuperAdmin ? Boolean(companyFilter) : true }
+  );
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
@@ -483,7 +486,7 @@ const RoleManagementPage = () => {
       } else {
         setFormName('');
         setFormDescription('');
-        setFormCompanyId('');
+        setFormCompanyId(companyFilter || '');
         setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
         setFormPermissions({});
       }
@@ -918,12 +921,11 @@ const RoleManagementPage = () => {
 
           {/* Company filter — Super Admin only */}
           {isSuperAdmin && (
-            <div className="w-full sm:w-52">
+            <div className="w-full sm:w-64">
               <SelectField
-                placeholder="All Companies"
+                placeholder="Select a Company..."
                 value={companyFilter}
                 onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
-                allowEmptyOption
                 searchable
                 options={companiesList.map((c) => ({
                   value: String(c.id),
@@ -958,8 +960,14 @@ const RoleManagementPage = () => {
         ) : roles.length === 0 ? (
           <div className="bg-white border border-slate-200 p-8 text-center">
             <AlertCircle className="text-slate-300 mx-auto mb-2" size={32} />
-            <p className="font-bold text-slate-700">No Roles Found</p>
-            <p className="text-xs text-slate-400">Add a custom role or refine your search.</p>
+            <p className="font-bold text-slate-700">
+              {isSuperAdmin && !companyFilter ? 'Please Select a Company' : 'No Roles Found'}
+            </p>
+            <p className="text-xs text-slate-400">
+              {isSuperAdmin && !companyFilter
+                ? 'Select a company from the dropdown above to view its roles.'
+                : 'Add a custom role or refine your search.'}
+            </p>
           </div>
         ) : (
           roles.map((role) => (
@@ -1042,8 +1050,12 @@ const RoleManagementPage = () => {
           columns={columns}
           data={roles}
           loadingState={loadingState}
-          emptyTitle="No Roles Found"
-          emptyDescription="Add a custom role or refine your search filters."
+          emptyTitle={isSuperAdmin && !companyFilter ? 'Please Select a Company' : 'No Roles Found'}
+          emptyDescription={
+            isSuperAdmin && !companyFilter
+              ? 'Select a company from the dropdown above to view and manage its roles.'
+              : 'Add a custom role or refine your search filters.'
+          }
           emptyIcon={Shield}
           skeletonRows={5}
         />

@@ -36,7 +36,6 @@ import {
   useLeadsQuery,
   useLeadFormDataQuery,
   useDeleteLeadMutation,
-  useDeleteAllLeadsMutation,
   useUserPreferencesQuery,
   useUpdateUserPreferencesMutation
 } from '../hooks/useLeads';
@@ -179,7 +178,6 @@ export const LeadsPage = () => {
   const [selectedLeadForEdit, setSelectedLeadForEdit] = useState(null);
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
-  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
 
   // Auto-open lead detail drawer if navigated via notification deep-link or from an
   // Opportunity record. Supports the following URL patterns:
@@ -436,7 +434,6 @@ export const LeadsPage = () => {
   const { data: leadsData, isLoading, isFetching, isError, error, refetch } = useLeadsQuery(queryParams);
   const { data: formDataRes, isLoading: isLoadingFormData } = useLeadFormDataQuery();
   const deleteLeadMutation = useDeleteLeadMutation();
-  const deleteAllLeadsMutation = useDeleteAllLeadsMutation();
 
   const leads = leadsData?.data?.leads || [];
   const paginationRaw = leadsData?.data?.pagination || {};
@@ -478,14 +475,6 @@ export const LeadsPage = () => {
     deleteLeadMutation.mutate(selectedLeadForDelete.id, {
       onSuccess: () => {
         setSelectedLeadForDelete(null);
-      }
-    });
-  };
-
-  const handleDeleteAllConfirm = () => {
-    deleteAllLeadsMutation.mutate(null, {
-      onSuccess: () => {
-        setIsDeleteAllOpen(false);
       }
     });
   };
@@ -938,27 +927,6 @@ export const LeadsPage = () => {
                 Kanban
               </Button>
 
-              {hasPermission('LEAD', 'canDelete') && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => setIsDeleteAllOpen(true)}
-                  startIcon={<Trash2 size={16} />}
-                  sx={{
-                    height: '44px',
-                    borderRadius: '12px',
-                    borderColor: '#FEE2E2',
-                    color: '#EF4444',
-                    '&:hover': {
-                      borderColor: '#FCA5A5',
-                      bgcolor: '#FEF2F2'
-                    }
-                  }}
-                >
-                  Delete All
-                </Button>
-              )}
-
               {hasPermission('LEAD', 'canCreate') && (
                 <>
                   <Button
@@ -1362,18 +1330,6 @@ export const LeadsPage = () => {
         cancelText="Cancel"
         danger
         isLoading={deleteLeadMutation.isPending}
-      />
-
-      <ConfirmModal
-        isOpen={isDeleteAllOpen}
-        onClose={() => setIsDeleteAllOpen(false)}
-        onConfirm={handleDeleteAllConfirm}
-        title="Delete All Leads"
-        message="Are you sure you want to delete ALL leads in your current scope? This will soft-delete all active leads."
-        confirmText="Delete All Leads"
-        cancelText="Cancel"
-        danger
-        isLoading={deleteAllLeadsMutation.isPending}
       />
 
 

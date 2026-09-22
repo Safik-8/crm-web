@@ -5,7 +5,7 @@ import { Eye, Edit3, Trash2, Power, MoreVertical } from 'lucide-react';
 import { Menu, MenuItem, IconButton } from '@mui/material';
 import Table from '../../../shared/components/elements/Table';
 
-const ActionMenu = ({ team, onViewDetails, onEdit, onToggleStatus, onDelete }) => {
+const ActionMenu = ({ team, onViewDetails, onEdit, onToggleStatus, onDelete, canEdit = false, canDelete = false }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   
@@ -65,7 +65,7 @@ const ActionMenu = ({ team, onViewDetails, onEdit, onToggleStatus, onDelete }) =
           <Eye size={16} className="text-slate-400" />
           View Details
         </MenuItem>
-        {!team.isDeleted && (
+        {!team.isDeleted && canEdit && (
           <>
             <MenuItem onClick={(e) => { handleClose(e); onEdit(team); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Edit3 size={16} className="text-slate-400" />
@@ -78,11 +78,13 @@ const ActionMenu = ({ team, onViewDetails, onEdit, onToggleStatus, onDelete }) =
               <Power size={16} className={isActive ? 'text-red-400' : 'text-emerald-400'} />
               {isActive ? 'Deactivate' : 'Activate'}
             </MenuItem>
-            <MenuItem onClick={(e) => { handleClose(e); onDelete(team); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444 !important' }}>
-              <Trash2 size={16} className="text-red-400" />
-              Archive Team
-            </MenuItem>
           </>
+        )}
+        {!team.isDeleted && canDelete && (
+          <MenuItem onClick={(e) => { handleClose(e); onDelete(team); }} sx={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444 !important' }}>
+            <Trash2 size={16} className="text-red-400" />
+            Archive Team
+          </MenuItem>
         )}
       </Menu>
     </div>
@@ -99,7 +101,9 @@ const TeamListTable = ({
   onToggleStatus,
   onDelete,
   hasActiveFilters = false,
-  onClearFilters
+  onClearFilters,
+  canEdit = false,
+  canDelete = false
 }) => {
   const columns = [
     {
@@ -182,6 +186,8 @@ const TeamListTable = ({
             onEdit={onEdit}
             onToggleStatus={onToggleStatus}
             onDelete={onDelete}
+            canEdit={canEdit}
+            canDelete={canDelete}
           />
         </div>
       )
