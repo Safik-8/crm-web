@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, TrendingUp, Plus, Award, AlertCircle, BarChart3, PieChart as PieIcon, LineChart as LineIcon, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useKpiDashboard } from '../hooks/useKpi';
 import KpiCard from '../components/KpiCard';
 import { CrmBarChart, CrmLineChart, CrmPieChart, ChartEmptyState } from '../../../shared/components/charts';
@@ -17,12 +18,9 @@ export default function KpiDashboardPage() {
   const canView = hasPermission('KPI', 'canView') || hasPermission('view:kpi');
 
   // Role Scoping & Dynamic Tab Visibility
-  const primaryRole = user?.primaryRole || '';
-  const rank = user?.primaryRoleRank ?? 0;
-
-  const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || rank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || rank === 80;
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || rank === 60;
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isTeamLevel, isPersonal } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide;
+  const isBranchManager = isBranchLevel || isCompanyWide;
 
   // Determine if user can access team/branch/company tabs
   const { data: dashboardData, isLoading, isError, error } = useKpiDashboard(activeTab, {
@@ -30,7 +28,7 @@ export default function KpiDashboardPage() {
   });
 
   const userRoleInfo = dashboardData?.userRoleInfo || {};
-  const isTeamLeader = userRoleInfo.isTeamLeader;
+  const isTeamLeader = userRoleInfo.isTeamLeader || isTeamLevel;
 
   // Build visible tabs list dynamically per role specification
   const availableTabs = [
@@ -50,9 +48,8 @@ export default function KpiDashboardPage() {
   const targets = dashboardData?.targets || [];
   const charts = dashboardData?.charts || {};
 
-  // Check drill down permission (ISE cannot drill down)
-  const isIse = primaryRole === 'ISE';
-  const canDrill = !isIse;
+  // Check drill down permission (Personal tier cannot drill down)
+  const canDrill = !isPersonal;
 
   const barSeries = [
     { dataKey: 'Target', name: 'Target Value', fill: '#cbd5e1', radius: [6, 6, 0, 0] },

@@ -61,7 +61,7 @@ const TeamFormModal = ({
         setName('');
         setCode('');
         setCompanyId(currentUser?.companyId || '');
-        setBranchId(currentUser?.primaryRole === 'BRANCH_MANAGER' ? currentUser.branchId : '');
+        setBranchId((currentUser?.primaryRole === 'BRANCH_MANAGER' || (formActorRank >= 60 && formActorRank < 80)) ? currentUser.branchId : '');
         setBdeId('');
         setStatus('ACTIVE');
         setIseIds([]);

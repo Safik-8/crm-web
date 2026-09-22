@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Users2, Plus, RefreshCw, Filter, Search, List, Network, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useQuery } from '@tanstack/react-query';
 
@@ -117,13 +118,9 @@ const UsersPage = () => {
   const canCreate = hasPermission('USER', 'canCreate');
 
   // ── DROPDOWNS DATA FETCHING (TENANT AWARE) ──────────────────
-
-  // ── Rank-based access flags — role-name agnostic, works for any custom role
-  // System ranks: Super Admin=100, Company Admin=80, Branch Manager=60
-  // Custom roles: company-scoped max rank=79, global max rank=99 (by design)
-  const actorRank = currentUser?.primaryRoleRank ?? 0;
-  const canFilterByCompany = actorRank >= 100; // No company scope (Super Admin level)
-  const canFilterByBranch = actorRank >= 80;  // Company-wide visibility (Company Admin+)
+  const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(currentUser);
+  const canFilterByCompany = isSuperAdmin;
+  const canFilterByBranch = isCompanyWide;
 
   // 1. Fetch Companies list — only for actors with no company scope (rank >= 100)
   const { data: companiesRes } = useQuery({
@@ -133,7 +130,7 @@ const UsersPage = () => {
   });
   const companies = Array.isArray(companiesRes?.data) ? companiesRes.data : (companiesRes?.data?.companies || []);
 
-  // 2. Fetch Branches list — only for company-wide visibility roles (rank >= 80)
+  // 2. Fetch Branches list — only for company-wide visibility roles (rank >= 61)
   const targetCompanyId = canFilterByCompany ? companyId : currentUser?.companyId;
   const { data: branchesRes } = useQuery({
     queryKey: ['branches-all-options', targetCompanyId],

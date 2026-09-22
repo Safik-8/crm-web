@@ -11,6 +11,8 @@ import TextField from '../../../shared/components/elements/TextField';
 import SearchInput from '../../../shared/components/elements/SearchInput';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
+
 export default function MyPerformancePage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,7 +35,8 @@ export default function MyPerformancePage() {
   const targets = rawData.targets || [];
   const charts = rawData.charts || {};
 
-  const isIse = user?.primaryRole === 'ISE';
+  const { isPersonal, role: primaryRole } = getRoleHierarchy(user);
+  const isIse = isPersonal || primaryRole === 'ISE';
 
   const kpiTypeOptions = [
     { value: 'ALL', label: 'All KPI Types' },

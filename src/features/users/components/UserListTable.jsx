@@ -144,8 +144,8 @@ const UserListTable = ({
   onSort
 }) => {
   const { user } = useAuth();
-  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
   const actorRank = user?.primaryRoleRank ?? 0;
+  const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN' || actorRank >= 100;
   const [userToDelete, setUserToDelete] = useState(null);
 
   const columns = [
@@ -313,8 +313,8 @@ const UserListTable = ({
         const rowRank = getRowRank(row);
         // Can delete row if:
         // 1. Row is NOT current user's own account (row.id !== user?.id)
-        // 2. Actor is SUPER_ADMIN OR (actorRank >= 80 AND actorRank > rowRank)
-        const canDeleteThisRow = row.id !== user?.id && (isSuperAdmin || (actorRank >= 80 && actorRank > rowRank));
+        // 2. Actor is SUPER_ADMIN OR (actorRank >= 61 AND actorRank > rowRank)
+        const canDeleteThisRow = row.id !== user?.id && (isSuperAdmin || (actorRank >= 61 && actorRank > rowRank));
 
         return (
           <div className="flex justify-end">

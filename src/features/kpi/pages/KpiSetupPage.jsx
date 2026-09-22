@@ -6,6 +6,7 @@ import { Target, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../api/axiosClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useCreateKpiTarget } from '../hooks/useKpi';
 import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
@@ -20,12 +21,9 @@ export default function KpiSetupPage() {
   const { user, hasPermission } = useAuth();
   const createMutation = useCreateKpiTarget();
 
-  const primaryRole = user?.primaryRole || '';
-  const rank = user?.primaryRoleRank ?? 0;
-
-  const isSuperAdmin = primaryRole === 'SUPER_ADMIN' || rank >= 100;
-  const isCompanyAdmin = primaryRole === 'COMPANY_ADMIN' || rank === 80;
-  const isBranchManager = primaryRole === 'BRANCH_MANAGER' || rank === 60;
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(user);
+  const isCompanyAdmin = isCompanyWide;
+  const isBranchManager = isBranchLevel || isCompanyWide;
   
   // Custom permission check
   const canCreate = hasPermission('KPI', 'canCreate') || hasPermission('create:kpi') || isSuperAdmin || isCompanyAdmin || isBranchManager;

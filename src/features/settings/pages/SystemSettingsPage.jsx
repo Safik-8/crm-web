@@ -19,12 +19,13 @@ import ConfirmModal from "../../../shared/components/elements/ConfirmModal"
 import SelectField from "../../../shared/components/elements/SelectField"
 import Skeleton from "../../../shared/components/elements/Skeleton"
 import { ShieldAlert, Loader2, Building, ShieldOff } from "lucide-react"
+import { getRoleHierarchy } from "../../../lib/utils/roleHierarchy"
 
 export const SystemSettingsPage = () => {
   const { user, hasPermission } = useAuth()
+  const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(user)
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin
   const userRole = user?.primaryRole || user?.role || "COMPANY_ADMIN"
-  const isSuperAdmin = userRole.toUpperCase() === "SUPER_ADMIN"
-  const isCompanyAdmin = userRole.toUpperCase() === "COMPANY_ADMIN"
 
   const canViewSettings =
     isSuperAdmin ||

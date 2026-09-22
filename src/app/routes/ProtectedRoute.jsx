@@ -28,9 +28,13 @@ const ProtectedRoute = ({ children, requiredPermission, allowedRoles }) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.primaryRole)) {
-    // If user role is not in allowed roles, redirect to unauthorized
-    return <Navigate to="/unauthorized" replace />;
+  if (allowedRoles) {
+    const roleName = user?.primaryRole || user?.role || '';
+    const rank = Number(user?.primaryRoleRank ?? 0);
+    const isAllowed = allowedRoles.includes(roleName) || (allowedRoles.includes('SUPER_ADMIN') && (roleName === 'SUPER_ADMIN' || rank >= 100));
+    if (!isAllowed) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return children;

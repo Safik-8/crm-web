@@ -30,7 +30,17 @@ const BdeDashboardView = () => {
     { icon: Target,        title: 'Opportunities',      value: metrics.activeOpportunities, color: 'purple'  },
     { icon: Handshake,     title: 'Deals Won',          value: metrics.dealsWon,           color: 'rose'    },
     { icon: TrendingUp,    title: 'Revenue',            value: metrics.revenue,            prefix: '₹', color: 'blue' },
-    { icon: BarChart3,     title: 'Calls Today',        value: metrics.callsCompletedToday, color: 'slate'  },
+    {
+      icon: BarChart3,
+      title: 'Calls Today',
+      value: metrics.callsCompletedToday,
+      color: 'slate',
+      badges: [
+        { label: '❄️ Cold', value: metrics.coldCallsToday || 0, color: 'sky' },
+        { label: '🔄 Follow-up', value: metrics.followupCallsToday || 0, color: 'indigo' },
+        { label: '✕ Missed', value: metrics.notReceivedCallsToday || 0, color: 'rose' },
+      ],
+    },
   ];
 
   return (

@@ -93,6 +93,7 @@ const SEARCH_NAV_ITEMS = [
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('LEAD_SOURCE', 'canView') || 
       hasPermission('SYSTEM_SETTINGS', 'canView')
   },
   {
@@ -106,6 +107,7 @@ const SEARCH_NAV_ITEMS = [
     permission: (user, hasPermission) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
+      hasPermission('LEAD_STATUS', 'canView') || 
       hasPermission('SYSTEM_SETTINGS', 'canView')
   },
   {
@@ -184,7 +186,7 @@ const SEARCH_NAV_ITEMS = [
     permission: (user) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
-      (user?.primaryRoleRank >= 80)
+      (user?.primaryRoleRank >= 61)
   },
   {
     id: 'kpi-analytics',
@@ -220,10 +222,10 @@ const SEARCH_NAV_ITEMS = [
     icon: ShieldAlert,
     path: '/audit-logs',
     keywords: ['audit', 'audit log', 'logs', 'security', 'trail', 'history', 'ip'],
-    permission: (user, hasPermission) => 
+    permission: (user) => 
       user?.primaryRole === 'SUPER_ADMIN' || 
       user?.primaryRole === 'COMPANY_ADMIN' || 
-      hasPermission('AUDIT', 'canView')
+      ((user?.primaryRoleRank ?? 0) >= 80)
   },
   {
     id: 'transfer-approvals',
@@ -312,6 +314,16 @@ const SEARCH_NAV_ITEMS = [
     icon: User,
     path: '/profile',
     keywords: ['profile', 'account', 'password', 'my profile', 'me', 'photo'],
+    permission: () => true
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    subtitle: 'Alerts, updates & activity dispatches',
+    category: 'Account',
+    icon: Bell,
+    path: '/notifications',
+    keywords: ['notifications', 'alerts', 'bell', 'messages', 'updates', 'unread'],
     permission: () => true
   }
 ];

@@ -121,8 +121,8 @@ const AuditPage = () => {
     ''
   ).toUpperCase().replace(/\s+/g, '_');
 
-  const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
-  const isCompanyAdmin = userRole === 'COMPANY_ADMIN' || userRole === 'COMPANY_MANAGER';
+  const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || ((user?.primaryRoleRank ?? 0) >= 100);
+  const isCompanyAdmin = userRole === 'COMPANY_ADMIN' || userRole === 'COMPANY_MANAGER' || (((user?.primaryRoleRank ?? 0) >= 80) && !isSuperAdmin);
   const hasAccess = isSuperAdmin || isCompanyAdmin;
 
   // Filter State

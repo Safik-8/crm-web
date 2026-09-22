@@ -23,7 +23,17 @@ const IseDashboardView = () => {
 
   const KPI_CARDS = [
     { icon: Layers, title: 'Assigned Leads', value: metrics.assignedLeads, color: 'blue' },
-    { icon: Phone, title: 'Calls Today', value: metrics.callsCompletedToday, color: 'emerald' },
+    {
+      icon: Phone,
+      title: 'Calls Today',
+      value: metrics.callsCompletedToday,
+      color: 'emerald',
+      badges: [
+        { label: '❄️ Cold', value: metrics.coldCallsToday || 0, color: 'sky' },
+        { label: '🔄 Follow-up', value: metrics.followupCallsToday || 0, color: 'indigo' },
+        { label: '✕ Missed', value: metrics.notReceivedCallsToday || 0, color: 'rose' },
+      ],
+    },
     { icon: Clock, title: "Today's Follow-ups", value: metrics.followupsToday, color: 'sky' },
     { icon: CheckCircle, title: 'Qualified Leads', value: metrics.qualifiedLeads, color: 'orange' },
     { icon: Calendar, title: 'Pending Follow-ups', value: metrics.pendingFollowups, color: 'purple' },

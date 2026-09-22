@@ -35,11 +35,11 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
   const [isTeamLeader, setIsTeamLeader] = useState(false);
   const [hasTeamChecked, setHasTeamChecked] = useState(false);
 
-  // Role permissions mappings
+  // Role permissions mappings via Universal 4-Tier boundaries
   const isSuper = rank >= 100;
-  const isAdmin = rank >= 80 && rank < 100;
-  const isManager = rank >= 60 && rank < 80;
-  const isSales = rank > 0 && rank < 60;
+  const isAdmin = rank >= 61 && rank < 100;
+  const isManager = rank >= 41 && rank < 61;
+  const isSales = rank > 0 && rank < 41;
 
   // Fetch active team membership & team leadership status of logged-in user
   useEffect(() => {
