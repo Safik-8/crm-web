@@ -41,8 +41,8 @@ export const navGroups = [
       { name: 'Leads', path: '/leads', icon: ClipboardList, permission: PERMISSIONS.VIEW_LEADS },
       { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_OPPORTUNITIES },
       { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
-      { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
-      { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
+      // { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
+      { name: 'Services', path: '/services', icon: Briefcase, permission: PERMISSIONS.VIEW_COURSES },
     ]
   },
   {

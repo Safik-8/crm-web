@@ -157,19 +157,19 @@ const MODULES_LIST = [
     uiLocation: "/customers",
     controls: "Converted client accounts, purchase history & directory"
   },
-  {
-    value: "DEAL",
-    label: "Deals",
-    group: "crm",
-    uiLocation: "/deals",
-    controls: "Closed-won transactions, payment tracking & contracts"
-  },
+  // {
+  //   value: "DEAL",
+  //   label: "Deals",
+  //   group: "crm",
+  //   uiLocation: "/deals",
+  //   controls: "Closed-won transactions, payment tracking & contracts"
+  // },
   {
     value: "COURSE",
-    label: "Courses",
+    label: "Services",
     group: "crm",
-    uiLocation: "/courses",
-    controls: "Product/course catalog, curriculums & pricing packages"
+    uiLocation: "/services",
+    controls: "Services catalog, service packages & pricing"
   },
   {
     value: "APPROVAL",
@@ -295,7 +295,7 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     OPPORTUNITY_PIPELINE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     COURSE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
@@ -323,7 +323,7 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
@@ -351,7 +351,7 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
@@ -379,7 +379,7 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     CUSTOMER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },

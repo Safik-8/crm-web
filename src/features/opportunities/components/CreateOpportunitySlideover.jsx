@@ -131,7 +131,7 @@ export const CreateOpportunitySlideover = ({
       if (initialValues?.leadId && Number(l.id) === Number(initialValues.leadId)) return true;
 
       // Must be QUALIFIED (status === 'QUALIFIED' or isQualified flag)
-      const isQualified = l.qualification?.status === 'QUALIFIED' || l.isQualified === true;
+      const isQualified = l.qualification?.status === 'QUALIFIED' || l.isQualified === true || l.qualificationStatus === 'QUALIFIED';
       if (!isQualified) return false;
 
       // Must not already be converted
@@ -154,7 +154,7 @@ export const CreateOpportunitySlideover = ({
     }
 
     return list;
-  }, [leads, initialValues?.leadId, computedInitialValues.opportunityName]);
+  }, [leads, initialValues?.leadId, computedInitialValues.opportunityName, user?.companyId]);
 
   // Field configuration: Select Lead at the very top (1st field), followed by auto-filled deal fields
   const fields = [
@@ -170,8 +170,9 @@ export const CreateOpportunitySlideover = ({
         : 'No qualified leads available (Qualify a lead first in Lead Management)',
       options: qualifiedLeads.map((l) => ({
         value: l.id,
-        label: `[${l.leadNumber || `#${l.id}`}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? 0}%)`,
+ label: `[${l.leadNumber || `#${l.id}`}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? l.qualificationScore ?? 100}%)`,
       })),
+        
       onCustomChange: handleLeadChange,
     },
     {
@@ -193,9 +194,9 @@ export const CreateOpportunitySlideover = ({
     {
       key: 'productId',
       name: 'productId',
-      label: 'Course / Product',
+      label: 'Service',
       type: 'select',
-      placeholder: 'Select Course / Product (Auto-fills if specified on Lead)',
+      placeholder: 'Select Service (Auto-fills if specified on Lead)',
       options: courseOptions,
     },
     {

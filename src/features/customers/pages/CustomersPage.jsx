@@ -104,7 +104,7 @@ const CustomersPage = () => {
   const productData = useMemo(() => {
     const counts = {};
     customers.forEach(c => {
-      const pName = c.purchasedProduct?.name || 'Other Course';
+      const pName = c.purchasedProduct?.name || 'Other Service';
       const rev = Number(c.totalRevenue || 0);
       counts[pName] = (counts[pName] || 0) + rev;
     });

@@ -20,7 +20,7 @@ export const ProductRevenueTable = ({ data = [], isLoading = false }) => {
   if (!data || data.length === 0) {
     return (
       <div className="bg-white  border border-slate-200/80 shadow-sm p-8 text-center text-slate-500">
-        No product/course revenue performance data found.
+        No service revenue performance data found.
       </div>
     );
   }
@@ -29,11 +29,11 @@ export const ProductRevenueTable = ({ data = [], isLoading = false }) => {
     <div className="bg-white  border border-slate-200/80 shadow-sm overflow-hidden mb-6">
       <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-slate-900 tracking-tight">Revenue by Product / Course</h3>
+          <h3 className="text-base font-bold text-slate-900 tracking-tight">Revenue by Service</h3>
           <p className="text-xs text-slate-500">Earnings breakdown, sales volume, ASP, and contribution percentage</p>
         </div>
         <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold whitespace-nowrap">
-          {data.length} Products
+          {data.length} Services
         </span>
       </div>
 
@@ -41,7 +41,7 @@ export const ProductRevenueTable = ({ data = [], isLoading = false }) => {
         <table className="w-full text-left border-collapse text-sm">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-              <th className="py-3 px-4">Product / Course Name</th>
+              <th className="py-3 px-4">Service Name</th>
               <th className="py-3 px-4">Category</th>
               <th className="py-3 px-4 text-center">Sales Count</th>
               <th className="py-3 px-4 text-right">Avg Selling Price (ASP)</th>

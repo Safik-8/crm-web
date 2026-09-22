@@ -629,10 +629,10 @@ export const OpportunityDetailPage = () => {
                 </div>
 
                 <div>
-                  <span className="text-slate-400 font-medium block mb-1">Product / Course</span>
+                  <span className="text-slate-400 font-medium block mb-1">Service</span>
                   <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
                     <BookOpen className="w-4 h-4 text-orange-600" />
-                    <span>{opportunity.product?.name || 'General Course'}</span>
+                    <span>{opportunity.product?.name || 'General Service'}</span>
                   </span>
                 </div>
 

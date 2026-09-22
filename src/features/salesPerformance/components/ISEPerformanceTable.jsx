@@ -2,13 +2,37 @@
 
 import React from 'react';
 import { PhoneCall, Crown, Trophy, Award } from 'lucide-react';
+import Skeleton from '../../../shared/components/elements/Skeleton';
 
 export default function ISEPerformanceTable({ data = [], isLoading = false }) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-none border border-slate-200/80 shadow-xs p-12 text-center text-slate-500">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-orange-500 mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Calculating ISE activity metrics...</p>
+      <div className="bg-white rounded-none border border-slate-200/80 shadow-xs p-6 space-y-4 animate-in fade-in duration-300">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <Skeleton variant="rounded" width={36} height={36} className="rounded-xl" />
+            <div className="space-y-1.5">
+              <Skeleton variant="text" width={220} height={20} />
+              <Skeleton variant="text" width={320} height={14} />
+            </div>
+          </div>
+          <Skeleton variant="rounded" width={100} height={28} className="rounded-full" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between py-3 px-4 border border-slate-100 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Skeleton variant="rounded" width={24} height={24} className="rounded-md" />
+                <Skeleton variant="text" width={160} height={18} />
+              </div>
+              <div className="flex items-center gap-4">
+                <Skeleton variant="rounded" width={80} height={24} className="rounded-md" />
+                <Skeleton variant="rounded" width={100} height={24} className="rounded-md" />
+                <Skeleton variant="rounded" width={60} height={24} className="rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

@@ -124,10 +124,10 @@ export const RevenueFilterBar = ({
             </div>
           )}
 
-          {/* Course / Product Selector */}
+          {/* Service Selector */}
           <div className="w-full sm:w-44">
             <SelectField
-              placeholder="All Courses"
+              placeholder="All Services"
               value={filters.courseId || ''}
               onChange={(val) => handleChange('courseId', val === undefined ? '' : val)}
               allowEmptyOption

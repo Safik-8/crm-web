@@ -28,7 +28,7 @@ const AvailableStagesPanel = ({
   const PRESET_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#64748b'];
 
   return (
-    <div className="bg-white border border-slate-200 flex flex-col overflow-hidden h-[580px]">
+    <div className="bg-white border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[580px]">
       {/* Panel Header */}
       <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white space-y-3">
         <div className="flex items-center justify-between">
@@ -127,15 +127,15 @@ const AvailableStagesPanel = ({
             return (
               <div
                 key={stage.id}
-                className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-md border transition-all ${
+                className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-none border transition-all ${
                   isEditingThis
-                    ? 'bg-white border-orange-400 ring-2 ring-orange-100'
+                    ? 'bg-white border-orange-300 ring-2 ring-orange-100'
                     : isInactive
                       ? 'bg-slate-50 border-slate-200'
                       : mandatory
-                        ? 'bg-orange-50/20 border-orange-200 border-l-[3px] border-l-orange-500'
+                        ? 'bg-orange-50/20 border-slate-200 border-l-[3px] border-l-orange-300'
                         : checked
-                          ? 'bg-white border-slate-200 border-l-[3px] border-l-orange-500'
+                          ? 'bg-white border-slate-200 border-l-[3px] border-l-orange-300'
                           : 'bg-white border-slate-200 hover:border-slate-300'
                 }`}
               >
@@ -194,20 +194,20 @@ const AvailableStagesPanel = ({
                       type="button"
                       onClick={() => toggleStage(stage)}
                       disabled={mandatory || isInactive}
-                      className={`text-left text-sm font-semibold truncate transition-colors ${
+                      className={`text-left text-sm font-bold truncate transition-colors ${
                         mandatory
-                          ? 'text-primary cursor-default'
+                          ? 'text-orange-950 cursor-default'
                           : isInactive
-                            ? 'text-slate-500 line-through cursor-not-allowed'
+                            ? 'text-slate-400 line-through cursor-not-allowed'
                             : checked
-                              ? 'text-primary'
-                              : 'text-slate-700 group-hover:text-slate-900'
+                              ? 'text-orange-950'
+                              : 'text-slate-900 group-hover:text-black'
                       }`}
                     >
                       {stage.name}
                     </button>
                     {isInactive && (
-                      <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded uppercase">
+                      <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded uppercase">
                         Disabled
                       </span>
                     )}
@@ -219,8 +219,8 @@ const AvailableStagesPanel = ({
                   <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto opacity-100">
                     {mandatory ? (
                       <span
-                        className="text-[10px] font-black text-primary uppercase tracking-widest
-                          bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-lg"
+                        className="text-[10px] font-black text-orange-600 uppercase tracking-widest
+                          bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg"
                         title="Mandatory system stage — always required"
                       >
                         REQUIRED
@@ -234,15 +234,15 @@ const AvailableStagesPanel = ({
                           disabled={isTogglingThis}
                           className={`p-2 rounded-lg transition-all focus:outline-none ${
                             isInactive
-                              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                              ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                           }`}
                           title={isInactive ? 'Enable stage' : 'Disable stage'}
                         >
                           {isTogglingThis ? (
                             <Loader2 size={13} className="animate-spin text-slate-400" />
                           ) : (
-                            <Power size={13} strokeWidth={2.5} />
+                            <Power size={14} strokeWidth={2.5} />
                           )}
                         </button>
 
@@ -251,13 +251,13 @@ const AvailableStagesPanel = ({
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); stageRename.startEdit(stage); }}
-                            className="p-2 rounded-lg bg-slate-100 text-slate-600
-                              hover:bg-primary/10 hover:text-primary
-                              transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="p-2 rounded-lg bg-slate-100 text-slate-700
+                              hover:bg-orange-50 hover:text-orange-600
+                              transition-all focus:outline-none focus:ring-2 focus:ring-orange-200"
                             title={`Rename ${stage.name}`}
                             aria-label={`Rename ${stage.name}`}
                           >
-                            <Pencil size={13} strokeWidth={2} />
+                            <Pencil size={14} strokeWidth={2.2} />
                           </button>
                         )}
 
@@ -267,8 +267,8 @@ const AvailableStagesPanel = ({
                             type="button"
                             onClick={(e) => { e.stopPropagation(); stageDelete.openModal(stage); }}
                             disabled={stageDelete.isDeleting(stage.id)}
-                            className="p-2 rounded-lg bg-slate-100 text-slate-500
-                              hover:bg-red-50 hover:text-red-500
+                            className="p-2 rounded-lg bg-slate-100 text-slate-700
+                              hover:bg-red-50 hover:text-red-600
                               disabled:opacity-50 disabled:cursor-not-allowed
                               transition-all focus:outline-none focus:ring-2 focus:ring-red-200"
                             title={`Delete ${stage.name} globally`}
@@ -277,7 +277,7 @@ const AvailableStagesPanel = ({
                             {stageDelete.isDeleting(stage.id) ? (
                               <Loader2 size={13} className="animate-spin text-red-400" />
                             ) : (
-                              <Trash2 size={13} strokeWidth={2} />
+                              <Trash2 size={14} strokeWidth={2.2} />
                             )}
                           </button>
                         )}

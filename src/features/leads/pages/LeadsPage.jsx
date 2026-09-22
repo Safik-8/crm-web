@@ -611,7 +611,7 @@ export const LeadsPage = () => {
       )
     },
     {
-      header: 'Course/Product',
+      header: 'Service',
       cell: (row) => (
         <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-lg border border-slate-200/50">
           <Award size={11} className="text-slate-400" />
@@ -1193,8 +1193,8 @@ export const LeadsPage = () => {
             />
             <SelectField
               id="drawer-filter-course"
-              label="Course / Product"
-              placeholder="All Courses"
+              label="Service"
+              placeholder="All Services"
               allowEmptyOption
               value={tempFilters.courseId}
               onChange={(val) => handleTempFilterChange('courseId', val)}

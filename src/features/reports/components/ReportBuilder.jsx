@@ -675,13 +675,13 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 searchable={true}
               />
               <SelectField
-                label="Course"
+                label="Service"
                 value={currentFilters.courseId || ''}
                 onChange={(val) => handleFieldChange('courseId', val)}
                 options={options.courses}
                 isLoading={loadingFields.metadata}
                 allowEmptyOption
-                placeholder="All Courses (Optional)"
+                placeholder="All Services (Optional)"
                 searchable={true}
               />
               <SelectField
@@ -710,13 +710,13 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 searchable={true}
               />
               <SelectField
-                label="Course"
+                label="Service"
                 value={currentFilters.productId || ''}
                 onChange={(val) => handleFieldChange('productId', val)}
                 options={options.courses}
                 isLoading={loadingFields.metadata}
                 allowEmptyOption
-                placeholder="All Courses (Optional)"
+                placeholder="All Services (Optional)"
                 searchable={true}
               />
               <SelectField
@@ -766,13 +766,13 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 searchable={true}
               />
               <SelectField
-                label="Course"
+                label="Service"
                 value={currentFilters.productId || ''}
                 onChange={(val) => handleFieldChange('productId', val)}
                 options={options.courses}
                 isLoading={loadingFields.metadata}
                 allowEmptyOption
-                placeholder="All Courses (Optional)"
+                placeholder="All Services (Optional)"
                 searchable={true}
               />
             </>
@@ -793,13 +793,13 @@ const ReportBuilder = ({ reportType, onGenerate, currentFilters = {}, onChangeFi
                 searchable={true}
               />
               <SelectField
-                label="Course Purchased"
+                label="Service Subscribed"
                 value={currentFilters.purchasedProductId || ''}
                 onChange={(val) => handleFieldChange('purchasedProductId', val)}
                 options={options.courses}
                 isLoading={loadingFields.metadata}
                 allowEmptyOption
-                placeholder="All Courses (Optional)"
+                placeholder="All Services (Optional)"
                 searchable={true}
               />
             </>
