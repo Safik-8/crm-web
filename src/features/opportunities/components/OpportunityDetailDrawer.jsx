@@ -199,23 +199,30 @@ export const OpportunityDetailDrawer = ({
               {/* Related Lead (Interactive Clickable Link) */}
               <div>
                 <span className="text-slate-400 font-medium block mb-1">Related Lead</span>
-                <a
-                  href={`/leads?search=${encodeURIComponent(opportunity.lead?.name || '')}`}
-                  onClick={(e) => {
-                    if (opportunity.lead?.id) {
-                      e.preventDefault();
-                      if (onLeadClick) {
-                        onLeadClick(opportunity.lead.id, opportunity.lead);
-                      } else {
-                        window.location.href = `/leads?search=${encodeURIComponent(opportunity.lead.name)}`;
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`/leads?search=${encodeURIComponent(opportunity.lead?.leadNumber || opportunity.lead?.name || '')}`}
+                    onClick={(e) => {
+                      if (opportunity.lead?.id) {
+                        e.preventDefault();
+                        if (onLeadClick) {
+                          onLeadClick(opportunity.lead.id, opportunity.lead);
+                        } else {
+                          window.location.href = `/leads?search=${encodeURIComponent(opportunity.lead?.leadNumber || opportunity.lead?.name || '')}`;
+                        }
                       }
-                    }
-                  }}
-                  className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1 text-sm group cursor-pointer"
-                >
-                  <span>{opportunity.lead?.name || 'N/A'}</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                </a>
+                    }}
+                    className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1 text-sm group cursor-pointer"
+                  >
+                    <span>{opportunity.lead?.name || 'N/A'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  </a>
+                  {opportunity.lead?.leadNumber && (
+                    <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                      {opportunity.lead.leadNumber}
+                    </span>
+                  )}
+                </div>
                 {opportunity.lead?.mobile && (
                   <span className="text-slate-500 text-xs block mt-0.5">
                     {opportunity.lead.mobile}

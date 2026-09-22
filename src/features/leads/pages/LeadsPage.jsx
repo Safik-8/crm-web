@@ -561,6 +561,19 @@ export const LeadsPage = () => {
       )
     },
     {
+      header: 'Lead ID',
+      accessorKey: 'leadNumber',
+      cell: (row) => (
+        <span
+          onClick={() => setSelectedLeadForView(row)}
+          className="text-[11px] font-mono font-bold text-slate-700 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200 transition-colors px-2 py-0.5 rounded border border-slate-200 select-all cursor-pointer whitespace-nowrap inline-block"
+          title="Click to view lead details"
+        >
+          {row.leadNumber || `LEAD-${row.id}`}
+        </span>
+      )
+    },
+    {
       header: 'Lead Name',
       sortable: true,
       accessorKey: 'name',
@@ -780,7 +793,7 @@ export const LeadsPage = () => {
               <SearchInput
                 value={search}
                 onChange={handleSearchChange}
-                placeholder="Search by name, mobile, email..."
+                placeholder="Search by lead ID, name, mobile, email..."
                 className="w-full"
               />
             </div>

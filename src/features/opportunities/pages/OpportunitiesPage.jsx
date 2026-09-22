@@ -468,9 +468,9 @@ export const OpportunitiesPage = () => {
           {/* Filters on Left */}
           <div className="flex flex-wrap items-center gap-3 flex-1">
             {/* Search */}
-            <div className="w-full sm:w-60">
+            <div className="w-full sm:w-64">
               <SearchInput
-                placeholder="Search..."
+                placeholder="Search by lead ID, name, title..."
                 value={searchTerm}
                 onChange={(val) => setSearchTerm(val)}
               />

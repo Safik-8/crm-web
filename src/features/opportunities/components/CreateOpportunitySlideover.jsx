@@ -170,8 +170,9 @@ export const CreateOpportunitySlideover = ({
         : 'No qualified leads available (Qualify a lead first in Lead Management)',
       options: qualifiedLeads.map((l) => ({
         value: l.id,
-        label: `[#${l.id}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? l.qualificationScore ?? 100}%)`,
+ label: `[${l.leadNumber || `#${l.id}`}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? l.qualificationScore ?? 100}%)`,
       })),
+        
       onCustomChange: handleLeadChange,
     },
     {

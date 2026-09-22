@@ -57,10 +57,17 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
         {opportunity.title}
       </h4>
 
-      {/* Lead Name */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
-        <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        <span className="truncate">{opportunity.lead?.name || 'Unassigned Lead'}</span>
+      {/* Lead Name & Lead ID */}
+      <div className="flex items-center justify-between gap-1.5 text-xs text-slate-500 mb-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="truncate">{opportunity.lead?.name || 'Unassigned Lead'}</span>
+        </div>
+        {(opportunity.lead?.leadNumber || opportunity.lead?.id) && (
+          <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+            {opportunity.lead?.leadNumber || `#${opportunity.lead?.id}`}
+          </span>
+        )}
       </div>
 
       {/* Revenue & Probability */}

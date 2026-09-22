@@ -278,10 +278,14 @@ const DealsPage = () => {
   }, [search]);
 
   useEffect(() => { forceHideLoader(); }, [forceHideLoader]);
-  useEffect(() => { setBranchFilter(''); }, [companyFilter]);
+  useEffect(() => { setBranchFilter(''); setOwnerFilter(''); }, [companyFilter]);
+  useEffect(() => { setOwnerFilter(''); }, [branchFilter]);
+
+  const isBranchDisabled = isSuperAdmin && !companyFilter;
+  const isOwnerDisabled = isSuperAdmin && !companyFilter;
 
   // ── companies / branches (SA only) ───────────────────────────────────────
-  const { data: companiesRaw } = useQuery({
+  const { data: companiesRaw, isLoading: companiesLoading, isFetching: companiesFetching } = useQuery({
     queryKey : ['companies-raw-deals'],
     queryFn  : () => companyApi.getCompanies(),
     enabled  : isSuperAdmin,
@@ -289,29 +293,40 @@ const DealsPage = () => {
   });
   const companies = Array.isArray(companiesRaw?.data) ? companiesRaw.data : [];
 
-  const { data: branchesRaw } = useQuery({
-    queryKey : ['branches-raw-deals', companyFilter || user?.companyId],
+  const { data: branchesRaw, isLoading: branchesLoading, isFetching: branchesFetching } = useQuery({
+    queryKey : ['branches-raw-deals', isSuperAdmin ? (companyFilter || '') : (user?.companyId || '')],
     queryFn  : async () => {
-      const cid = companyFilter || user?.companyId;
-      if (!cid) return [];
-      const res = await apiClient(`/branches?company_id=${cid}`, { method: 'GET' });
+      const cid = isSuperAdmin ? (companyFilter || undefined) : user?.companyId;
+      if (isSuperAdmin && !cid) return [];
+      const url = cid ? `/branches?company_id=${cid}` : `/branches`;
+      const res = await apiClient(url, { method: 'GET' });
       return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
     },
-    enabled  : canSeeAll,
+    enabled  : isSuperAdmin ? !!companyFilter : canSeeAll,
     staleTime: 30000,
   });
   const branches = branchesRaw || [];
 
   // ── active users for owner filter ────────────────────────────────────────
-  const { data: usersRaw } = useQuery({
-    queryKey : ['users-active-deals', user?.companyId],
+  const { data: usersRaw, isLoading: usersLoading, isFetching: usersFetching } = useQuery({
+    queryKey : [
+      'users-active-deals',
+      isSuperAdmin ? (companyFilter || '') : (user?.companyId || ''),
+      isBranchLevel ? (user?.branchId || '') : (branchFilter || '')
+    ],
     queryFn  : async () => {
       if (!isCompanyWide && !isBranchLevel) return [];
-      const res = await apiClient(`/users?status=ACTIVE&limit=100`, { method: 'GET' });
-      const items = res?.data?.items || res?.data || res?.items || res || [];
+      const cid = isSuperAdmin ? (companyFilter || undefined) : user?.companyId;
+      if (isSuperAdmin && !cid) return [];
+      const bid = isBranchLevel ? user?.branchId : (branchFilter || undefined);
+      const params = new URLSearchParams({ status: 'ACTIVE', limit: '200' });
+      if (cid) params.set('companyId', String(cid));
+      if (bid) params.set('branchId', String(bid));
+      const res = await apiClient(`/users?${params.toString()}`, { method: 'GET' });
+      const items = res?.data?.users || res?.data?.items || (Array.isArray(res?.data) ? res.data : []);
       return Array.isArray(items) ? items : [];
     },
-    enabled  : !!user && (isCompanyWide || isBranchLevel),
+    enabled  : !!user && (isSuperAdmin ? !!companyFilter : (isCompanyWide || isBranchLevel)),
     staleTime: 60000,
   });
   const activeUsers = usersRaw || [];
@@ -663,6 +678,56 @@ const DealsPage = () => {
         }
       >
         <div className="space-y-5 pb-6">
+          {/* Company Filter (Super Admin only) */}
+          {isSuperAdmin && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
+              <SelectField
+                placeholder="All Companies"
+                value={companyFilter}
+                onChange={(v) => { setCompanyFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                isLoading={companiesLoading || companiesFetching}
+                options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
+              />
+            </div>
+          )}
+
+          {/* Branch Filter (Admin / Super Admin only) */}
+          {canSeeAll && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
+              <SelectField
+                placeholder={isBranchDisabled ? 'Select company first' : 'All Branches'}
+                value={branchFilter}
+                onChange={(v) => { setBranchFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                disabled={isBranchDisabled}
+                isLoading={branchesLoading || branchesFetching}
+                options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
+              />
+            </div>
+          )}
+
+          {/* Owner Filter (Admin / Manager only) */}
+          {(isCompanyWide || isBranchLevel) && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
+              <SelectField
+                placeholder={isOwnerDisabled ? 'Select company first' : 'All Owners'}
+                value={ownerFilter}
+                onChange={(v) => { setOwnerFilter(v === undefined ? '' : v); setPage(1); }}
+                allowEmptyOption
+                searchable
+                disabled={isOwnerDisabled}
+                isLoading={usersLoading || usersFetching}
+                options={activeUsers.map((u) => ({ value: String(u.id), label: u.name }))}
+              />
+            </div>
+          )}
+
           {/* Outcome Filter */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Outcome</label>
@@ -728,51 +793,6 @@ const DealsPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Owner Filter (Admin / Manager only) */}
-          {(isCompanyWide || isBranchLevel) && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Owner</label>
-              <SelectField
-                placeholder="All Owners"
-                value={ownerFilter}
-                onChange={(v) => { setOwnerFilter(v === undefined ? '' : v); setPage(1); }}
-                allowEmptyOption
-                searchable
-                options={activeUsers.map((u) => ({ value: String(u.id), label: u.name }))}
-              />
-            </div>
-          )}
-
-          {/* Company Filter (Super Admin only) */}
-          {isSuperAdmin && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company</label>
-              <SelectField
-                placeholder="All Companies"
-                value={companyFilter}
-                onChange={(v) => { setCompanyFilter(v === undefined ? '' : v); setPage(1); }}
-                allowEmptyOption
-                searchable
-                options={companies.map((c) => ({ value: String(c.id), label: c.name }))}
-              />
-            </div>
-          )}
-
-          {/* Branch Filter (Admin / Super Admin only) */}
-          {canSeeAll && (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
-              <SelectField
-                placeholder="All Branches"
-                value={branchFilter}
-                onChange={(v) => { setBranchFilter(v === undefined ? '' : v); setPage(1); }}
-                allowEmptyOption
-                searchable
-                options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
-              />
-            </div>
-          )}
         </div>
       </Drawer>
     </div>

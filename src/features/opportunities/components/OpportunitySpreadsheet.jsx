@@ -128,11 +128,15 @@ export const OpportunitySpreadsheet = ({
           >
             {row.lead?.name || '—'}
           </span>
-          {row.lead?.mobile && (
+          {row.lead?.leadNumber ? (
+            <span className="text-[10px] font-mono font-bold text-slate-500 block">
+              {row.lead.leadNumber}
+            </span>
+          ) : row.lead?.mobile ? (
             <span className="text-[11px] text-slate-400 font-mono block">
               {row.lead.mobile}
             </span>
-          )}
+          ) : null}
         </div>
       ),
     },
