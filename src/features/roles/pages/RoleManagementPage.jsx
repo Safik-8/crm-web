@@ -1053,7 +1053,6 @@ const RoleManagementPage = () => {
     if (!isSuperOrCompanyAdmin) return null;
 
     const isEditDisabled = role.rank >= userRank;
-    const isCloneDisabled = !isSuperAdmin && role.rank > userRank;
     const isStatusDisabled = role.isSystem || role.rank >= userRank;
 
     return (
@@ -1094,19 +1093,6 @@ const RoleManagementPage = () => {
           >
             <Edit2 size={14} className="text-slate-400" />
             <span>Edit Role</span>
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              handleClose();
-              handleCloneClick(role);
-            }}
-            disabled={isCloneDisabled}
-            className="px-3.5 py-2 text-[12px] font-bold hover:bg-indigo-50 transition-colors text-slate-600 hover:text-indigo-700"
-            sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
-          >
-            <Copy size={14} className="text-indigo-500" />
-            <span>Clone Role</span>
           </MenuItem>
 
           {!role.isSystem && (
