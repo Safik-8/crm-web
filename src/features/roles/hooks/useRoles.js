@@ -5,6 +5,7 @@ import { roleApi } from '../api/roleApi';
 export const useRoles = (companyId = '', options = {}) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [roleType, setRoleType] = useState('ALL');
   const [page, setPage] = useState(1);
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -24,11 +25,17 @@ export const useRoles = (companyId = '', options = {}) => {
     setPage(1);
   }, []);
 
+  const handleRoleTypeChange = useCallback((value) => {
+    setRoleType(value || 'ALL');
+    setPage(1);
+  }, []);
+
   const params = {
     page,
     limit: 10,
     search: debouncedSearch,
     status,
+    type: roleType !== 'ALL' ? roleType.toLowerCase() : '',
     companyId
   };
 
@@ -76,8 +83,10 @@ export const useRoles = (companyId = '', options = {}) => {
     errorMessage: error?.message || '',
     search,
     status,
+    roleType,
     handleSearchChange,
     handleStatusChange,
+    handleRoleTypeChange,
     setPage,
     refetch
   };
