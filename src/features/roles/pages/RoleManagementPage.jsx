@@ -729,7 +729,6 @@ const RoleManagementPage = () => {
     setFormHierarchyBracket(newBracket);
     // Uncheck all permissions so nothing leaks from the previous tier or clone
     setFormPermissions({});
-    toast.info('Data access level changed. All permissions have been reset.');
   };
 
   // Toggle permission checkbox in matrix with view dependencies
