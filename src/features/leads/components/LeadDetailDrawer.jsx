@@ -17,7 +17,6 @@ import StageHistoryTab from './drawer/StageHistoryTab';
 import FollowupsTab from './drawer/FollowupsTab';
 import CommunicationsTab from './drawer/CommunicationsTab';
 import QualificationHistoryTab from './drawer/QualificationHistoryTab';
-import QualifyLeadModal from './QualifyLeadModal';
 import Button from '../../../shared/components/elements/Button';
 
 import { CreateOpportunitySlideover } from '../../opportunities/components/CreateOpportunitySlideover';
@@ -60,7 +59,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
     }
   }, [initialTab]);
 
-  const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
   const tabSectionRef = useRef(null);
   const { data: leadRes, isError, error } = useLeadQuery(initialLead?.id, initialLead);
@@ -87,7 +85,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
     (Array.isArray(coursesQuery.data) ? coursesQuery.data : []);
 
   const canCreateOpp = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
-  const canQualifyLead = hasPermission('edit:qualification') || hasPermission('QUALIFICATION', 'canEdit');
 
   const oppStagesQuery = useQuery({
     queryKey: ['opportunity-stages'],
@@ -238,7 +235,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
             </div>
 
             <div className="flex items-center gap-3">
-              {isQualified && !hasOpenOpp && canCreateOpp && (
+              {!hasOpenOpp && canCreateOpp && (
                 <Button
                   variant="contained"
                   size="small"
@@ -252,15 +249,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                   }}
                 >
                   Create Opportunity
-                </Button>
-              )}
-              {canQualifyLead && (
-                <Button
-                  variant={isQualified ? 'outlined' : 'contained'}
-                  size="small"
-                  onClick={() => setIsQualifyModalOpen(true)}
-                >
-                  {isQualified ? 'Re-evaluate Qualification' : 'Qualify Lead'}
                 </Button>
               )}
             </div>
@@ -437,7 +425,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                 )}
                 {activeTab === 'qualification' && (
                   <div className="fade-in">
-                    <QualificationHistoryTab leadId={lead.id} onOpenQualifyModal={() => setIsQualifyModalOpen(true)} />
+                    <QualificationHistoryTab leadId={lead.id} onOpenQualifyModal={() => {}} />
                   </div>
                 )}
                 {activeTab === 'notes' && <div className="fade-in"><NotesTab leadId={lead.id} /></div>}
@@ -451,12 +439,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
           </div>
         </div>
       </div>
-
-      <QualifyLeadModal
-        isOpen={isQualifyModalOpen}
-        onClose={() => setIsQualifyModalOpen(false)}
-        lead={lead}
-      />
 
       <CreateOpportunitySlideover
         isOpen={isCreateOppOpen}

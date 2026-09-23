@@ -47,27 +47,51 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
         <span className="text-[11px] font-mono font-bold text-slate-400">
           OPP-{opportunity.id}
         </span>
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
-          {opportunity.stage?.name || 'In Progress'}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {/* Qualification Score Badge — only shown if a score exists */}
+          {(opportunity.qualificationScore != null || opportunity.lead?.qualificationScore != null) && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+              🏆 {opportunity.qualificationScore ?? opportunity.lead?.qualificationScore}%
+            </span>
+          )}
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+            {opportunity.stage?.name || 'In Progress'}
+          </span>
+        </div>
       </div>
 
       {/* Title */}
       <h4 className="text-xs font-bold text-slate-800 line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
-        {opportunity.title}
+        {opportunity.title || opportunity.opportunityName}
       </h4>
 
       {/* Lead Name & Lead ID */}
-      <div className="flex items-center justify-between gap-1.5 text-xs text-slate-500 mb-3">
+      <div className="flex items-center justify-between gap-1.5 text-xs text-slate-500 mb-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="truncate">{opportunity.lead?.name || 'Unassigned Lead'}</span>
+          <span className="truncate font-medium">{opportunity.lead?.name || 'Unassigned Lead'}</span>
         </div>
         {(opportunity.lead?.leadNumber || opportunity.lead?.id) && (
           <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
             {opportunity.lead?.leadNumber || `#${opportunity.lead?.id}`}
           </span>
         )}
+      </div>
+
+      {/* Attribution: Created By (who closed lead) & Assigned To (handling deal) */}
+      <div className="bg-slate-50/80 rounded-lg p-2 mb-2.5 border border-slate-100/80 space-y-1 text-[11px]">
+        <div className="flex items-center justify-between gap-1.5">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">Created By:</span>
+          <span className="font-semibold text-slate-700 truncate text-right" title={opportunity.createdBy?.name || 'System'}>
+            {opportunity.createdBy?.name || 'System'}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-1.5">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">Assigned To:</span>
+          <span className="font-semibold text-primary truncate text-right" title={opportunity.owner?.name || 'Unassigned'}>
+            {opportunity.owner?.name || 'Unassigned'}
+          </span>
+        </div>
       </div>
 
       {/* Revenue & Probability */}

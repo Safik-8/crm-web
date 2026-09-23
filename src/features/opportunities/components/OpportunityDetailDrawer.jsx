@@ -1,5 +1,5 @@
 // src/features/opportunities/components/OpportunityDetailDrawer.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Drawer from '../../../shared/components/elements/Drawer';
 import {
@@ -18,9 +18,11 @@ import {
   Activity,
   ArrowRight,
   Maximize2,
+  Target,
 } from 'lucide-react';
 import { useOpportunityDetailQuery } from '../hooks/useOpportunities';
 import { useFormatters } from '../../../shared/hooks/useFormatters';
+import QualifyOpportunityModal from './QualifyOpportunityModal';
 
 /**
  * Clean, Formal Loading Skeleton
@@ -64,6 +66,7 @@ export const OpportunityDetailDrawer = ({
   const navigate = useNavigate();
   const { formatCurrency, formatDate } = useFormatters();
   const { data: opportunity, isLoading } = useOpportunityDetailQuery(opportunityId);
+  const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -71,16 +74,17 @@ export const OpportunityDetailDrawer = ({
 
   // Compact, informative subtitle header
   const drawerSubtitle = opportunity
-    ? `ID: #${opportunityId} · Lead: ${opportunity.lead?.name || 'N/A'} · Owner: ${opportunity.owner?.name || 'Unassigned'}`
+    ? `ID: #${opportunityId} · Lead: ${opportunity.lead?.name || 'N/A'} · Created by: ${opportunity.createdBy?.name || 'System'} · Owner: ${opportunity.owner?.name || 'Unassigned'}`
     : `ID: #${opportunityId}`;
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      onClose={onClose}
-      title={drawerTitle}
-      subtitle={drawerSubtitle}
-    >
+    <>
+      <Drawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title={drawerTitle}
+        subtitle={drawerSubtitle}
+      >
       {/* Loading State */}
       {isLoading ? (
         <OpportunityDrawerSkeleton />
@@ -128,6 +132,13 @@ export const OpportunityDetailDrawer = ({
               </span>
             </div>
 
+            {/* Qualification Score Badge — shown when opportunity has been qualified */}
+              {opportunity.qualificationScore != null && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  🏆 {opportunity.qualificationScore}%
+                </span>
+              )}
+
             {/* Action Buttons */}
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -144,13 +155,24 @@ export const OpportunityDetailDrawer = ({
               </button>
 
               {opportunity.status === 'OPEN' && (
-                <button
-                  type="button"
-                  onClick={() => onCloseOpportunityClick && onCloseOpportunityClick(opportunity)}
-                  className="px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
-                >
-                  Close Deal
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsQualifyModalOpen(true)}
+                    className="px-3 py-1.5 text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    title={opportunity.qualificationScore != null ? 'Re-evaluate Qualification' : 'Qualify this Opportunity'}
+                  >
+                    <Target className="w-3.5 h-3.5" />
+                    <span>{opportunity.qualificationScore != null ? 'Re-evaluate' : 'Qualify'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onCloseOpportunityClick && onCloseOpportunityClick(opportunity)}
+                    className="px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
+                  >
+                    Close Deal
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -233,12 +255,25 @@ export const OpportunityDetailDrawer = ({
               {/* Assigned Owner */}
               <div>
                 <span className="text-slate-400 font-medium block mb-1">Assigned Owner</span>
-                <span className="font-semibold text-slate-800 block text-sm">
+                <span className="font-semibold text-primary block text-sm">
                   {opportunity.owner?.name || 'Unassigned'}
                 </span>
                 {opportunity.owner?.email && (
                   <span className="text-slate-500 text-xs block mt-0.5 truncate">
                     {opportunity.owner.email}
+                  </span>
+                )}
+              </div>
+
+              {/* Created By */}
+              <div>
+                <span className="text-slate-400 font-medium block mb-1">Created By</span>
+                <span className="font-semibold text-slate-800 block text-sm">
+                  {opportunity.createdBy?.name || 'System'}
+                </span>
+                {opportunity.createdBy?.email && (
+                  <span className="text-slate-500 text-xs block mt-0.5 truncate">
+                    {opportunity.createdBy.email}
                   </span>
                 )}
               </div>
@@ -324,7 +359,7 @@ export const OpportunityDetailDrawer = ({
                 Activity & History Timeline
               </h4>
               <span className="text-xs font-medium text-slate-500">
-                {1 + (opportunity.stageHistory?.length || 0)} Events
+                {1 + (opportunity.stageHistory?.length || 0) + (opportunity.qualificationScore != null ? 1 : 0) + (opportunity.status !== 'OPEN' ? 1 : 0)} Events
               </span>
             </div>
 
@@ -351,6 +386,28 @@ export const OpportunityDetailDrawer = ({
                     </span>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
                       {formatDate(opportunity.updatedAt)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Opportunity Qualification Event */}
+              {opportunity.qualificationScore != null && (
+                <div className="relative">
+                  <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600">
+                    <Target className="w-3 h-3" />
+                  </span>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-slate-900 block">
+                        Opportunity Qualified
+                      </span>
+                      <span className="font-bold text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded">
+                        🏆 {opportunity.qualificationScore}%
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 block">
+                      Evaluated by {opportunity.qualificationData?.evaluatedByName || opportunity.updatedBy?.name || 'User'} · {formatDate(opportunity.qualifiedAt || opportunity.updatedAt)}
                     </span>
                   </div>
                 </div>
@@ -399,5 +456,17 @@ export const OpportunityDetailDrawer = ({
         </div>
       )}
     </Drawer>
+
+      {/* Qualify Opportunity Modal */}
+      {opportunity && (
+        <QualifyOpportunityModal
+          opportunity={opportunity}
+          isOpen={isQualifyModalOpen}
+          onClose={() => setIsQualifyModalOpen(false)}
+        />
+      )}
+    </>
   );
 };
+
+export default OpportunityDetailDrawer;

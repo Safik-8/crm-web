@@ -193,12 +193,25 @@ export const OpportunitySpreadsheet = ({
       ),
     },
     {
-      header: 'Owner',
+      header: 'Created By',
+      accessorKey: 'createdBy',
+      className: 'min-w-[100px] max-w-[120px]',
+      cell: (row) => (
+        <span
+          className="text-slate-600 font-medium text-[13px] block truncate max-w-[110px]"
+          title={row.createdBy?.name || 'System'}
+        >
+          {row.createdBy?.name || 'System'}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Owner',
       accessorKey: 'owner',
       className: 'min-w-[100px] max-w-[120px]',
       cell: (row) => (
         <span
-          className="text-slate-700 font-medium text-[13px] block truncate max-w-[110px]"
+          className="text-primary font-semibold text-[13px] block truncate max-w-[110px]"
           title={row.owner?.name}
         >
           {row.owner?.name || '—'}

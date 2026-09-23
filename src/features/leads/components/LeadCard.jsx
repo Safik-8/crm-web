@@ -3,11 +3,11 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Phone, Calendar, BookOpen, User, MoreVertical, Pencil, Trash2, Lock, Target } from 'lucide-react';
 
-const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, canManage = false, onEdit, onDelete, onQualify }) => {
+const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, canManage = false, onEdit, onDelete }) => {
   const sortableId = `card-${lead.id}`;
 
-  // Card is locked if user lacks edit/create permissions OR if the stage is terminal (WON/CLOSURE)
-  const isLocked = !canManage || isTerminal;
+  // Card is locked if user lacks edit/create permissions OR if the stage is terminal (WON/CLOSURE) OR if lead is CONVERTED
+  const isLocked = !canManage || isTerminal || lead?.qualificationStatus === 'CONVERTED';
 
   const {
     attributes,
@@ -71,12 +71,6 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
     setMenuOpen(false);
     onDelete?.(lead);
   }, [lead, onDelete]);
-
-  const handleQualify = useCallback((e) => {
-    e.stopPropagation();
-    setMenuOpen(false);
-    onQualify?.(lead);
-  }, [lead, onQualify]);
 
   const maskedMobile = lead.mobile
     ? lead.mobile.toString().replace(/^(\d{2})(\d+)(\d{2})$/, '$1••••••$3')
@@ -161,14 +155,6 @@ const LeadCard = memo(({ lead, stageId, stageName, isTerminal = false, onClick, 
               >
                 <Pencil size={11} className="text-zinc-400 shrink-0" />
                 Edit
-              </button>
-              <button
-                type="button"
-                onClick={handleQualify}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors outline-none"
-              >
-                <Target size={11} className="text-zinc-400 shrink-0" />
-                Qualify Lead
               </button>
               <div className="h-px bg-zinc-100 mx-2 my-0.5" />
               <button

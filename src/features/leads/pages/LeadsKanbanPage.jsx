@@ -10,7 +10,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal } from 'lucide-react';
+import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal, Layers, UserCheck } from 'lucide-react';
 import { useKanban } from '../hooks/useKanban';
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterSidebar } from '../components/KanbanFilterSidebar';
@@ -25,9 +25,12 @@ import LeadDetailDrawer from '../components/LeadDetailDrawer';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDeleteModal from '../components/LeadDeleteModal';
 import LostReasonModal from '../components/LostReasonModal';
-import QualifyLeadModal from '../components/QualifyLeadModal';
 import { toast } from '../../../shared/utils/toast';
-import { isTerminalStage, requiresReason } from '../../pipelines/utils/stageRules';
+import { isTerminalStage, requiresReason, isClosureStage } from '../../pipelines/utils/stageRules';
+import ClosurePopupModal from '../../pipelines/components/ClosurePopupModal';
+import { createFromPipelineClosure } from '../../opportunities/services/opportunityService';
+import { courseService } from '../../courses/services/courseService';
+import { useQuery } from '@tanstack/react-query';
 
 
 /**
@@ -68,12 +71,28 @@ const LeadsKanbanPage = () => {
   const { hasPermission, user } = useAuth();
   const { forceHideLoader } = useLoader();
 
+  // ── Role Scoping (All vs Mine) ──────────────────────────────────────────
+  const isIse = user?.primaryRole === 'ISE' || Number(user?.primaryRoleRank) <= 20;
+  const canViewAll = !isIse;
+  const [scope, setScope] = useState(() => (isIse ? 'mine' : 'all'));
+
+  useEffect(() => {
+    if (isIse && scope !== 'mine') {
+      setScope('mine');
+    }
+  }, [isIse, scope]);
+
   // ── Sidebar collapse/mobile state ───────────────────────────────────────
   // Desktop: start expanded. Persisted in localStorage so it survives navigation.
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem('kanban-sidebar-collapsed') === 'true'; } catch { return false; }
   });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // ── Closure Popup state (Auto-opportunity from CLOSURE drop) ────────
+  const [showClosurePopup, setShowClosurePopup] = useState(false);
+  const [pendingClosureLead, setPendingClosureLead] = useState(null);
+  const [isClosureSubmitting, setIsClosureSubmitting] = useState(false);
 
   // ── Lost Reason Modal state (Sprint 4) ─────────────────────────────
   // When drag targets a LOST stage, we intercept and store the pending move
@@ -103,6 +122,14 @@ const LeadsKanbanPage = () => {
   } = useKanbanFilters();
 
   // ── Board state ──────────────────────────────────────────────────────────
+  const kanbanParams = useMemo(() => {
+    const params = { ...apiParams };
+    if (scope === 'mine' && user?.id) {
+      params.assignedToId = user.id;
+    }
+    return params;
+  }, [apiParams, scope, user?.id]);
+
   const {
     columns,
     orderedStages,
@@ -116,7 +143,20 @@ const LeadsKanbanPage = () => {
     refetch,
     pipelineName,
     assignableUsers,
-  } = useKanban(pipelineId, apiParams);
+  } = useKanban(pipelineId, kanbanParams);
+
+  // Dedicated courses query for the ClosurePopupModal Service dropdown.
+  const { data: coursesRes } = useQuery({
+    queryKey: ['courses-active-kanban', user?.companyId],
+    queryFn: () =>
+      courseService.getCourses({ status: 'ACTIVE', companyId: user?.companyId, limit: 200 }),
+    enabled: !!user?.companyId,
+    staleTime: 5 * 60 * 1000, // 5 min — courses rarely change mid-session
+  });
+  const courses =
+    coursesRes?.data?.courses ||
+    coursesRes?.data?.data ||
+    (Array.isArray(coursesRes?.data) ? coursesRes.data : []);
 
   // ── Toast feedback for filter actions ───────────────────────────────────
   const prevIsRefetchingRef = useRef(false);
@@ -205,7 +245,6 @@ const LeadsKanbanPage = () => {
   // Edit / Delete modal state
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
-  const [qualifyingLead, setQualifyingLead] = useState(null);
 
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
@@ -349,14 +388,6 @@ const LeadsKanbanPage = () => {
     setSelectedLead((prev) => prev?.id === leadId ? null : prev);
   }, [deleteLeadLocal]);
 
-  const handleQualifyLead = useCallback((lead) => {
-    setQualifyingLead(lead);
-  }, []);
-
-  const handleLeadQualified = useCallback(() => {
-    refetch();
-    setQualifyingLead(null);
-  }, [refetch]);
 
   // Real-time window pointer listener for auto-scrolling during drag
   const updatePointerPos = useCallback((e) => {
@@ -436,19 +467,31 @@ const LeadsKanbanPage = () => {
     if (!toStageId) return;
     if (String(fromStage) === String(toStageId)) return;
 
-    // ── Terminal lock: prevent dragging OUT of WON/CLOSURE stages ─────────
+    // ── Terminal lock: prevent dragging OUT of WON/CLOSURE stages or converted leads ─────────
     const fromStageObj = Object.values(columns).find(
       (col) => String(col.stage.id) === String(fromStage)
     )?.stage;
-    if (isTerminalStage(fromStageObj)) {
-      toast.error(`Leads in "${fromStageObj?.name}" stage cannot be moved to another stage.`);
+    if (isTerminalStage(fromStageObj) || draggedCard.qualificationStatus === 'CONVERTED') {
+      toast.error(`Converted leads in "${fromStageObj?.name || 'Closure'}" stage cannot be moved to another stage.`);
       return;
     }
 
-    // ── LOST intercept: show reason modal before calling moveCard ─────────
+    // ── CLOSURE intercept: show popup before calling any stage API ────────
     const toStageObj = Object.values(columns).find(
       (col) => String(col.stage.id) === String(toStageId)
     )?.stage;
+
+    if (isClosureStage(toStageObj)) {
+      setPendingClosureLead({
+        lead: draggedCard,
+        targetStageId: toStageId,
+        sourceStageId: fromStage,
+      }); // store the lead and target closure stage being closed
+      setShowClosurePopup(true);          // open the popup
+      return;                             // DO NOT call moveCard or any stage API here
+    }
+
+    // ── LOST intercept: show reason modal before calling moveCard ─────────
     if (requiresReason(toStageObj)) {
       setLostReasonModal({
         leadId: draggedCard.id,
@@ -462,6 +505,47 @@ const LeadsKanbanPage = () => {
 
     await moveCard(draggedCard.id, fromStage, toStageId);
   };
+
+  // ── Closure Popup Modal handlers ────────────────────────────────────
+  const handleClosureConfirm = useCallback(
+    async ({ expectedRevenue, closingDate, productId }) => {
+      const targetLead = pendingClosureLead?.lead || pendingClosureLead;
+      if (!targetLead) return;
+      setIsClosureSubmitting(true);
+      try {
+        const result = await createFromPipelineClosure(targetLead.id, {
+          expectedRevenue,
+          closingDate,
+          productId: productId || null,
+          stageId: pendingClosureLead?.targetStageId || null,
+        });
+        // Smart toast: show who the opportunity was assigned to (from backend response)
+        const ownerName = result?.data?.owner?.name || result?.owner?.name;
+        const toastMsg =
+          ownerName && ownerName !== user?.name
+            ? `Lead closed! Opportunity assigned to ${ownerName}.`
+            : 'Lead closed! Opportunity created successfully.';
+        toast.success(toastMsg);
+        setShowClosurePopup(false);
+        setPendingClosureLead(null);
+        refetch(); // Board refetches — lead is now in Closure stage column and locked
+      } catch (err) {
+        // Keep popup open so user can correct and retry
+        toast.error(
+          err?.response?.data?.message || err?.message || 'Failed to close lead. Please try again.'
+        );
+      } finally {
+        setIsClosureSubmitting(false);
+      }
+    },
+    [pendingClosureLead, refetch, user?.name]
+  );
+
+  const handleClosureCancel = useCallback(() => {
+    // Lead stays in its previous column — popup was intercepted before stage API call
+    setShowClosurePopup(false);
+    setPendingClosureLead(null);
+  }, []);
 
   // ── Lost Reason Modal handlers (Sprint 4) ───────────────────────────
   const handleLostReasonConfirm = useCallback(async (reason) => {
@@ -622,6 +706,36 @@ const LeadsKanbanPage = () => {
           </div>
         </div>
 
+        {/* ── Scope Tabs (All / Mine) ── */}
+        <div className="flex-shrink-0 px-3 sm:px-5 bg-white border-b border-zinc-200/70 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {canViewAll && (
+              <button
+                type="button"
+                onClick={() => setScope('all')}
+                className={`py-2.5 font-semibold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  scope === 'all'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+                }`}
+              >
+                <Layers size={15} /> All
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setScope('mine')}
+              className={`py-2.5 font-semibold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer ${
+                scope === 'mine'
+                  ? 'text-orange-600 border-b-2 border-orange-600'
+                  : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
+            >
+              <UserCheck size={15} /> Mine
+            </button>
+          </div>
+        </div>
+
         {/* ── Kanban board ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <DndContext
@@ -680,7 +794,6 @@ const LeadsKanbanPage = () => {
                       canManage={canManage}
                       onEditLead={handleEditLead}
                       onDeleteLead={handleDeleteLead}
-                      onQualifyLead={handleQualifyLead}
                     />
                   ))
                 )}
@@ -757,14 +870,15 @@ const LeadsKanbanPage = () => {
         />
       )}
 
-      {qualifyingLead && (
-        <QualifyLeadModal
-          lead={qualifyingLead}
-          isOpen={!!qualifyingLead}
-          onClose={() => setQualifyingLead(null)}
-          onSuccess={handleLeadQualified}
-        />
-      )}
+      {/* Pipeline Closure Popup — fires when lead is dragged to CLOSURE column */}
+      <ClosurePopupModal
+        isOpen={showClosurePopup && !!pendingClosureLead}
+        lead={pendingClosureLead?.lead || pendingClosureLead}
+        courses={courses}
+        onClose={handleClosureCancel}
+        onConfirm={handleClosureConfirm}
+        isLoading={isClosureSubmitting}
+      />
 
       {/* Lost Reason Modal (Sprint 4) */}
       <LostReasonModal

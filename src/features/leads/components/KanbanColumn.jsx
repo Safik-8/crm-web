@@ -29,7 +29,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick, canManage, onEditLead, onDeleteLead, onQualifyLead }) => {
+const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, onLeadClick, canManage, onEditLead, onDeleteLead }) => {
   // Prefixed droppable ID prevents collision with card IDs (lead.id and stage.id share numeric space)
   const droppableId = stageDropId(stage.id);
   const isTerminal = isTerminalStage(stage);
@@ -138,7 +138,6 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
                   canManage={canManage}
                   onEdit={onEditLead}
                   onDelete={onDeleteLead}
-                  onQualify={onQualifyLead}
                 />
               ))}
             </SortableContext>

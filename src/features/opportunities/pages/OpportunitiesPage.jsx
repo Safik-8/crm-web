@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Loader2,
   RefreshCw,
+  Layers,
+  UserCheck,
 } from 'lucide-react';
 import Button from '../../../shared/components/elements/Button';
 import TextField from '../../../shared/components/elements/TextField';
@@ -138,6 +140,17 @@ export const OpportunitiesPage = () => {
   const canFilterByBranch = isCompanyWide;
   const canCreateOpportunity = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
 
+  // ── Role Scoping (All vs Mine) ──────────────────────────────────────────
+  const isIse = user?.primaryRole === 'ISE' || Number(user?.primaryRoleRank) <= 20;
+  const canViewAll = !isIse;
+  const [scope, setScope] = useState(() => (isIse ? 'mine' : 'all'));
+
+  useEffect(() => {
+    if (isIse && scope !== 'mine') {
+      setScope('mine');
+    }
+  }, [isIse, scope]);
+
   const [viewMode, setViewMode] = useState('kanban');
   const [searchTerm, setSearchTerm] = useState('');
   // stageFilter: { type: 'status'|'stageId', value: string } | null
@@ -211,7 +224,6 @@ export const OpportunitiesPage = () => {
 
   // ── Form Data ──────────────────────────────────────────────────────────────
   const leadsQuery = useLeadsQuery({
-    isQualified: 'true',
     withoutOpenOpportunity: 'true',
     limit: 500,
     companyId: companyFilter || user?.companyId,
@@ -255,6 +267,7 @@ export const OpportunitiesPage = () => {
   // ── Main Data Query ────────────────────────────────────────────────────────
   const queryParams = {
     search: searchTerm,
+    scope: scope,
     ...(stageFilter?.type === 'status' && { status: stageFilter.value }),
     ...(stageFilter?.type === 'stageId' && { stageId: stageFilter.value }),
     ...(companyFilter && { companyId: companyFilter }),
@@ -462,6 +475,34 @@ export const OpportunitiesPage = () => {
           </div>
         </div>
       )}
+
+      {/* ── Scope Tabs (All / Mine) ── */}
+      <div className="flex items-center gap-6 border-b border-slate-200 px-1 pt-1">
+        {canViewAll && (
+          <button
+            type="button"
+            onClick={() => setScope('all')}
+            className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+              scope === 'all'
+                ? 'text-orange-600 border-b-2 border-orange-600'
+                : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+            }`}
+          >
+            <Layers size={16} /> All
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setScope('mine')}
+          className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
+            scope === 'mine'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+          }`}
+        >
+          <UserCheck size={16} /> Mine
+        </button>
+      </div>
 
       <div className="bg-white p-3.5 border border-slate-200">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
