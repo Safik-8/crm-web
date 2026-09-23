@@ -560,7 +560,6 @@ const RoleManagementPage = () => {
   const [formHierarchyBracket, setFormHierarchyBracket] = useState('COMPANY_ADMIN_TO_BRANCH_MANAGER');
   const [formPermissions, setFormPermissions] = useState({});
   const [collapsedModuleGroups, setCollapsedModuleGroups] = useState({ settings: true, reports: true });
-  const [clonedRoleData, setClonedRoleData] = useState(null);
   const [cloneMenuAnchor, setCloneMenuAnchor] = useState(null);
 
   // Query Companies for Super Admin dropdown selection
@@ -619,13 +618,6 @@ const RoleManagementPage = () => {
           }
         });
         setFormPermissions(permMap);
-      } else if (clonedRoleData) {
-        setFormName(clonedRoleData.name);
-        setFormDescription(clonedRoleData.description);
-        setFormCompanyId(clonedRoleData.companyId);
-        setFormHierarchyBracket(clonedRoleData.hierarchyBracket);
-        setFormPermissions(clonedRoleData.permissions);
-        setClonedRoleData(null);
       } else {
         setFormName('');
         setFormDescription('');
@@ -634,62 +626,16 @@ const RoleManagementPage = () => {
         setFormPermissions({});
       }
     }
-  }, [isFormOpen, selectedRole, clonedRoleData]);
+  }, [isFormOpen, selectedRole]);
 
   const handleCreateClick = () => {
     setSelectedRole(null);
-    setClonedRoleData(null);
     setIsFormOpen(true);
   };
 
   const handleEditClick = (role) => {
     setSelectedRole(role);
-    setClonedRoleData(null);
     setIsFormOpen(true);
-  };
-
-  const getCloneTargetBracket = (sourceRole) => {
-    const r = Number(sourceRole.rank || 0);
-    if (sourceRole.isSystem) {
-      if (r >= 80) return 'COMPANY_ADMIN_TO_BRANCH_MANAGER';
-      if (r >= 60) return 'BRANCH_MANAGER_TO_BDE';
-      if (r >= 40) return 'BDE_TO_ISE';
-      return 'BELOW_ISE';
-    }
-    if (r >= 61 && r <= 79) return 'COMPANY_ADMIN_TO_BRANCH_MANAGER';
-    if (r >= 41 && r <= 59) return 'BRANCH_MANAGER_TO_BDE';
-    if (r >= 21 && r <= 39) return 'BDE_TO_ISE';
-    return 'BELOW_ISE';
-  };
-
-  const handleCloneClick = (role) => {
-    const targetBracket = getCloneTargetBracket(role);
-    const activeModuleSet = new Set(MODULES_LIST.map(m => m.value));
-    const permMap = {};
-    const rawPerms = role.rolePermissions || role.permissions || [];
-
-    rawPerms.forEach(p => {
-      if (activeModuleSet.has(p.module) && isModuleAllowedInBracket(p.module, targetBracket, false)) {
-        permMap[p.module] = {
-          canView: isActionAllowedInBracket(p.module, 'canView', targetBracket, false) && Boolean(p.canView),
-          canCreate: isActionAllowedInBracket(p.module, 'canCreate', targetBracket, false) && Boolean(p.canCreate),
-          canEdit: isActionAllowedInBracket(p.module, 'canEdit', targetBracket, false) && Boolean(p.canEdit),
-          canDelete: isActionAllowedInBracket(p.module, 'canDelete', targetBracket, false) && Boolean(p.canDelete),
-          canArchive: false
-        };
-      }
-    });
-
-    setClonedRoleData({
-      name: `Copy of ${role.name}`,
-      description: role.description ? `Cloned from ${role.name}. ${role.description}` : `Cloned from ${role.name}`,
-      companyId: companyFilter || role.companyId || (user?.companyId ? String(user.companyId) : ''),
-      hierarchyBracket: targetBracket,
-      permissions: permMap
-    });
-    setSelectedRole(null);
-    setIsFormOpen(true);
-    toast.info(`Cloned configuration from "${role.name}". Adjust permissions and save your new role.`);
   };
 
   const handleDeleteClick = async (role) => {
