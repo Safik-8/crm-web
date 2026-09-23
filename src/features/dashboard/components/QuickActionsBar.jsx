@@ -47,9 +47,15 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
     enabled: showOppSlideover && canCreateOpportunity && !!user?.companyId,
   });
 
+  const isManagerOrAdmin = (user?.primaryRoleRank && user.primaryRoleRank >= 60) || ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'].includes(user?.role);
+
   const { data: leadsRes } = useQuery({
-    queryKey: ['leadsOptions', user?.id],
-    queryFn: () => getLeads({ assignedToId: user?.id, limit: 100 }),
+    queryKey: ['leadsOptions', user?.companyId, user?.id, isManagerOrAdmin],
+    queryFn: () => getLeads({
+      limit: 200,
+      companyId: user?.companyId,
+      ...(!isManagerOrAdmin ? { assignedToId: user?.id } : {})
+    }),
     staleTime: 2 * 60 * 1000,
     enabled: (showOppSlideover || showFollowupPicker) && !!user?.id,
   });

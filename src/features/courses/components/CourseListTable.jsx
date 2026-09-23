@@ -83,7 +83,7 @@ const RowActionsMenu = ({
               sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
               <Edit2 size={13} className="text-slate-400" />
-              <span>Edit Course</span>
+              <span>Edit Service</span>
             </MenuItem>
 
             <MenuItem
@@ -108,7 +108,7 @@ const RowActionsMenu = ({
             sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
           >
             <Trash2 size={13} className="text-rose-400" />
-            <span>Delete Course</span>
+            <span>Delete Service</span>
           </MenuItem>
         )}
       </Menu>
@@ -162,7 +162,7 @@ export const CourseListTable = ({
       )
     },
     {
-      header: 'Course Name',
+      header: 'Service Name',
       accessorKey: 'name',
       align: 'left',
       sortable: true,
@@ -170,7 +170,7 @@ export const CourseListTable = ({
       cell: (row) => (
         <div className="flex items-center gap-3 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 text-[13px] font-bold shadow-sm border border-orange-200/50 uppercase flex-shrink-0">
-            {row.name?.charAt(0) || 'C'}
+            {row.name?.charAt(0) || 'S'}
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-800 text-[13px] leading-tight truncate">
@@ -295,8 +295,8 @@ export const CourseListTable = ({
       onRetry={onRetry}
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
-      emptyTitle="No courses found"
-      emptyDescription="Could not find any course records matching the search term or status."
+      emptyTitle="No services found"
+      emptyDescription="Could not find any service records matching the search term or status."
       sortBy={sortBy}
       sortOrder={sortOrder}
       onSort={onSort}

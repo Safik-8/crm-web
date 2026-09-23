@@ -179,7 +179,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     }
 
     if (!values.courseId) {
-      errs.courseId = 'Interested course is required';
+      errs.courseId = 'Interested service is required';
     }
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -456,8 +456,8 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
 
             <SelectField
               id="lead-course"
-              label="Interested Course/Product"
-              placeholder="Select Course..."
+              label="Interested Service"
+              placeholder="Select Service..."
               required
               value={values.courseId}
               onChange={(val) => handleFieldChange('courseId', val)}

@@ -117,7 +117,7 @@ const BranchDashboardView = () => {
       </div>
 
       {/* Conversion Rate Card */}
-      <div className="bg-white border border-slate-200 p-4 flex items-center justify-between">
+      <div className="bg-white border border-slate-200 shadow-sm p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
             <ShieldCheck size={20} />

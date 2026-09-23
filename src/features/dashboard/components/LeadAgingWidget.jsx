@@ -13,7 +13,7 @@ const LeadAgingWidget = ({ data = {}, isLoading = false }) => {
   const total = Object.values(data).reduce((s, v) => s + (v || 0), 0);
 
   return (
-    <section aria-label="Lead Aging" className="bg-white border border-slate-200 p-5">
+    <section aria-label="Lead Aging" className="bg-white border border-slate-200 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle size={15} className="text-amber-500" />
         <h3 className="text-sm font-bold text-slate-700">Active Lead Aging</h3>

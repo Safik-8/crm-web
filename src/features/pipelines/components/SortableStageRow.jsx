@@ -70,16 +70,16 @@ const SortableStageRow = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center gap-3 bg-white border rounded-xl px-4 py-3.5 transition-all ${
+      className={`group flex items-center gap-3 bg-white border rounded-none px-4 py-3.5 transition-all ${
         isDragging
-          ? 'border-primary/40 shadow-2xl scale-[1.02] ring-4 ring-primary/8'
+          ? 'border-orange-300 shadow-2xl scale-[1.02] ring-4 ring-orange-100'
           : isEditing
-            ? 'border-primary/30 shadow-md ring-2 ring-primary/10'
+            ? 'border-orange-300 shadow-md ring-2 ring-orange-100'
             : isDeleting
               ? 'border-red-200 bg-red-50/30'
               : mandatory
-                ? 'border-primary/25 border-l-[3px] border-l-primary bg-primary/[0.02] shadow-sm'
-                : 'border-slate-200 border-l-[3px] border-l-primary shadow-sm hover:shadow-md hover:border-slate-300'
+                ? 'border-slate-200 border-l-[3px] border-l-orange-300 bg-orange-50/[0.08]'
+                : 'border-slate-200 border-l-[3px] border-l-orange-300 hover:border-slate-300'
       }`}
     >
       {/* Drag handle / lock */}
@@ -88,17 +88,17 @@ const SortableStageRow = ({
         className={`flex-shrink-0 flex items-center justify-center transition-colors
           min-h-[40px] min-w-[28px] sm:min-h-0 sm:min-w-0
           ${mandatory
-            ? 'text-primary/40 cursor-not-allowed'
+            ? 'text-orange-500/60 cursor-not-allowed'
             : isEditing || isDeleting
-              ? 'text-slate-200 cursor-default'
-              : 'text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none'
+              ? 'text-slate-300 cursor-default'
+              : 'text-slate-500 hover:text-slate-800 cursor-grab active:cursor-grabbing touch-none'
           }`}
         style={{ touchAction: 'none' }}
         title={mandatory ? 'Mandatory system stage — cannot be moved' : undefined}
       >
         {mandatory
           ? <Lock size={14} strokeWidth={2.5} />
-          : <GripVertical size={18} strokeWidth={2} />
+          : <GripVertical size={18} strokeWidth={2.5} />
         }
       </div>
 
@@ -122,15 +122,15 @@ const SortableStageRow = ({
         />
       ) : (
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className={`text-sm font-semibold truncate transition-colors ${
-            mandatory ? 'text-primary' : isDeleting ? 'text-slate-400' : 'text-slate-800'
+          <span className={`text-sm font-bold truncate transition-colors ${
+            mandatory ? 'text-orange-950' : isDeleting ? 'text-slate-400' : 'text-slate-900'
           }`}>
             {stage.name}
           </span>
 
           {/* Code badge (only if different from stageType) */}
           {stage.code && stage.code !== stage.stageType && (
-            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+            <span className="text-[10px] font-mono font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
               {stage.code}
             </span>
           )}
@@ -145,8 +145,8 @@ const SortableStageRow = ({
         <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
           {mandatory ? (
             <span
-              className="text-[10px] font-black text-primary uppercase tracking-widest
-                bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-lg"
+              className="text-[10px] font-black text-orange-600 uppercase tracking-widest
+                bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg"
               title="Mandatory system stage — always required"
             >
               REQUIRED
@@ -158,13 +158,13 @@ const SortableStageRow = ({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onStartEdit?.(); }}
-                  className="p-2 rounded-lg bg-slate-100 text-slate-500
-                    hover:bg-primary/10 hover:text-primary
-                    transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="p-2 rounded-lg bg-slate-100 text-slate-700
+                    hover:bg-orange-50 hover:text-orange-600
+                    transition-all focus:outline-none focus:ring-2 focus:ring-orange-200"
                   title="Rename stage"
                   aria-label={`Rename ${stage.name}`}
                 >
-                  <Pencil size={13} strokeWidth={2} />
+                  <Pencil size={14} strokeWidth={2.2} />
                 </button>
               )}
 
@@ -174,8 +174,8 @@ const SortableStageRow = ({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
                   disabled={isDeleting}
-                  className="p-2 rounded-lg bg-slate-100 text-slate-500
-                    hover:bg-red-50 hover:text-red-500
+                  className="p-2 rounded-lg bg-slate-100 text-slate-700
+                    hover:bg-red-50 hover:text-red-600
                     disabled:opacity-50 disabled:cursor-not-allowed
                     transition-all focus:outline-none focus:ring-2 focus:ring-red-200"
                   title="Delete stage globally"
@@ -183,7 +183,7 @@ const SortableStageRow = ({
                 >
                   {isDeleting
                     ? <Loader2 size={13} className="animate-spin text-red-400" />
-                    : <Trash2 size={13} strokeWidth={2} />
+                    : <Trash2 size={14} strokeWidth={2.2} />
                   }
                 </button>
               )}
@@ -193,13 +193,13 @@ const SortableStageRow = ({
                 <button
                   type="button"
                   onClick={() => onRemove(stage.id)}
-                  className="p-2 rounded-lg bg-slate-100 text-slate-500
-                    hover:bg-red-50 hover:text-red-500
+                  className="p-2 rounded-lg bg-slate-100 text-slate-700
+                    hover:bg-red-50 hover:text-red-600
                     transition-all focus:outline-none focus:ring-2 focus:ring-red-200"
                   title="Remove from pipeline"
                   aria-label={`Remove ${stage.name} from pipeline`}
                 >
-                  <X size={13} strokeWidth={2.5} />
+                  <X size={14} strokeWidth={2.5} />
                 </button>
               )}
             </>

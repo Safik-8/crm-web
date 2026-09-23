@@ -209,10 +209,10 @@ export default function RevenueReportPage() {
       ];
     } else if (activeTab === 'product') {
       exportData = productQuery.data?.data || [];
-      reportTitle = 'Product & Course Revenue Report';
+      reportTitle = 'Service Revenue Report';
       exportCols = [
-        { header: 'Product Name', accessorKey: 'productName' },
-        { header: 'Product Code', accessorKey: 'productCode' },
+        { header: 'Service Name', accessorKey: 'productName' },
+        { header: 'Service Code', accessorKey: 'productCode' },
         { header: 'Category', accessorKey: 'category' },
         { header: 'Sales Count', accessorKey: 'salesCount', align: 'center' },
         {
@@ -329,7 +329,7 @@ export default function RevenueReportPage() {
             Company: isSuperAdmin ? (selectedCompanyObj?.name || null) : companyName,
             Branch: selectedBranchObj?.name || null,
             Team: selectedTeamObj?.name || null,
-            Course: selectedCourseObj?.name || null,
+            Service: selectedCourseObj?.name || null,
             'Date Range': filters.startDate && filters.endDate ? `${filters.startDate} to ${filters.endDate}` : null
           },
           summaryCards: [
@@ -349,7 +349,7 @@ export default function RevenueReportPage() {
     { id: 'overview', label: 'Overview', icon: TrendingUp },
     { id: 'monthly', label: 'Monthly Statement', icon: Calendar },
     { id: 'quarterly', label: 'Quarterly Breakdown', icon: PieChart },
-    { id: 'product', label: 'By Product', icon: BookOpen },
+    { id: 'product', label: 'By Service', icon: BookOpen },
     { id: 'team', label: 'By Team', icon: Users },
     ...(isSuperAdmin || isCompanyAdmin
       ? [{ id: 'branch', label: 'By Branch', icon: GitBranch }]

@@ -9,7 +9,7 @@ const PageHeader = ({
   className = ''
 }) => {
   return (
-    <div className={`flex flex-col bg-white p-4 border border-slate-200 sm:flex-row sm:items-center justify-between gap-3.5 ${className}`}>
+    <div className={`flex flex-col bg-white p-4 border border-slate-200 shadow-sm sm:flex-row sm:items-center justify-between gap-3.5 ${className}`}>
       <div className="flex items-center gap-3.5 min-w-0">
         {Icon && (
           <div className={`p-2.5 shrink-0 ${iconClassName || 'bg-orange-50 text-orange-600'}`}>

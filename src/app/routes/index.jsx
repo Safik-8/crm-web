@@ -291,6 +291,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'services',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COURSES}>
+            <CoursesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'courses',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_COURSES}>
