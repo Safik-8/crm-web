@@ -33,8 +33,10 @@ import RoleManagementPage from '../../features/roles/pages/RoleManagementPage';
 import AuditPage from '../../features/audit/pages/AuditPage';
 import NotificationsPage from '../../features/notifications/pages/NotificationsPage';
 import PipelinesPage from '../../features/pipelines/pages/PipelinesPage';
+import PipelineIndexRedirect from '../../features/pipelines/pages/PipelineIndexRedirect';
 import PipelineStageBuilderPage from '../../features/pipelines/pages/PipelineStageBuilderPage';
 import LeadsKanbanPage from '../../features/leads/pages/LeadsKanbanPage';
+import FeedbackKanbanPage from '../../features/feedback/pages/FeedbackKanbanPage';
 import UserProfilePage from '../../features/userprofile/pages/UserProfilePage';
 import LeadSourcePage from '../../features/leadsources/pages/LeadSourcePage';
 import LeadStatusPage from '../../features/leadstatuses/pages/LeadStatusPage';
@@ -417,6 +419,14 @@ export const router = createBrowserRouter([
         path: 'pipelines',
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PIPELINES}>
+            <PipelineIndexRedirect />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'pipelines/cards',
+        element: (
+          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_PIPELINES}>
             <PipelinesPage />
           </ProtectedRoute>
         ),
@@ -434,6 +444,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_LEADS_KANBAN}>
             <LeadsKanbanPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'feedback',
+        element: (
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+            <FeedbackKanbanPage />
           </ProtectedRoute>
         ),
       },
