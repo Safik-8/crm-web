@@ -26,6 +26,7 @@ import {
   Plus,
   Send,
   Target,
+  GitBranch,
 } from 'lucide-react';
 import QualifyOpportunityModal from '../components/QualifyOpportunityModal';
 import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
@@ -509,6 +510,8 @@ export const OpportunityDetailPage = () => {
                   <span className="text-slate-300">•</span>
                   <span>Lead: <strong className="text-slate-800 font-semibold">{opportunity.lead?.name || 'N/A'}</strong></span>
                   <span className="text-slate-300">•</span>
+                  <span>Lead Pipeline: <strong className="text-slate-800 font-semibold">{opportunity.lead?.pipeline?.name || 'Standard Sales Pipeline'}</strong></span>
+                  <span className="text-slate-300">•</span>
                   <span>Created By: <strong className="text-slate-800 font-semibold">{opportunity.createdBy?.name || 'System'}</strong></span>
                   <span className="text-slate-300">•</span>
                   <span>Owner: <strong className="text-orange-600 font-semibold">{opportunity.owner?.name || 'Unassigned'}</strong></span>
@@ -703,6 +706,17 @@ export const OpportunityDetailPage = () => {
                   <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
                     <BookOpen className="w-4 h-4 text-orange-600" />
                     <span>{opportunity.product?.name || 'General Service'}</span>
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Source Pipeline</span>
+                  <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                    <GitBranch className="w-4 h-4 text-orange-600" />
+                    <span>{opportunity.lead?.pipeline?.name || 'Standard Sales Pipeline'}</span>
+                  </span>
+                  <span className="text-slate-400 text-[11px] block mt-0.5">
+                    Lead originated from this pipeline
                   </span>
                 </div>
 

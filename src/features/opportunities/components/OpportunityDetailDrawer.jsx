@@ -19,6 +19,7 @@ import {
   ArrowRight,
   Maximize2,
   Target,
+  GitBranch,
 } from 'lucide-react';
 import { useOpportunityDetailQuery } from '../hooks/useOpportunities';
 import { useFormatters } from '../../../shared/hooks/useFormatters';
@@ -320,6 +321,15 @@ export const OpportunityDetailDrawer = ({
                 <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
                   <span className="truncate">{opportunity.product?.name || 'General Service'}</span>
+                </span>
+              </div>
+
+              {/* Source Pipeline */}
+              <div>
+                <span className="text-slate-400 font-medium block mb-1">Source Pipeline</span>
+                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <GitBranch className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="truncate">{opportunity.lead?.pipeline?.name || 'Standard Sales Pipeline'}</span>
                 </span>
               </div>
 
