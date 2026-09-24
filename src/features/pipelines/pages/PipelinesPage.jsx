@@ -135,7 +135,7 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
 // ----- Main Page -----
 const PipelinesPage = () => {
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const { forceHideLoader } = useLoader();
   const { pipelines, loading, error, addPipeline, editPipeline, removePipeline } = usePipelines();
   const didHideInitialRouteLoaderRef = useRef(false);
@@ -168,6 +168,13 @@ const PipelinesPage = () => {
       // Go directly to stage builder for the new pipeline
       if (res.pipeline?.id) navigate(`/pipelines/${res.pipeline.id}/stages`);
     }
+  };
+
+  const handleOpenBoard = (id) => {
+    try {
+      localStorage.setItem(`last_active_pipeline_${user?.id || 'default'}`, String(id));
+    } catch {}
+    navigate(`/pipelines/${id}/board`);
   };
 
   const handleEdit = async (data) => {
@@ -241,16 +248,35 @@ const PipelinesPage = () => {
         description="Build your sales flow. Track every lead."
         icon={GitBranch}
         actions={
-          canCreate && (
-            <Button
-              onClick={() => setShowModal(true)}
-              variant="contained"
-              size="medium"
-              startIcon={<Plus size={18} />}
-            >
-              New Pipeline
-            </Button>
-          )
+          <div className="flex items-center gap-2">
+            {hasPermission(PERMISSIONS.VIEW_LEADS_KANBAN) && pipelines.length > 0 && (
+              <Button
+                onClick={() => {
+                  const storageKey = `last_active_pipeline_${user?.id || 'default'}`;
+                  const savedId = localStorage.getItem(storageKey);
+                  const targetId = (savedId && pipelines.some(p => String(p.id) === String(savedId)))
+                    ? savedId
+                    : pipelines[0].id;
+                  handleOpenBoard(targetId);
+                }}
+                variant="outlined"
+                size="medium"
+                startIcon={<Kanban size={17} />}
+              >
+                Open Kanban Board
+              </Button>
+            )}
+            {canCreate && (
+              <Button
+                onClick={() => setShowModal(true)}
+                variant="contained"
+                size="medium"
+                startIcon={<Plus size={18} />}
+              >
+                New Pipeline
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -276,7 +302,8 @@ const PipelinesPage = () => {
       <div className="grid p-4 bg-white border border-slate-200 shadow-sm grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {pipelines.map(pipeline => (
           <div key={pipeline.id}
-            className="bg-white rounded border border-slate-200 shadow-sm hover:shadow transition-all group p-5 flex flex-col gap-4">
+            onClick={() => handleOpenBoard(pipeline.id)}
+            className="bg-white rounded border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group p-5 flex flex-col gap-4">
             {/* Card top */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
@@ -292,7 +319,7 @@ const PipelinesPage = () => {
               </div>
               {/* Actions */}
               {(canCreate || canDelete) && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                   {canCreate && (
                     <button onClick={() => setEditTarget(pipeline)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors">
@@ -310,8 +337,8 @@ const PipelinesPage = () => {
             </div>
 
             {/* Card actions */}
-            <div className="flex gap-2 pt-1 border-t border-slate-50">
-              <button onClick={() => navigate(`/pipelines/${pipeline.id}/board`)}
+            <div className="flex gap-2 pt-1 border-t border-slate-50" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => handleOpenBoard(pipeline.id)}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow shadow-primary/20">
                 <Kanban size={14} /> Open Board
               </button>

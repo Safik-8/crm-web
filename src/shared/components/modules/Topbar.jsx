@@ -3,7 +3,7 @@ import {
   Search, Bell, Menu, User, LogOut, Loader2, ChevronRight, Home, X, 
   CornerDownLeft, ClipboardList, Kanban, SlidersHorizontal, Briefcase, 
   Layers, Handshake, Users, CheckSquare, Target, BarChart3, FileText, 
-  ShieldAlert, ArrowRightLeft, BookOpen, Key, Building2, Tag, Compass
+  ShieldAlert, ArrowRightLeft, BookOpen, Key, Building2, Tag, Compass, Bug
 } from 'lucide-react';
 import { Menu as MuiMenu, MenuItem } from '@mui/material';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -11,6 +11,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import NotificationPanel from '../../../features/notifications/components/NotificationPanel.jsx';
 import { useNotificationBadge } from '../../../features/notifications/hooks/useNotificationBadge.js';
+import FeedbackModal from '../../../features/feedback/components/FeedbackModal.jsx';
 
 const ROUTE_LABELS = {
   'dashboard': 'Dashboard',
@@ -533,6 +534,8 @@ const Topbar = ({ toggleSidebar }) => {
     setProfileAnchorEl(null);
   };
 
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
   return (
     <>
       <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl">
@@ -678,6 +681,17 @@ const Topbar = ({ toggleSidebar }) => {
             )}
           </div>
 
+          {/* Bug / Feedback report icon (visible to all users) */}
+          <button
+            type="button"
+            onClick={() => setIsFeedbackModalOpen(true)}
+            aria-label="Report bug or feedback"
+            title="Report bug or feedback"
+            className="flex items-center justify-center w-8 h-8 rounded-xl text-zinc-500 hover:bg-orange-50 hover:text-orange-600 transition-all duration-150 cursor-pointer"
+          >
+            <Bug size={17} aria-hidden="true" />
+          </button>
+
           {/* Notification bell */}
           <button
             ref={bellButtonRef}
@@ -793,6 +807,11 @@ const Topbar = ({ toggleSidebar }) => {
         isOpen={isPanelOpen}
         onClose={closePanel}
         triggerRef={bellButtonRef}
+      />
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
       />
     </>
   );

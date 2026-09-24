@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../../lib/api/api';
+import { setAccessToken, clearAccessToken } from '../../lib/api/authSession';
 import { useQueryClient } from '@tanstack/react-query';
 
 const defaultAuthContext = {
@@ -256,10 +257,8 @@ export const AuthProvider = ({ children }) => {
 
       if (response && response.success && response.data?.user) {
         if (response.data.accessToken) {
-          localStorage.setItem('accessToken', response.data.accessToken);
+          setAccessToken(response.data.accessToken);
         }
-        // refreshToken is managed securely via httpOnly cookie
-        localStorage.removeItem('refreshToken');
         queryClient.clear();
         setUser(response.data.user);
         setLoading(false);
@@ -286,8 +285,7 @@ export const AuthProvider = ({ children }) => {
     // the network. The ProtectedRoute will redirect to /login as soon as
     // `isAuthenticated` becomes false.
     setUser(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    clearAccessToken();
     queryClient.clear();
 
     // ── Background API call ──────────────────────────────────────────────────
