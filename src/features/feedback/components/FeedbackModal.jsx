@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { X, Bug, AlertTriangle, Upload, Image as ImageIcon, Trash2, Loader2, Send } from 'lucide-react';
+import { X, Bug, AlertTriangle, Upload, Image as ImageIcon, Trash2, Loader2, Send, Link2 } from 'lucide-react';
 import { feedbackService } from '../services/feedbackService';
 import { toast } from '../../../shared/utils/toast';
 import Button from '../../../shared/components/elements/Button';
@@ -14,13 +14,6 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   const [pageUrl, setPageUrl] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  // Pre-fill with current page when modal opens, but user can freely edit or clear it
-  useEffect(() => {
-    if (isOpen) {
-      setPageUrl(location.pathname + location.search);
-    }
-  }, [isOpen, location]);
 
   // Listen for clipboard paste (Ctrl+V) to easily attach screenshots
   useEffect(() => {
@@ -97,6 +90,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
       setTitle('');
       setDescription('');
       setPriority('NORMAL');
+      setPageUrl('');
       setAttachmentUrl(null);
       onClose();
     } catch (err) {
@@ -104,6 +98,15 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleClose = () => {
+    setTitle('');
+    setDescription('');
+    setPriority('NORMAL');
+    setPageUrl('');
+    setAttachmentUrl(null);
+    onClose();
   };
 
   return (
@@ -125,7 +128,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition-colors"
           >
             <X size={18} />
@@ -220,16 +223,16 @@ const FeedbackModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Page / Feature URL (Optional & Editable) */}
+          {/* Page / Feature URL (Optional — completely empty by default, user pastes or types) */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-              Page / Feature URL <span className="text-slate-400 font-normal">(Optional — edit or enter any URL)</span>
+              Page / Feature URL <span className="text-slate-400 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
               value={pageUrl}
               onChange={(e) => setPageUrl(e.target.value)}
-              placeholder="e.g. /leads, /pipelines, or any custom URL"
+              placeholder="Paste or enter page URL (e.g. /leads, /pipelines)..."
               className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-mono placeholder:text-slate-400 placeholder:font-sans"
             />
           </div>
@@ -240,7 +243,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               type="button"
               variant="outlined"
               size="small"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={submitting}
               sx={{
                 borderColor: '#E2E8F0',
