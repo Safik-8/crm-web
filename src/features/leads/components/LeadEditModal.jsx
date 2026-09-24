@@ -9,6 +9,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Drawer from '../../../shared/components/elements/Drawer';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useSettings } from '../../settings/hooks/useSettings';
@@ -38,6 +39,7 @@ export const LeadEditModal = ({
     mobile: '',
     email: '',
     alternateMobile: '',
+    linkedinUrl: '',
     sourceId: '',
     courseId: '',
     statusId: '',
@@ -73,6 +75,7 @@ export const LeadEditModal = ({
         mobile: lead.mobile || '',
         email: lead.email || '',
         alternateMobile: lead.alternateMobile || '',
+        linkedinUrl: lead.linkedinUrl || '',
         sourceId: lead.source?.id || lead.sourceId || '',
         courseId: lead.course?.id || lead.courseId || '',
         statusId: lead.status?.id || lead.statusId || '',
@@ -243,6 +246,7 @@ export const LeadEditModal = ({
       priority: values.priority,
       email: values.email.trim() || null,
       alternateMobile: values.alternateMobile.trim() || null,
+      linkedinUrl: values.linkedinUrl?.trim() || null,
       budget: values.budget.trim() ? parseFloat(values.budget) : null,
       city: values.city.trim() || null,
       state: values.state.trim() || null,
@@ -437,6 +441,19 @@ export const LeadEditModal = ({
               onChange={(val) => handleFieldChange('alternateMobile', val)}
               errorText={errors.alternateMobile}
               startIcon={Phone}
+            />
+          </div>
+
+          <div>
+            <TextField
+              id="lead-edit-linkedin"
+              label="LinkedIn Profile"
+              placeholder="e.g. https://linkedin.com/in/username"
+              value={values.linkedinUrl}
+              onChange={(val) => handleFieldChange('linkedinUrl', val)}
+              errorText={errors.linkedinUrl}
+              startIcon={LinkedinIcon}
+              helperText="Optional client or lead LinkedIn profile link"
             />
           </div>
         </div>

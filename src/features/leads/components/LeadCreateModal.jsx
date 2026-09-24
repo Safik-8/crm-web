@@ -11,6 +11,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import SelectField from '../../../shared/components/elements/SelectField';
 import Button from '../../../shared/components/elements/Button';
 import Drawer from '../../../shared/components/elements/Drawer';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useSettings } from '../../settings/hooks/useSettings';
 
@@ -31,6 +32,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
     mobile: '',
     email: '',
     alternateMobile: '',
+    linkedinUrl: '',
     sourceId: '',
     courseId: '',
     statusId: '',
@@ -69,6 +71,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
         mobile: '',
         email: '',
         alternateMobile: '',
+        linkedinUrl: '',
         sourceId: '',
         courseId: '',
         statusId: initialStatus,
@@ -239,6 +242,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       priority: values.priority,
       email: values.email.trim() || null,
       alternateMobile: values.alternateMobile.trim() || null,
+      linkedinUrl: values.linkedinUrl?.trim() || null,
       budget: values.budget.trim() ? parseFloat(values.budget) : null,
       city: values.city.trim() || null,
       state: values.state.trim() || null,
@@ -428,6 +432,19 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
               onChange={(val) => handleFieldChange('alternateMobile', val)}
               errorText={errors.alternateMobile}
               startIcon={Phone}
+            />
+          </div>
+
+          <div>
+            <TextField
+              id="lead-linkedin"
+              label="LinkedIn Profile"
+              placeholder="e.g. https://linkedin.com/in/username"
+              value={values.linkedinUrl}
+              onChange={(val) => handleFieldChange('linkedinUrl', val)}
+              errorText={errors.linkedinUrl}
+              startIcon={LinkedinIcon}
+              helperText="Optional client or lead LinkedIn profile link"
             />
           </div>
         </div>

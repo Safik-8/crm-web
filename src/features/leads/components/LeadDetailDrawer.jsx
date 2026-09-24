@@ -5,8 +5,10 @@ import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
   MapPin, Award, ShieldAlert, History, MessageSquare,
-  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target
+  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target, ExternalLink
 } from 'lucide-react';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
+import { formatExternalUrl } from '../../../shared/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import CommentThread from '../../activities/components/CommentThread';
 
@@ -156,6 +158,13 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
     { icon: Phone, label: 'Mobile', value: lead.mobile || '—' },
     { icon: Phone, label: 'Alt Contact', value: lead.alternateMobile || '—' },
     { icon: Mail, label: 'Email', value: lead.email || '—' },
+    ...(lead.linkedinUrl ? [{
+      icon: LinkedinIcon,
+      label: 'LinkedIn',
+      value: lead.linkedinUrl,
+      isLink: true,
+      href: formatExternalUrl(lead.linkedinUrl)
+    }] : []),
     { icon: Calendar, label: 'Created Date', value: date },
     { icon: MapPin, label: 'Location', value: locationStr },
   ];
@@ -268,12 +277,25 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                     const IconComponent = item.icon;
                     return (
                       <div key={idx} className="bg-white border border-slate-100 rounded-xl p-2.5 flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 shrink-0">
+                        <div className={`p-1.5 rounded-lg shrink-0 ${item.isLink ? 'bg-blue-50 text-[#0A66C2]' : 'bg-slate-50 text-slate-400'}`}>
                           <IconComponent size={13} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{item.label}</div>
-                          <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                          {item.isLink ? (
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline mt-0.5 truncate flex items-center gap-1 group"
+                              title={item.value}
+                            >
+                              <span className="truncate">{item.value}</span>
+                              <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
+                            </a>
+                          ) : (
+                            <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                          )}
                         </div>
                       </div>
                     );
@@ -448,6 +470,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
           opportunityName: lead?.name ? `${lead.name} Deal` : undefined,
           expectedRevenue: lead?.budget !== undefined && lead?.budget !== null ? Number(lead.budget) : undefined,
           productId: lead?.courseId ? Number(lead.courseId) : (lead?.course?.id ? Number(lead.course.id) : undefined),
+          linkedinUrl: lead?.linkedinUrl || undefined,
         }}
         onSubmit={handleCreateOppSubmit}
         isLoading={createOppMutation.isPending}

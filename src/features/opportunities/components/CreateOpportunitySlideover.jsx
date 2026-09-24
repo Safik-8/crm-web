@@ -80,6 +80,9 @@ export const CreateOpportunitySlideover = ({
             base.stageId = defaultStageId;
           }
         }
+        if (!base.linkedinUrl && selectedLead.linkedinUrl) {
+          base.linkedinUrl = selectedLead.linkedinUrl;
+        }
       }
     }
     return base;
@@ -113,6 +116,11 @@ export const CreateOpportunitySlideover = ({
         onChangeCallback('stageId', Number(selectedLead.stageId));
       } else if (stages && stages.length > 0) {
         onChangeCallback('stageId', Number(stages[0].id));
+      }
+
+      // Auto-prefill LinkedIn URL from Lead if available
+      if (selectedLead.linkedinUrl) {
+        onChangeCallback('linkedinUrl', selectedLead.linkedinUrl);
       }
     }
   };
@@ -230,6 +238,13 @@ export const CreateOpportunitySlideover = ({
       type: 'textarea',
       placeholder: 'Add any specific deal requirements or notes...',
     },
+    {
+      key: 'linkedinUrl',
+      name: 'linkedinUrl',
+      label: 'LinkedIn Profile',
+      type: 'text',
+      placeholder: 'e.g. https://linkedin.com/in/username (Auto-fills from Lead)',
+    },
   ];
 
   // Client-side form validation for inline field error highlights
@@ -275,6 +290,7 @@ export const CreateOpportunitySlideover = ({
         ? Number(formData.probabilityPercentage)
         : undefined,
       productId: formData.productId ? Number(formData.productId) : null,
+      linkedinUrl: formData.linkedinUrl ? String(formData.linkedinUrl).trim() : null,
     };
     return onSubmit(payload);
   };

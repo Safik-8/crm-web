@@ -28,6 +28,8 @@ import {
   Target,
 } from 'lucide-react';
 import QualifyOpportunityModal from '../components/QualifyOpportunityModal';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
+import { formatExternalUrl } from '../../../shared/utils/formatters';
 import {
   useOpportunityDetailQuery,
   useUpdateOpportunityMutation,
@@ -681,6 +683,19 @@ export const OpportunityDetailPage = () => {
                       Mobile: {opportunity.lead.mobile}
                     </span>
                   )}
+                  {(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl) && (
+                    <a
+                      href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 mt-1 group"
+                      title={opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                    >
+                      <LinkedinIcon size={13} className="text-[#0A66C2] shrink-0" />
+                      <span>LinkedIn Profile</span>
+                      <ExternalLink className="w-3 h-3 text-blue-500 opacity-70 group-hover:opacity-100" />
+                    </a>
+                  )}
                 </div>
 
                 <div>
@@ -893,6 +908,22 @@ export const OpportunityDetailPage = () => {
                   <div className="flex items-center gap-2 text-slate-700">
                     <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">{opportunity.lead.email}</span>
+                  </div>
+                )}
+
+                {(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl) && (
+                  <div className="flex items-center gap-2 text-slate-700 pt-1 border-t border-slate-100">
+                    <LinkedinIcon size={14} className="text-[#0A66C2] shrink-0" />
+                    <a
+                      href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 truncate group"
+                      title={opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                    >
+                      <span className="truncate">{opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}</span>
+                      <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 shrink-0" />
+                    </a>
                   </div>
                 )}
 

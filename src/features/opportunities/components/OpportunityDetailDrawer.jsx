@@ -23,6 +23,8 @@ import {
 import { useOpportunityDetailQuery } from '../hooks/useOpportunities';
 import { useFormatters } from '../../../shared/hooks/useFormatters';
 import QualifyOpportunityModal from './QualifyOpportunityModal';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
+import { formatExternalUrl } from '../../../shared/utils/formatters';
 
 /**
  * Clean, Formal Loading Skeleton
@@ -251,6 +253,40 @@ export const OpportunityDetailDrawer = ({
                   </span>
                 )}
               </div>
+
+              {/* Client LinkedIn Profile */}
+              {(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl) && (
+                <div className="col-span-2 bg-blue-50/60 border border-blue-100 rounded-lg p-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 rounded-md bg-[#0A66C2]/10 flex items-center justify-center shrink-0">
+                      <LinkedinIcon size={14} className="text-[#0A66C2]" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                        Client LinkedIn Profile
+                      </span>
+                      <a
+                        href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline truncate inline-block max-w-full"
+                        title={opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                      >
+                        {opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                      </a>
+                    </div>
+                  </div>
+                  <a
+                    href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-100/60 rounded-md transition-colors shrink-0"
+                    title="Open LinkedIn in new tab"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              )}
 
               {/* Assigned Owner */}
               <div>
