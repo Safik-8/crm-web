@@ -180,7 +180,7 @@ export const OpportunitiesPage = () => {
       const raw = res?.data || res;
       return Array.isArray(raw) ? raw : (Array.isArray(raw?.branches) ? raw.branches : []);
     },
-    enabled: canFilterByBranch,
+    enabled: canFilterByBranch && (!canFilterByCompany || !!companyFilter),
     staleTime: 30000,
   });
 
@@ -563,16 +563,15 @@ export const OpportunitiesPage = () => {
             )}
 
             {/* Branch Filter — SA and Company Admin */}
-            {canFilterByBranch && (
+            {canFilterByBranch && (!canFilterByCompany || companyFilter) && (
               <div className="w-full sm:w-44">
                 <SelectField
-                  placeholder={canFilterByCompany && !companyFilter ? 'Select company first' : 'All Branches'}
+                  placeholder="All Branches"
                   value={branchFilter}
                   onChange={(val) => setBranchFilter(val === undefined ? '' : val)}
                   allowEmptyOption
                   searchable={true}
                   isLoading={branchesQuery.isLoading}
-                  disabled={canFilterByCompany && branches.length === 0 && !branchesQuery.isLoading}
                   options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
                 />
               </div>
