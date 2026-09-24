@@ -22,6 +22,7 @@ import {
   TrendingUp,
   DollarSign,
   Sliders,
+  Bug,
 } from 'lucide-react';
 import {
   PERMISSIONS
@@ -71,6 +72,7 @@ export const navGroups = [
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
       { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
+      { name: 'Feedback & Bugs', path: '/feedback', icon: Bug, roles: ['SUPER_ADMIN'] },
     ]
   }
 ];

@@ -10,8 +10,9 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal, Layers, UserCheck } from 'lucide-react';
+import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal, Layers, UserCheck, ChevronDown, ChevronRight, Search, Check } from 'lucide-react';
 import { useKanban } from '../hooks/useKanban';
+import { usePipelines } from '../../pipelines/hooks/usePipelines';
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterSidebar } from '../components/KanbanFilterSidebar';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -70,6 +71,39 @@ const LeadsKanbanPage = () => {
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { pipelines, loading: loadingPipelines } = usePipelines();
+
+  // Remember active pipeline in localStorage
+  useEffect(() => {
+    if (pipelineId && user?.id) {
+      try {
+        localStorage.setItem(`last_active_pipeline_${user.id}`, String(pipelineId));
+      } catch {}
+    }
+  }, [pipelineId, user?.id]);
+
+  // Dropdown state for pipeline switcher
+  const [isPipelineDropdownOpen, setIsPipelineDropdownOpen] = useState(false);
+  const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
+  const pipelineDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (pipelineDropdownRef.current && !pipelineDropdownRef.current.contains(event.target)) {
+        setIsPipelineDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredPipelines = useMemo(() => {
+    if (!pipelines) return [];
+    if (!pipelineSearchTerm.trim()) return pipelines;
+    return pipelines.filter((p) =>
+      p.name.toLowerCase().includes(pipelineSearchTerm.toLowerCase())
+    );
+  }, [pipelines, pipelineSearchTerm]);
 
   // ── Role Scoping (All vs Mine) ──────────────────────────────────────────
   const isIse = user?.primaryRole === 'ISE' || Number(user?.primaryRoleRank) <= 20;
@@ -638,36 +672,149 @@ const LeadsKanbanPage = () => {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
         {/* ── Page header ── */}
-        <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-zinc-200/70 bg-white/90 backdrop-blur-sm shadow-[0_1px_0_rgba(0,0,0,0.04)] gap-2">
+        <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-zinc-200/70 bg-white shadow-[0_1px_0_rgba(0,0,0,0.04)] gap-2 relative z-30">
           <div className="flex items-center gap-2 min-w-0">
-            {/* Back */}
+            {/* Back to all pipeline cards */}
             <button
-              onClick={() => navigate('/pipelines')}
-              className="flex items-center justify-center p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-700 transition-all duration-150 shrink-0"
+              onClick={() => navigate('/pipelines/cards')}
+              className="flex items-center justify-center p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-700 transition-all duration-150 shrink-0 cursor-pointer"
+              title="View all pipeline cards"
             >
               <ArrowLeft size={15} />
             </button>
 
-            {/* Title */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-orange-50 shrink-0">
-                <Kanban size={14} className="text-primary" />
-              </div>
-              <div className="min-w-0 flex items-center gap-2">
-                <h1 className="text-[13px] sm:text-[15px] font-semibold font-heading text-zinc-900 truncate tracking-tight">
-                  {boardTitle}
-                </h1>
-                {totalPipelineRevenue > 0 && (
-                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
-                    ₹{totalPipelineRevenue.toLocaleString('en-IN')}
-                  </span>
-                )}
-              </div>
+            {/* Pipeline Searchable Selector Dropdown */}
+            <div className="relative min-w-0 z-30" ref={pipelineDropdownRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPipelineDropdownOpen((prev) => !prev);
+                  setPipelineSearchTerm('');
+                }}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all duration-150 text-left cursor-pointer group ${
+                  isPipelineDropdownOpen
+                    ? 'border-orange-300 bg-orange-50/60 ring-2 ring-orange-500/10'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80 shadow-2xs'
+                }`}
+                title="Switch pipeline"
+              >
+                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-50 shrink-0">
+                  <Kanban size={13} className="text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] sm:text-[14px] font-bold font-heading text-zinc-900 truncate tracking-tight max-w-[110px] xs:max-w-[150px] sm:max-w-[220px] md:max-w-[280px]">
+                      {boardTitle}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-zinc-400 group-hover:text-zinc-600 transition-transform duration-200 shrink-0 ${
+                        isPipelineDropdownOpen ? 'rotate-180 text-primary' : ''
+                      }`}
+                    />
+                  </div>
+                </div>
+              </button>
+
+              {/* Floating Searchable Menu */}
+              {isPipelineDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  {/* Search Bar */}
+                  <div className="p-2.5 border-b border-slate-100 bg-slate-50/70">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        autoFocus
+                        value={pipelineSearchTerm}
+                        onChange={(e) => setPipelineSearchTerm(e.target.value)}
+                        placeholder="Search pipelines..."
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-medium placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pipelines List */}
+                  <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+                    {loadingPipelines ? (
+                      <div className="py-6 text-center text-xs text-slate-400">Loading pipelines...</div>
+                    ) : filteredPipelines.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-slate-400 font-medium">No pipelines found</div>
+                    ) : (
+                      filteredPipelines.map((p) => {
+                        const isCurrent = String(p.id) === String(pipelineId);
+                        const stageCount = p.stages?.length ?? p._count?.stages ?? 0;
+                        const leadCount = p.leadCount ?? p._count?.leads ?? 0;
+
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              try {
+                                localStorage.setItem(`last_active_pipeline_${user?.id || 'default'}`, String(p.id));
+                              } catch {}
+                              setIsPipelineDropdownOpen(false);
+                              navigate(`/pipelines/${p.id}/board`);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+                              isCurrent
+                                ? 'bg-orange-50/80 text-orange-900 font-semibold'
+                                : 'hover:bg-slate-50 text-slate-700 font-normal'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1 pr-2">
+                              <p className="text-xs truncate font-medium">{p.name}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                {stageCount} stages &middot; {leadCount} leads
+                              </p>
+                            </div>
+                            {isCurrent && <Check size={14} className="text-primary shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer - All Pipelines Cards shortcut */}
+                  <div className="border-t border-slate-100 p-1.5 bg-slate-50/50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPipelineDropdownOpen(false);
+                        navigate('/pipelines/cards');
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-primary hover:bg-white hover:shadow-2xs transition-all cursor-pointer"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> View All Pipeline Cards
+                      </span>
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {totalPipelineRevenue > 0 && (
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700 shrink-0">
+                ₹{totalPipelineRevenue.toLocaleString('en-IN')}
+              </span>
+            )}
           </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* All Pipelines cards button */}
+            <button
+              onClick={() => navigate('/pipelines/cards')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900 transition-all duration-150 shrink-0 text-[11px] sm:text-[12px] font-semibold cursor-pointer shadow-2xs"
+              title="View all pipeline cards"
+            >
+              <Layers size={13} />
+              <span className="hidden md:inline">All Pipelines</span>
+            </button>
+
             {/* Mobile/Tablet filter toggle — hidden on lg+ where sidebar is always visible */}
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
