@@ -1,4 +1,3 @@
-// crm-web/src/features/dashboard/pages/BranchDashboardView.jsx
 import React, { useState } from 'react';
 import {
   Layers, Users, UserCheck, Handshake, TrendingUp,
@@ -9,6 +8,7 @@ import KpiCard            from '../components/KpiCard';
 import LeadAgingWidget    from '../components/LeadAgingWidget';
 import ActivityFeedWidget from '../components/ActivityFeedWidget';
 import ReminderWidget     from '../components/ReminderWidget';
+import FollowupsDrawer    from '../components/FollowupsDrawer';
 import QuickActionsBar    from '../components/QuickActionsBar';
 import BranchTeamPerformanceWidget from '../components/BranchTeamPerformanceWidget';
 import SelectField       from '../../../shared/components/elements/SelectField';
@@ -28,6 +28,7 @@ const BranchDashboardView = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [period, setPeriod] = useState('MONTHLY');
+  const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
 
   const params = {
     rankingPeriod: period,
@@ -45,14 +46,14 @@ const BranchDashboardView = () => {
                              'Monthly Revenue';
 
   const KPI_CARDS = [
-    { icon: Layers,      title: 'Branch Leads',       value: metrics.totalLeads,         color: 'blue'    },
-    { icon: CheckSquare, title: 'Qualified Leads',     value: metrics.qualifiedLeads,      color: 'emerald' },
-    { icon: Target,      title: 'Opportunities',       value: metrics.activeOpportunities, color: 'purple'  },
-    { icon: Handshake,   title: 'Won Deals',          value: metrics.wonDeals,            color: 'rose'    },
-    { icon: TrendingUp,  title: revenueTitle,         value: metrics.revenue,             prefix: '₹', color: 'blue' },
-    { icon: Clock,       title: "Today's Follow-ups", value: metrics.followupsToday,      color: 'sky'     },
-    { icon: Users,       title: 'Active BDEs',        value: metrics.bdeCount,            color: 'orange'  },
-    { icon: UserCheck,   title: 'Active ISEs',        value: metrics.iseCount,            color: 'emerald' },
+    { icon: Layers,      title: 'Branch Leads',       value: metrics.totalLeads,         color: 'blue',    onClick: () => navigate('/leads') },
+    { icon: CheckSquare, title: 'Qualified Leads',     value: metrics.qualifiedLeads,      color: 'emerald', onClick: () => navigate('/leads?isQualified=true') },
+    { icon: Target,      title: 'Opportunities',       value: metrics.activeOpportunities, color: 'purple',  onClick: () => navigate('/opportunities') },
+    { icon: Handshake,   title: 'Won Deals',          value: metrics.wonDeals,            color: 'rose',    onClick: () => navigate('/deals?outcome=WON') },
+    { icon: TrendingUp,  title: revenueTitle,         value: metrics.revenue,             prefix: '₹', color: 'blue', onClick: () => navigate('/reports/sales-performance') },
+    { icon: Clock,       title: "Today's Follow-ups", value: metrics.followupsToday,      color: 'sky',     onClick: () => setFollowupDrawerOpen(true) },
+    { icon: Users,       title: 'Active BDEs',        value: metrics.bdeCount,            color: 'orange',  onClick: () => navigate('/users') },
+    { icon: UserCheck,   title: 'Active ISEs',        value: metrics.iseCount,            color: 'emerald', onClick: () => navigate('/users') },
   ];
 
   const teamMembers = metrics.teamPerformance || [];
@@ -117,7 +118,18 @@ const BranchDashboardView = () => {
       </div>
 
       {/* Conversion Rate Card */}
-      <div className="bg-white border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/reports/sales-performance')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate('/reports/sales-performance');
+          }
+        }}
+        className="bg-white border border-slate-200 shadow-sm p-4 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-purple-300 transition-all group"
+      >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
             <ShieldCheck size={20} />
@@ -129,9 +141,12 @@ const BranchDashboardView = () => {
             </p>
           </div>
         </div>
-        <p className="text-xs text-slate-400 hidden sm:block">
-          Ratio of total closed-won deals to branch leads
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-slate-400 hidden sm:block">
+            Ratio of total closed-won deals to branch leads
+          </p>
+          <ArrowUpRight size={18} className="text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+        </div>
       </div>
 
       {/* Team Performance & Contribution (Scalable with sorting, podium ranks, team filter & roster drawer) */}
@@ -145,6 +160,13 @@ const BranchDashboardView = () => {
 
       {/* Follow-up Reminders Widget */}
       <ReminderWidget />
+
+      {/* Follow-up Drawer triggered by Today's Follow-ups card */}
+      <FollowupsDrawer
+        isOpen={followupDrawerOpen}
+        onClose={() => setFollowupDrawerOpen(false)}
+        initialFilter="today"
+      />
     </div>
   );
 };

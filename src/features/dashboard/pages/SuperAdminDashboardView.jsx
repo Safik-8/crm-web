@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import {
   Building2, GitBranch, Users, Layers, Target, Handshake,
-  TrendingUp, UserCheck, BarChart3, RefreshCw,
+  TrendingUp, UserCheck, BarChart3, RefreshCw, ArrowUpRight,
 } from 'lucide-react';
 import KpiCard from '../components/KpiCard';
 import LeadAgingWidget from '../components/LeadAgingWidget';
@@ -30,14 +30,14 @@ const SuperAdminDashboardView = () => {
         'Monthly Revenue';
 
   const KPI_CARDS = [
-    { icon: Building2, title: 'Total Companies', value: metrics.totalCompanies, color: 'blue' },
-    { icon: GitBranch, title: 'Total Branches', value: metrics.totalBranches, color: 'purple' },
-    { icon: Users, title: 'Total Users', value: metrics.totalUsers, color: 'sky' },
-    { icon: Layers, title: 'Total Leads', value: metrics.totalLeads, color: 'orange' },
-    { icon: Target, title: 'Active Opportunities', value: metrics.activeOpportunities, color: 'emerald' },
-    { icon: Handshake, title: 'Deals Won', value: metrics.dealsWon, color: 'rose' },
-    { icon: TrendingUp, title: revenueTitle, value: metrics.monthlyRevenue, prefix: '₹', color: 'blue' },
-    { icon: UserCheck, title: 'Active Customers', value: metrics.activeCustomers, color: 'purple' },
+    { icon: Building2, title: 'Total Companies', value: metrics.totalCompanies, color: 'blue', onClick: () => navigate('/settings/organization') },
+    { icon: GitBranch, title: 'Total Branches', value: metrics.totalBranches, color: 'purple', onClick: () => navigate('/settings/branch') },
+    { icon: Users, title: 'Total Users', value: metrics.totalUsers, color: 'sky', onClick: () => navigate('/users') },
+    { icon: Layers, title: 'Total Leads', value: metrics.totalLeads, color: 'orange', onClick: () => navigate('/leads') },
+    { icon: Target, title: 'Active Opportunities', value: metrics.activeOpportunities, color: 'emerald', onClick: () => navigate('/opportunities') },
+    { icon: Handshake, title: 'Deals Won', value: metrics.dealsWon, color: 'rose', onClick: () => navigate('/deals?outcome=WON') },
+    { icon: TrendingUp, title: revenueTitle, value: metrics.monthlyRevenue, prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
+    { icon: UserCheck, title: 'Active Customers', value: metrics.activeCustomers, color: 'purple', onClick: () => navigate('/customers') },
   ];
 
   const dummyBranches = [
@@ -109,12 +109,24 @@ const SuperAdminDashboardView = () => {
       </div>
 
       {/* Conversion Rate Card */}
-      <div className="bg-white border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/reports/sales-performance')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate('/reports/sales-performance');
+          }
+        }}
+        className="bg-white border border-slate-200 shadow-sm p-5 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group"
+      >
         <div>
           <p className="text-3xl font-extrabold text-blue-600">{metrics.conversionRate ?? 0}%</p>
-          <p className="text-sm font-semibold text-slate-600">Overall Conversion Rate</p>
+          <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Overall Conversion Rate</p>
           <p className="text-xs text-slate-400">Deals Won ÷ Total Leads × 100</p>
         </div>
+        <ArrowUpRight size={20} className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
       </div>
 
       {/* Charts Row */}

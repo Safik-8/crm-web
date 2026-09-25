@@ -1,4 +1,5 @@
 // crm-web/src/features/dashboard/pages/IseDashboardView.jsx
+import { useState } from 'react';
 import {
   Layers, Phone, CheckCircle, Calendar,
   Clock, TrendingUp, LayoutDashboard
@@ -6,6 +7,7 @@ import {
 import KpiCard from '../components/KpiCard';
 import TargetProgressBar from '../components/TargetProgressBar';
 import ReminderWidget from '../components/ReminderWidget';
+import FollowupsDrawer from '../components/FollowupsDrawer';
 import QuickActionsBar from '../components/QuickActionsBar';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import { useDashboardMetrics, useKpiTargets, useCallQueue } from '../hooks/useRoleDashboard';
@@ -15,29 +17,41 @@ import { useNavigate } from 'react-router-dom';
 const IseDashboardView = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
+  const [followupFilter, setFollowupFilter]         = useState('today');
   const params = { rankingPeriod: 'MONTHLY', companyId: user?.companyId };
 
   const { data: metrics = {}, isLoading } = useDashboardMetrics(params);
   const { data: kpis = [], isLoading: kl } = useKpiTargets(params);
   const { data: callQueue = [], isLoading: ql } = useCallQueue(params);
 
+  const scrollToCallQueue = () => {
+    const el = document.getElementById('call-queue-widget');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      navigate('/leads');
+    }
+  };
+
   const KPI_CARDS = [
-    { icon: Layers, title: 'Assigned Leads', value: metrics.assignedLeads, color: 'blue' },
+    { icon: Layers, title: 'Assigned Leads', value: metrics.assignedLeads, color: 'blue', onClick: () => navigate('/leads') },
     {
       icon: Phone,
       title: 'Calls Today',
       value: metrics.callsCompletedToday,
       color: 'emerald',
+      onClick: scrollToCallQueue,
       badges: [
         { label: '❄️ Cold', value: metrics.coldCallsToday || 0, color: 'sky' },
         { label: '🔄 Follow-up', value: metrics.followupCallsToday || 0, color: 'indigo' },
         { label: '✕ Missed', value: metrics.notReceivedCallsToday || 0, color: 'rose' },
       ],
     },
-    { icon: Clock, title: "Today's Follow-ups", value: metrics.followupsToday, color: 'sky' },
-    { icon: CheckCircle, title: 'Qualified Leads', value: metrics.qualifiedLeads, color: 'orange' },
-    { icon: Calendar, title: 'Pending Follow-ups', value: metrics.pendingFollowups, color: 'purple' },
-    { icon: TrendingUp, title: 'Revenue', value: metrics.revenue, prefix: '₹', color: 'rose' },
+    { icon: Clock, title: "Today's Follow-ups", value: metrics.followupsToday, color: 'sky', onClick: () => { setFollowupFilter('today'); setFollowupDrawerOpen(true); } },
+    { icon: CheckCircle, title: 'Qualified Leads', value: metrics.qualifiedLeads, color: 'orange', onClick: () => navigate('/leads?isQualified=true') },
+    { icon: Calendar, title: 'Pending Follow-ups', value: metrics.pendingFollowups, color: 'purple', onClick: () => { setFollowupFilter('overdue'); setFollowupDrawerOpen(true); } },
+    { icon: TrendingUp, title: 'Revenue', value: metrics.revenue, prefix: '₹', color: 'rose', onClick: () => navigate('/my-performance') },
   ];
 
   return (
@@ -55,7 +69,7 @@ const IseDashboardView = () => {
 
       {/* Call Queue */}
       {callQueue.length > 0 && (
-        <div className="bg-white border border-slate-200 shadow-sm p-5">
+        <div id="call-queue-widget" className="bg-white border border-slate-200 shadow-sm p-5 transition-all">
           <div className="flex items-center gap-2 mb-4">
             <Phone size={15} className="text-emerald-500" />
             <h3 className="text-sm font-bold text-slate-700">Call Queue</h3>
@@ -93,6 +107,13 @@ const IseDashboardView = () => {
       )}
 
       <ReminderWidget />
+
+      {/* Follow-up Drawer triggered by Follow-up KPI cards */}
+      <FollowupsDrawer
+        isOpen={followupDrawerOpen}
+        onClose={() => setFollowupDrawerOpen(false)}
+        initialFilter={followupFilter}
+      />
     </div>
   );
 };
