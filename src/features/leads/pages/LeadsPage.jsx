@@ -239,9 +239,18 @@ export const LeadsPage = () => {
       priority: '',
       assignedToId: '',
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      isQualified: searchParams.get('isQualified') || ''
     }
   });
+
+  // Sync isQualified from URL query params
+  useEffect(() => {
+    const qualParam = searchParams.get('isQualified');
+    if (qualParam !== null && qualParam !== undefined) {
+      handleFilterChange('isQualified', qualParam);
+    }
+  }, [searchParams]);
 
   // Local temporary filter states (does not trigger backend query until Apply is clicked)
   const [tempFilters, setTempFilters] = useState({
@@ -254,7 +263,8 @@ export const LeadsPage = () => {
     priority: '',
     assignedToId: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    isQualified: searchParams.get('isQualified') || ''
   });
 
   // Sync tempFilters with current filters when Drawer opens
