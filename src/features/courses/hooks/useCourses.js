@@ -54,11 +54,11 @@ export const useCreateCourseMutation = () => {
     mutationFn: courseService.createCourse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
-      toast.success('Course created successfully');
+      toast.success('Service created successfully');
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
-        const msg = error?.message || 'Failed to create course';
+        const msg = error?.message || 'Failed to create service';
         toast.error(msg);
       }
     }
@@ -72,11 +72,11 @@ export const useUpdateCourseMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.id) });
-      toast.success('Course details updated successfully');
+      toast.success('Service details updated successfully');
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
-        const msg = error?.message || 'Failed to update course details';
+        const msg = error?.message || 'Failed to update service details';
         toast.error(msg);
       }
     }
@@ -90,7 +90,7 @@ export const useToggleCourseStatusMutation = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.id) });
-      toast.success(`Course successfully ${variables.nextStatus === 'ACTIVE' ? 'activated' : 'deactivated'}`);
+      toast.success(`Service successfully ${variables.nextStatus === 'ACTIVE' ? 'activated' : 'deactivated'}`);
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
@@ -107,11 +107,11 @@ export const useDeleteCourseMutation = () => {
     mutationFn: courseService.deleteCourse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
-      toast.success('Course deleted successfully');
+      toast.success('Service deleted successfully');
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
-        const msg = error?.message || 'Failed to delete course';
+        const msg = error?.message || 'Failed to delete service';
         toast.error(msg);
       }
     }
