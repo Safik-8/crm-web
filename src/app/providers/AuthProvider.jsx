@@ -160,21 +160,30 @@ export const AuthProvider = ({ children }) => {
         return isBdeOrLeader;
       }
 
-      let actionKey = action;
-      if (!actionKey) {
-        if (moduleOrPermissionStr === 'create:kpi' || moduleOrPermissionStr === 'create:kpi:target') actionKey = 'canCreate';
-        else if (moduleOrPermissionStr === 'view:kpi_own') actionKey = 'canViewOwn';
-        else if (moduleOrPermissionStr === 'view:kpi_analytics') actionKey = 'canViewAll';
-        else if (moduleOrPermissionStr === 'manage:kpi') actionKey = 'canCreate';
-        else actionKey = 'canView';
+      if (moduleOrPermissionStr === 'view:kpi_own') {
+        return Boolean(user.permissions?.KPI?.canView ?? true);
+      }
+      if (moduleOrPermissionStr === 'view:kpi_analytics') {
+        return isBdeOrLeader;
+      }
+      if (
+        moduleOrPermissionStr === 'create:kpi' ||
+        moduleOrPermissionStr === 'create:kpi:target' ||
+        moduleOrPermissionStr === 'manage:kpi'
+      ) {
+        const dbPerm = user.permissions?.KPI?.canCreate;
+        if (dbPerm !== undefined) return Boolean(dbPerm);
+        return isManagerOrAdmin;
       }
 
-      const dbValue = user.permissions?.KPI?.[actionKey] ?? user.permissions?.KPI?.[actionKey === 'canViewOwn' || actionKey === 'canViewAll' ? 'canView' : actionKey];
+      const standardAction = action || 'canView';
+      const dbValue = user.permissions?.KPI?.[standardAction];
       if (dbValue !== undefined) return Boolean(dbValue);
 
-      if (actionKey === 'canCreate' || actionKey === 'canEdit') return isManagerOrAdmin;
-      if (actionKey === 'canViewAll') return isBdeOrLeader;
-      return true; // canViewOwn / canView is true for all authenticated users
+      if (standardAction === 'canCreate' || standardAction === 'canEdit' || standardAction === 'canDelete') {
+        return isManagerOrAdmin;
+      }
+      return true;
     }
 
     // Special logic for Notifications: every user and role can see their own notifications

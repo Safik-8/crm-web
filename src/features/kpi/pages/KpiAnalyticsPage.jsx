@@ -21,6 +21,7 @@ export default function KpiAnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKpiType, setSelectedKpiType] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [selectedScope, setSelectedScope] = useState('ALL'); // 'ALL' | 'TEAM' | 'INDIVIDUAL'
   const [selectedTeamId, setSelectedTeamId] = useState('ALL');
   const [selectedBranchId, setSelectedBranchId] = useState('ALL');
   const [selectedCompanyId, setSelectedCompanyId] = useState('ALL');
@@ -41,6 +42,7 @@ export default function KpiAnalyticsPage() {
     search: searchQuery,
     kpiType: selectedKpiType,
     statusColor: selectedStatus,
+    scopeType: (activeTab === 'branch' || activeTab === 'company') ? selectedScope : undefined,
     teamId: selectedTeamId,
     branchId: selectedBranchId,
     companyId: selectedCompanyId,
@@ -70,6 +72,12 @@ export default function KpiAnalyticsPage() {
     { value: 'GREEN', label: 'Completed' },
     { value: 'YELLOW', label: 'In Progress' },
     { value: 'RED', label: 'Below Target' },
+  ];
+
+  const scopeOptions = [
+    { value: 'ALL', label: 'All Target Scopes' },
+    { value: 'TEAM', label: 'Team Targets Only' },
+    { value: 'INDIVIDUAL', label: 'Individual Targets Only' },
   ];
 
   const teamSelectOptions = [
@@ -175,6 +183,18 @@ export default function KpiAnalyticsPage() {
               searchable={false}
             />
           </div>
+
+          {/* Target Scope Filter: Visible on Branch & Company Tabs to eliminate double-counting */}
+          {(activeTab === 'branch' || activeTab === 'company') && (
+            <div className="w-full sm:w-44">
+              <SelectField
+                value={selectedScope}
+                onChange={(val) => setSelectedScope(val)}
+                options={scopeOptions}
+                searchable={false}
+              />
+            </div>
+          )}
 
           {/* Team Dropdown: Visible on Team Tab when there are multiple teams */}
           {activeTab === 'team' && (isTeamLeader || isBranchManager || isCompanyAdmin || isSuperAdmin) && filterOptions.teamOptions?.length > 1 && (

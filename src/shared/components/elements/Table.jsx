@@ -49,7 +49,7 @@ const Table = ({
 
             const isAction = isActionColumn(col);
             const stickyClass = isAction
-              ? 'sticky right-0 z-10 bg-white border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+              ? 'sticky right-0 z-10 bg-white'
               : '';
 
             return (
@@ -156,7 +156,7 @@ const Table = ({
 
                 const isAction = isActionColumn(col);
                 const stickyClass = isAction
-                  ? 'sticky right-0 z-20 bg-[#F8FAFC] border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+                  ? 'sticky right-0 z-20 bg-[#F8FAFC]'
                   : '';
 
                 return (
@@ -200,7 +200,7 @@ const Table = ({
 
                   const isAction = isActionColumn(col);
                   const stickyClass = isAction
-                    ? 'sticky right-0 z-10 bg-white group-hover:bg-[#F8FAFC] transition-colors border-l border-slate-200/60 shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.06)]'
+                    ? 'sticky right-0 z-10 bg-white group-hover:bg-[#F8FAFC] transition-colors'
                     : '';
 
                   const cellValue = col.accessorKey ? row[col.accessorKey] : undefined;

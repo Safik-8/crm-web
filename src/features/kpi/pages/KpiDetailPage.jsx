@@ -30,7 +30,7 @@ export default function KpiDetailPage() {
   const isBranchManager = isBranchLevel;
 
   const { data: detailResponse, isLoading, isError, error, refetch } = useKpiDetail(id, {
-    enabled: Boolean(id) && !isIse,
+    enabled: Boolean(id),
   });
 
   const target = detailResponse?.data || detailResponse || {};
@@ -57,13 +57,13 @@ export default function KpiDetailPage() {
     }
   };
 
-  if (isIse) {
+  if (isIse && target?.id && target.employeeId !== user?.id) {
     return (
       <div className="bg-rose-50 border border-rose-200 text-rose-800 p-8 rounded-none text-center max-w-lg mx-auto my-12 space-y-3">
         <AlertCircle size={36} className="mx-auto text-rose-600" />
         <h3 className="text-lg font-bold">Access Restricted</h3>
         <p className="text-xs text-rose-600">
-          ISE role users are restricted from inspecting detailed target breakdowns.
+          ISE role users are restricted from inspecting detailed target breakdowns of other employees or teams.
         </p>
         <Link to="/my-performance" className="inline-block pt-2 text-xs font-bold text-rose-700 underline">
           Back to My Performance
@@ -107,8 +107,8 @@ export default function KpiDetailPage() {
         <p className="text-xs text-rose-600">
           {error?.response?.data?.message || error?.message || 'You do not have permission to inspect this KPI target.'}
         </p>
-        <Link to="/kpi-analytics" className="inline-block pt-2 text-xs font-bold text-rose-700 underline">
-          Back to KPI Analytics
+        <Link to={isIse ? "/my-performance" : "/kpi-analytics"} className="inline-block pt-2 text-xs font-bold text-rose-700 underline">
+          Back to {isIse ? 'My Performance' : 'KPI Analytics'}
         </Link>
       </div>
     );

@@ -185,7 +185,7 @@ export const LeadEditModal = ({
       errs.sourceId = 'Lead source is required';
     }
 
-    if (!values.courseId) {
+    if (!values.courseId && coursesOptions.length > 0) {
       errs.courseId = 'Interested service is required';
     }
 
