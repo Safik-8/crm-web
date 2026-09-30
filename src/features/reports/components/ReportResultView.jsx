@@ -16,7 +16,7 @@ import { SYSTEM_REPORTS_METADATA } from '../constants/reportConstants';
 import { apiClient } from '../../../lib/api/api';
 import { useExport } from '../../../shared/hooks/useExport';
 
-const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, error, toast }) => {
+const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, tableLoading = false, error, toast }) => {
   const { user } = useAuth();
   const { exportPDFFromData } = useExport();
   const reportPerms = user?.permissions?.REPORT || {};
@@ -772,20 +772,21 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
           <Table
             columns={columns}
             data={items}
-            loadingState="success"
+            loadingState={tableLoading ? 'loading' : 'success'}
             className="rounded-none"
           />
 
-          {pagination.pages > 1 && (
+          {(pagination.pages > 1 || pagination.totalPages > 1) && (
             <div className="flex justify-end bg-white border border-slate-200 rounded-none p-4 shadow-2xs">
               <Pagination
                 pagination={{
-                  page: pagination.page,
-                  totalPages: pagination.pages,
-                  total: pagination.total,
-                  limit: pagination.limit
+                  page: pagination.page || 1,
+                  totalPages: pagination.pages || pagination.totalPages || 1,
+                  total: pagination.total || 0,
+                  limit: pagination.limit || 10
                 }}
                 onPageChange={onPageChange}
+                isLoading={tableLoading}
               />
             </div>
           )}
