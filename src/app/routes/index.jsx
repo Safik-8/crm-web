@@ -361,7 +361,7 @@ export const router = createBrowserRouter([
       {
         path: 'settings/qualification',
         element: (
-          <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_SETTINGS}>
+          <ProtectedRoute requiredPermission="view:qualification">
             <QualificationCriteriaSettingsPage />
           </ProtectedRoute>
         ),

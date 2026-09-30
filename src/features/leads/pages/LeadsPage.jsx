@@ -239,9 +239,18 @@ export const LeadsPage = () => {
       priority: '',
       assignedToId: '',
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      isQualified: searchParams.get('isQualified') || ''
     }
   });
+
+  // Sync isQualified from URL query params
+  useEffect(() => {
+    const qualParam = searchParams.get('isQualified');
+    if (qualParam !== null && qualParam !== undefined) {
+      handleFilterChange('isQualified', qualParam);
+    }
+  }, [searchParams]);
 
   // Local temporary filter states (does not trigger backend query until Apply is clicked)
   const [tempFilters, setTempFilters] = useState({
@@ -254,7 +263,8 @@ export const LeadsPage = () => {
     priority: '',
     assignedToId: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    isQualified: searchParams.get('isQualified') || ''
   });
 
   // Sync tempFilters with current filters when Drawer opens
@@ -553,6 +563,45 @@ export const LeadsPage = () => {
   // Table Columns
   const columns = [
     {
+      header: (() => {
+        const unassignedLeads = leads.filter(l => !l.assignedToId && !l.teamId);
+        const isAllSelected = unassignedLeads.length > 0 && unassignedLeads.every(l => selectedLeadIds.includes(l.id));
+        const isSomeSelected = selectedLeadIds.length > 0 && !isAllSelected;
+        return (
+          <Checkbox
+            checked={isAllSelected}
+            indeterminate={isSomeSelected}
+            onChange={(checked) => {
+              if (checked) {
+                setSelectedLeadIds(unassignedLeads.map(l => l.id));
+              } else {
+                setSelectedLeadIds([]);
+              }
+            }}
+            sx={{ p: 0.5, width: 'auto' }}
+          />
+        );
+      })(),
+      cell: (row) => {
+        const isAssigned = !!row.assignedToId || !!row.teamId;
+        return (
+          <Checkbox
+            id={`lead-select-${row.id}`}
+            checked={selectedLeadIds.includes(row.id)}
+            disabled={isAssigned}
+            onChange={(checked) => {
+              if (checked) {
+                setSelectedLeadIds(prev => [...prev, row.id]);
+              } else {
+                setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
+              }
+            }}
+            sx={{ p: 0.5, width: 'auto' }}
+          />
+        );
+      }
+    },
+    {
       header: '#',
       cell: (row, i) => (
         <span className="text-[11px] text-slate-400 font-semibold font-mono">
@@ -702,45 +751,6 @@ export const LeadsPage = () => {
           {formatDate(row.createdAt)}
         </span>
       )
-    },
-    {
-      header: (() => {
-        const unassignedLeads = leads.filter(l => !l.assignedToId && !l.teamId);
-        const isAllSelected = unassignedLeads.length > 0 && unassignedLeads.every(l => selectedLeadIds.includes(l.id));
-        const isSomeSelected = selectedLeadIds.length > 0 && !isAllSelected;
-        return (
-          <Checkbox
-            checked={isAllSelected}
-            indeterminate={isSomeSelected}
-            onChange={(checked) => {
-              if (checked) {
-                setSelectedLeadIds(unassignedLeads.map(l => l.id));
-              } else {
-                setSelectedLeadIds([]);
-              }
-            }}
-            sx={{ p: 0.5, width: 'auto' }}
-          />
-        );
-      })(),
-      cell: (row) => {
-        const isAssigned = !!row.assignedToId || !!row.teamId;
-        return (
-          <Checkbox
-            id={`lead-select-${row.id}`}
-            checked={selectedLeadIds.includes(row.id)}
-            disabled={isAssigned}
-            onChange={(checked) => {
-              if (checked) {
-                setSelectedLeadIds(prev => [...prev, row.id]);
-              } else {
-                setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
-              }
-            }}
-            sx={{ p: 0.5, width: 'auto' }}
-          />
-        );
-      }
     },
     {
       header: 'Actions',

@@ -158,8 +158,8 @@ const TeamFormModal = ({
       return false;
     }
 
-    // Allow ISE or Custom Roles with rank <= 40
-    return roleName === 'ISE' || (roleRank <= 40 && roleRank >= 0);
+    // Allow ISE or Custom Roles with rank <= 20
+    return roleName === 'ISE' || (roleRank <= 20 && roleRank >= 0);
   };
 
   const getRoleBadgeLabel = (u) => {
