@@ -27,6 +27,7 @@ import {
   Send,
   Target,
   GitBranch,
+  Lock,
 } from 'lucide-react';
 import QualifyOpportunityModal from '../components/QualifyOpportunityModal';
 import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
@@ -67,11 +68,24 @@ export const OpportunityDetailPage = () => {
   const opportunityId = Number(id);
   const rank = user?.primaryRoleRank ?? 0;
 
-  const canEditOpp = hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit');
-
   const { data: opportunity, isLoading, isError } = useOpportunityDetailQuery(opportunityId);
   const updateMutation = useUpdateOpportunityMutation();
   const closeMutation = useCloseOpportunityMutation();
+
+  const canManageOpp = React.useMemo(() => {
+    if (!user || !opportunity) return false;
+    const userRank = Number(user.primaryRoleRank || 0);
+    const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || userRank >= 100;
+    if (isSuperAdmin) return true;
+    const isCompanyAdmin = user.primaryRole === 'COMPANY_ADMIN' || userRank >= 61;
+    if (isCompanyAdmin) return true;
+    const isBranchManager = (user.primaryRole === 'BRANCH_MANAGER' || (userRank >= 41 && userRank <= 60)) &&
+      Number(user.branchId) === Number(opportunity.branchId);
+    if (isBranchManager) return true;
+    return Number(opportunity.ownerId) === Number(user.id);
+  }, [user, opportunity]);
+
+  const canEditOpp = canManageOpp && (hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit') || user?.primaryRole === 'SUPER_ADMIN');
 
   const { data: stagesRaw } = useOpportunityStagesQuery({
     companyId: opportunity?.companyId,
@@ -541,6 +555,12 @@ export const OpportunityDetailPage = () => {
                   </button>
                 </>
               )}
+              {opportunity.status === 'OPEN' && !canEditOpp && (
+                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Managed by {opportunity.owner?.name || 'Assigned Closer'}</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -574,15 +594,18 @@ export const OpportunityDetailPage = () => {
                 <button
                   key={st.id}
                   type="button"
-                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending}
+                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending || !canManageOpp}
                   onClick={() => handleStageClick(st)}
-                  className={`p-3.5 rounded-md border text-left transition-all text-xs cursor-pointer relative flex flex-col justify-between ${updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
-                    } ${isActive
+                  title={!canManageOpp ? `Assigned to ${opportunity.owner?.name || 'Manager'}. Only the assigned owner or manager can move this opportunity.` : `Move to ${st.name}`}
+                  className={`p-3.5 rounded-md border text-left transition-all text-xs relative flex flex-col justify-between ${
+                    updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
+                  } ${!canManageOpp ? 'cursor-default opacity-85' : 'cursor-pointer'} ${
+                    isActive
                       ? 'bg-orange-600 text-white border-orange-600 shadow-sm ring-2 ring-orange-200'
                       : isPast
                         ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-xs truncate">{st.name}</span>

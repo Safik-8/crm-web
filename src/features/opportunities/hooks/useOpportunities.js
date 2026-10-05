@@ -273,6 +273,7 @@ export const useMoveOpportunityStageMutation = () => {
       toast.success(res?.message || 'Opportunity stage updated successfully');
     },
     onError: (error) => {
+      if (error?.statusCode === 403 || error?.status === 403 || error?.code === 'FORBIDDEN') return;
       toast.error(error?.message || 'Failed to move opportunity stage');
     },
   });

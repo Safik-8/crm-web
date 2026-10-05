@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useOpportunityDetailQuery } from '../hooks/useOpportunities';
 import { useFormatters } from '../../../shared/hooks/useFormatters';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import QualifyOpportunityModal from './QualifyOpportunityModal';
 import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
 import { formatExternalUrl } from '../../../shared/utils/formatters';
@@ -67,9 +68,23 @@ export const OpportunityDetailDrawer = ({
   onLeadClick,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { formatCurrency, formatDate } = useFormatters();
   const { data: opportunity, isLoading } = useOpportunityDetailQuery(opportunityId);
   const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
+
+  const canManage = React.useMemo(() => {
+    if (!user || !opportunity) return false;
+    const rank = Number(user.primaryRoleRank || 0);
+    const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;
+    if (isSuperAdmin) return true;
+    const isCompanyAdmin = user.primaryRole === 'COMPANY_ADMIN' || rank >= 61;
+    if (isCompanyAdmin) return true;
+    const isBranchManager = (user.primaryRole === 'BRANCH_MANAGER' || (rank >= 41 && rank <= 60)) &&
+      Number(user.branchId) === Number(opportunity.branchId);
+    if (isBranchManager) return true;
+    return Number(opportunity.ownerId) === Number(user.id);
+  }, [user, opportunity]);
 
   if (!isOpen) return null;
 
@@ -157,7 +172,7 @@ export const OpportunityDetailDrawer = ({
                 <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
               </button>
 
-              {opportunity.status === 'OPEN' && (
+              {opportunity.status === 'OPEN' && canManage && (
                 <>
                   <button
                     type="button"
@@ -176,6 +191,11 @@ export const OpportunityDetailDrawer = ({
                     Close Deal
                   </button>
                 </>
+              )}
+              {opportunity.status === 'OPEN' && !canManage && (
+                <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                  Read-Only (Assigned to {opportunity.owner?.name?.split(' ')[0] || 'Manager'})
+                </span>
               )}
             </div>
           </div>
