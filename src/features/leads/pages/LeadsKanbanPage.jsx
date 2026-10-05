@@ -612,10 +612,37 @@ const LeadsKanbanPage = () => {
 
   const handleLeadCreated = (lead) => {
     setShowForm(false);
-    if (!lead) { refetch(); return; }
-    const prospectStage = orderedStages.find((s) => s.isDefault);
-    if (prospectStage) addLeadToColumn(prospectStage.id, lead);
-    else refetch();
+    if (!lead) {
+      refetch();
+      return;
+    }
+
+    const currentPipelineId = Number(pipelineId);
+    const leadPipelineId = lead.pipelineId ? Number(lead.pipelineId) : null;
+
+    // Only inject into the local board if the lead belongs to this active pipeline
+    if (leadPipelineId && leadPipelineId === currentPipelineId) {
+      const targetStageId = lead.stageId
+        ? Number(lead.stageId)
+        : (orderedStages.find((s) => s.isDefault)?.id || orderedStages[0]?.id);
+
+      if (targetStageId && columns[targetStageId]) {
+        addLeadToColumn(targetStageId, {
+          ...lead,
+          pipelineId: currentPipelineId,
+          stageId: targetStageId,
+        });
+      }
+      refetch();
+    } else {
+      // Lead was created without a pipeline or assigned to another pipeline
+      if (leadPipelineId) {
+        toast.info('Lead created in its assigned pipeline.');
+      } else {
+        toast.info('Lead created without a pipeline assignment (available in Leads list).');
+      }
+      refetch();
+    }
   };
 
   useEffect(() => {

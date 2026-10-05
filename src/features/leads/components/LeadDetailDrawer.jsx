@@ -5,7 +5,7 @@ import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
   MapPin, Award, ShieldAlert, History, MessageSquare,
-  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target, ExternalLink
+  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target, ExternalLink, Hash
 } from 'lucide-react';
 import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
 import { formatExternalUrl } from '../../../shared/utils/formatters';
@@ -154,6 +154,8 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
 
   const locationStr = [lead.city, lead.state, lead.country].filter(Boolean).join(', ') || '—';
 
+  const displayLeadNumber = lead.leadNumber || lead.lead_number || (lead.id ? `LEAD-${lead.id}` : null);
+
   const contactDetails = [
     { icon: Phone, label: 'Mobile', value: lead.mobile || '—' },
     { icon: Phone, label: 'Alt Contact', value: lead.alternateMobile || '—' },
@@ -203,9 +205,19 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
               >
                 <ArrowLeft size={20} />
               </button>
-              <h2 className="text-xl font-medium text-slate-900 tracking-tight">
-                {lead.name}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-medium text-slate-900 tracking-tight">
+                  {lead.name}
+                </h2>
+                {displayLeadNumber && (
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono bg-slate-100 border border-slate-200 text-slate-700 select-all"
+                    title={`Lead ID: ${displayLeadNumber}`}
+                  >
+                    {displayLeadNumber}
+                  </span>
+                )}
+              </div>
               {/* Stage Pill */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-200/60 text-orange-600 rounded-full text-xs font-medium">
                 <Tag size={13} />

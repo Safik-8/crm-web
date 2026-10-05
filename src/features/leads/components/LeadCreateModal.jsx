@@ -181,7 +181,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       errs.sourceId = 'Lead source is required';
     }
 
-    if (!values.courseId) {
+    if (!values.courseId && coursesOptions.length > 0) {
       errs.courseId = 'Interested service is required';
     }
 

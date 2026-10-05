@@ -24,7 +24,15 @@ const MyTeamRouteGuard = ({ children }) => {
     );
   }
 
-  // 3. Render MyTeam page (MyTeamPage handles displaying team data or the unassigned empty state)
+  // 3. Team membership check: Only active team members or leaders can access My Team
+  if (!activeTeam?.id || isError) {
+    const canManageTeams = hasPermission('TEAM', 'canCreate') || hasPermission('TEAM', 'canEdit');
+    if (canManageTeams) {
+      return <Navigate to="/teams" replace />;
+    }
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   return children;
 };
 

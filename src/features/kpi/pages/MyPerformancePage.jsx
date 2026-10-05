@@ -196,7 +196,7 @@ export default function MyPerformancePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {targets.map((target) => (
-              <KpiCard key={target.id} target={target} canDrill={!isIse} />
+              <KpiCard key={target.id} target={target} canDrill={true} />
             ))}
           </div>
         )}

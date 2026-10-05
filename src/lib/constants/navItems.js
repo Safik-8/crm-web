@@ -79,7 +79,7 @@ export const navGroups = [
 
 export const navItems = navGroups.flatMap(group => group.items);
 
-export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) => {
+export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = false) => {
   if (!user) return [];
 
   let items = [...navItems];
@@ -105,7 +105,7 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
   });
 };
 
-export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) => {
+export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = false) => {
   if (!user) return [];
 
   const userRole = (user?.primaryRole || user?.role || user?.userRoles?.[0]?.role?.name || '').toUpperCase();

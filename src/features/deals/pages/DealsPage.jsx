@@ -1,5 +1,6 @@
 // src/features/deals/pages/DealsPage.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Handshake, Search, Filter, RefreshCcw, IndianRupee,
   TrendingUp, TrendingDown, XCircle, Eye, X, Calendar,
@@ -253,9 +254,10 @@ const DealsPage = () => {
   const canSeeAll      = isCompanyWide;
 
   // ── filter state ──────────────────────────────────────────────────────────
+  const [searchParams] = useSearchParams();
   const [search,      setSearch]      = useState('');
   const [debouncedQ,  setDebouncedQ]  = useState('');
-  const [outcome,     setOutcome]     = useState('');
+  const [outcome,     setOutcome]     = useState(() => searchParams.get('outcome') || '');
   const [dateFrom,    setDateFrom]    = useState('');
   const [dateTo,      setDateTo]      = useState('');
   const [dateRangePreset, setDateRangePreset] = useState('');
@@ -276,6 +278,13 @@ const DealsPage = () => {
     debounceRef.current = setTimeout(() => { setDebouncedQ(search); setPage(1); }, 400);
     return () => clearTimeout(debounceRef.current);
   }, [search]);
+
+  useEffect(() => {
+    const outcomeParam = searchParams.get('outcome');
+    if (outcomeParam !== null) {
+      setOutcome(outcomeParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => { forceHideLoader(); }, [forceHideLoader]);
   useEffect(() => { setBranchFilter(''); setOwnerFilter(''); }, [companyFilter]);
