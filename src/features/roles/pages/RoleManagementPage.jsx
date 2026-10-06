@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X, MoreVertical, Info, Sparkles, RotateCcw, ChevronDown } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, Power, AlertCircle, RefreshCcw, Check, X, MoreVertical, Info, Sparkles, RotateCcw, ChevronDown, Copy } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole, useToggleRoleStatus } from '../hooks/useRoles';
@@ -157,19 +157,19 @@ const MODULES_LIST = [
     uiLocation: "/customers",
     controls: "Converted client accounts, purchase history & directory"
   },
-  {
-    value: "DEAL",
-    label: "Deals",
-    group: "crm",
-    uiLocation: "/deals",
-    controls: "Closed-won transactions, payment tracking & contracts"
-  },
+  // {
+  //   value: "DEAL",
+  //   label: "Deals",
+  //   group: "crm",
+  //   uiLocation: "/deals",
+  //   controls: "Closed-won transactions, payment tracking & contracts"
+  // },
   {
     value: "COURSE",
-    label: "Courses",
+    label: "Services",
     group: "crm",
-    uiLocation: "/courses",
-    controls: "Product/course catalog, curriculums & pricing packages"
+    uiLocation: "/services",
+    controls: "Services catalog, service packages & pricing"
   },
   {
     value: "APPROVAL",
@@ -278,11 +278,11 @@ const HIERARCHY_DETAILS = {
 
 const RECOMMENDED_PERMISSIONS_MAP = {
   COMPANY_ADMIN_TO_BRANCH_MANAGER: {
-    SYSTEM_SETTINGS: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     COMPANY: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     BRANCH: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     USER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    TEAM: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    TEAM: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
@@ -295,13 +295,13 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     OPPORTUNITY_PIPELINE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     TARGET: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     KPI: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    REPORT: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    REPORT: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     REVENUE_REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
   },
@@ -309,27 +309,27 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     COMPANY: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     BRANCH: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    USER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    USER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     TEAM: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
-    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
-    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
-    ACTIVITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    TASK: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    ACTIVITY: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     QUALIFICATION: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     LEAD_ASSIGNMENT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
-    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
-    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
+    PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     TARGET: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     KPI: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    REPORT: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     REVENUE_REPORT: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
   },
@@ -337,21 +337,21 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     SYSTEM_SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     COMPANY: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     BRANCH: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    USER: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    USER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     TEAM: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     TASK: { canView: true, canCreate: true, canEdit: true, canDelete: true, canArchive: false },
     ACTIVITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    QUALIFICATION: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     LEAD_ASSIGNMENT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    CUSTOMER: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    CUSTOMER: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    // DEAL: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
@@ -366,34 +366,150 @@ const RECOMMENDED_PERMISSIONS_MAP = {
     COMPANY: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     BRANCH: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     USER: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    TEAM: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    LEAD: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
+    TEAM: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    LEAD: { canView: true, canCreate: false, canEdit: true, canDelete: false, canArchive: false },
     FOLLOWUP: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     TASK: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
     ACTIVITY: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
-    QUALIFICATION: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    QUALIFICATION: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
     LEAD_ASSIGNMENT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_SOURCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     LEAD_STATUS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    OPPORTUNITY_PIPELINE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    OPPORTUNITY: { canView: true, canCreate: true, canEdit: true, canDelete: false, canArchive: false },
-    CUSTOMER: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    DEAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY_PIPELINE: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    OPPORTUNITY: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    CUSTOMER: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
+    // DEAL: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     COURSE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    APPROVAL: { canView: true, canCreate: true, canEdit: false, canDelete: false, canArchive: false },
+    APPROVAL: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     DASHBOARD: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     TARGET: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     KPI: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     REPORT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
     REVENUE_REPORT: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false },
-    SALES_PERFORMANCE: { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
+    SALES_PERFORMANCE: { canView: true, canCreate: false, canEdit: false, canDelete: false, canArchive: false }
   }
 };
 
-const isModuleRecommended = (moduleValue, bracket) => {
-  const rec = RECOMMENDED_PERMISSIONS_MAP[bracket]?.[moduleValue];
-  return Boolean(rec && (rec.canView || rec.canCreate || rec.canEdit || rec.canDelete));
+/**
+ * Strict Capability & Module Visibility configuration per Role Rank Tier.
+ * Any module omitted from a tier will be completely hidden from the Custom Role matrix.
+ * Any action not included in a module's array will be rendered as a disabled dash (—).
+ */
+export const TIER_CAPABILITY_CONFIG = {
+  COMPANY_ADMIN_TO_BRANCH_MANAGER: {
+    COMPANY: ['canView', 'canEdit'],
+    BRANCH: ['canView', 'canCreate', 'canEdit'],
+    USER: ['canView', 'canCreate', 'canEdit'],
+    TEAM: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    LEAD: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    FOLLOWUP: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    TASK: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    ACTIVITY: ['canView', 'canCreate'],
+    QUALIFICATION: ['canView', 'canCreate', 'canEdit'],
+    LEAD_ASSIGNMENT: ['canView', 'canCreate', 'canEdit'],
+    LEAD_SOURCE: ['canView', 'canCreate', 'canEdit'],
+    LEAD_STATUS: ['canView', 'canCreate', 'canEdit'],
+    PIPELINE: ['canView', 'canCreate', 'canEdit'],
+    OPPORTUNITY_PIPELINE: ['canView', 'canCreate', 'canEdit'],
+    OPPORTUNITY: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    CUSTOMER: ['canView', 'canCreate', 'canEdit'],
+    DEAL: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    COURSE: ['canView', 'canCreate', 'canEdit'],
+    APPROVAL: ['canView', 'canCreate', 'canEdit'],
+    DASHBOARD: ['canView'],
+    TARGET: ['canView', 'canCreate', 'canEdit'],
+    KPI: ['canView', 'canCreate', 'canEdit'],
+    REPORT: ['canView', 'canCreate', 'canEdit'],
+    REVENUE_REPORT: ['canView'],
+    SALES_PERFORMANCE: ['canView']
+  },
+  BRANCH_MANAGER_TO_BDE: {
+    COMPANY: ['canView'],
+    BRANCH: ['canView'],
+    USER: ['canView', 'canCreate', 'canEdit'],
+    TEAM: ['canView', 'canCreate', 'canEdit'],
+    LEAD: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    FOLLOWUP: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    TASK: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    ACTIVITY: ['canView', 'canCreate'],
+    QUALIFICATION: ['canView', 'canEdit'],
+    LEAD_ASSIGNMENT: ['canView'],
+    LEAD_SOURCE: ['canView'],
+    LEAD_STATUS: ['canView'],
+    PIPELINE: ['canView'],
+    OPPORTUNITY_PIPELINE: ['canView'],
+    OPPORTUNITY: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    CUSTOMER: ['canView', 'canCreate', 'canEdit'],
+    DEAL: ['canView', 'canCreate', 'canEdit'],
+    COURSE: ['canView'],
+    APPROVAL: ['canView', 'canEdit'],
+    DASHBOARD: ['canView'],
+    TARGET: ['canView', 'canCreate', 'canEdit'],
+    KPI: ['canView'],
+    REPORT: ['canView'],
+    REVENUE_REPORT: ['canView'],
+    SALES_PERFORMANCE: ['canView']
+  },
+  BDE_TO_ISE: {
+    USER: ['canView'],
+    TEAM: ['canView'],
+    LEAD: ['canView', 'canCreate', 'canEdit'],
+    FOLLOWUP: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    TASK: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+    ACTIVITY: ['canView', 'canCreate', 'canEdit'],
+    QUALIFICATION: ['canView', 'canCreate', 'canEdit'],
+    LEAD_ASSIGNMENT: ['canView'],
+    LEAD_SOURCE: ['canView'],
+    LEAD_STATUS: ['canView'],
+    PIPELINE: ['canView', 'canEdit'],
+    OPPORTUNITY_PIPELINE: ['canView', 'canCreate', 'canEdit'],
+    OPPORTUNITY: ['canView', 'canCreate', 'canEdit'],
+    CUSTOMER: ['canView', 'canCreate', 'canEdit'],
+    DEAL: ['canView', 'canCreate', 'canEdit'],
+    COURSE: ['canView'],
+    APPROVAL: ['canView', 'canCreate'],
+    DASHBOARD: ['canView'],
+    TARGET: ['canView'],
+    KPI: ['canView'],
+    REPORT: ['canView', 'canCreate'],
+    SALES_PERFORMANCE: ['canView']
+  },
+  BELOW_ISE: {
+    TEAM: ['canView'],
+    LEAD: ['canView', 'canCreate', 'canEdit'],
+    FOLLOWUP: ['canView', 'canCreate', 'canEdit'],
+    TASK: ['canView', 'canCreate', 'canEdit'],
+    ACTIVITY: ['canView', 'canCreate', 'canEdit'],
+    QUALIFICATION: ['canView', 'canCreate', 'canEdit'],
+    LEAD_SOURCE: ['canView'],
+    LEAD_STATUS: ['canView'],
+    PIPELINE: ['canView'],
+    OPPORTUNITY_PIPELINE: ['canView'],
+    OPPORTUNITY: ['canView', 'canCreate', 'canEdit'],
+    CUSTOMER: ['canView'],
+    DEAL: ['canView', 'canCreate'],
+    COURSE: ['canView'],
+    APPROVAL: ['canView', 'canCreate'],
+    DASHBOARD: ['canView'],
+    TARGET: ['canView'],
+    KPI: ['canView'],
+    REPORT: ['canView', 'canCreate'],
+    SALES_PERFORMANCE: ['canView']
+  }
+};
+
+export const isModuleAllowedInBracket = (moduleValue, bracket, isSystemRole = false) => {
+  if (isSystemRole) return true;
+  const config = TIER_CAPABILITY_CONFIG[bracket];
+  return Boolean(config && config[moduleValue]);
+};
+
+export const isActionAllowedInBracket = (moduleValue, actionKey, bracket, isSystemRole = false) => {
+  if (isSystemRole) return true;
+  const config = TIER_CAPABILITY_CONFIG[bracket];
+  if (!config || !config[moduleValue]) return false;
+  return config[moduleValue].includes(actionKey);
 };
 
 const RoleManagementPage = () => {
@@ -407,7 +523,20 @@ const RoleManagementPage = () => {
   // Company filter — Super Admin only
   const [companyFilter, setCompanyFilter] = useState('');
 
-  const { roles, pagination, loadingState, refetch, search, handleSearchChange, setPage } = useRoles(companyFilter);
+  const {
+    roles,
+    pagination,
+    loadingState,
+    refetch,
+    search,
+    roleType,
+    handleSearchChange,
+    handleRoleTypeChange,
+    setPage
+  } = useRoles(
+    companyFilter,
+    { enabled: isSuperAdmin ? Boolean(companyFilter) : true }
+  );
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
@@ -431,6 +560,7 @@ const RoleManagementPage = () => {
   const [formHierarchyBracket, setFormHierarchyBracket] = useState('COMPANY_ADMIN_TO_BRANCH_MANAGER');
   const [formPermissions, setFormPermissions] = useState({});
   const [collapsedModuleGroups, setCollapsedModuleGroups] = useState({ settings: true, reports: true });
+  const [cloneMenuAnchor, setCloneMenuAnchor] = useState(null);
 
   // Query Companies for Super Admin dropdown selection
   const { data: companiesData } = useQuery({
@@ -439,6 +569,14 @@ const RoleManagementPage = () => {
     enabled: isSuperAdmin
   });
   const companiesList = Array.isArray(companiesData?.data) ? companiesData.data : [];
+
+  // Query all roles for cloning blueprints (fetching up to 100 roles)
+  const { data: allRolesData } = useQuery({
+    queryKey: ['roles', 'clone-blueprints', companyFilter, user?.companyId],
+    queryFn: () => roleApi.getRoles({ limit: 100, companyId: companyFilter || (!isSuperAdmin ? (user?.companyId ? String(user.companyId) : '') : '') }),
+    enabled: isSuperAdmin ? Boolean(companyFilter) : true
+  });
+  const allRolesList = Array.isArray(allRolesData?.data?.roles) ? allRolesData.data.roles : roles;
 
   useEffect(() => {
     if (loadingState !== 'loading' && !didHideLoader.current) {
@@ -483,7 +621,7 @@ const RoleManagementPage = () => {
       } else {
         setFormName('');
         setFormDescription('');
-        setFormCompanyId('');
+        setFormCompanyId(companyFilter || '');
         setFormHierarchyBracket('COMPANY_ADMIN_TO_BRANCH_MANAGER');
         setFormPermissions({});
       }
@@ -531,8 +669,21 @@ const RoleManagementPage = () => {
     setIsStatusOpen(true);
   };
 
+  // Switch hierarchy bracket - uncheck all permissions when data access level changes
+  const handleBracketChange = (newBracket) => {
+    if (newBracket === formHierarchyBracket) return;
+    setFormHierarchyBracket(newBracket);
+    // Uncheck all permissions so nothing leaks from the previous tier or clone
+    setFormPermissions({});
+  };
+
   // Toggle permission checkbox in matrix with view dependencies
   const handlePermissionChange = (module, action, checked) => {
+    const isSystemRole = Boolean(selectedRole?.isSystem);
+    if (!isActionAllowedInBracket(module, action, formHierarchyBracket, isSystemRole)) {
+      return;
+    }
+
     setFormPermissions(prev => {
       const current = prev[module] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canArchive: false };
       let updatedModule = { ...current, [action]: checked };
@@ -547,8 +698,10 @@ const RoleManagementPage = () => {
           canArchive: false
         };
       } else if (action !== 'canView' && checked) {
-        // Checking Create, Edit, Delete, or Archive automatically checks View
-        updatedModule.canView = true;
+        // Checking Create, Edit, Delete, or Archive automatically checks View if View is allowed
+        if (isActionAllowedInBracket(module, 'canView', formHierarchyBracket, isSystemRole)) {
+          updatedModule.canView = true;
+        }
       }
 
       return {
@@ -560,16 +713,32 @@ const RoleManagementPage = () => {
 
   // Select all or deselect all permissions for a module
   const handleToggleRowPermissions = (module, selectAll) => {
-    setFormPermissions(prev => ({
-      ...prev,
-      [module]: {
-        canView: selectAll,
-        canCreate: selectAll,
-        canEdit: selectAll,
-        canDelete: selectAll,
-        canArchive: selectAll
+    const isSystemRole = Boolean(selectedRole?.isSystem);
+    setFormPermissions(prev => {
+      if (!selectAll) {
+        return {
+          ...prev,
+          [module]: {
+            canView: false,
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+            canArchive: false
+          }
+        };
       }
-    }));
+
+      return {
+        ...prev,
+        [module]: {
+          canView: isActionAllowedInBracket(module, 'canView', formHierarchyBracket, isSystemRole),
+          canCreate: isActionAllowedInBracket(module, 'canCreate', formHierarchyBracket, isSystemRole),
+          canEdit: isActionAllowedInBracket(module, 'canEdit', formHierarchyBracket, isSystemRole),
+          canDelete: isActionAllowedInBracket(module, 'canDelete', formHierarchyBracket, isSystemRole),
+          canArchive: false
+        }
+      };
+    });
   };
 
   // 1-Click Auto-Fill Recommended Permissions based on selected hierarchy bracket
@@ -577,21 +746,72 @@ const RoleManagementPage = () => {
     const template = RECOMMENDED_PERMISSIONS_MAP[formHierarchyBracket];
     if (!template) return;
 
+    const isSystemRole = Boolean(selectedRole?.isSystem);
     const newPerms = {};
     MODULES_LIST.forEach(mod => {
+      const isAllowedMod = isModuleAllowedInBracket(mod.value, formHierarchyBracket, isSystemRole);
+      if (!isAllowedMod) {
+        newPerms[mod.value] = {
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+          canArchive: false
+        };
+        return;
+      }
       const t = template[mod.value];
       newPerms[mod.value] = {
-        canView: Boolean(t?.canView),
-        canCreate: Boolean(t?.canCreate),
-        canEdit: Boolean(t?.canEdit),
-        canDelete: Boolean(t?.canDelete),
-        canArchive: Boolean(t?.canArchive)
+        canView: isActionAllowedInBracket(mod.value, 'canView', formHierarchyBracket, isSystemRole) && Boolean(t?.canView),
+        canCreate: isActionAllowedInBracket(mod.value, 'canCreate', formHierarchyBracket, isSystemRole) && Boolean(t?.canCreate),
+        canEdit: isActionAllowedInBracket(mod.value, 'canEdit', formHierarchyBracket, isSystemRole) && Boolean(t?.canEdit),
+        canDelete: isActionAllowedInBracket(mod.value, 'canDelete', formHierarchyBracket, isSystemRole) && Boolean(t?.canDelete),
+        canArchive: false
       };
     });
 
     setFormPermissions(newPerms);
     const bracketTitle = HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Selected Scope';
-    toast.success(`Applied recommended permissions for ${bracketTitle}`);
+    toast.success(`Auto-filled permissions for ${bracketTitle}`);
+  };
+
+  // 1-Click Clone Permissions from an existing role blueprint
+  const handleApplyClonedPermissionsFromRole = (sourceRole) => {
+    if (!sourceRole) return;
+    const isSystemRole = Boolean(selectedRole?.isSystem);
+    const newPerms = {};
+    const rawPerms = sourceRole.rolePermissions || sourceRole.permissions || [];
+    const sourcePermMap = {};
+
+    rawPerms.forEach(p => {
+      sourcePermMap[p.module] = p;
+    });
+
+    MODULES_LIST.forEach(mod => {
+      const isAllowedMod = isModuleAllowedInBracket(mod.value, formHierarchyBracket, isSystemRole);
+      if (!isAllowedMod) {
+        newPerms[mod.value] = {
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+          canArchive: false
+        };
+        return;
+      }
+
+      const p = sourcePermMap[mod.value];
+      newPerms[mod.value] = {
+        canView: isActionAllowedInBracket(mod.value, 'canView', formHierarchyBracket, isSystemRole) && Boolean(p?.canView),
+        canCreate: isActionAllowedInBracket(mod.value, 'canCreate', formHierarchyBracket, isSystemRole) && Boolean(p?.canCreate),
+        canEdit: isActionAllowedInBracket(mod.value, 'canEdit', formHierarchyBracket, isSystemRole) && Boolean(p?.canEdit),
+        canDelete: isActionAllowedInBracket(mod.value, 'canDelete', formHierarchyBracket, isSystemRole) && Boolean(p?.canDelete),
+        canArchive: false
+      };
+    });
+
+    setFormPermissions(newPerms);
+    toast.success(`Cloned permissions from "${sourceRole.name}" into matrix`);
   };
 
   // 1-Click Clear all permissions in the matrix
@@ -616,12 +836,18 @@ const RoleManagementPage = () => {
       return;
     }
 
-    const activeModuleSet = new Set(MODULES_LIST.map(m => m.value));
+    const isSystemRole = Boolean(selectedRole?.isSystem);
+    const activeModuleList = MODULES_LIST.filter(m => isModuleAllowedInBracket(m.value, formHierarchyBracket, isSystemRole));
+    const activeModuleSet = new Set(activeModuleList.map(m => m.value));
     const payloadPermissions = Object.keys(formPermissions)
       .filter(mod => activeModuleSet.has(mod))
       .map(mod => ({
         module: mod,
-        ...formPermissions[mod]
+        canView: isActionAllowedInBracket(mod, 'canView', formHierarchyBracket, isSystemRole) ? Boolean(formPermissions[mod]?.canView) : false,
+        canCreate: isActionAllowedInBracket(mod, 'canCreate', formHierarchyBracket, isSystemRole) ? Boolean(formPermissions[mod]?.canCreate) : false,
+        canEdit: isActionAllowedInBracket(mod, 'canEdit', formHierarchyBracket, isSystemRole) ? Boolean(formPermissions[mod]?.canEdit) : false,
+        canDelete: isActionAllowedInBracket(mod, 'canDelete', formHierarchyBracket, isSystemRole) ? Boolean(formPermissions[mod]?.canDelete) : false,
+        canArchive: false
       }));
 
     const data = {
@@ -711,6 +937,48 @@ const RoleManagementPage = () => {
   };
 
   const isSuperOrCompanyAdmin = isSuperAdmin || user?.primaryRole === 'COMPANY_ADMIN';
+  const userRank = user?.primaryRoleRank || 0;
+
+  // Bracket-scoped blueprint limits so high-level roles (like Company Admin) cannot be cloned into low-level tiers (like ISE)
+  const getBracketMinBlueprintRank = (bracket) => {
+    switch (bracket) {
+      case 'BELOW_ISE':
+        return 1;
+      case 'BDE_TO_ISE':
+        return 20; // BDE (40), ISE (20), and custom roles (21-39)
+      case 'BRANCH_MANAGER_TO_BDE':
+        return 40; // Branch Manager (60), BDE (40), and custom roles (41-59)
+      case 'COMPANY_ADMIN_TO_BRANCH_MANAGER':
+      default:
+        return 60; // Company Admin (80), Branch Manager (60), and custom roles (61-79)
+    }
+  };
+
+  const getBracketMaxBlueprintRank = (bracket) => {
+    switch (bracket) {
+      case 'BELOW_ISE':
+        return 20; // Only ISE (Rank 20) and Below-ISE custom roles (Rank 1-19)
+      case 'BDE_TO_ISE':
+        return 40; // BDE (Rank 40) and roles up to 40
+      case 'BRANCH_MANAGER_TO_BDE':
+        return 60; // Branch Manager (Rank 60) and roles up to 60
+      case 'COMPANY_ADMIN_TO_BRANCH_MANAGER':
+      default:
+        return 80; // Company Admin (Rank 80) and roles up to 80
+    }
+  };
+
+  const cloneableRoles = allRolesList.filter(r => {
+    // Cannot clone self when editing
+    if (selectedRole && r.id === selectedRole.id) return false;
+    // Anti-escalation: logged in user cannot clone a role higher than own rank
+    if (!isSuperAdmin && r.rank > userRank) return false;
+    // Bracket-level cap: strictly filter role blueprints matching the current bracket tier
+    const minBlueprintRank = getBracketMinBlueprintRank(formHierarchyBracket);
+    const maxBlueprintRank = getBracketMaxBlueprintRank(formHierarchyBracket);
+    if (r.rank < minBlueprintRank || r.rank > maxBlueprintRank) return false;
+    return true;
+  });
   const activeModuleCount = Object.values(formPermissions).filter((p) => p?.canView).length;
   const footerScopeLabel = HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Selected Scope';
   const footerRoleName = formName.trim() || 'Untitled role';
@@ -730,7 +998,6 @@ const RoleManagementPage = () => {
 
     if (!isSuperOrCompanyAdmin) return null;
 
-    const userRank = user?.primaryRoleRank || 0;
     const isEditDisabled = role.rank >= userRank;
     const isStatusDisabled = role.isSystem || role.rank >= userRank;
 
@@ -910,20 +1177,34 @@ const RoleManagementPage = () => {
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
           <div className="w-full sm:w-64">
             <SearchInput
-              placeholder="Search..."
+              placeholder="Search roles..."
               value={search}
               onChange={handleSearchChange}
             />
           </div>
 
+          {/* Role Type Filter: All Roles / System Roles / Custom Roles */}
+          <div className="w-full sm:w-44">
+            <SelectField
+              id="role-type-filter"
+              placeholder="All Roles"
+              value={roleType}
+              onChange={handleRoleTypeChange}
+              options={[
+                { value: 'ALL', label: 'All Roles' },
+                { value: 'SYSTEM', label: 'System Roles' },
+                { value: 'CUSTOM', label: 'Custom Roles' },
+              ]}
+            />
+          </div>
+
           {/* Company filter — Super Admin only */}
           {isSuperAdmin && (
-            <div className="w-full sm:w-52">
+            <div className="w-full sm:w-64">
               <SelectField
-                placeholder="All Companies"
+                placeholder="Select a Company..."
                 value={companyFilter}
                 onChange={(val) => setCompanyFilter(val === undefined ? '' : val)}
-                allowEmptyOption
                 searchable
                 options={companiesList.map((c) => ({
                   value: String(c.id),
@@ -958,8 +1239,14 @@ const RoleManagementPage = () => {
         ) : roles.length === 0 ? (
           <div className="bg-white border border-slate-200 p-8 text-center">
             <AlertCircle className="text-slate-300 mx-auto mb-2" size={32} />
-            <p className="font-bold text-slate-700">No Roles Found</p>
-            <p className="text-xs text-slate-400">Add a custom role or refine your search.</p>
+            <p className="font-bold text-slate-700">
+              {isSuperAdmin && !companyFilter ? 'Please Select a Company' : 'No Roles Found'}
+            </p>
+            <p className="text-xs text-slate-400">
+              {isSuperAdmin && !companyFilter
+                ? 'Select a company from the dropdown above to view its roles.'
+                : 'Add a custom role or refine your search.'}
+            </p>
           </div>
         ) : (
           roles.map((role) => (
@@ -1042,8 +1329,12 @@ const RoleManagementPage = () => {
           columns={columns}
           data={roles}
           loadingState={loadingState}
-          emptyTitle="No Roles Found"
-          emptyDescription="Add a custom role or refine your search filters."
+          emptyTitle={isSuperAdmin && !companyFilter ? 'Please Select a Company' : 'No Roles Found'}
+          emptyDescription={
+            isSuperAdmin && !companyFilter
+              ? 'Select a company from the dropdown above to view and manage its roles.'
+              : 'Add a custom role or refine your search filters.'
+          }
           emptyIcon={Shield}
           skeletonRows={5}
         />
@@ -1129,7 +1420,7 @@ const RoleManagementPage = () => {
                     id="hierarchy-bracket"
                     label="Data Access Level"
                     value={formHierarchyBracket}
-                    onChange={(val) => setFormHierarchyBracket(val)}
+                    onChange={(val) => handleBracketChange(val)}
                     options={[
                       { value: 'COMPANY_ADMIN_TO_BRANCH_MANAGER', label: 'Company-Wide (Above Branch Manager)' },
                       { value: 'BRANCH_MANAGER_TO_BDE', label: 'Branch-Level (Below Branch Manager / Above BDE)' },
@@ -1220,7 +1511,7 @@ const RoleManagementPage = () => {
                     </div>
                     <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                       {(!selectedRole || !selectedRole.isSystem)
-                        ? "Grant granular action privileges. Use 1-click Auto-Fill to populate standard permissions for this hierarchy rank."
+                        ? "Grant granular action privileges. Use 1-click Auto Fill to populate permissions for this hierarchy rank."
                         : "Granular action privileges assigned to this system role."}
                     </p>
                   </div>
@@ -1234,11 +1525,62 @@ const RoleManagementPage = () => {
                       disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
                       onClick={handleApplyRecommendedPermissions}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-2xs hover:shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                      title="Populate recommended permissions for the selected bracket"
+                      title="Auto-fill permissions for the selected bracket"
                     >
                       <Sparkles size={13} />
-                      <span>Auto-Fill Recommended</span>
+                      <span>Auto Fill</span>
                     </button>
+
+                    {/* Clone Permissions from an existing Role */}
+                    <button
+                      type="button"
+                      disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
+                      onClick={(e) => setCloneMenuAnchor(e.currentTarget)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 text-xs font-bold rounded-lg shadow-2xs hover:shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      title="Clone all permissions from an existing role (e.g. ISE, BDE, etc.)"
+                    >
+                      <Copy size={13} />
+                      <span>Clone From Role</span>
+                      <ChevronDown size={12} className="opacity-70" />
+                    </button>
+                    <Menu
+                      anchorEl={cloneMenuAnchor}
+                      open={Boolean(cloneMenuAnchor)}
+                      onClose={() => setCloneMenuAnchor(null)}
+                      elevation={0}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      PaperProps={{
+                        className: "mt-1 shadow-xl border border-slate-200 rounded-xl bg-white min-w-[240px] max-h-[300px] py-1 text-slate-700 font-sans"
+                      }}
+                    >
+                      <div className="px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                        {HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'Compatible Roles'} Blueprints
+                      </div>
+                      {cloneableRoles.length === 0 ? (
+                        <div className="px-3.5 py-3 text-xs text-slate-400 italic">No compatible role blueprints for this tier</div>
+                      ) : (
+                        cloneableRoles.map((r) => (
+                          <MenuItem
+                            key={r.id}
+                            onClick={() => {
+                              handleApplyClonedPermissionsFromRole(r);
+                              setCloneMenuAnchor(null);
+                            }}
+                            className="px-3.5 py-2 text-[12px] font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Shield size={14} className={r.isSystem ? "text-orange-500" : "text-blue-500"} />
+                              <span className="font-bold text-slate-800">{r.name}</span>
+                            </div>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${r.isSystem ? 'bg-slate-100 text-slate-600' : 'bg-indigo-50 text-indigo-700'}`}>
+                              {r.isSystem ? 'System' : 'Custom'}
+                            </span>
+                          </MenuItem>
+                        ))
+                      )}
+                    </Menu>
+
                     <button
                       type="button"
                       disabled={selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false}
@@ -1269,7 +1611,12 @@ const RoleManagementPage = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
                       {MODULE_GROUPS.map((group) => {
-                        const groupModules = MODULES_LIST.filter((m) => m.group === group.id);
+                        const isCustomRole = !selectedRole || !selectedRole.isSystem;
+                        const groupModules = MODULES_LIST.filter((m) => {
+                          if (m.group !== group.id) return false;
+                          return isModuleAllowedInBracket(m.value, formHierarchyBracket, !isCustomRole);
+                        });
+                        if (groupModules.length === 0) return null;
                         const isGroupCollapsed = Boolean(collapsedModuleGroups[group.id]);
                         const groupViewCount = groupModules.filter((m) => formPermissions[m.value]?.canView).length;
 
@@ -1304,31 +1651,19 @@ const RoleManagementPage = () => {
                               </td>
                             </tr>
                             {!isGroupCollapsed && groupModules.map((mod) => {
-                              const isCustomRole = !selectedRole || !selectedRole.isSystem;
-                              const isRecommended = isCustomRole && isModuleRecommended(mod.value, formHierarchyBracket);
-
                               return (
                                 <tr
                                   key={mod.value}
-                                  className={`transition-colors ${isRecommended ? 'hover:bg-emerald-50/40' : 'hover:bg-slate-50/80'
-                                    }`}
+                                  className="transition-colors hover:bg-slate-50/80"
                                 >
                                   <td className="py-2.5 px-3.5 text-xs font-bold text-slate-800">
-                                    <div className="flex flex-col gap-1 items-start">
-                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                        <span>{mod.label}</span>
-                                        <Tooltip title={mod.controls} arrow placement="top">
-                                          <span className="cursor-help text-slate-400 hover:text-indigo-600 transition-colors">
-                                            <Info size={13} />
-                                          </span>
-                                        </Tooltip>
-                                      </div>
-                                      {isRecommended && (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                          <Sparkles size={10} className="text-emerald-500" />
-                                          Recommended
+                                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                      <span>{mod.label}</span>
+                                      <Tooltip title={mod.controls} arrow placement="top">
+                                        <span className="cursor-help text-slate-400 hover:text-indigo-600 transition-colors">
+                                          <Info size={13} />
                                         </span>
-                                      )}
+                                      </Tooltip>
                                     </div>
                                   </td>
                                   <td className="py-2.5 px-3 text-[11px] text-slate-600">
@@ -1340,17 +1675,31 @@ const RoleManagementPage = () => {
                                     {mod.controls}
                                   </td>
                                   {ACTIONS.map((act) => {
+                                    const isAllowedAction = isActionAllowedInBracket(mod.value, act.key, formHierarchyBracket, !isCustomRole);
                                     const isChecked = !!formPermissions[mod.value]?.[act.key];
                                     const isPermissionDisabled = selectedRole ? (selectedRole.rank >= (user?.primaryRoleRank || 0)) : false;
+
                                     return (
                                       <td key={act.key} className="py-2 px-2 text-center">
-                                        <Checkbox
-                                          id={`permission-${mod.value}-${act.key}`}
-                                          checked={isChecked}
-                                          disabled={isPermissionDisabled}
-                                          onChange={(checked) => handlePermissionChange(mod.value, act.key, checked)}
-                                          sx={{ p: 0, width: 'auto' }}
-                                        />
+                                        {isAllowedAction ? (
+                                          <Checkbox
+                                            id={`permission-${mod.value}-${act.key}`}
+                                            checked={isChecked}
+                                            disabled={isPermissionDisabled}
+                                            onChange={(checked) => handlePermissionChange(mod.value, act.key, checked)}
+                                            sx={{ p: 0, width: 'auto' }}
+                                          />
+                                        ) : (
+                                          <Tooltip
+                                            title={`${act.label} permission is not available for ${HIERARCHY_DETAILS[formHierarchyBracket]?.title || 'this access level'}`}
+                                            arrow
+                                            placement="top"
+                                          >
+                                            <span className="inline-flex items-center justify-center w-6 h-6 text-slate-300 font-bold select-none text-sm cursor-default">
+                                              —
+                                            </span>
+                                          </Tooltip>
+                                        )}
                                       </td>
                                     );
                                   })}

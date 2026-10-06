@@ -25,7 +25,13 @@ import {
   AlertCircle,
   Plus,
   Send,
+  Target,
+  GitBranch,
+  Lock,
 } from 'lucide-react';
+import QualifyOpportunityModal from '../components/QualifyOpportunityModal';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
+import { formatExternalUrl } from '../../../shared/utils/formatters';
 import {
   useOpportunityDetailQuery,
   useUpdateOpportunityMutation,
@@ -62,11 +68,24 @@ export const OpportunityDetailPage = () => {
   const opportunityId = Number(id);
   const rank = user?.primaryRoleRank ?? 0;
 
-  const canEditOpp = hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit');
-
   const { data: opportunity, isLoading, isError } = useOpportunityDetailQuery(opportunityId);
   const updateMutation = useUpdateOpportunityMutation();
   const closeMutation = useCloseOpportunityMutation();
+
+  const canManageOpp = React.useMemo(() => {
+    if (!user || !opportunity) return false;
+    const userRank = Number(user.primaryRoleRank || 0);
+    const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || userRank >= 100;
+    if (isSuperAdmin) return true;
+    const isCompanyAdmin = user.primaryRole === 'COMPANY_ADMIN' || userRank >= 61;
+    if (isCompanyAdmin) return true;
+    const isBranchManager = (user.primaryRole === 'BRANCH_MANAGER' || (userRank >= 41 && userRank <= 60)) &&
+      Number(user.branchId) === Number(opportunity.branchId);
+    if (isBranchManager) return true;
+    return Number(opportunity.ownerId) === Number(user.id);
+  }, [user, opportunity]);
+
+  const canEditOpp = canManageOpp && (hasPermission('edit:opportunity') || hasPermission('OPPORTUNITY', 'canEdit') || user?.primaryRole === 'SUPER_ADMIN');
 
   const { data: stagesRaw } = useOpportunityStagesQuery({
     companyId: opportunity?.companyId,
@@ -78,6 +97,7 @@ export const OpportunityDetailPage = () => {
   const queryClient = useQueryClient();
 
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+  const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState('WON');
   const [closeRemarks, setCloseRemarks] = useState('');
   const [stageToMove, setStageToMove] = useState(null);
@@ -237,7 +257,7 @@ export const OpportunityDetailPage = () => {
       date: new Date(opportunity.createdAt),
       title: 'Opportunity Created',
       description: `Initial Expected Revenue: ${formatCurrency(opportunity.expectedRevenue)}`,
-      meta: `Created by ${opportunity.owner?.name || 'System'}`
+      meta: `Created by ${opportunity.createdBy?.name || opportunity.owner?.name || 'System'}`
     });
 
     // 2. Stage transitions
@@ -314,6 +334,32 @@ export const OpportunityDetailPage = () => {
         }
       });
     }
+
+    // 5. Qualification Event
+    if (opportunity.qualificationScore != null || opportunity.qualificationData) {
+      const qualData = opportunity.qualificationData || {};
+      const evalDate = opportunity.qualifiedAt || opportunity.updatedAt;
+      timelineEvents.push({
+        id: `qual-${opportunity.id}`,
+        type: 'OPPORTUNITY_QUALIFIED',
+        date: new Date(evalDate),
+        title: `Opportunity Qualified: ${opportunity.qualificationScore}% 🏆`,
+        description: (
+          <div className="space-y-1 text-slate-600">
+            <span className="block font-medium">
+              Score: <strong className="text-slate-900">{opportunity.qualificationScore}%</strong>
+              {qualData.passThreshold ? ` (Pass Threshold: ${qualData.passThreshold}%)` : ''}
+            </span>
+            {qualData.criteriaSnapshot && (
+              <span className="text-[11px] text-slate-500 block">
+                Evaluated across {qualData.criteriaSnapshot.length} qualification factors
+              </span>
+            )}
+          </div>
+        ),
+        meta: `Evaluated by ${qualData.evaluatedByName || opportunity.updatedBy?.name || 'User'} on ${formatDate(evalDate)}`
+      });
+    }
   }
 
   // Sort by date descending
@@ -321,6 +367,12 @@ export const OpportunityDetailPage = () => {
 
   const getTimelineIcon = (type, status) => {
     switch (type) {
+      case 'OPPORTUNITY_QUALIFIED':
+        return (
+          <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600">
+            <Target className="w-3.5 h-3.5" />
+          </span>
+        );
       case 'OPPORTUNITY_CLOSED':
         return status === 'WON' ? (
           <span className="absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600">
@@ -458,6 +510,13 @@ export const OpportunityDetailPage = () => {
                     )}
                     {opportunity.status}
                   </span>
+
+                  {/* Qualification Score Badge — shows 🏆 X% when qualified */}
+                  {opportunity.qualificationScore != null && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                      🏆 {opportunity.qualificationScore}%
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -465,7 +524,11 @@ export const OpportunityDetailPage = () => {
                   <span className="text-slate-300">•</span>
                   <span>Lead: <strong className="text-slate-800 font-semibold">{opportunity.lead?.name || 'N/A'}</strong></span>
                   <span className="text-slate-300">•</span>
-                  <span>Owner: <strong className="text-slate-800 font-semibold">{opportunity.owner?.name || 'Unassigned'}</strong></span>
+                  <span>Lead Pipeline: <strong className="text-slate-800 font-semibold">{opportunity.lead?.pipeline?.name || 'Standard Sales Pipeline'}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Created By: <strong className="text-slate-800 font-semibold">{opportunity.createdBy?.name || 'System'}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Owner: <strong className="text-orange-600 font-semibold">{opportunity.owner?.name || 'Unassigned'}</strong></span>
                 </div>
               </div>
             </div>
@@ -473,13 +536,30 @@ export const OpportunityDetailPage = () => {
             {/* Right: Primary Action Buttons */}
             <div className="flex items-center gap-3">
               {opportunity.status === 'OPEN' && canEditOpp && (
-                <button
-                  type="button"
-                  onClick={() => setIsCloseModalOpen(true)}
-                  className="px-4 py-2 text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4" /> Close Deal
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsQualifyModalOpen(true)}
+                    className="px-4 py-2 text-xs font-bold bg-white border border-orange-300 hover:bg-orange-50 text-orange-700 rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2"
+                    title={opportunity.qualificationScore != null ? 'Re-evaluate Opportunity Score' : 'Qualify this Opportunity'}
+                  >
+                    <Target className="w-4 h-4" />
+                    {opportunity.qualificationScore != null ? 'Re-evaluate' : 'Qualify Opportunity'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCloseModalOpen(true)}
+                    className="px-4 py-2 text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Close Deal
+                  </button>
+                </>
+              )}
+              {opportunity.status === 'OPEN' && !canEditOpp && (
+                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Managed by {opportunity.owner?.name || 'Assigned Closer'}</span>
+                </span>
               )}
             </div>
           </div>
@@ -514,15 +594,18 @@ export const OpportunityDetailPage = () => {
                 <button
                   key={st.id}
                   type="button"
-                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending}
+                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending || !canManageOpp}
                   onClick={() => handleStageClick(st)}
-                  className={`p-3.5 rounded-md border text-left transition-all text-xs cursor-pointer relative flex flex-col justify-between ${updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
-                    } ${isActive
+                  title={!canManageOpp ? `Assigned to ${opportunity.owner?.name || 'Manager'}. Only the assigned owner or manager can move this opportunity.` : `Move to ${st.name}`}
+                  className={`p-3.5 rounded-md border text-left transition-all text-xs relative flex flex-col justify-between ${
+                    updateMutation.isPending ? 'opacity-60 cursor-wait' : ''
+                  } ${!canManageOpp ? 'cursor-default opacity-85' : 'cursor-pointer'} ${
+                    isActive
                       ? 'bg-orange-600 text-white border-orange-600 shadow-sm ring-2 ring-orange-200'
                       : isPast
                         ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-xs truncate">{st.name}</span>
@@ -626,13 +709,37 @@ export const OpportunityDetailPage = () => {
                       Mobile: {opportunity.lead.mobile}
                     </span>
                   )}
+                  {(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl) && (
+                    <a
+                      href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 mt-1 group"
+                      title={opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                    >
+                      <LinkedinIcon size={13} className="text-[#0A66C2] shrink-0" />
+                      <span>LinkedIn Profile</span>
+                      <ExternalLink className="w-3 h-3 text-blue-500 opacity-70 group-hover:opacity-100" />
+                    </a>
+                  )}
                 </div>
 
                 <div>
-                  <span className="text-slate-400 font-medium block mb-1">Product / Course</span>
+                  <span className="text-slate-400 font-medium block mb-1">Service</span>
                   <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
                     <BookOpen className="w-4 h-4 text-orange-600" />
-                    <span>{opportunity.product?.name || 'General Course'}</span>
+                    <span>{opportunity.product?.name || 'General Service'}</span>
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Source Pipeline</span>
+                  <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                    <GitBranch className="w-4 h-4 text-orange-600" />
+                    <span>{opportunity.lead?.pipeline?.name || 'Standard Sales Pipeline'}</span>
+                  </span>
+                  <span className="text-slate-400 text-[11px] block mt-0.5">
+                    Lead originated from this pipeline
                   </span>
                 </div>
 
@@ -841,6 +948,22 @@ export const OpportunityDetailPage = () => {
                   </div>
                 )}
 
+                {(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl) && (
+                  <div className="flex items-center gap-2 text-slate-700 pt-1 border-t border-slate-100">
+                    <LinkedinIcon size={14} className="text-[#0A66C2] shrink-0" />
+                    <a
+                      href={formatExternalUrl(opportunity.linkedinUrl || opportunity.lead?.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 truncate group"
+                      title={opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}
+                    >
+                      <span className="truncate">{opportunity.linkedinUrl || opportunity.lead?.linkedinUrl}</span>
+                      <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 shrink-0" />
+                    </a>
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <Link
                     to={`/leads?detailId=${opportunity.lead?.id || ''}`}
@@ -857,18 +980,32 @@ export const OpportunityDetailPage = () => {
             {/* Sales Owner & Metadata Card */}
             <div className="bg-white rounded-md border border-slate-200 shadow-xs p-5 space-y-3 text-xs">
               <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <User className="w-5 h-5 text-orange-600" /> Record Assignment
+                <User className="w-5 h-5 text-orange-600" /> People & Assignment
               </h3>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div>
-                  <span className="text-slate-400 font-medium block">Sales Representative</span>
+                  <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-wider block">Assigned Owner (Handling Deal)</span>
                   <span className="font-bold text-slate-900 text-sm block mt-0.5">
                     {opportunity.owner?.name || 'Unassigned'}
                   </span>
-                  <span className="text-slate-500 block text-[11px] truncate">
-                    {opportunity.owner?.email || ''}
+                  {opportunity.owner?.email && (
+                    <span className="text-slate-500 block text-[11px] truncate">
+                      {opportunity.owner.email}
+                    </span>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-slate-100">
+                  <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-wider block">Created By (Pipeline Closure)</span>
+                  <span className="font-bold text-slate-800 text-sm block mt-0.5">
+                    {opportunity.createdBy?.name || 'System'}
                   </span>
+                  {opportunity.createdBy?.email && (
+                    <span className="text-slate-500 block text-[11px] truncate">
+                      {opportunity.createdBy.email}
+                    </span>
+                  )}
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-400 space-y-1">
@@ -1112,6 +1249,13 @@ export const OpportunityDetailPage = () => {
         cancelText="Cancel"
         type="error"
         isLoading={isDeletingProposal}
+      />
+
+      {/* Qualify Opportunity Modal */}
+      <QualifyOpportunityModal
+        opportunity={opportunity}
+        isOpen={isQualifyModalOpen}
+        onClose={() => setIsQualifyModalOpen(false)}
       />
     </div>
   );

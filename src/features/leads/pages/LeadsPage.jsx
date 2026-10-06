@@ -36,7 +36,6 @@ import {
   useLeadsQuery,
   useLeadFormDataQuery,
   useDeleteLeadMutation,
-  useDeleteAllLeadsMutation,
   useUserPreferencesQuery,
   useUpdateUserPreferencesMutation
 } from '../hooks/useLeads';
@@ -179,7 +178,6 @@ export const LeadsPage = () => {
   const [selectedLeadForEdit, setSelectedLeadForEdit] = useState(null);
   const [selectedLeadForView, setSelectedLeadForView] = useState(null);
   const [selectedLeadForDelete, setSelectedLeadForDelete] = useState(null);
-  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
 
   // Auto-open lead detail drawer if navigated via notification deep-link or from an
   // Opportunity record. Supports the following URL patterns:
@@ -241,9 +239,18 @@ export const LeadsPage = () => {
       priority: '',
       assignedToId: '',
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      isQualified: searchParams.get('isQualified') || ''
     }
   });
+
+  // Sync isQualified from URL query params
+  useEffect(() => {
+    const qualParam = searchParams.get('isQualified');
+    if (qualParam !== null && qualParam !== undefined) {
+      handleFilterChange('isQualified', qualParam);
+    }
+  }, [searchParams]);
 
   // Local temporary filter states (does not trigger backend query until Apply is clicked)
   const [tempFilters, setTempFilters] = useState({
@@ -256,7 +263,8 @@ export const LeadsPage = () => {
     priority: '',
     assignedToId: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    isQualified: searchParams.get('isQualified') || ''
   });
 
   // Sync tempFilters with current filters when Drawer opens
@@ -436,7 +444,6 @@ export const LeadsPage = () => {
   const { data: leadsData, isLoading, isFetching, isError, error, refetch } = useLeadsQuery(queryParams);
   const { data: formDataRes, isLoading: isLoadingFormData } = useLeadFormDataQuery();
   const deleteLeadMutation = useDeleteLeadMutation();
-  const deleteAllLeadsMutation = useDeleteAllLeadsMutation();
 
   const leads = leadsData?.data?.leads || [];
   const paginationRaw = leadsData?.data?.pagination || {};
@@ -478,14 +485,6 @@ export const LeadsPage = () => {
     deleteLeadMutation.mutate(selectedLeadForDelete.id, {
       onSuccess: () => {
         setSelectedLeadForDelete(null);
-      }
-    });
-  };
-
-  const handleDeleteAllConfirm = () => {
-    deleteAllLeadsMutation.mutate(null, {
-      onSuccess: () => {
-        setIsDeleteAllOpen(false);
       }
     });
   };
@@ -564,10 +563,62 @@ export const LeadsPage = () => {
   // Table Columns
   const columns = [
     {
+      header: (() => {
+        const unassignedLeads = leads.filter(l => !l.assignedToId && !l.teamId);
+        const isAllSelected = unassignedLeads.length > 0 && unassignedLeads.every(l => selectedLeadIds.includes(l.id));
+        const isSomeSelected = selectedLeadIds.length > 0 && !isAllSelected;
+        return (
+          <Checkbox
+            checked={isAllSelected}
+            indeterminate={isSomeSelected}
+            onChange={(checked) => {
+              if (checked) {
+                setSelectedLeadIds(unassignedLeads.map(l => l.id));
+              } else {
+                setSelectedLeadIds([]);
+              }
+            }}
+            sx={{ p: 0.5, width: 'auto' }}
+          />
+        );
+      })(),
+      cell: (row) => {
+        const isAssigned = !!row.assignedToId || !!row.teamId;
+        return (
+          <Checkbox
+            id={`lead-select-${row.id}`}
+            checked={selectedLeadIds.includes(row.id)}
+            disabled={isAssigned}
+            onChange={(checked) => {
+              if (checked) {
+                setSelectedLeadIds(prev => [...prev, row.id]);
+              } else {
+                setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
+              }
+            }}
+            sx={{ p: 0.5, width: 'auto' }}
+          />
+        );
+      }
+    },
+    {
       header: '#',
       cell: (row, i) => (
         <span className="text-[11px] text-slate-400 font-semibold font-mono">
           {(page - 1) * pagination.limit + i + 1}
+        </span>
+      )
+    },
+    {
+      header: 'Lead ID',
+      accessorKey: 'leadNumber',
+      cell: (row) => (
+        <span
+          onClick={() => setSelectedLeadForView(row)}
+          className="text-[11px] font-mono font-bold text-slate-700 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200 transition-colors px-2 py-0.5 rounded border border-slate-200 select-all cursor-pointer whitespace-nowrap inline-block"
+          title="Click to view lead details"
+        >
+          {row.leadNumber || `LEAD-${row.id}`}
         </span>
       )
     },
@@ -609,7 +660,7 @@ export const LeadsPage = () => {
       )
     },
     {
-      header: 'Course/Product',
+      header: 'Service',
       cell: (row) => (
         <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-lg border border-slate-200/50">
           <Award size={11} className="text-slate-400" />
@@ -702,45 +753,6 @@ export const LeadsPage = () => {
       )
     },
     {
-      header: (() => {
-        const unassignedLeads = leads.filter(l => !l.assignedToId && !l.teamId);
-        const isAllSelected = unassignedLeads.length > 0 && unassignedLeads.every(l => selectedLeadIds.includes(l.id));
-        const isSomeSelected = selectedLeadIds.length > 0 && !isAllSelected;
-        return (
-          <Checkbox
-            checked={isAllSelected}
-            indeterminate={isSomeSelected}
-            onChange={(checked) => {
-              if (checked) {
-                setSelectedLeadIds(unassignedLeads.map(l => l.id));
-              } else {
-                setSelectedLeadIds([]);
-              }
-            }}
-            sx={{ p: 0.5, width: 'auto' }}
-          />
-        );
-      })(),
-      cell: (row) => {
-        const isAssigned = !!row.assignedToId || !!row.teamId;
-        return (
-          <Checkbox
-            id={`lead-select-${row.id}`}
-            checked={selectedLeadIds.includes(row.id)}
-            disabled={isAssigned}
-            onChange={(checked) => {
-              if (checked) {
-                setSelectedLeadIds(prev => [...prev, row.id]);
-              } else {
-                setSelectedLeadIds(prev => prev.filter(id => id !== row.id));
-              }
-            }}
-            sx={{ p: 0.5, width: 'auto' }}
-          />
-        );
-      }
-    },
-    {
       header: 'Actions',
       align: 'right',
       cell: (row) => (
@@ -791,7 +803,7 @@ export const LeadsPage = () => {
               <SearchInput
                 value={search}
                 onChange={handleSearchChange}
-                placeholder="Search by name, mobile, email..."
+                placeholder="Search by lead ID, name, mobile, email..."
                 className="w-full"
               />
             </div>
@@ -937,27 +949,6 @@ export const LeadsPage = () => {
               >
                 Kanban
               </Button>
-
-              {hasPermission('LEAD', 'canDelete') && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => setIsDeleteAllOpen(true)}
-                  startIcon={<Trash2 size={16} />}
-                  sx={{
-                    height: '44px',
-                    borderRadius: '12px',
-                    borderColor: '#FEE2E2',
-                    color: '#EF4444',
-                    '&:hover': {
-                      borderColor: '#FCA5A5',
-                      bgcolor: '#FEF2F2'
-                    }
-                  }}
-                >
-                  Delete All
-                </Button>
-              )}
 
               {hasPermission('LEAD', 'canCreate') && (
                 <>
@@ -1212,8 +1203,8 @@ export const LeadsPage = () => {
             />
             <SelectField
               id="drawer-filter-course"
-              label="Course / Product"
-              placeholder="All Courses"
+              label="Service"
+              placeholder="All Services"
               allowEmptyOption
               value={tempFilters.courseId}
               onChange={(val) => handleTempFilterChange('courseId', val)}
@@ -1362,18 +1353,6 @@ export const LeadsPage = () => {
         cancelText="Cancel"
         danger
         isLoading={deleteLeadMutation.isPending}
-      />
-
-      <ConfirmModal
-        isOpen={isDeleteAllOpen}
-        onClose={() => setIsDeleteAllOpen(false)}
-        onConfirm={handleDeleteAllConfirm}
-        title="Delete All Leads"
-        message="Are you sure you want to delete ALL leads in your current scope? This will soft-delete all active leads."
-        confirmText="Delete All Leads"
-        cancelText="Cancel"
-        danger
-        isLoading={deleteAllLeadsMutation.isPending}
       />
 
 

@@ -10,8 +10,9 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal } from 'lucide-react';
+import { Plus, ArrowLeft, RefreshCw, AlertCircle, Kanban, Upload, SlidersHorizontal, Layers, UserCheck, ChevronDown, ChevronRight, Search, Check } from 'lucide-react';
 import { useKanban } from '../hooks/useKanban';
+import { usePipelines } from '../../pipelines/hooks/usePipelines';
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterSidebar } from '../components/KanbanFilterSidebar';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -25,9 +26,12 @@ import LeadDetailDrawer from '../components/LeadDetailDrawer';
 import LeadEditModal from '../components/LeadEditModal';
 import LeadDeleteModal from '../components/LeadDeleteModal';
 import LostReasonModal from '../components/LostReasonModal';
-import QualifyLeadModal from '../components/QualifyLeadModal';
 import { toast } from '../../../shared/utils/toast';
-import { isTerminalStage, requiresReason } from '../../pipelines/utils/stageRules';
+import { isTerminalStage, requiresReason, isClosureStage } from '../../pipelines/utils/stageRules';
+import ClosurePopupModal from '../../pipelines/components/ClosurePopupModal';
+import { createFromPipelineClosure } from '../../opportunities/services/opportunityService';
+import { courseService } from '../../courses/services/courseService';
+import { useQuery } from '@tanstack/react-query';
 
 
 /**
@@ -67,6 +71,50 @@ const LeadsKanbanPage = () => {
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { pipelines, loading: loadingPipelines } = usePipelines();
+
+  // Remember active pipeline in localStorage
+  useEffect(() => {
+    if (pipelineId && user?.id) {
+      try {
+        localStorage.setItem(`last_active_pipeline_${user.id}`, String(pipelineId));
+      } catch {}
+    }
+  }, [pipelineId, user?.id]);
+
+  // Dropdown state for pipeline switcher
+  const [isPipelineDropdownOpen, setIsPipelineDropdownOpen] = useState(false);
+  const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
+  const pipelineDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (pipelineDropdownRef.current && !pipelineDropdownRef.current.contains(event.target)) {
+        setIsPipelineDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredPipelines = useMemo(() => {
+    if (!pipelines) return [];
+    if (!pipelineSearchTerm.trim()) return pipelines;
+    return pipelines.filter((p) =>
+      p.name.toLowerCase().includes(pipelineSearchTerm.toLowerCase())
+    );
+  }, [pipelines, pipelineSearchTerm]);
+
+  // ── Role Scoping (All vs Mine) ──────────────────────────────────────────
+  const isIse = user?.primaryRole === 'ISE' || Number(user?.primaryRoleRank) <= 20;
+  const canViewAll = !isIse;
+  const [scope, setScope] = useState(() => (isIse ? 'mine' : 'all'));
+
+  useEffect(() => {
+    if (isIse && scope !== 'mine') {
+      setScope('mine');
+    }
+  }, [isIse, scope]);
 
   // ── Sidebar collapse/mobile state ───────────────────────────────────────
   // Desktop: start expanded. Persisted in localStorage so it survives navigation.
@@ -74,6 +122,11 @@ const LeadsKanbanPage = () => {
     try { return localStorage.getItem('kanban-sidebar-collapsed') === 'true'; } catch { return false; }
   });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // ── Closure Popup state (Auto-opportunity from CLOSURE drop) ────────
+  const [showClosurePopup, setShowClosurePopup] = useState(false);
+  const [pendingClosureLead, setPendingClosureLead] = useState(null);
+  const [isClosureSubmitting, setIsClosureSubmitting] = useState(false);
 
   // ── Lost Reason Modal state (Sprint 4) ─────────────────────────────
   // When drag targets a LOST stage, we intercept and store the pending move
@@ -103,6 +156,14 @@ const LeadsKanbanPage = () => {
   } = useKanbanFilters();
 
   // ── Board state ──────────────────────────────────────────────────────────
+  const kanbanParams = useMemo(() => {
+    const params = { ...apiParams };
+    if (scope === 'mine' && user?.id) {
+      params.assignedToId = user.id;
+    }
+    return params;
+  }, [apiParams, scope, user?.id]);
+
   const {
     columns,
     orderedStages,
@@ -116,7 +177,20 @@ const LeadsKanbanPage = () => {
     refetch,
     pipelineName,
     assignableUsers,
-  } = useKanban(pipelineId, apiParams);
+  } = useKanban(pipelineId, kanbanParams);
+
+  // Dedicated courses query for the ClosurePopupModal Service dropdown.
+  const { data: coursesRes } = useQuery({
+    queryKey: ['courses-active-kanban', user?.companyId],
+    queryFn: () =>
+      courseService.getCourses({ status: 'ACTIVE', companyId: user?.companyId, limit: 200 }),
+    enabled: !!user?.companyId,
+    staleTime: 5 * 60 * 1000, // 5 min — courses rarely change mid-session
+  });
+  const courses =
+    coursesRes?.data?.courses ||
+    coursesRes?.data?.data ||
+    (Array.isArray(coursesRes?.data) ? coursesRes.data : []);
 
   // ── Toast feedback for filter actions ───────────────────────────────────
   const prevIsRefetchingRef = useRef(false);
@@ -205,7 +279,6 @@ const LeadsKanbanPage = () => {
   // Edit / Delete modal state
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
-  const [qualifyingLead, setQualifyingLead] = useState(null);
 
   const canCreate = hasPermission(PERMISSIONS.CREATE_LEAD);
   const canEdit = hasPermission(PERMISSIONS.EDIT_LEAD);
@@ -349,14 +422,6 @@ const LeadsKanbanPage = () => {
     setSelectedLead((prev) => prev?.id === leadId ? null : prev);
   }, [deleteLeadLocal]);
 
-  const handleQualifyLead = useCallback((lead) => {
-    setQualifyingLead(lead);
-  }, []);
-
-  const handleLeadQualified = useCallback(() => {
-    refetch();
-    setQualifyingLead(null);
-  }, [refetch]);
 
   // Real-time window pointer listener for auto-scrolling during drag
   const updatePointerPos = useCallback((e) => {
@@ -436,19 +501,31 @@ const LeadsKanbanPage = () => {
     if (!toStageId) return;
     if (String(fromStage) === String(toStageId)) return;
 
-    // ── Terminal lock: prevent dragging OUT of WON/CLOSURE stages ─────────
+    // ── Terminal lock: prevent dragging OUT of WON/CLOSURE stages or converted leads ─────────
     const fromStageObj = Object.values(columns).find(
       (col) => String(col.stage.id) === String(fromStage)
     )?.stage;
-    if (isTerminalStage(fromStageObj)) {
-      toast.error(`Leads in "${fromStageObj?.name}" stage cannot be moved to another stage.`);
+    if (isTerminalStage(fromStageObj) || draggedCard.qualificationStatus === 'CONVERTED') {
+      toast.error(`Converted leads in "${fromStageObj?.name || 'Closure'}" stage cannot be moved to another stage.`);
       return;
     }
 
-    // ── LOST intercept: show reason modal before calling moveCard ─────────
+    // ── CLOSURE intercept: show popup before calling any stage API ────────
     const toStageObj = Object.values(columns).find(
       (col) => String(col.stage.id) === String(toStageId)
     )?.stage;
+
+    if (isClosureStage(toStageObj)) {
+      setPendingClosureLead({
+        lead: draggedCard,
+        targetStageId: toStageId,
+        sourceStageId: fromStage,
+      }); // store the lead and target closure stage being closed
+      setShowClosurePopup(true);          // open the popup
+      return;                             // DO NOT call moveCard or any stage API here
+    }
+
+    // ── LOST intercept: show reason modal before calling moveCard ─────────
     if (requiresReason(toStageObj)) {
       setLostReasonModal({
         leadId: draggedCard.id,
@@ -462,6 +539,47 @@ const LeadsKanbanPage = () => {
 
     await moveCard(draggedCard.id, fromStage, toStageId);
   };
+
+  // ── Closure Popup Modal handlers ────────────────────────────────────
+  const handleClosureConfirm = useCallback(
+    async ({ expectedRevenue, closingDate, productId }) => {
+      const targetLead = pendingClosureLead?.lead || pendingClosureLead;
+      if (!targetLead) return;
+      setIsClosureSubmitting(true);
+      try {
+        const result = await createFromPipelineClosure(targetLead.id, {
+          expectedRevenue,
+          closingDate,
+          productId: productId || null,
+          stageId: pendingClosureLead?.targetStageId || null,
+        });
+        // Smart toast: show who the opportunity was assigned to (from backend response)
+        const ownerName = result?.data?.owner?.name || result?.owner?.name;
+        const toastMsg =
+          ownerName && ownerName !== user?.name
+            ? `Lead closed! Opportunity assigned to ${ownerName}.`
+            : 'Lead closed! Opportunity created successfully.';
+        toast.success(toastMsg);
+        setShowClosurePopup(false);
+        setPendingClosureLead(null);
+        refetch(); // Board refetches — lead is now in Closure stage column and locked
+      } catch (err) {
+        // Keep popup open so user can correct and retry
+        toast.error(
+          err?.response?.data?.message || err?.message || 'Failed to close lead. Please try again.'
+        );
+      } finally {
+        setIsClosureSubmitting(false);
+      }
+    },
+    [pendingClosureLead, refetch, user?.name]
+  );
+
+  const handleClosureCancel = useCallback(() => {
+    // Lead stays in its previous column — popup was intercepted before stage API call
+    setShowClosurePopup(false);
+    setPendingClosureLead(null);
+  }, []);
 
   // ── Lost Reason Modal handlers (Sprint 4) ───────────────────────────
   const handleLostReasonConfirm = useCallback(async (reason) => {
@@ -494,10 +612,37 @@ const LeadsKanbanPage = () => {
 
   const handleLeadCreated = (lead) => {
     setShowForm(false);
-    if (!lead) { refetch(); return; }
-    const prospectStage = orderedStages.find((s) => s.isDefault);
-    if (prospectStage) addLeadToColumn(prospectStage.id, lead);
-    else refetch();
+    if (!lead) {
+      refetch();
+      return;
+    }
+
+    const currentPipelineId = Number(pipelineId);
+    const leadPipelineId = lead.pipelineId ? Number(lead.pipelineId) : null;
+
+    // Only inject into the local board if the lead belongs to this active pipeline
+    if (leadPipelineId && leadPipelineId === currentPipelineId) {
+      const targetStageId = lead.stageId
+        ? Number(lead.stageId)
+        : (orderedStages.find((s) => s.isDefault)?.id || orderedStages[0]?.id);
+
+      if (targetStageId && columns[targetStageId]) {
+        addLeadToColumn(targetStageId, {
+          ...lead,
+          pipelineId: currentPipelineId,
+          stageId: targetStageId,
+        });
+      }
+      refetch();
+    } else {
+      // Lead was created without a pipeline or assigned to another pipeline
+      if (leadPipelineId) {
+        toast.info('Lead created in its assigned pipeline.');
+      } else {
+        toast.info('Lead created without a pipeline assignment (available in Leads list).');
+      }
+      refetch();
+    }
   };
 
   useEffect(() => {
@@ -554,36 +699,149 @@ const LeadsKanbanPage = () => {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
         {/* ── Page header ── */}
-        <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-zinc-200/70 bg-white/90 backdrop-blur-sm shadow-[0_1px_0_rgba(0,0,0,0.04)] gap-2">
+        <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-zinc-200/70 bg-white shadow-[0_1px_0_rgba(0,0,0,0.04)] gap-2 relative z-30">
           <div className="flex items-center gap-2 min-w-0">
-            {/* Back */}
+            {/* Back to all pipeline cards */}
             <button
-              onClick={() => navigate('/pipelines')}
-              className="flex items-center justify-center p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-700 transition-all duration-150 shrink-0"
+              onClick={() => navigate('/pipelines/cards')}
+              className="flex items-center justify-center p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-700 transition-all duration-150 shrink-0 cursor-pointer"
+              title="View all pipeline cards"
             >
               <ArrowLeft size={15} />
             </button>
 
-            {/* Title */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-orange-50 shrink-0">
-                <Kanban size={14} className="text-primary" />
-              </div>
-              <div className="min-w-0 flex items-center gap-2">
-                <h1 className="text-[13px] sm:text-[15px] font-semibold font-heading text-zinc-900 truncate tracking-tight">
-                  {boardTitle}
-                </h1>
-                {totalPipelineRevenue > 0 && (
-                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
-                    ₹{totalPipelineRevenue.toLocaleString('en-IN')}
-                  </span>
-                )}
-              </div>
+            {/* Pipeline Searchable Selector Dropdown */}
+            <div className="relative min-w-0 z-30" ref={pipelineDropdownRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPipelineDropdownOpen((prev) => !prev);
+                  setPipelineSearchTerm('');
+                }}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all duration-150 text-left cursor-pointer group ${
+                  isPipelineDropdownOpen
+                    ? 'border-orange-300 bg-orange-50/60 ring-2 ring-orange-500/10'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80 shadow-2xs'
+                }`}
+                title="Switch pipeline"
+              >
+                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-50 shrink-0">
+                  <Kanban size={13} className="text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] sm:text-[14px] font-bold font-heading text-zinc-900 truncate tracking-tight max-w-[110px] xs:max-w-[150px] sm:max-w-[220px] md:max-w-[280px]">
+                      {boardTitle}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-zinc-400 group-hover:text-zinc-600 transition-transform duration-200 shrink-0 ${
+                        isPipelineDropdownOpen ? 'rotate-180 text-primary' : ''
+                      }`}
+                    />
+                  </div>
+                </div>
+              </button>
+
+              {/* Floating Searchable Menu */}
+              {isPipelineDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  {/* Search Bar */}
+                  <div className="p-2.5 border-b border-slate-100 bg-slate-50/70">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        autoFocus
+                        value={pipelineSearchTerm}
+                        onChange={(e) => setPipelineSearchTerm(e.target.value)}
+                        placeholder="Search pipelines..."
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-medium placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pipelines List */}
+                  <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+                    {loadingPipelines ? (
+                      <div className="py-6 text-center text-xs text-slate-400">Loading pipelines...</div>
+                    ) : filteredPipelines.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-slate-400 font-medium">No pipelines found</div>
+                    ) : (
+                      filteredPipelines.map((p) => {
+                        const isCurrent = String(p.id) === String(pipelineId);
+                        const stageCount = p.stages?.length ?? p._count?.stages ?? 0;
+                        const leadCount = p.leadCount ?? p._count?.leads ?? 0;
+
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              try {
+                                localStorage.setItem(`last_active_pipeline_${user?.id || 'default'}`, String(p.id));
+                              } catch {}
+                              setIsPipelineDropdownOpen(false);
+                              navigate(`/pipelines/${p.id}/board`);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+                              isCurrent
+                                ? 'bg-orange-50/80 text-orange-900 font-semibold'
+                                : 'hover:bg-slate-50 text-slate-700 font-normal'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1 pr-2">
+                              <p className="text-xs truncate font-medium">{p.name}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                {stageCount} stages &middot; {leadCount} leads
+                              </p>
+                            </div>
+                            {isCurrent && <Check size={14} className="text-primary shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer - All Pipelines Cards shortcut */}
+                  <div className="border-t border-slate-100 p-1.5 bg-slate-50/50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPipelineDropdownOpen(false);
+                        navigate('/pipelines/cards');
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-primary hover:bg-white hover:shadow-2xs transition-all cursor-pointer"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> View All Pipeline Cards
+                      </span>
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {totalPipelineRevenue > 0 && (
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700 shrink-0">
+                ₹{totalPipelineRevenue.toLocaleString('en-IN')}
+              </span>
+            )}
           </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* All Pipelines cards button */}
+            <button
+              onClick={() => navigate('/pipelines/cards')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900 transition-all duration-150 shrink-0 text-[11px] sm:text-[12px] font-semibold cursor-pointer shadow-2xs"
+              title="View all pipeline cards"
+            >
+              <Layers size={13} />
+              <span className="hidden md:inline">All Pipelines</span>
+            </button>
+
             {/* Mobile/Tablet filter toggle — hidden on lg+ where sidebar is always visible */}
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -610,24 +868,45 @@ const LeadsKanbanPage = () => {
               <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
             </button>
             {canCreate && (
-              <>
-                <button
-                  onClick={() => setShowImport(true)}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-600 text-[11px] sm:text-[12px] font-semibold hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150"
-                >
-                  <Upload size={13} />
-                  <span className="hidden sm:inline">Import</span>
-                </button>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-primary text-white text-[11px] sm:text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all duration-150 active:scale-[0.97]"
-                >
-                  <Plus size={13} />
-                  <span className="hidden sm:inline">Add Lead</span>
-                  <span className="sm:hidden">Add</span>
-                </button>
-              </>
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-primary text-white text-[11px] sm:text-[12px] font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all duration-150 active:scale-[0.97]"
+              >
+                <Plus size={13} />
+                <span className="hidden sm:inline">Add Lead</span>
+                <span className="sm:hidden">Add</span>
+              </button>
             )}
+          </div>
+        </div>
+
+        {/* ── Scope Tabs (All / Mine) ── */}
+        <div className="flex-shrink-0 px-3 sm:px-5 bg-white border-b border-zinc-200/70 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {canViewAll && (
+              <button
+                type="button"
+                onClick={() => setScope('all')}
+                className={`py-2.5 font-semibold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  scope === 'all'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+                }`}
+              >
+                <Layers size={15} /> All
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setScope('mine')}
+              className={`py-2.5 font-semibold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer ${
+                scope === 'mine'
+                  ? 'text-orange-600 border-b-2 border-orange-600'
+                  : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
+            >
+              <UserCheck size={15} /> Mine
+            </button>
           </div>
         </div>
 
@@ -689,7 +968,6 @@ const LeadsKanbanPage = () => {
                       canManage={canManage}
                       onEditLead={handleEditLead}
                       onDeleteLead={handleDeleteLead}
-                      onQualifyLead={handleQualifyLead}
                     />
                   ))
                 )}
@@ -766,14 +1044,15 @@ const LeadsKanbanPage = () => {
         />
       )}
 
-      {qualifyingLead && (
-        <QualifyLeadModal
-          lead={qualifyingLead}
-          isOpen={!!qualifyingLead}
-          onClose={() => setQualifyingLead(null)}
-          onSuccess={handleLeadQualified}
-        />
-      )}
+      {/* Pipeline Closure Popup — fires when lead is dragged to CLOSURE column */}
+      <ClosurePopupModal
+        isOpen={showClosurePopup && !!pendingClosureLead}
+        lead={pendingClosureLead?.lead || pendingClosureLead}
+        courses={courses}
+        onClose={handleClosureCancel}
+        onConfirm={handleClosureConfirm}
+        isLoading={isClosureSubmitting}
+      />
 
       {/* Lost Reason Modal (Sprint 4) */}
       <LostReasonModal

@@ -128,11 +128,15 @@ export const OpportunitySpreadsheet = ({
           >
             {row.lead?.name || '—'}
           </span>
-          {row.lead?.mobile && (
+          {row.lead?.leadNumber ? (
+            <span className="text-[10px] font-mono font-bold text-slate-500 block">
+              {row.lead.leadNumber}
+            </span>
+          ) : row.lead?.mobile ? (
             <span className="text-[11px] text-slate-400 font-mono block">
               {row.lead.mobile}
             </span>
-          )}
+          ) : null}
         </div>
       ),
     },
@@ -189,12 +193,25 @@ export const OpportunitySpreadsheet = ({
       ),
     },
     {
-      header: 'Owner',
+      header: 'Created By',
+      accessorKey: 'createdBy',
+      className: 'min-w-[100px] max-w-[120px]',
+      cell: (row) => (
+        <span
+          className="text-slate-600 font-medium text-[13px] block truncate max-w-[110px]"
+          title={row.createdBy?.name || 'System'}
+        >
+          {row.createdBy?.name || 'System'}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Owner',
       accessorKey: 'owner',
       className: 'min-w-[100px] max-w-[120px]',
       cell: (row) => (
         <span
-          className="text-slate-700 font-medium text-[13px] block truncate max-w-[110px]"
+          className="text-primary font-semibold text-[13px] block truncate max-w-[110px]"
           title={row.owner?.name}
         >
           {row.owner?.name || '—'}

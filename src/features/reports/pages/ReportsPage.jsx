@@ -48,6 +48,7 @@ const ReportsPage = () => {
   const [reportData, setReportData] = useState(null);
   const [currentFilters, setCurrentFilters] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tableLoading, setTableLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState(false);
 
@@ -189,7 +190,8 @@ const ReportsPage = () => {
     return allowedReports.includes(type);
   };
 
-  const handleGenerateReport = async (filters, page = 1) => {
+  const handleGenerateReport = async (filters, page = 1, options = {}) => {
+    const isPageChange = Boolean(options.isPageChange);
     const targetType = activeReportType || filters?.reportType;
     if (!canAccessReportType(targetType)) {
       setError(true);
@@ -197,9 +199,13 @@ const ReportsPage = () => {
       return;
     }
 
-    setLoading(true);
+    if (isPageChange) {
+      setTableLoading(true);
+    } else {
+      setLoading(true);
+      showLoader('Generating report...');
+    }
     setError(false);
-    showLoader('Generating report...');
     setCurrentFilters(filters);
     setCurrentPage(page);
     try {
@@ -214,7 +220,9 @@ const ReportsPage = () => {
       });
       if (res?.success) {
         setReportData(res.data);
-        toast.success('Report generated successfully');
+        if (!isPageChange) {
+          toast.success('Report generated successfully');
+        }
       } else {
         setError(true);
         toast.error(res?.message || 'Failed to generate report');
@@ -223,8 +231,12 @@ const ReportsPage = () => {
       setError(true);
       toast.error(err.message || 'Error generating report');
     } finally {
-      setLoading(false);
-      hideLoader();
+      if (isPageChange) {
+        setTableLoading(false);
+      } else {
+        setLoading(false);
+        hideLoader();
+      }
     }
   };
 
@@ -505,9 +517,10 @@ const ReportsPage = () => {
               reportData={reportData}
               filters={currentFilters}
               builderOptions={builderOptions}
-              onPageChange={(page) => handleGenerateReport(currentFilters, page)}
+              onPageChange={(page) => handleGenerateReport(currentFilters, page, { isPageChange: true })}
               onSaveConfig={handleSaveConfig}
               loading={loading}
+              tableLoading={tableLoading}
               error={error}
               toast={toast}
             />

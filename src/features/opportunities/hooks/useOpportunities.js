@@ -13,6 +13,7 @@ import {
   deleteOpportunityStage,
   moveOpportunityStage,
   bulkUpdateOpportunityStages,
+  qualifyOpportunity,
 } from '../services/opportunityService';
 import { toast } from '../../../shared/utils/toast';
 
@@ -272,6 +273,7 @@ export const useMoveOpportunityStageMutation = () => {
       toast.success(res?.message || 'Opportunity stage updated successfully');
     },
     onError: (error) => {
+      if (error?.statusCode === 403 || error?.status === 403 || error?.code === 'FORBIDDEN') return;
       toast.error(error?.message || 'Failed to move opportunity stage');
     },
   });
@@ -294,3 +296,33 @@ export const useBulkUpdateOpportunityStagesMutation = () => {
   });
 };
 
+/**
+ * Hook to qualify an opportunity and compute a priority score (0–100%).
+ * On success invalidates both the list and the detail queries so the badge
+ * appears immediately everywhere (kanban card + detail page + drawer).
+ */
+export const useQualifyOpportunityMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ opportunityId, data }) => qualifyOpportunity(opportunityId, data),
+    onSuccess: (res, variables) => {
+      const { opportunityId } = variables;
+      // Bust all opportunity queries so badge appears everywhere instantly
+      queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.detail(opportunityId) });
+      const score = res?.score ?? res?.data?.score;
+      toast.success(
+        score !== undefined
+          ? `Opportunity qualified! Score: ${score}% 🏆`
+          : 'Opportunity qualification saved'
+      );
+    },
+    onError: (error) => {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to qualify opportunity';
+      toast.error(msg);
+    },
+  });
+};

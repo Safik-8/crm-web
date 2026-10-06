@@ -126,3 +126,16 @@ export const formatDateTime = (
     return datePart
   }
 }
+
+/**
+ * Ensures an external URL begins with http:// or https:// for safe opening in new tabs
+ * @param {string} url - User-provided URL (e.g. "linkedin.com/in/user" or "https://linkedin.com/in/user")
+ * @returns {string} Formatted absolute URL
+ */
+export const formatExternalUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};

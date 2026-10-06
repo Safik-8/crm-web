@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { SocketContext } from '../../shared/context/SocketContext';
 import { useAuth } from './AuthProvider';
+import { getAccessToken } from '../../lib/api/authSession';
 
 export const SocketProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
@@ -27,7 +28,7 @@ export const SocketProvider = ({ children }) => {
 
     const socketInstance = io(socketUrl, {
       auth: {
-        token: localStorage.getItem('token') || localStorage.getItem('accessToken') || '',
+        token: getAccessToken() || '',
       },
       transports: ['websocket', 'polling'],
       reconnection: true,

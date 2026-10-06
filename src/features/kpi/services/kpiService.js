@@ -28,4 +28,9 @@ export const kpiService = {
     const res = await axiosClient.put(`${BASE_PATH}/targets/${id}`, targetData);
     return res.data || res;
   },
+
+  deleteTarget: async (id) => {
+    const res = await axiosClient.delete(`${BASE_PATH}/targets/${id}`);
+    return res.data || res;
+  },
 };

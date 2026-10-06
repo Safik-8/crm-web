@@ -14,7 +14,7 @@ export default function KpiDashboardPage() {
   const { user, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState('my'); // 'my' | 'team' | 'branch' | 'company'
 
-  const canManage = hasPermission('KPI', 'canManage') || hasPermission('manage:kpi');
+  const canCreate = hasPermission('KPI', 'canCreate') || hasPermission('create:kpi');
   const canView = hasPermission('KPI', 'canView') || hasPermission('view:kpi');
 
   // Role Scoping & Dynamic Tab Visibility
@@ -91,9 +91,9 @@ export default function KpiDashboardPage() {
           </p>
         </div>
 
-        {canManage && (
+        {canCreate && (
           <Link
-            to="/kpi/setup"
+            to="/kpi-management"
             className="h-9 px-4 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs rounded-md shadow-2xs transition-colors flex items-center gap-2 self-start sm:self-auto"
           >
             <Plus size={16} />

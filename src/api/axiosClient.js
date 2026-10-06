@@ -2,25 +2,29 @@
 
 import axios from 'axios';
 import { enhancedToast } from '../shared/utils/toast';
-
-import { refreshAuthToken } from '../lib/api/authSession';
+import { 
+  refreshAuthToken, 
+  getAccessToken, 
+  setAccessToken, 
+  clearAccessToken 
+} from '../lib/api/authSession';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create central Axios instance
 const axiosClient = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // Crucial for sending httpOnly session cookies cross-origin
+  withCredentials: true, // Sends httpOnly session cookies cross-origin
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to attach Bearer token if available
+// Request interceptor to attach in-memory Bearer token if available
 axiosClient.interceptors.request.use(
   (config) => {
     const isRefreshRequest = config.url && config.url.includes('/auth/refresh');
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = getAccessToken();
     if (token && !config.headers.Authorization && !isRefreshRequest) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,14 +33,13 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for centralized error handling
+// Response interceptor for centralized error handling and in-memory token capture
 axiosClient.interceptors.response.use(
   (response) => {
     const tokenReceived = response.data?.data?.accessToken || response.data?.accessToken;
     if (tokenReceived) {
-      localStorage.setItem('accessToken', tokenReceived);
+      setAccessToken(tokenReceived);
     }
-    // Return the custom unified response envelope (e.g. response.data)
     return response.data;
   },
   async (error) => {
@@ -53,9 +56,7 @@ axiosClient.interceptors.response.use(
       // ── 1. UN-AUTHENTICATED SESSION TIMEOUT (401) ──
       if (status === 401 && !isLoginRequest && !isLoginPage && !isRefreshRequest) {
         if (originalRequest._retry) {
-          // Clear window context and redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          clearAccessToken();
           window.location.href = '/login?session=expired';
           return Promise.reject(data || new Error('Session expired'));
         }
@@ -69,6 +70,7 @@ axiosClient.interceptors.response.use(
           }
           return axiosClient(originalRequest);
         } catch (refreshError) {
+          clearAccessToken();
           window.location.href = '/login?session=expired';
           return Promise.reject(refreshError);
         }
@@ -79,7 +81,6 @@ axiosClient.interceptors.response.use(
         enhancedToast.permissionDenied(data?.message);
       }
 
-      // Reject with backend error object if formatted
       return Promise.reject(data || error.response);
     }
 

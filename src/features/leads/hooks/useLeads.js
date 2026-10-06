@@ -6,7 +6,6 @@ import {
   createLead,
   updateLead,
   deleteLead,
-  deleteAllLeads,
   importLeadsPreview,
   importLeadsCommit,
   restoreLead,
@@ -143,23 +142,6 @@ export const useDeleteLeadMutation = () => {
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED' && error?.code !== 'DUPLICATE_LEAD_WARNING') {
         const msg = error?.message || 'Failed to delete lead';
-        toast.error(msg);
-      }
-    },
-  });
-};
-
-export const useDeleteAllLeadsMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteAllLeads,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.lists() });
-      toast.success('All leads deleted successfully');
-    },
-    onError: (error) => {
-      if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED') {
-        const msg = error?.message || 'Failed to delete all leads';
         toast.error(msg);
       }
     },

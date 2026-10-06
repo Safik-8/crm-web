@@ -80,6 +80,9 @@ export const CreateOpportunitySlideover = ({
             base.stageId = defaultStageId;
           }
         }
+        if (!base.linkedinUrl && selectedLead.linkedinUrl) {
+          base.linkedinUrl = selectedLead.linkedinUrl;
+        }
       }
     }
     return base;
@@ -114,13 +117,18 @@ export const CreateOpportunitySlideover = ({
       } else if (stages && stages.length > 0) {
         onChangeCallback('stageId', Number(stages[0].id));
       }
+
+      // Auto-prefill LinkedIn URL from Lead if available
+      if (selectedLead.linkedinUrl) {
+        onChangeCallback('linkedinUrl', selectedLead.linkedinUrl);
+      }
     }
   };
 
   const isLeadFixed = Boolean(initialValues?.leadId);
 
-  // Filter leads: Must be QUALIFIED, not CONVERTED, without an active OPEN opportunity, and in user's company
-  const qualifiedLeads = React.useMemo(() => {
+  // Filter leads: Not CONVERTED, without an active OPEN opportunity, and in user's company
+  const availableLeads = React.useMemo(() => {
     const list = leads.filter((l) => {
       // Multi-Tenant Safety Check: Must belong to current logged in company
       if (user?.companyId && l.companyId && Number(l.companyId) !== Number(user.companyId)) {
@@ -130,12 +138,13 @@ export const CreateOpportunitySlideover = ({
       // If a lead is pre-selected, always include it
       if (initialValues?.leadId && Number(l.id) === Number(initialValues.leadId)) return true;
 
-      // Must be QUALIFIED (status === 'QUALIFIED' or isQualified flag)
-      const isQualified = l.qualification?.status === 'QUALIFIED' || l.isQualified === true || l.qualificationStatus === 'QUALIFIED';
-      if (!isQualified) return false;
-
       // Must not already be converted
-      if (l.status?.code === 'CONVERTED' || l.status?.name === 'CONVERTED' || l.isConverted) return false;
+      if (
+        l.status?.code === 'CONVERTED' ||
+        l.status?.name === 'CONVERTED' ||
+        l.isConverted ||
+        l.qualificationStatus === 'CONVERTED'
+      ) return false;
 
       // Must not already have an OPEN opportunity
       const hasOpenOpp = Array.isArray(l.opportunities) && l.opportunities.some((o) => o.status === 'OPEN');
@@ -161,17 +170,18 @@ export const CreateOpportunitySlideover = ({
     {
       key: 'leadId',
       name: 'leadId',
-      label: 'Select Lead (Qualified Only)',
+      label: 'Select Lead',
       type: 'searchable-select',
       required: true,
       disabled: isLeadFixed,
-      placeholder: qualifiedLeads.length > 0 
-        ? 'Search qualified lead by Name, Mobile, or ID...' 
-        : 'No qualified leads available (Qualify a lead first in Lead Management)',
-      options: qualifiedLeads.map((l) => ({
+      placeholder: availableLeads.length > 0 
+        ? 'Search lead by Name, Mobile, or ID...' 
+        : 'No leads available. Leads assigned to you will appear here.',
+      options: availableLeads.map((l) => ({
         value: l.id,
-        label: `[#${l.id}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''} (Qualified • Score: ${l.qualification?.score ?? l.qualificationScore ?? 100}%)`,
+        label: `[${l.leadNumber || `#${l.id}`}] ${l.name || 'Unnamed Lead'}${l.mobile ? ` - ${l.mobile}` : ''}`,
       })),
+        
       onCustomChange: handleLeadChange,
     },
     {
@@ -193,9 +203,9 @@ export const CreateOpportunitySlideover = ({
     {
       key: 'productId',
       name: 'productId',
-      label: 'Course / Product',
+      label: 'Service',
       type: 'select',
-      placeholder: 'Select Course / Product (Auto-fills if specified on Lead)',
+      placeholder: 'Select Service (Auto-fills if specified on Lead)',
       options: courseOptions,
     },
     {
@@ -227,6 +237,13 @@ export const CreateOpportunitySlideover = ({
       label: 'Internal Notes',
       type: 'textarea',
       placeholder: 'Add any specific deal requirements or notes...',
+    },
+    {
+      key: 'linkedinUrl',
+      name: 'linkedinUrl',
+      label: 'LinkedIn Profile',
+      type: 'text',
+      placeholder: 'e.g. https://linkedin.com/in/username (Auto-fills from Lead)',
     },
   ];
 
@@ -273,6 +290,7 @@ export const CreateOpportunitySlideover = ({
         ? Number(formData.probabilityPercentage)
         : undefined,
       productId: formData.productId ? Number(formData.productId) : null,
+      linkedinUrl: formData.linkedinUrl ? String(formData.linkedinUrl).trim() : null,
     };
     return onSubmit(payload);
   };
@@ -282,7 +300,7 @@ export const CreateOpportunitySlideover = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Create New Opportunity"
-      subtitle="Track potential sales deals for qualified leads"
+      subtitle="Track potential sales deals for leads"
       icon={Target}
       fields={fields}
       initialValues={computedInitialValues}

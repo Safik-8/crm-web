@@ -43,3 +43,14 @@ export const useUpdateKpiTarget = () => {
     },
   });
 };
+
+export const useDeleteKpiTarget = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id) => kpiService.deleteTarget(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kpiDashboard'] });
+    },
+  });
+};

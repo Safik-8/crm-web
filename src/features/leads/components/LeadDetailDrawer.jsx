@@ -5,8 +5,10 @@ import { useLeadQuery } from '../hooks/useLeads';
 import {
   X, Phone, Calendar, Compass, Tag, User, Mail, DollarSign,
   MapPin, Award, ShieldAlert, History, MessageSquare,
-  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target
+  ClipboardList, UserCheck, GitBranch, CalendarClock, ArrowLeft, Target, ExternalLink, Hash
 } from 'lucide-react';
+import LinkedinIcon from '../../../shared/components/elements/LinkedinIcon';
+import { formatExternalUrl } from '../../../shared/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import CommentThread from '../../activities/components/CommentThread';
 
@@ -17,7 +19,6 @@ import StageHistoryTab from './drawer/StageHistoryTab';
 import FollowupsTab from './drawer/FollowupsTab';
 import CommunicationsTab from './drawer/CommunicationsTab';
 import QualificationHistoryTab from './drawer/QualificationHistoryTab';
-import QualifyLeadModal from './QualifyLeadModal';
 import Button from '../../../shared/components/elements/Button';
 
 import { CreateOpportunitySlideover } from '../../opportunities/components/CreateOpportunitySlideover';
@@ -60,7 +61,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
     }
   }, [initialTab]);
 
-  const [isQualifyModalOpen, setIsQualifyModalOpen] = useState(false);
   const [isCreateOppOpen, setIsCreateOppOpen] = useState(false);
   const tabSectionRef = useRef(null);
   const { data: leadRes, isError, error } = useLeadQuery(initialLead?.id, initialLead);
@@ -87,7 +87,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
     (Array.isArray(coursesQuery.data) ? coursesQuery.data : []);
 
   const canCreateOpp = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
-  const canQualifyLead = hasPermission('edit:qualification') || hasPermission('QUALIFICATION', 'canEdit');
 
   const oppStagesQuery = useQuery({
     queryKey: ['opportunity-stages'],
@@ -155,17 +154,26 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
 
   const locationStr = [lead.city, lead.state, lead.country].filter(Boolean).join(', ') || '—';
 
+  const displayLeadNumber = lead.leadNumber || lead.lead_number || (lead.id ? `LEAD-${lead.id}` : null);
+
   const contactDetails = [
     { icon: Phone, label: 'Mobile', value: lead.mobile || '—' },
     { icon: Phone, label: 'Alt Contact', value: lead.alternateMobile || '—' },
     { icon: Mail, label: 'Email', value: lead.email || '—' },
+    ...(lead.linkedinUrl ? [{
+      icon: LinkedinIcon,
+      label: 'LinkedIn',
+      value: lead.linkedinUrl,
+      isLink: true,
+      href: formatExternalUrl(lead.linkedinUrl)
+    }] : []),
     { icon: Calendar, label: 'Created Date', value: date },
     { icon: MapPin, label: 'Location', value: locationStr },
   ];
 
   const interestDetails = [
     { icon: Compass, label: 'Source', value: lead.source?.name || '—' },
-    { icon: Award, label: 'Interested Course', value: lead.course?.name || lead.interestedFor || lead.interested_for || '—' },
+    { icon: Award, label: 'Interested Service', value: lead.course?.name || lead.interestedFor || lead.interested_for || '—' },
     { icon: DollarSign, label: 'Budget', value: lead.budget !== null && lead.budget !== undefined ? `₹${lead.budget.toLocaleString('en-IN')}` : '—' },
     { icon: ShieldAlert, label: 'Priority', value: lead.priority || 'MEDIUM' },
   ];
@@ -197,9 +205,19 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
               >
                 <ArrowLeft size={20} />
               </button>
-              <h2 className="text-xl font-medium text-slate-900 tracking-tight">
-                {lead.name}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-medium text-slate-900 tracking-tight">
+                  {lead.name}
+                </h2>
+                {displayLeadNumber && (
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono bg-slate-100 border border-slate-200 text-slate-700 select-all"
+                    title={`Lead ID: ${displayLeadNumber}`}
+                  >
+                    {displayLeadNumber}
+                  </span>
+                )}
+              </div>
               {/* Stage Pill */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-200/60 text-orange-600 rounded-full text-xs font-medium">
                 <Tag size={13} />
@@ -238,7 +256,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
             </div>
 
             <div className="flex items-center gap-3">
-              {isQualified && !hasOpenOpp && canCreateOpp && (
+              {!hasOpenOpp && canCreateOpp && (
                 <Button
                   variant="contained"
                   size="small"
@@ -252,15 +270,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                   }}
                 >
                   Create Opportunity
-                </Button>
-              )}
-              {canQualifyLead && (
-                <Button
-                  variant={isQualified ? 'outlined' : 'contained'}
-                  size="small"
-                  onClick={() => setIsQualifyModalOpen(true)}
-                >
-                  {isQualified ? 'Re-evaluate Qualification' : 'Qualify Lead'}
                 </Button>
               )}
             </div>
@@ -280,12 +289,25 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                     const IconComponent = item.icon;
                     return (
                       <div key={idx} className="bg-white border border-slate-100 rounded-xl p-2.5 flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 shrink-0">
+                        <div className={`p-1.5 rounded-lg shrink-0 ${item.isLink ? 'bg-blue-50 text-[#0A66C2]' : 'bg-slate-50 text-slate-400'}`}>
                           <IconComponent size={13} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{item.label}</div>
-                          <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                          {item.isLink ? (
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline mt-0.5 truncate flex items-center gap-1 group"
+                              title={item.value}
+                            >
+                              <span className="truncate">{item.value}</span>
+                              <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
+                            </a>
+                          ) : (
+                            <div className="text-xs font-bold text-slate-700 mt-0.5 truncate">{item.value}</div>
+                          )}
                         </div>
                       </div>
                     );
@@ -437,7 +459,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                 )}
                 {activeTab === 'qualification' && (
                   <div className="fade-in">
-                    <QualificationHistoryTab leadId={lead.id} onOpenQualifyModal={() => setIsQualifyModalOpen(true)} />
+                    <QualificationHistoryTab leadId={lead.id} onOpenQualifyModal={() => {}} />
                   </div>
                 )}
                 {activeTab === 'notes' && <div className="fade-in"><NotesTab leadId={lead.id} /></div>}
@@ -452,12 +474,6 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
         </div>
       </div>
 
-      <QualifyLeadModal
-        isOpen={isQualifyModalOpen}
-        onClose={() => setIsQualifyModalOpen(false)}
-        lead={lead}
-      />
-
       <CreateOpportunitySlideover
         isOpen={isCreateOppOpen}
         onClose={() => setIsCreateOppOpen(false)}
@@ -466,6 +482,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
           opportunityName: lead?.name ? `${lead.name} Deal` : undefined,
           expectedRevenue: lead?.budget !== undefined && lead?.budget !== null ? Number(lead.budget) : undefined,
           productId: lead?.courseId ? Number(lead.courseId) : (lead?.course?.id ? Number(lead.course.id) : undefined),
+          linkedinUrl: lead?.linkedinUrl || undefined,
         }}
         onSubmit={handleCreateOppSubmit}
         isLoading={createOppMutation.isPending}

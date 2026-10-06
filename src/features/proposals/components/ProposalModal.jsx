@@ -281,8 +281,8 @@ export default function ProposalModal({
 
           <SelectField
             id="proposal-product"
-            label="Product / Course"
-            placeholder="Select Product (Optional)..."
+            label="Service"
+            placeholder="Select Service (Optional)..."
             allowEmptyOption
             value={productId}
             onChange={handleCourseChange}

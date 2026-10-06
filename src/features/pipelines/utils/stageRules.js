@@ -13,10 +13,10 @@
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Stage types that cannot be dragged OUT of once a lead is there */
-export const LOCKED_STAGE_TYPES = ['WON', 'CLOSURE'];
+export const LOCKED_STAGE_TYPES = ['CLOSURE'];
 
 /** Stage types that show as terminal (lock icon) in Kanban column header */
-export const TERMINAL_STAGE_TYPES = ['WON', 'CLOSURE', 'LOST'];
+export const TERMINAL_STAGE_TYPES = ['CLOSURE'];
 
 /** Names of system-mandatory stages (case-insensitive — backward compat) */
 const MANDATORY_NAMES = ['prospect', 'closure'];
@@ -58,13 +58,13 @@ export const isLostStage = (stage) =>
 
 /**
  * Returns true if a lead in this stage cannot be dragged OUT.
- * WON and CLOSURE are terminal — once a lead reaches them it's locked.
+ * CLOSURE is terminal — once a lead reaches it it's locked.
  */
 export const isTerminalStage = (stage) => {
   if (LOCKED_STAGE_TYPES.includes(stage?.stageType)) return true;
   // name-based fallback for legacy data
   const name = stage?.name?.toLowerCase();
-  return name === 'closure' || name === 'won';
+  return name === 'closure';
 };
 
 /**

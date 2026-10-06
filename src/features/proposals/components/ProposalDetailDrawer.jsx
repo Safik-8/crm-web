@@ -371,11 +371,11 @@ export default function ProposalDetailDrawer({
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Product / Service */}
+            {/* Service */}
             <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
               <Award className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Product / Course</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Service</span>
                 <span className="font-semibold text-xs text-slate-700 leading-tight block mt-0.5">{proposal.product?.name || '—'}</span>
               </div>
             </div>

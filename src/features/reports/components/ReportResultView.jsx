@@ -16,7 +16,7 @@ import { SYSTEM_REPORTS_METADATA } from '../constants/reportConstants';
 import { apiClient } from '../../../lib/api/api';
 import { useExport } from '../../../shared/hooks/useExport';
 
-const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, error, toast }) => {
+const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, tableLoading = false, error, toast }) => {
   const { user } = useAuth();
   const { exportPDFFromData } = useExport();
   const reportPerms = user?.permissions?.REPORT || {};
@@ -197,7 +197,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
         [],
         ['Applied Filters'],
         ['Status Filter', filters?.status || filters?.statusId || filters?.paymentStatus || 'All'],
-        ['Course/Product Filter', getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || 'All'],
+        ['Service Filter', getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || 'All'],
         ['Lead Source Filter', getScopeName('leadSources', filters?.sourceId) || 'All'],
         ['Deal Outcome Filter', filters?.outcome || 'All'],
         [],
@@ -325,7 +325,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
           Scope: `${companyName} -> ${getScopeName('branches', filters?.branchId) || 'All Branches'} -> ${getScopeName('teams', filters?.teamId) || 'All Teams'}`,
           'Date Range': filters?.startDate && filters?.endDate ? `${filters.startDate} to ${filters.endDate}` : 'All Time',
           Status: filters?.status || filters?.statusId || filters?.paymentStatus || null,
-          Course: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
+          Service: getScopeName('courses', filters?.productId || filters?.courseId || filters?.purchasedProductId) || null
         },
         summaryCards: [
           { label: 'Total Records', value: `${exportItems.length} Rows` },
@@ -772,20 +772,21 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
           <Table
             columns={columns}
             data={items}
-            loadingState="success"
+            loadingState={tableLoading ? 'loading' : 'success'}
             className="rounded-none"
           />
 
-          {pagination.pages > 1 && (
+          {(pagination.pages > 1 || pagination.totalPages > 1) && (
             <div className="flex justify-end bg-white border border-slate-200 rounded-none p-4 shadow-2xs">
               <Pagination
                 pagination={{
-                  page: pagination.page,
-                  totalPages: pagination.pages,
-                  total: pagination.total,
-                  limit: pagination.limit
+                  page: pagination.page || 1,
+                  totalPages: pagination.pages || pagination.totalPages || 1,
+                  total: pagination.total || 0,
+                  limit: pagination.limit || 10
                 }}
                 onPageChange={onPageChange}
+                isLoading={tableLoading}
               />
             </div>
           )}
@@ -886,7 +887,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
 
                   {filters?.status && <div><span className="text-slate-400 block mb-0.5">Status</span> <span className="text-slate-800">{filters.status}</span></div>}
                   {filters?.paymentStatus && <div><span className="text-slate-400 block mb-0.5">Payment Status</span> <span className="text-slate-800">{filters.paymentStatus}</span></div>}
-                  {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Product / Course</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Courses'}</span></div>}
+                  {filters?.productId && <div><span className="text-slate-400 block mb-0.5">Service</span> <span className="text-slate-800">{getScopeName('courses', filters.productId) || 'All Services'}</span></div>}
                   {filters?.outcome && <div><span className="text-slate-400 block mb-0.5">Outcome</span> <span className="text-slate-800">{filters.outcome}</span></div>}
                 </div>
               </div>

@@ -22,6 +22,7 @@ import {
   TrendingUp,
   DollarSign,
   Sliders,
+  Bug,
 } from 'lucide-react';
 import {
   PERMISSIONS
@@ -41,8 +42,8 @@ export const navGroups = [
       { name: 'Leads', path: '/leads', icon: ClipboardList, permission: PERMISSIONS.VIEW_LEADS },
       { name: 'Opportunities', path: '/opportunities', icon: Target, permission: PERMISSIONS.VIEW_OPPORTUNITIES },
       { name: 'Customers', path: '/customers', icon: Users, permission: PERMISSIONS.VIEW_CUSTOMERS },
-      { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
-      { name: 'Courses', path: '/courses', icon: BookOpen, permission: PERMISSIONS.VIEW_COURSES },
+      // { name: 'Deals', path: '/deals', icon: Briefcase, permission: PERMISSIONS.VIEW_DEALS },
+      { name: 'Services', path: '/services', icon: Briefcase, permission: PERMISSIONS.VIEW_COURSES },
     ]
   },
   {
@@ -71,13 +72,14 @@ export const navGroups = [
       { name: 'Qualification Rules', path: '/settings/qualification', icon: Target, permission: 'view:qualification' },
       { name: 'Roles & Permissions', path: '/roles', icon: Shield, permission: PERMISSIONS.VIEW_ROLES, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
       { name: 'Audit Logs', path: '/audit-logs', icon: ClipboardList, roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
+      { name: 'Feedback & Bugs', path: '/feedback', icon: Bug, roles: ['SUPER_ADMIN'] },
     ]
   }
 ];
 
 export const navItems = navGroups.flatMap(group => group.items);
 
-export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) => {
+export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = false) => {
   if (!user) return [];
 
   let items = [...navItems];
@@ -103,7 +105,7 @@ export const getFilteredNavItems = (user, hasPermission, hasActiveTeam = true) =
   });
 };
 
-export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = true) => {
+export const getFilteredNavGroups = (user, hasPermission, hasActiveTeam = false) => {
   if (!user) return [];
 
   const userRole = (user?.primaryRole || user?.role || user?.userRoles?.[0]?.role?.name || '').toUpperCase();

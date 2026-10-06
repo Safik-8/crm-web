@@ -17,6 +17,7 @@ import DynamicFormSlideover from '../../../shared/components/elements/DynamicFor
 import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import { toast } from '../../../shared/utils/toast';
 import { IconButton, InputAdornment } from '@mui/material';
+import Pagination from '../../../shared/components/elements/Pagination';
 import Skeleton from '../../../shared/components/elements/Skeleton';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import { useAuth } from '../../../app/providers/AuthProvider';

@@ -102,3 +102,30 @@ export const bulkUpdateOpportunityStages = (data) => {
 export const getWinLossReasons = (params = {}) => {
   return apiClient(`/opportunities/reasons${buildQueryString(params)}`, { method: 'GET' });
 };
+
+/**
+ * Auto-create opportunity from pipeline closure (Kanban drag-to-CLOSURE flow).
+ * leadId is passed in the URL, payload fields in request body.
+ */
+export const createFromPipelineClosure = (leadId, data) => {
+  return apiClient(`/opportunities/from-pipeline-closure/${leadId}`, {
+    method: 'POST',
+    body: data,
+  });
+};
+
+/**
+ * Qualify an opportunity — computes a priority score (0–100%) from company-configured criteria.
+ * Stores score on the opportunity itself; does NOT touch Lead qualification tables.
+ *
+ * @param {number} opportunityId
+ * @param {Object} data - criteria key-value map e.g. { budgetAvailable: true, interestLevel: 'HIGH' }
+ * @returns {Promise<{ opportunity, score, passThreshold }>}
+ */
+export const qualifyOpportunity = async (opportunityId, data) => {
+  const response = await apiClient(`/opportunities/${opportunityId}/qualify`, {
+    method: 'POST',
+    body: data,
+  });
+  return response?.data || response;
+};

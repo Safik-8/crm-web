@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import {
   GitBranch, Users, TrendingUp, Layers, Target,
-  Handshake, UserCheck, Clock, BarChart3, RefreshCw,
+  Handshake, UserCheck, Clock, BarChart3, RefreshCw, ArrowUpRight,
 } from 'lucide-react';
 import KpiCard            from '../components/KpiCard';
 import LeadAgingWidget    from '../components/LeadAgingWidget';
 import ActivityFeedWidget from '../components/ActivityFeedWidget';
 import ReminderWidget     from '../components/ReminderWidget';
+import FollowupsDrawer    from '../components/FollowupsDrawer';
 import Button             from '../../../shared/components/elements/Button';
 import SelectField        from '../../../shared/components/elements/SelectField';
 import PageHeader         from '../../../shared/components/modules/PageHeader';
@@ -20,6 +21,7 @@ const CompanyAdminDashboardView = () => {
   const { user }   = useAuth();
   const navigate   = useNavigate();
   const [period, setPeriod] = useState('MONTHLY');
+  const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
 
   const params = { rankingPeriod: period, companyId: user?.companyId };
   const { data: metrics = {}, isLoading, isFetching, refetch } = useDashboardMetrics(params);
@@ -32,14 +34,14 @@ const CompanyAdminDashboardView = () => {
                              'Monthly Revenue';
 
   const KPI_CARDS = [
-    { icon: GitBranch,     title: 'Total Branches',      value: metrics.totalBranches,      color: 'blue'    },
-    { icon: Users,         title: 'Total Users',          value: metrics.totalUsers,         color: 'purple'  },
-    { icon: Layers,        title: 'Total Leads',          value: metrics.totalLeads,         color: 'sky'     },
-    { icon: Target,        title: 'Opportunities',         value: metrics.activeOpportunities, color: 'orange'  },
-    { icon: Handshake,     title: 'Deals Won',            value: metrics.dealsWon,           color: 'emerald' },
-    { icon: TrendingUp,    title: revenueTitle,           value: metrics.monthlyRevenue,     prefix: '₹', color: 'blue' },
-    { icon: UserCheck,     title: 'Active Customers',     value: metrics.activeCustomers,    color: 'purple'  },
-    { icon: Clock,         title: "Today's Follow-ups",  value: metrics.followupsToday,     color: 'rose'    },
+    { icon: GitBranch,     title: 'Total Branches',      value: metrics.totalBranches,      color: 'blue',    onClick: () => navigate('/settings/branch') },
+    { icon: Users,         title: 'Total Users',          value: metrics.totalUsers,         color: 'purple',  onClick: () => navigate('/users') },
+    { icon: Layers,        title: 'Total Leads',          value: metrics.totalLeads,         color: 'sky',     onClick: () => navigate('/leads') },
+    { icon: Target,        title: 'Opportunities',         value: metrics.activeOpportunities, color: 'orange',  onClick: () => navigate('/opportunities') },
+    { icon: Handshake,     title: 'Deals Won',            value: metrics.dealsWon,           color: 'emerald', onClick: () => navigate('/deals?outcome=WON') },
+    { icon: TrendingUp,    title: revenueTitle,           value: metrics.monthlyRevenue,     prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
+    { icon: UserCheck,     title: 'Active Customers',     value: metrics.activeCustomers,    color: 'purple',  onClick: () => navigate('/customers') },
+    { icon: Clock,         title: "Today's Follow-ups",  value: metrics.followupsToday,     color: 'rose',    onClick: () => setFollowupDrawerOpen(true) },
   ];
 
   const branchChartData = (metrics.branchRankings ?? []).map((b) => ({
@@ -104,9 +106,23 @@ const CompanyAdminDashboardView = () => {
         {KPI_CARDS.map(card => <KpiCard key={card.title} {...card} isLoading={isLoading} />)}
       </div>
 
-      <div className="bg-white border border-slate-200 shadow-sm p-4">
-        <p className="text-2xl font-extrabold text-purple-600">{metrics.conversionRate ?? 0}%</p>
-        <p className="text-sm font-semibold text-slate-600">Conversion Rate</p>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/reports/sales-performance')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate('/reports/sales-performance');
+          }
+        }}
+        className="bg-white border border-slate-200 shadow-sm p-4 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-purple-300 transition-all group"
+      >
+        <div>
+          <p className="text-2xl font-extrabold text-purple-600">{metrics.conversionRate ?? 0}%</p>
+          <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Conversion Rate</p>
+        </div>
+        <ArrowUpRight size={20} className="text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -133,6 +149,13 @@ const CompanyAdminDashboardView = () => {
         <ActivityFeedWidget activities={activities} isLoading={activitiesLoading} />
         <ReminderWidget />
       </div>
+
+      {/* Follow-up Drawer triggered by Today's Follow-ups card */}
+      <FollowupsDrawer
+        isOpen={followupDrawerOpen}
+        onClose={() => setFollowupDrawerOpen(false)}
+        initialFilter="today"
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Target, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Target, ArrowLeft, AlertCircle, Info, Sparkles, HelpCircle, Calculator } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../api/axiosClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -22,8 +22,9 @@ export default function KpiSetupPage() {
   const createMutation = useCreateKpiTarget();
 
   const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(user);
-  const isCompanyAdmin = isCompanyWide;
-  const isBranchManager = isBranchLevel || isCompanyWide;
+  // Use tier-aware flags: isCompanyWide includes Super Admin + Company Admin, isBranchLevel is ONLY Branch Manager tier
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
   
   // Custom permission check
   const canCreate = hasPermission('KPI', 'canCreate') || hasPermission('create:kpi') || isSuperAdmin || isCompanyAdmin || isBranchManager;
@@ -408,7 +409,54 @@ export default function KpiSetupPage() {
     CUSTOMER: { label: 'Target Customer Count', placeholder: 'e.g. 10 (Count)' },
   };
 
+  // Simple user-friendly KPI Type descriptions, examples & auto-tracking details
+  const kpiTypeExplanations = {
+    LEAD: {
+      title: 'Lead Target',
+      badge: 'Count (Qty)',
+      description: 'A goal for how many new potential customer inquiries / leads an employee or team should bring in or handle.',
+      example: 'If set to 50, the goal is to contact or create 50 new leads during this month.',
+      howItWorks: 'Every time a new lead is created or assigned in the CRM, the counter increases by 1 automatically.'
+    },
+    REVENUE: {
+      title: 'Revenue Target',
+      badge: '₹ (INR)',
+      description: 'A financial goal for the total money earned from all successfully closed contracts and won deals.',
+      example: 'If set to ₹5,00,000, the goal is to close ₹5 Lakhs in won deals during this period.',
+      howItWorks: 'When any deal is marked as WON, the CRM instantly adds its final amount to the progress total.'
+    },
+    SALES: {
+      title: 'Sales Target',
+      badge: '₹ (INR)',
+      description: 'An individual sales turnover quota given to a sales executive or BDE to achieve through their direct sales pitches.',
+      example: 'If set to ₹2,50,000, the sales executive needs to close ₹2.5 Lakhs of total product/course sales.',
+      howItWorks: 'Automatically sums all sales revenue closed directly by that salesperson in real time.'
+    },
+    OPPORTUNITY: {
+      title: 'Opportunity Target',
+      badge: 'Count (Qty)',
+      description: 'A goal for how many hot/qualified prospects should be moved from raw leads into active sales pipeline discussions.',
+      example: 'If set to 20, the goal is to build and manage 20 active demo/proposal opportunities.',
+      howItWorks: 'Counts each new opportunity created in the sales pipeline within the target date range.'
+    },
+    CONVERSION: {
+      title: 'Conversion Rate Target',
+      badge: '% (0–100%)',
+      description: 'A quality score measuring how successfully an agent converts their assigned leads into paying clients.',
+      example: 'If set to 25%, the agent must convert at least 25 out of every 100 assigned leads into won deals.',
+      howItWorks: 'CRM calculates: (Total Won Deals ÷ Total Assigned Leads) × 100 automatically.'
+    },
+    CUSTOMER: {
+      title: 'Customer Acquisition Target',
+      badge: 'Count (Qty)',
+      description: 'A goal for how many brand-new paying client or student accounts should be acquired and onboarded.',
+      example: 'If set to 10, the goal is to onboard 10 brand-new paying customer accounts.',
+      howItWorks: 'Counts every new customer record created during the active target timeframe.'
+    },
+  };
+
   const currentMetric = metricConfigs[formData.kpiType] || metricConfigs.LEAD;
+  const currentExplanation = kpiTypeExplanations[formData.kpiType] || kpiTypeExplanations.LEAD;
 
   const handleSelectChange = (field, eOrVal) => {
     const rawVal = eOrVal && typeof eOrVal === 'object' && eOrVal.target ? eOrVal.target.value : eOrVal;
@@ -744,6 +792,60 @@ export default function KpiSetupPage() {
             <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
               ✓ {formData.duration === 'CUSTOM_RANGE' ? 'Flexible User Range' : 'Auto-Validated Range'}
             </span>
+          </div>
+
+          {/* Simple Dynamic KPI Type Explanation Guide Card */}
+          <div className="md:col-span-2 border border-slate-200 bg-slate-50/80 p-4 rounded-none space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-orange-100 text-orange-700 rounded-none">
+                  <Target size={16} />
+                </span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                  {currentExplanation.title} Guide
+                </h4>
+              </div>
+              {currentExplanation.badge && (
+                <span className="text-[11px] font-bold px-2 py-0.5 bg-orange-100/70 text-orange-800 border border-orange-200/80">
+                  Unit: {currentExplanation.badge}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              {/* 1. Simple Description */}
+              <div className="bg-white border border-slate-200/90 p-3 space-y-1.5 shadow-xs">
+                <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11.5px]">
+                  <HelpCircle size={13} className="text-orange-600" />
+                  What is this Target?
+                </span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">
+                  {currentExplanation.description}
+                </p>
+              </div>
+
+              {/* 2. Simple Example */}
+              <div className="bg-white border border-slate-200/90 p-3 space-y-1.5 shadow-xs">
+                <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11.5px]">
+                  <Sparkles size={13} className="text-amber-600" />
+                  Real Example:
+                </span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">
+                  {currentExplanation.example}
+                </p>
+              </div>
+
+              {/* 3. Automatic Tracking */}
+              <div className="bg-white border border-slate-200/90 p-3 space-y-1.5 shadow-xs">
+                <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11.5px]">
+                  <Calculator size={13} className="text-emerald-600" />
+                  How CRM Measures It:
+                </span>
+                <p className="text-slate-600 leading-relaxed text-[11.5px]">
+                  {currentExplanation.howItWorks}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

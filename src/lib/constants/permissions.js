@@ -29,7 +29,6 @@ export const PERMISSIONS = {
   VIEW_LEAD_STATUSES: 'view:lead_statuses',
   VIEW_LEAD_ASSIGNMENT: 'view:lead_assignment',
   VIEW_KPI: 'view:kpi',
-  MANAGE_KPI: 'manage:kpi',
   CREATE_KPI: 'create:kpi',
   VIEW_KPI_OWN: 'view:kpi_own',
   VIEW_KPI_ALL: 'view:kpi_analytics',

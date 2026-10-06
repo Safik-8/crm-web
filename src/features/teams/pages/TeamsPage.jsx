@@ -26,6 +26,10 @@ const TeamsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
+  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManager = isBranchLevel;
+
   // Search & Pagination State
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -57,14 +61,14 @@ const TeamsPage = () => {
   // Multi-tenancy scopes synchronization
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.primaryRole !== 'SUPER_ADMIN') {
+      if (!isSuperAdmin) {
         setCompanyId(currentUser.companyId || '');
       }
-      if (currentUser.primaryRole !== 'SUPER_ADMIN' && currentUser.primaryRole !== 'COMPANY_ADMIN') {
+      if (!isCompanyWide) {
         setBranchId(currentUser.branchId || '');
       }
     }
-  }, [currentUser]);
+  }, [currentUser, isSuperAdmin, isCompanyWide]);
 
   // Handle auto-opening of Create Team form or auto-filtering from other pages (e.g. Branch Table)
   useEffect(() => {
@@ -130,10 +134,6 @@ const TeamsPage = () => {
     }, 100);
     return () => clearTimeout(timer);
   }, [forceHideLoader]);
-
-  const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(currentUser);
-  const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
-  const isBranchManager = isBranchLevel;
 
   // Query Teams List
   const {
@@ -328,7 +328,7 @@ const TeamsPage = () => {
           )}
 
           {/* Branch Filter */}
-          {canFilterByBranch && currentUser?.primaryRole !== 'BRANCH_MANAGER' && (
+          {canFilterByBranch && !isBranchManager && (
             <div className="w-full sm:w-44">
               <SelectField
                 id="branchFilter"
@@ -382,6 +382,8 @@ const TeamsPage = () => {
           onDelete={handleOpenDelete}
           hasActiveFilters={hasActiveFilters}
           onClearFilters={clearFilters}
+          canEdit={canEdit}
+          canDelete={canDelete}
         />
 
         {/* Pagination */}
@@ -403,6 +405,7 @@ const TeamsPage = () => {
         onClose={() => setIsFormOpen(false)}
         initialValues={selectedTeamForEdit}
         companies={companies}
+        branches={branches}
         currentUser={currentUser}
       />
 
