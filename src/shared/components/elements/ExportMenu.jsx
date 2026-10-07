@@ -76,7 +76,7 @@ export const ExportMenu = ({
                 transition: 'all 0.15s ease-in-out',
                 '&:hover': {
                   bgcolor: '#F8FAFC',
-                  color: 'var(--brand-500, #F86F03)'
+                  color: 'var(--brand-500, #474ce1)'
                 }
               }
             }

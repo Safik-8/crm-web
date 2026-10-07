@@ -39,7 +39,7 @@ export default function CrmLineChart({
   const rawId = useId();
   const instanceId = rawId.replace(/:/g, '_');
   const { currentBrandColor } = useBrandTheme() || {};
-  const brandColor = currentBrandColor || '#F86F03';
+  const brandColor = currentBrandColor || '#474ce1';
 
   if (!Array.isArray(data) || data.length === 0 || data.every((d) => !d)) {
     return <ChartEmptyState message={emptyMessage} height={height} className={className} />;

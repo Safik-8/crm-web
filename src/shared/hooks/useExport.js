@@ -56,7 +56,7 @@ export const useExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const { currentBrandColor } = useBrandTheme();
   const { user } = useAuth();
-  const brandColor = currentBrandColor || '#F86F03';
+  const brandColor = currentBrandColor || '#474ce1';
   const palette = generateBrandPalette(brandColor);
   const brandDark = palette[600];
 

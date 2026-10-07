@@ -77,16 +77,16 @@ export const BrandingSettingsForm = ({ formData, updateField, readOnly = false }
                 <input
                   type="color"
                   disabled={readOnly}
-                  value={formData.primaryColor || "#ea580c"}
+                  value={formData.primaryColor || "#474ce1"}
                   onChange={(e) => handleColorChange("primaryColor", e.target.value)}
                   className="w-9 h-9 rounded-[8px] border border-slate-200 bg-white cursor-pointer p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <input
                   type="text"
                   disabled={readOnly}
-                  value={formData.primaryColor || "#ea580c"}
+                  value={formData.primaryColor || "#474ce1"}
                   onChange={(e) => handleColorChange("primaryColor", e.target.value)}
-                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-orange-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-brand-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -98,16 +98,16 @@ export const BrandingSettingsForm = ({ formData, updateField, readOnly = false }
                 <input
                   type="color"
                   disabled={readOnly}
-                  value={formData.secondaryColor || "#0284c7"}
+                  value={formData.secondaryColor || "#3561f3"}
                   onChange={(e) => handleColorChange("secondaryColor", e.target.value)}
                   className="w-9 h-9 rounded-[8px] border border-slate-200 bg-white cursor-pointer p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <input
                   type="text"
                   disabled={readOnly}
-                  value={formData.secondaryColor || "#0284c7"}
+                  value={formData.secondaryColor || "#3561f3"}
                   onChange={(e) => handleColorChange("secondaryColor", e.target.value)}
-                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-orange-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-brand-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -119,16 +119,16 @@ export const BrandingSettingsForm = ({ formData, updateField, readOnly = false }
                 <input
                   type="color"
                   disabled={readOnly}
-                  value={formData.accentColor || "#f59e0b"}
+                  value={formData.accentColor || "#1bda9a"}
                   onChange={(e) => handleColorChange("accentColor", e.target.value)}
                   className="w-9 h-9 rounded-[8px] border border-slate-200 bg-white cursor-pointer p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <input
                   type="text"
                   disabled={readOnly}
-                  value={formData.accentColor || "#f59e0b"}
+                  value={formData.accentColor || "#1bda9a"}
                   onChange={(e) => handleColorChange("accentColor", e.target.value)}
-                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-orange-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  className="w-full px-3 h-[36px] text-[12px] font-mono font-semibold bg-white border border-slate-200 rounded-[8px] text-slate-900 focus:outline-none focus:border-brand-500 shadow-2xs disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>

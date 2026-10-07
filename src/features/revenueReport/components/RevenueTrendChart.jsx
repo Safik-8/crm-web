@@ -10,7 +10,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
   const [chartType, setChartType] = useState('area'); // 'area' | 'bar'
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' | 'quarterly'
   const { currentBrandColor } = useBrandTheme() || {};
-  const brandColor = currentBrandColor || '#F86F03';
+  const brandColor = currentBrandColor || '#474ce1';
 
   if (isLoading) {
     return (

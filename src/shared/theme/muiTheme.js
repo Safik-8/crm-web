@@ -4,7 +4,7 @@ import { generateBrandPalette } from '../utils/brandColorManager.js';
 /**
  * ─── CMS Brand Palette ────────────────────────────────────────────────────────
  *
- * Primary  → Orange   (#F86F03)   — brand signature colour
+ * Primary  → Indigo / Blue (#474ce1) — brand signature colour
  * Secondary → Black   (#000000)   — high-contrast accent
  * Tertiary  → Amber   (#B96A01)   — warm dark-orange support
  * Neutral   → Warm White (#FFF5EB) — brand background tint
@@ -16,18 +16,18 @@ import { generateBrandPalette } from '../utils/brandColorManager.js';
 
 // ─── Raw brand tokens (single source of truth fallback) ───────────────────────
 export const defaultBrand = {
-  /** Primary orange */
+  /** Primary brand */
   orange: {
-    50:  '#FFF5EB',
-    100: '#FFE4C4',
-    200: '#FFC999',
-    300: '#FFAA66',
-    400: '#FF8C33',
-    500: '#F86F03',   // ← primary.main
-    600: '#E05E00',
-    700: '#C45200',
-    800: '#B96A01',   // ← tertiary / dark variant
-    900: '#8A3D00',
+    50:  '#f0f1fd',
+    100: '#dedffa',
+    200: '#bdbff4',
+    300: '#8d90ec',
+    400: '#585de4',
+    500: '#474ce1',   // ← primary.main
+    600: '#242ae1',
+    700: '#171dc4',
+    800: '#0f139d',   // ← tertiary / dark variant
+    900: '#080c74',
   },
 
   /** Neutral greys */
@@ -46,12 +46,12 @@ export const defaultBrand = {
 
   white: '#FFFFFF',
   black: '#000000',
-  warmWhite: '#FFF5EB',   // ← neutral brand bg
+  warmWhite: '#f0f1fd',   // ← neutral brand bg
 };
 export const brand = defaultBrand;
 
 // ─── Dynamic MUI Theme Factory ────────────────────────────────────────────────
-export function buildDynamicMuiTheme(primaryHex = '#F86F03') {
+export function buildDynamicMuiTheme(primaryHex = '#474ce1') {
   const palette = generateBrandPalette(primaryHex);
   const brand = {
     orange: {
@@ -81,9 +81,9 @@ export function buildDynamicMuiTheme(primaryHex = '#F86F03') {
       lightest:    brand.orange[50],
       lighter:     brand.orange[100],
       light:       brand.orange[300],
-      main:        brand.orange[500],   // #F86F03
-      dark:        brand.orange[600],   // #E05E00
-      darker:      brand.orange[800],   // #B96A01
+      main:        brand.orange[500],   // #474ce1
+      dark:        brand.orange[600],
+      darker:      brand.orange[800],
       contrastText: brand.white,
     },
 
@@ -816,5 +816,5 @@ export function buildDynamicMuiTheme(primaryHex = '#F86F03') {
   });
 }
 
-const defaultMuiTheme = buildDynamicMuiTheme('#F86F03');
+const defaultMuiTheme = buildDynamicMuiTheme('#474ce1');
 export default defaultMuiTheme;

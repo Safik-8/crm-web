@@ -63,10 +63,10 @@ const AvailableStagesPanel = ({
               sx={{
                 height: '38px',
                 borderRadius: '8px',
-                backgroundColor: 'var(--brand-500, #F86F03)',
+                backgroundColor: 'var(--brand-500, #474ce1)',
                 fontWeight: 700,
                 px: 2.5,
-                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
               }}
             >
               ADD

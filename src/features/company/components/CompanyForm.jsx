@@ -112,13 +112,13 @@ const CompanyForm = ({ isOpen, onClose, company, onSuccess, inlineMode = false }
       transition: 'all 0.2s',
       '& fieldset': { borderColor: '#e2e8f0' },
       '&:hover fieldset': { borderColor: '#cbd5e1' },
-      '&.Mui-focused fieldset': { borderColor: 'var(--brand-500, #F86F03)', borderWidth: '2px' },
-      '&.Mui-focused': { backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(var(--brand-rgb, 248, 111, 3), 0.08)' }
+      '&.Mui-focused fieldset': { borderColor: 'var(--brand-500, #474ce1)', borderWidth: '2px' },
+      '&.Mui-focused': { backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(var(--brand-rgb, 71, 76, 225), 0.08)' }
     },
     '& .MuiInputLabel-root': {
       color: '#64748b',
       fontWeight: 600,
-      '&.Mui-focused': { color: 'var(--brand-500, #F86F03)' }
+      '&.Mui-focused': { color: 'var(--brand-500, #474ce1)' }
     }
   };
 

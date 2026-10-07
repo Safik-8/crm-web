@@ -673,12 +673,12 @@ const DealsPage = () => {
               variant="contained"
               onClick={() => setIsFilterDrawerOpen(false)}
               sx={{
-                backgroundColor: 'var(--brand-500, #F86F03)',
+                backgroundColor: 'var(--brand-500, #474ce1)',
                 fontWeight: 700,
                 fontSize: '13px',
                 height: '42px',
                 px: 3,
-                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
               }}
             >
               Apply Filters

@@ -139,7 +139,7 @@ const FollowupForm = ({ leadId, lead = null, followup = null, onClose, onSuccess
         {/* Header */}
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FAFAFA' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: 38, height: 38, borderRadius: '12px', background: 'linear-gradient(135deg, var(--brand-500, #F86F03), var(--brand-400, #FF9A3C))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(var(--brand-rgb, 248, 111, 3), 0.25)' }}>
+            <div style={{ width: 38, height: 38, borderRadius: '12px', background: 'linear-gradient(135deg, var(--brand-500, #474ce1), var(--brand-400, #585de4))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(var(--brand-rgb, 71, 76, 225), 0.25)' }}>
               <CalendarClock size={20} color="#fff" />
             </div>
             <div>

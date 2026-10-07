@@ -263,10 +263,10 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                   startIcon={<Target size={15} />}
                   onClick={() => setIsCreateOppOpen(true)}
                   sx={{
-                    backgroundColor: 'var(--brand-500, #F86F03)',
+                    backgroundColor: 'var(--brand-500, #474ce1)',
                     fontSize: '12px',
                     fontWeight: 600,
-                    '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' },
+                    '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' },
                   }}
                 >
                   Create Opportunity

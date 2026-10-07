@@ -5,7 +5,7 @@ import { applyBrandTheme, resetBrandTheme } from '../../shared/utils/brandColorM
 import { buildDynamicMuiTheme } from '../../shared/theme/muiTheme';
 
 const ThemeContext = createContext({
-  currentBrandColor: '#F86F03',
+  currentBrandColor: '#474ce1',
   previewBrandColor: (hex) => {},
   revertBrandColor: () => {},
   commitBrandColor: (hex) => {},
@@ -16,8 +16,8 @@ export const DynamicThemeProvider = ({ children }) => {
 
   // 1. Resolve company brand from authenticated user
   const savedBrandColor = useMemo(() => {
-    // If Super Admin without company scope, default to platform #F86F03
-    return user?.companySettings?.primaryColor || user?.company?.settings?.primaryColor || '#F86F03';
+    // If Super Admin without company scope, default to platform #474ce1
+    return user?.companySettings?.primaryColor || user?.company?.settings?.primaryColor || '#474ce1';
   }, [user]);
 
   const [activeColor, setActiveColor] = useState(savedBrandColor);
@@ -32,8 +32,8 @@ export const DynamicThemeProvider = ({ children }) => {
     } else {
       // Reset to platform default on logout
       resetBrandTheme();
-      setActiveColor('#F86F03');
-      activeColorRef.current = '#F86F03';
+      setActiveColor('#474ce1');
+      activeColorRef.current = '#474ce1';
     }
   }, [user, savedBrandColor]);
 

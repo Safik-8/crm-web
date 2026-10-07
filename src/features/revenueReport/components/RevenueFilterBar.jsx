@@ -159,8 +159,8 @@ export const RevenueFilterBar = ({
               disabled={isExporting}
               className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
               sx={{
-                backgroundColor: 'var(--brand-500, #F86F03)',
-                '&:hover': { backgroundColor: 'var(--brand-600, #E06202)' },
+                backgroundColor: 'var(--brand-500, #474ce1)',
+                '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' },
                 height: '38px',
                 borderRadius: '8px',
                 fontSize: '13px',

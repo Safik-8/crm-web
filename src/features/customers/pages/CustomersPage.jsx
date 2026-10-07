@@ -77,7 +77,7 @@ const CustomersPage = () => {
   const { user, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
   const { currentBrandColor } = useBrandTheme() || {};
-  const brandColor = currentBrandColor || '#F86F03';
+  const brandColor = currentBrandColor || '#474ce1';
 
   const [customers, setCustomers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
@@ -675,12 +675,12 @@ const CustomersPage = () => {
               variant="contained"
               onClick={() => setIsFilterDrawerOpen(false)}
               sx={{
-                backgroundColor: 'var(--brand-500, #F86F03)',
+                backgroundColor: 'var(--brand-500, #474ce1)',
                 fontWeight: 700,
                 fontSize: '13px',
                 height: '42px',
                 px: 3,
-                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
               }}
             >
               Apply Filters

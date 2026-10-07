@@ -2,18 +2,18 @@
 @import "tailwindcss";
 
 :root {
-  /* Default Brand: StackCode Orange fallback tokens */
-  --brand-50:  #FFF5EB;
-  --brand-100: #FFE4C4;
-  --brand-200: #FFC999;
-  --brand-300: #FFAA66;
-  --brand-400: #FF8C33;
-  --brand-500: #F86F03;
-  --brand-600: #E05E00;
-  --brand-700: #C45200;
-  --brand-800: #B96A01;
-  --brand-900: #8A3D00;
-  --brand-rgb: 248, 111, 3;
+  /* Default Brand: StackDot Indigo fallback tokens */
+  --brand-50:  #f0f1fd;
+  --brand-100: #dedffa;
+  --brand-200: #bdbff4;
+  --brand-300: #8d90ec;
+  --brand-400: #585de4;
+  --brand-500: #474ce1;
+  --brand-600: #242ae1;
+  --brand-700: #171dc4;
+  --brand-800: #0f139d;
+  --brand-900: #080c74;
+  --brand-rgb: 71, 76, 225;
 }
 
 /* 
@@ -381,9 +381,9 @@
 
 /* Info */
 .toast-icon--info {
-  background: var(--brand-50, #FFF7ED) !important;
-  border-color: var(--brand-100, #FFEDD5) !important;
-  color: var(--brand-500, #F86F03) !important;
+  background: var(--brand-50, #f0f1fd) !important;
+  border-color: var(--brand-100, #dedffa) !important;
+  color: var(--brand-500, #474ce1) !important;
 }
 
 /* Loading */
@@ -556,7 +556,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--brand-500, #F86F03) 0%, var(--brand-400, #FF9E53) 50%, var(--brand-500, #F86F03) 100%);
+  background: linear-gradient(90deg, var(--brand-500, #474ce1) 0%, var(--brand-400, #585de4) 50%, var(--brand-500, #474ce1) 100%);
   background-size: 200% auto;
   animation: progress-shimmer 1.5s infinite linear;
   z-index: 100;

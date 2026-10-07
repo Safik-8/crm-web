@@ -2,7 +2,7 @@ import defaultLogo from '../../assets/logos/logo-official.png';
 
 /**
  * Convert HEX to HSL
- * @param {string} hex - e.g. "#F86F03" or "#2563EB"
+ * @param {string} hex - e.g. "#474ce1" or "#2563EB"
  * @returns {{ h: number, s: number, l: number }}
  */
 function hexToHsl(hex) {
@@ -75,7 +75,7 @@ function hexToRgb(hex) {
  * @returns {Record<string, string>}
  */
 export function generateBrandPalette(primaryHex) {
-  const hex = /^#([A-Fa-f0-9]{6})$/.test(primaryHex) ? primaryHex : '#F86F03';
+  const hex = /^#([A-Fa-f0-9]{6})$/.test(primaryHex) ? primaryHex : '#474ce1';
   const { h, s, l } = hexToHsl(hex);
   const { r, g, b } = hexToRgb(hex);
 
@@ -124,10 +124,10 @@ export function applyBrandTheme(primaryHex) {
 }
 
 /**
- * Resets brand theme on :root back to default StackCode Orange (#F86F03)
+ * Resets brand theme on :root back to default (#474ce1)
  */
 export function resetBrandTheme() {
-  return applyBrandTheme('#F86F03');
+  return applyBrandTheme('#474ce1');
 }
 
 /**
