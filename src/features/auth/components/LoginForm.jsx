@@ -72,8 +72,8 @@ const LoginForm = () => {
       <div className="flex flex-col items-center text-center mb-8">
         <div className="-mt-3 -mb-6 flex justify-center w-full">
           <img
-            src="/logos/logo-official.png"
-            alt="StackCode Training Institute"
+            src="/logos/logo.svg"
+            alt="StackCode"
             className="w-full max-w-[200px] sm:max-w-[230px] h-auto object-contain transition-opacity duration-300 hover:opacity-90"
           />
         </div>
