@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import logoOfficial from '../../../assets/logos/logo-official.png';
+import logoSvg from '../../../assets/logos/logo.svg';
 import { X, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -92,27 +92,27 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col h-full w-[220px] bg-white border-r border-zinc-200/80',
+          'fixed inset-y-0 left-0 z-50 flex flex-col h-full w-[240px] bg-white border-r border-zinc-200/80',
           'shadow-[1px_0_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out',
           'lg:relative lg:translate-x-0 lg:shadow-none',
           !isOpen && '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* ── Logo header ── */}
-        <div className="flex h-[60px] items-center justify-between  border-b border-zinc-100 shrink-0">
-          <div className="flex p-4 items-center justify-start h-full flex-1 min-w-0">
+        <div className="flex h-[60px] sm:h-[64px] items-center justify-between px-4 border-b border-zinc-100 shrink-0">
+          <Link to="/" className="flex items-center justify-start h-full flex-1 min-w-0 pr-2">
             <img
-              src={logoOfficial}
-              alt="StackCode"
-              className="w-auto p-4 object-contain transition-all duration-300 hover:opacity-80"
+              src={user?.company?.logo || logoSvg}
+              alt={user?.company?.name || "StackCode"}
+              className="w-auto h-[44px] sm:h-[48px] max-w-[185px] sm:max-w-[195px] object-contain object-left transition-all duration-300 hover:opacity-90"
             />
-          </div>
+          </Link>
           <button
             onClick={toggleSidebar}
-            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors ml-2 shrink-0"
+            className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors shrink-0"
             aria-label="Close sidebar"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 

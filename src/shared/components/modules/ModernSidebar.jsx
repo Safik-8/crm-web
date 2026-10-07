@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import logoOfficial from '../../../assets/logos/logo-official.png';
+import logoSvg from '../../../assets/logos/logo.svg';
 import { LogOut, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -140,14 +140,16 @@ const ModernSidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* RIGHT PANEL (Items) */}
-        <div className="w-[200px] bg-white h-full flex flex-col z-10 shrink-0 border-r border-zinc-200/80 rounded-l-2xl">
+        <div className="w-[210px] bg-white h-full flex flex-col z-10 shrink-0 border-r border-zinc-200/80 rounded-l-2xl">
           {/* Logo */}
-          <div className="px-2 pt-4 pb-6 flex items-center">
-            <img
-              src={logoOfficial}
-              alt="StackCode Logo"
-              className="h-11 w-auto object-contain transition-all duration-300 hover:opacity-80"
-            />
+          <div className="h-[60px] sm:h-[64px] px-3.5 flex items-center border-b border-zinc-100/80 shrink-0">
+            <Link to="/" className="flex items-center w-full">
+              <img
+                src={user?.company?.logo || logoSvg}
+                alt={user?.company?.name || "StackCode"}
+                className="w-auto h-[44px] sm:h-[48px] max-w-[175px] object-contain object-left transition-all duration-300 hover:opacity-90"
+              />
+            </Link>
           </div>
 
           {/* Items List */}
