@@ -13,11 +13,14 @@ import ConfirmModal from '../../../shared/components/elements/ConfirmModal';
 import KpiEditDrawer from '../components/KpiEditDrawer';
 import { CrmBarChart, CrmLineChart } from '../../../shared/components/charts';
 import { toast } from '../../../shared/utils/toast';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 export default function KpiDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#f97316';
   const deleteMutation = useDeleteKpiTarget();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -178,14 +181,14 @@ export default function KpiDetailPage() {
   const barSeries = [
     {
       dataKey: 'Value',
-      fill: '#f97316',
+      fill: brandColor,
       radius: [6, 6, 0, 0],
     },
   ];
 
   const cellColors = [
     '#6366f1', // Indigo for Target Goal
-    statusColor === 'GREEN' ? '#10b981' : '#f97316', // Emerald or Orange for Achieved
+    statusColor === 'GREEN' ? '#10b981' : brandColor, // Emerald or Brand for Achieved
     '#94a3b8', // Slate for Remaining Gap
   ];
 

@@ -348,7 +348,7 @@ export const LeadSourceFormSlideover = ({ isOpen, mode, source, onClose }) => {
           <button
             type="submit"
             disabled={isPending || !name.trim()}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#F97316] hover:bg-[#EA580C] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-[10px] shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-[10px] shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer"
           >
             {isPending ? (
               <>

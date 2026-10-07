@@ -661,12 +661,12 @@ export const OpportunitiesPage = () => {
                 sx={{
                   height: '38px',
                   borderRadius: '8px',
-                  backgroundColor: '#F86F03',
+                  backgroundColor: 'var(--brand-500, #F86F03)',
                   fontSize: '12px',
                   fontWeight: 700,
                   textTransform: 'none',
                   whiteSpace: 'nowrap',
-                  '&:hover': { backgroundColor: '#DE5D02' },
+                  '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' },
                 }}
               >
                 New Opportunity

@@ -25,16 +25,26 @@ const THEME_OPTIONS = [
   { value: "SYSTEM", label: "Sync with OS System Preference" },
 ]
 
+import { useBrandTheme } from "../../../app/providers/ThemeProvider"
+
 export const BrandingSettingsForm = ({ formData, updateField, readOnly = false }) => {
+  const { previewBrandColor, revertBrandColor } = useBrandTheme()
   const isFaviconValid = isValidHttpUrl(formData.faviconUrl)
   const isLoginBgValid = isValidHttpUrl(formData.loginBackgroundUrl)
   const isCustomDomainValid = isValidDomain(formData.customDomain)
+
+  // Revert preview if user unmounts or navigates away without saving
+  React.useEffect(() => {
+    return () => {
+      revertBrandColor()
+    }
+  }, [])
 
   const handleColorChange = (key, value) => {
     if (readOnly) return
     updateField(key, value)
     if (key === "primaryColor") {
-      document.documentElement.style.setProperty("--color-primary", value)
+      previewBrandColor(value)
     } else if (key === "accentColor") {
       document.documentElement.style.setProperty("--color-accent", value)
     }

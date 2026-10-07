@@ -19,8 +19,8 @@ const professionalInputSx = {
     },
     '&.Mui-focused': {
       backgroundColor: '#ffffff',
-      border: '1px solid #f97316', // primary orange
-      boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.1)',
+      border: '1px solid var(--brand-500, #f97316)',
+      boxShadow: '0 0 0 3px rgba(var(--brand-rgb, 249, 115, 22), 0.1)',
     },
   },
   '& .MuiInputBase-input': {

@@ -128,8 +128,8 @@ export default function PerformanceFilterBar({
               disabled={!isQueryEnabled || isExporting}
               className="group shadow-sm hover:shadow-md transition-all whitespace-nowrap"
               sx={{
-                backgroundColor: '#F86F03',
-                '&:hover': { backgroundColor: '#E06202' },
+                backgroundColor: 'var(--brand-500, #F86F03)',
+                '&:hover': { backgroundColor: 'var(--brand-600, #E06202)' },
                 height: '38px',
                 borderRadius: '8px',
                 fontSize: '13px',

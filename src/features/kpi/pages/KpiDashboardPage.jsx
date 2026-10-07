@@ -9,9 +9,12 @@ import { useKpiDashboard } from '../hooks/useKpi';
 import KpiCard from '../components/KpiCard';
 import { CrmBarChart, CrmLineChart, CrmPieChart, ChartEmptyState } from '../../../shared/components/charts';
 import GlobalLoader from '../../../shared/components/elements/GlobalLoader';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 export default function KpiDashboardPage() {
   const { user, hasPermission } = useAuth();
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#f97316';
   const [activeTab, setActiveTab] = useState('my'); // 'my' | 'team' | 'branch' | 'company'
 
   const canCreate = hasPermission('KPI', 'canCreate') || hasPermission('create:kpi');
@@ -53,12 +56,12 @@ export default function KpiDashboardPage() {
 
   const barSeries = [
     { dataKey: 'Target', name: 'Target Value', fill: '#cbd5e1', radius: [6, 6, 0, 0] },
-    { dataKey: 'Achieved', name: 'Achieved Value', fill: '#f97316', radius: [6, 6, 0, 0] },
+    { dataKey: 'Achieved', name: 'Achieved Value', fill: brandColor, radius: [6, 6, 0, 0] },
   ];
 
   const lineSeries = [
     { dataKey: 'target', name: 'Target', stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '4 4' },
-    { dataKey: 'achieved', name: 'Achieved', stroke: '#f97316', strokeWidth: 3 },
+    { dataKey: 'achieved', name: 'Achieved', stroke: brandColor, strokeWidth: 3 },
   ];
 
   if (isLoading) {

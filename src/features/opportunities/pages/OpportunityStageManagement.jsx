@@ -565,10 +565,10 @@ export const OpportunityStageManagement = () => {
                 sx={{
                   height: '38px',
                   borderRadius: '8px',
-                  backgroundColor: '#F86F03',
+                  backgroundColor: 'var(--brand-500, #F86F03)',
                   fontWeight: 700,
                   px: 2.5,
-                  '&:hover': { backgroundColor: '#DE5D02' }
+                  '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
                 }}
               >
                 Add
@@ -673,12 +673,12 @@ export const OpportunityStageManagement = () => {
               sx={{
                 height: '38px',
                 borderRadius: '8px',
-                backgroundColor: '#F86F03',
+                backgroundColor: 'var(--brand-500, #F86F03)',
                 fontWeight: 700,
                 fontSize: '12px',
                 whiteSpace: 'nowrap',
                 shrink: 0,
-                '&:hover': { backgroundColor: '#DE5D02' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
               }}
             >
               Save Stages

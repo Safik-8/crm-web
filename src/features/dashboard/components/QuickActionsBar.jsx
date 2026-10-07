@@ -146,7 +146,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
                 color: '#0F172A',
               },
               '& .MuiButton-startIcon': {
-                color: '#F86F03',
+                color: 'var(--brand-500, #F86F03)',
                 marginRight: '6px',
               },
             }}

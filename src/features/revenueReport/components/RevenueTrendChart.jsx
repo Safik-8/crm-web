@@ -4,10 +4,13 @@ import React, { useState } from 'react';
 import { BarChart3, LineChart as LineIcon } from 'lucide-react';
 import { CrmLineChart, CrmBarChart } from '../../../shared/components/charts';
 import { formatCurrencyShort } from '../../../shared/utils/chartDataTransformers';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
   const [chartType, setChartType] = useState('area'); // 'area' | 'bar'
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' | 'quarterly'
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#F86F03';
 
   if (isLoading) {
     return (
@@ -26,7 +29,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
     {
       dataKey: 'revenue',
       name: `${year} Revenue`,
-      stroke: '#F86F03',
+      stroke: brandColor,
       strokeWidth: 3,
       gradientId: 'currentRevGrad',
     },
@@ -48,7 +51,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
     {
       dataKey: 'revenue',
       name: `${year} Revenue`,
-      fill: '#F86F03',
+      fill: brandColor,
       radius: [6, 6, 0, 0],
     },
     ...(viewMode === 'monthly'

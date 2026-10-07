@@ -85,7 +85,7 @@ const CompanyFilters = ({
                     borderColor: '#CBD5E1',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#F86F03',
+                    borderColor: 'var(--brand-500, #F86F03)',
                   }
                 }
               }}
@@ -117,7 +117,7 @@ const CompanyFilters = ({
                     borderColor: '#CBD5E1',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#F86F03',
+                    borderColor: 'var(--brand-500, #F86F03)',
                   }
                 }
               }}

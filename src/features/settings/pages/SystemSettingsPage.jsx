@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "../../../app/providers/AuthProvider"
+import { useBrandTheme } from "../../../app/providers/ThemeProvider"
 import { companyApi } from "../../company/api/companyApi"
 import { useSettings } from "../hooks/useSettings"
 import { SettingsLeftNav, CATEGORY_ITEMS } from "../components/SettingsLeftNav"
@@ -93,12 +94,31 @@ export const SystemSettingsPage = () => {
   const currentCategoryObj = CATEGORY_ITEMS.find((item) => item.id === activeTab) || CATEGORY_ITEMS[0]
   const isRestrictedTab = currentCategoryObj.adminOnly && !canEditSettings
 
+  const { commitBrandColor, revertBrandColor, previewBrandColor } = useBrandTheme()
+  const { refetchUser } = useAuth()
+
   const handleSave = async () => {
-    await saveCategory(activeTab)
+    try {
+      const res = await saveCategory(activeTab)
+      if (activeTab === "branding" && formData?.primaryColor) {
+        if (!isSuperAdmin || (user?.companyId && user.companyId === Number(effectiveCompanyId))) {
+          commitBrandColor(formData.primaryColor)
+        } else {
+          revertBrandColor()
+        }
+      }
+      if (refetchUser) refetchUser()
+      return res
+    } catch (e) {
+      // error handled by toast in useSettings
+    }
   }
 
   const handleConfirmReset = async () => {
     await resetCategoryDefaults(activeTab)
+    if (activeTab === "branding") {
+      revertBrandColor()
+    }
     setConfirmResetOpen(false)
   }
 

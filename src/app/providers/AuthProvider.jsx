@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { apiClient } from '../../lib/api/api';
 import { setAccessToken, clearAccessToken } from '../../lib/api/authSession';
 import { useQueryClient } from '@tanstack/react-query';
+import { resetBrandTheme } from '../../shared/utils/brandColorManager';
 
 const defaultAuthContext = {
   user: null,
@@ -296,6 +297,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     clearAccessToken();
     queryClient.clear();
+    resetBrandTheme();
 
     // ── Background API call ──────────────────────────────────────────────────
     // Fire-and-forget: the session cookie is invalidated server-side.

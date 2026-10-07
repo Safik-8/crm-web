@@ -765,7 +765,7 @@ const AuditPage = () => {
                   setIsExportDrawerOpen(true);
                 }}
                 disabled={exporting}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 h-11 px-4 text-xs font-bold text-white bg-[#F86F03] hover:bg-[#DE5D02] rounded-xl transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 h-11 px-4 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Export Audit Logs Report"
               >
                 <Download size={15} />

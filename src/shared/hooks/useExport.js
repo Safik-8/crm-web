@@ -3,6 +3,9 @@ import html2pdfLib from 'html2pdf.js';
 import { toast } from '../utils/toast';
 import { apiClient } from '../../lib/api/api';
 import logoOfficial from '../../assets/logos/logo-official.png';
+import { useBrandTheme } from '../../app/providers/ThemeProvider';
+import { useAuth } from '../../app/providers/AuthProvider';
+import { generateBrandPalette, getTenantLogo } from '../utils/brandColorManager';
 
 const getHtml2PdfInstance = async () => {
   let mod = html2pdfLib;
@@ -51,6 +54,11 @@ const formatFileName = (fileName, ext, rawFileName = false) => {
  */
 export const useExport = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const { currentBrandColor } = useBrandTheme();
+  const { user } = useAuth();
+  const brandColor = currentBrandColor || '#F86F03';
+  const palette = generateBrandPalette(brandColor);
+  const brandDark = palette[600];
 
   /**
    * Export data as a CSV file with optional export audit logging.
@@ -279,10 +287,10 @@ export const useExport = () => {
         .slice(0, 2)
         .toUpperCase() || 'CD';
 
-      const logoUrlToUse = pdfOptions.logoUrl || logoOfficial;
+      const logoUrlToUse = pdfOptions.logoUrl || getTenantLogo(user);
       const logoHtml = logoUrlToUse
         ? `<img src="${logoUrlToUse}" alt="Logo" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" />`
-        : `<div style="width: 38px; height: 38px; background: linear-gradient(135deg, #f86f03 0%, #ea580c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 15px; box-shadow: 0 2px 4px rgba(248,111,3,0.25); border: 1px solid rgba(255,255,255,0.2);">${companyInitials}</div>`;
+        : `<div style="width: 38px; height: 38px; background: linear-gradient(135deg, ${brandColor} 0%, ${brandDark} 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.2);">${companyInitials}</div>`;
 
       const filterBadgesHtml = pdfOptions.filtersSummary
         ? Object.entries(pdfOptions.filtersSummary)
@@ -294,7 +302,7 @@ export const useExport = () => {
       // 4. Format Summary KPI Cards
       const summaryCardsHtml = Array.isArray(pdfOptions.summaryCards) && pdfOptions.summaryCards.length > 0
         ? pdfOptions.summaryCards.map(card => `
-            <div style="flex: 1; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; border-left: 3.5px solid #f86f03;">
+            <div style="flex: 1; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; border-left: 3.5px solid ${brandColor};">
               <div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${card.label}</div>
               <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px;">${card.value}</div>
             </div>
@@ -324,7 +332,7 @@ export const useExport = () => {
       }).join('');
 
       container.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #f86f03; padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid ${brandColor}; padding-bottom: 12px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 12px;">
             ${logoHtml}
             <div>
@@ -334,7 +342,7 @@ export const useExport = () => {
           </div>
           <div style="text-align: right;">
             <h1 style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px;">${title}</h1>
-            <div style="font-size: 10.5px; color: #f86f03; font-weight: 600; margin-top: 2px;">Official Performance Export</div>
+            <div style="font-size: 10.5px; color: ${brandColor}; font-weight: 600; margin-top: 2px;">Official Performance Export</div>
           </div>
         </div>
 

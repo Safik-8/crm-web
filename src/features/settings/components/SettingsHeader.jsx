@@ -157,12 +157,12 @@ export const SettingsHeader = ({
               fontSize: '12px',
               fontWeight: 700,
               textTransform: 'none',
-              backgroundColor: isDirty && !isSaving ? '#F86F03' : '#F1F5F9',
+              backgroundColor: isDirty && !isSaving ? 'var(--brand-500, #F86F03)' : '#F1F5F9',
               color: isDirty && !isSaving ? '#FFFFFF' : '#94A3B8',
               borderColor: isDirty && !isSaving ? 'transparent' : '#E2E8F0',
-              boxShadow: isDirty && !isSaving ? '0 1px 2px 0 rgba(248, 111, 3, 0.25)' : 'none',
+              boxShadow: isDirty && !isSaving ? '0 1px 2px 0 rgba(var(--brand-rgb, 248, 111, 3), 0.25)' : 'none',
               '&:hover': {
-                backgroundColor: isDirty && !isSaving ? '#E05E00' : '#F1F5F9',
+                backgroundColor: isDirty && !isSaving ? 'var(--brand-600, #E05E00)' : '#F1F5F9',
               }
             }}
           >

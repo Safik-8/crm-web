@@ -1,6 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+:root {
+  /* Default Brand: StackCode Orange fallback tokens */
+  --brand-50:  #FFF5EB;
+  --brand-100: #FFE4C4;
+  --brand-200: #FFC999;
+  --brand-300: #FFAA66;
+  --brand-400: #FF8C33;
+  --brand-500: #F86F03;
+  --brand-600: #E05E00;
+  --brand-700: #C45200;
+  --brand-800: #B96A01;
+  --brand-900: #8A3D00;
+  --brand-rgb: 248, 111, 3;
+}
+
 /* 
   Custom Theme Configuration (Tailwind CSS v4 Native) 
   Centralize all design tokens here so they can be changed in one place.
@@ -11,12 +26,26 @@
   --font-sans: "DM Sans", "sans-serif";
   --font-heading: "Sora", "sans-serif";
 
-  /* Colors */
-  --color-primary: #F86F03;
+  /* Brand Semantic Tokens */
+  --color-primary: var(--brand-500);
+  --color-primary-hover: var(--brand-600);
   --color-secondary: #000000;
-  --color-tertiary: #B96A01;
-  --color-neutral: #FFF5EB; /* Brand Warm White */
+  --color-tertiary: var(--brand-800);
+  --color-neutral: var(--brand-50); /* Brand Warm White / Tint */
   --color-grey-light: #F4F4F4; /* Used for inputs */
+
+  /* Enterprise Backward Compatibility Aliasing:
+     Redirects all existing orange-* classes to the dynamic brand palette! */
+  --color-orange-50:  var(--brand-50);
+  --color-orange-100: var(--brand-100);
+  --color-orange-200: var(--brand-200);
+  --color-orange-300: var(--brand-300);
+  --color-orange-400: var(--brand-400);
+  --color-orange-500: var(--brand-500);
+  --color-orange-600: var(--brand-600);
+  --color-orange-700: var(--brand-700);
+  --color-orange-800: var(--brand-800);
+  --color-orange-900: var(--brand-900);
 
   /* Custom Font Sizes (Industrial Standard) */
   --font-size-headline-lg: 32px;
@@ -352,9 +381,9 @@
 
 /* Info */
 .toast-icon--info {
-  background: #FFF7ED !important;
-  border-color: #FFEDD5 !important;
-  color: #F86F03 !important;
+  background: var(--brand-50, #FFF7ED) !important;
+  border-color: var(--brand-100, #FFEDD5) !important;
+  color: var(--brand-500, #F86F03) !important;
 }
 
 /* Loading */
@@ -527,7 +556,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #F86F03 0%, #FF9E53 50%, #F86F03 100%);
+  background: linear-gradient(90deg, var(--brand-500, #F86F03) 0%, var(--brand-400, #FF9E53) 50%, var(--brand-500, #F86F03) 100%);
   background-size: 200% auto;
   animation: progress-shimmer 1.5s infinite linear;
   z-index: 100;

@@ -50,10 +50,10 @@ const TextField = ({
       },
       '&.Mui-focused': {
         bgcolor: '#FFFFFF',
-        boxShadow: '0 0 0 3px rgba(248,111,3,0.14), 0 2px 4px rgba(0,0,0,0.02)'
+        boxShadow: '0 0 0 3px rgba(var(--brand-rgb, 248,111,3), 0.14), 0 2px 4px rgba(0,0,0,0.02)'
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#F86F03',
+        borderColor: 'var(--brand-500, #F86F03)',
         borderWidth: '1px'
       },
       '& .MuiInputBase-input': {
@@ -99,7 +99,7 @@ const TextField = ({
             ml: 0.5
           }}
         >
-          {label} {required && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
+          {label} {required && <span style={{ color: 'var(--brand-500, #F86F03)', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
         </Typography>
       )}
       <OutlinedInput

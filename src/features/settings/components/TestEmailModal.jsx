@@ -95,9 +95,9 @@ export const TestEmailModal = ({ isOpen, onClose, onSendTestEmail, isSending, us
                 fontSize: '12px',
                 fontWeight: 700,
                 textTransform: 'none',
-                backgroundColor: '#F86F03',
+                backgroundColor: 'var(--brand-500, #F86F03)',
                 '&:hover': {
-                  backgroundColor: '#E05E00',
+                  backgroundColor: 'var(--brand-600, #E05E00)',
                 }
               }}
             >

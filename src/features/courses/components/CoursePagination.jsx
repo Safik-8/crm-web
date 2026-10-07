@@ -67,7 +67,7 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
             onClick={() => onPageChange(page - 1)}
             disabled={!hasPrev || isLoading}
             className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500
-                       hover:bg-slate-50 hover:text-[#F86F03] hover:border-[#F86F03]/30
+                       hover:bg-slate-50 hover:text-orange-500 hover:border-orange-500/30
                        disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-500 disabled:hover:border-slate-200
                        transition-all"
             aria-label="Previous page"
@@ -92,8 +92,8 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
                   disabled={isLoading}
                   className={`h-8 w-8 flex items-center justify-center rounded-lg text-sm font-semibold transition-all
                     ${p === page
-                      ? 'bg-[#F86F03] text-white shadow-md shadow-[#F86F03]/25 border border-[#F86F03]'
-                      : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-[#F86F03] hover:border-[#F86F03]/30 disabled:opacity-40 disabled:cursor-not-allowed'
+                      ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25 border border-orange-500'
+                      : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-orange-500 hover:border-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed'
                     }`}
                   aria-label={`Page ${p}`}
                   aria-current={p === page ? 'page' : undefined}
@@ -109,7 +109,7 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
             onClick={() => onPageChange(page + 1)}
             disabled={!hasNext || isLoading}
             className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500
-                       hover:bg-slate-50 hover:text-[#F86F03] hover:border-[#F86F03]/30
+                       hover:bg-slate-50 hover:text-orange-500 hover:border-orange-500/30
                        disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-500 disabled:hover:border-slate-200
                        transition-all"
             aria-label="Next page"

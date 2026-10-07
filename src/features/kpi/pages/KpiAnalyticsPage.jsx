@@ -13,9 +13,12 @@ import TextField from '../../../shared/components/elements/TextField';
 
 import SearchInput from '../../../shared/components/elements/SearchInput';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 export default function KpiAnalyticsPage() {
   const { user, hasPermission } = useAuth();
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#f97316';
   const [activeTab, setActiveTab] = useState('my'); // 'my' | 'team' | 'branch' | 'company'
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,7 +121,7 @@ export default function KpiAnalyticsPage() {
 
   const barSeries = [
     { dataKey: 'Target', name: 'Target Value', fill: '#cbd5e1', radius: [6, 6, 0, 0] },
-    { dataKey: 'Achieved', name: 'Achieved Value', fill: '#f97316', radius: [6, 6, 0, 0] },
+    { dataKey: 'Achieved', name: 'Achieved Value', fill: brandColor, radius: [6, 6, 0, 0] },
   ];
 
   if (isError) {
@@ -240,8 +243,8 @@ export default function KpiAnalyticsPage() {
               variant="contained"
               startIcon={<Plus size={16} />}
               sx={{
-                backgroundColor: '#F86F03',
-                '&:hover': { backgroundColor: '#E06202' },
+                backgroundColor: 'var(--brand-500, #F86F03)',
+                '&:hover': { backgroundColor: 'var(--brand-600, #E06202)' },
                 height: '38px',
                 borderRadius: '8px',
                 fontSize: '13px',

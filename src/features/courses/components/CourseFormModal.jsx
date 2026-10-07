@@ -121,12 +121,12 @@ const CourseFormModal = ({
         loading={isLoading}
         onClick={handleSubmit}
         sx={{
-          bgcolor: '#F86F03',
+          bgcolor: 'var(--brand-500, #F86F03)',
           color: '#FFFFFF',
           px: 5,
           fontWeight: 600,
           '&:hover': {
-            bgcolor: '#E05D02'
+            bgcolor: 'var(--brand-600, #E05D02)'
           }
         }}
       >
@@ -155,7 +155,7 @@ const CourseFormModal = ({
             </h3>
             <div className="flex flex-col gap-1">
               <label className="text-[12px] font-bold text-[#475569] mb-1 ml-0.5">
-                Assign to Company <span style={{ color: '#F86F03', fontWeight: 'bold' }}>*</span>
+                Assign to Company <span style={{ color: 'var(--brand-500, #F86F03)', fontWeight: 'bold' }}>*</span>
               </label>
               <SearchableSelect
                 options={companyOptions}
@@ -220,7 +220,7 @@ const CourseFormModal = ({
             {/* Searchable Select Dropdown for Categories */}
             <div className="flex flex-col gap-1">
               <label className="text-[12px] font-bold text-[#475569] mb-1 ml-0.5">
-                Primary Category <span style={{ color: '#F86F03', fontWeight: 'bold' }}>*</span>
+                Primary Category <span style={{ color: 'var(--brand-500, #F86F03)', fontWeight: 'bold' }}>*</span>
               </label>
               <SearchableSelect
                 options={categoryOptions}

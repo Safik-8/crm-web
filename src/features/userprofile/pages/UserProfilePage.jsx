@@ -1189,12 +1189,12 @@ const UserProfilePage = () => {
               startIcon={<Check size={16} />}
               onClick={handleEditSubmit}
               sx={{
-                bgcolor: '#F86F03',
+                bgcolor: 'var(--brand-500, #F86F03)',
                 color: '#FFFFFF',
                 px: 5,
                 fontWeight: 600,
                 '&:hover': {
-                  bgcolor: '#E05D02'
+                  bgcolor: 'var(--brand-600, #E05D02)'
                 }
               }}
             >

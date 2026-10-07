@@ -924,8 +924,8 @@ export const LeadsPage = () => {
                   sx={{
                     height: '44px',
                     borderRadius: '12px',
-                    backgroundColor: '#F86F03',
-                    '&:hover': { backgroundColor: '#DE5D02' }
+                    backgroundColor: 'var(--brand-500, #F86F03)',
+                    '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
                   }}
                 >
                   Assign Selected ({selectedLeadIds.length})
@@ -976,9 +976,9 @@ export const LeadsPage = () => {
                     sx={{
                       height: '44px',
                       borderRadius: '12px',
-                      backgroundColor: '#F86F03',
+                      backgroundColor: 'var(--brand-500, #F86F03)',
                       fontWeight: 700,
-                      '&:hover': { backgroundColor: '#DE5D02' }
+                      '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
                     }}
                   >
                     Add Lead
@@ -1076,12 +1076,12 @@ export const LeadsPage = () => {
                 setIsFilterOpen(false);
               }}
               sx={{
-                backgroundColor: '#F86F03',
+                backgroundColor: 'var(--brand-500, #F86F03)',
                 fontWeight: 700,
                 fontSize: '13px',
                 height: '42px',
                 px: 3,
-                '&:hover': { backgroundColor: '#DE5D02' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
               }}
             >
               Apply Filters
@@ -1425,7 +1425,7 @@ export const LeadsPage = () => {
               variant="contained"
               onClick={handleSaveOrRenameFilter}
               disabled={!filterName.trim() || updatePreferencesMutation.isPending}
-              sx={{ backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+              sx={{ backgroundColor: 'var(--brand-500, #f97316)', '&:hover': { backgroundColor: 'var(--brand-600, #ea580c)' } }}
             >
               Confirm
             </Button>

@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material/styles';
+import { generateBrandPalette } from '../utils/brandColorManager.js';
 
 /**
  * ─── CMS Brand Palette ────────────────────────────────────────────────────────
@@ -13,8 +14,8 @@ import { createTheme } from '@mui/material/styles';
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-// ─── Raw brand tokens (single source of truth) ────────────────────────────────
-export const brand = {
+// ─── Raw brand tokens (single source of truth fallback) ───────────────────────
+export const defaultBrand = {
   /** Primary orange */
   orange: {
     50:  '#FFF5EB',
@@ -47,9 +48,31 @@ export const brand = {
   black: '#000000',
   warmWhite: '#FFF5EB',   // ← neutral brand bg
 };
+export const brand = defaultBrand;
 
-// ─── MUI Theme ────────────────────────────────────────────────────────────────
-const muiTheme = createTheme({
+// ─── Dynamic MUI Theme Factory ────────────────────────────────────────────────
+export function buildDynamicMuiTheme(primaryHex = '#F86F03') {
+  const palette = generateBrandPalette(primaryHex);
+  const brand = {
+    orange: {
+      50:  palette[50],
+      100: palette[100],
+      200: palette[200],
+      300: palette[300],
+      400: palette[400],
+      500: palette[500],
+      600: palette[600],
+      700: palette[700],
+      800: palette[800],
+      900: palette[900],
+    },
+    grey: defaultBrand.grey,
+    white: defaultBrand.white,
+    black: defaultBrand.black,
+    warmWhite: palette[50],
+  };
+
+  return createTheme({
   // ── Colour palette ──────────────────────────────────────────────────────────
   palette: {
     mode: 'light',
@@ -790,6 +813,8 @@ const muiTheme = createTheme({
       },
     },
   },
-});
+  });
+}
 
-export default muiTheme;
+const defaultMuiTheme = buildDynamicMuiTheme('#F86F03');
+export default defaultMuiTheme;

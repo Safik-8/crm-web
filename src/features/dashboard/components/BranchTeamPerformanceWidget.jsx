@@ -339,11 +339,11 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
                 borderRadius: '0',
                 fontSize: '11px',
                 fontWeight: 700,
-                color: '#F86F03',
-                borderColor: '#F86F03',
+                color: 'var(--brand-500, #F86F03)',
+                borderColor: 'var(--brand-500, #F86F03)',
                 '&:hover': {
-                  borderColor: '#EA580C',
-                  backgroundColor: '#FFF7ED',
+                  borderColor: 'var(--brand-600, #EA580C)',
+                  backgroundColor: 'var(--brand-50, #FFF7ED)',
                 },
               }}
             >
@@ -358,10 +358,10 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
               sx={{
                 fontSize: '11px',
                 fontWeight: 700,
-                color: '#F86F03',
+                color: 'var(--brand-500, #F86F03)',
                 padding: '2px 8px',
                 '&:hover': {
-                  backgroundColor: '#FFF7ED',
+                  backgroundColor: 'var(--brand-50, #FFF7ED)',
                 },
               }}
             >

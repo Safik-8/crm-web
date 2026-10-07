@@ -7,8 +7,11 @@ import {
   toPipelineFunnelData,
   toTeamRevenueBarData,
 } from '../../../shared/utils/chartDataTransformers';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = [] }) {
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#f97316';
   const funnelData = toPipelineFunnelData(bdeData);
   const teamRevenueData = toTeamRevenueBarData(teamData);
 
@@ -16,7 +19,7 @@ export default function PerformanceAnalyticsCharts({ bdeData = [], teamData = []
     {
       dataKey: 'revenue',
       name: 'Revenue',
-      fill: '#f97316',
+      fill: brandColor,
       radius: [6, 6, 0, 0],
       barSize: 36,
     },

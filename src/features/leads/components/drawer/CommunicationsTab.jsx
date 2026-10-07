@@ -101,7 +101,7 @@ const CommunicationsTab = ({ leadId }) => {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
+              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-orange-500 focus:ring-3 focus:ring-orange-500/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
             />
           </div>
         </div>
@@ -147,7 +147,7 @@ const CommunicationsTab = ({ leadId }) => {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             placeholder="Add brief details of the conversation..."
-            className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all resize-none h-16 placeholder-slate-400"
+            className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-orange-500 focus:ring-3 focus:ring-orange-500/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all resize-none h-16 placeholder-slate-400"
           />
         </div>
 
@@ -158,7 +158,7 @@ const CommunicationsTab = ({ leadId }) => {
             size="small"
             isLoading={createLogMutation.isPending}
             startIcon={<Send size={11} />}
-            sx={{ height: '28px', backgroundColor: '#f97316', '&:hover': { backgroundColor: '#ea580c' } }}
+            sx={{ height: '28px', backgroundColor: 'var(--brand-500, #f97316)', '&:hover': { backgroundColor: 'var(--brand-600, #ea580c)' } }}
           >
             Log Interaction
           </Button>

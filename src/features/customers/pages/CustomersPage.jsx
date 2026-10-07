@@ -7,6 +7,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 import { useLoader } from '../../../shared/context/LoaderContext';
 import PageHeader from '../../../shared/components/modules/PageHeader';
@@ -75,6 +76,8 @@ const CustomersPage = () => {
   const { formatCurrency, formatDate } = useFormatters();
   const { user, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#F86F03';
 
   const [customers, setCustomers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
@@ -516,7 +519,7 @@ const CustomersPage = () => {
                     itemStyle={{ fontSize: '11px', color: '#10B981' }}
                     formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
                   />
-                  <Bar dataKey="value" fill="#F86F03" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="value" fill={brandColor} radius={[6, 6, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -672,12 +675,12 @@ const CustomersPage = () => {
               variant="contained"
               onClick={() => setIsFilterDrawerOpen(false)}
               sx={{
-                backgroundColor: '#F86F03',
+                backgroundColor: 'var(--brand-500, #F86F03)',
                 fontWeight: 700,
                 fontSize: '13px',
                 height: '42px',
                 px: 3,
-                '&:hover': { backgroundColor: '#DE5D02' }
+                '&:hover': { backgroundColor: 'var(--brand-600, #DE5D02)' }
               }}
             >
               Apply Filters

@@ -61,7 +61,7 @@ const SelectField = ({
             ml: 0.5
           }}
         >
-          {label} {required && <span style={{ color: '#F86F03', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
+          {label} {required && <span style={{ color: 'var(--brand-500, #F86F03)', fontWeight: 'bold', marginLeft: '2px' }}>*</span>}
         </Typography>
       )}
       <SearchableSelect
