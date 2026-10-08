@@ -16,17 +16,17 @@ import { createTheme } from '@mui/material/styles';
 // ─── Raw brand tokens (single source of truth) ────────────────────────────────
 export const brand = {
   /** Primary orange */
-  blue: {
-    50:  '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3b82f6',
-    600: '#2563eb',
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
+  orange: {
+    50:  '#FFF5EB',
+    100: '#FFE4C4',
+    200: '#FFC999',
+    300: '#FFAA66',
+    400: '#FF8C33',
+    500: '#F86F03',   // ← primary.main
+    600: '#E05E00',
+    700: '#C45200',
+    800: '#B96A01',   // ← tertiary / dark variant
+    900: '#8A3D00',
   },
 
   /** Neutral greys */
@@ -55,12 +55,12 @@ const muiTheme = createTheme({
     mode: 'light',
 
     primary: {
-      lightest:    brand.blue[50],
-      lighter:     brand.blue[100],
-      light:       brand.blue[300],
-      main:        brand.blue[500],   // #F86F03
-      dark:        brand.blue[600],   // #E05E00
-      darker:      brand.blue[800],   // #B96A01
+      lightest:    brand.orange[50],
+      lighter:     brand.orange[100],
+      light:       brand.orange[300],
+      main:        brand.orange[500],   // #F86F03
+      dark:        brand.orange[600],   // #E05E00
+      darker:      brand.orange[800],   // #B96A01
       contrastText: brand.white,
     },
 
@@ -74,9 +74,9 @@ const muiTheme = createTheme({
     /** Warm-white neutral — use as surface/background variant */
     neutral: {
       main:        brand.warmWhite,
-      light:       brand.blue[50],
-      dark:        brand.blue[100],
-      contrastText: brand.blue[500],
+      light:       brand.orange[50],
+      dark:        brand.orange[100],
+      contrastText: brand.orange[500],
     },
 
     background: {
@@ -161,9 +161,9 @@ const muiTheme = createTheme({
     '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',         // 3 — chart card
     '0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)',         // 4 — hover card
     '0px 20px 40px rgba(25,28,30,0.06)',                                 // 5 — soft elevation
-    '0 4px 12px rgba(59,130,246,0.25), 0 8px 24px rgba(37,99,235,0.22)', // 6 — primary glow
-    '0 2px 8px rgba(59,130,246,0.25)',                                    // 7 — subtle primary
-    '0 8px 24px rgba(59,130,246,0.35), 0 14px 36px rgba(37,99,235,0.30)',// 8 — strong primary
+    '0 4px 12px rgba(248,111,3,0.25), 0 8px 24px rgba(200,80,0,0.22)', // 6 — primary glow
+    '0 2px 8px rgba(248,111,3,0.25)',                                    // 7 — subtle primary
+    '0 8px 24px rgba(248,111,3,0.35), 0 14px 36px rgba(200,80,0,0.30)',// 8 — strong primary
     '0 1px 3px rgba(0,0,0,0.08)',                                        // 9
     '0 4px 16px rgba(0,0,0,0.08)',                                       // 10
     '0 8px 32px rgba(0,0,0,0.10)',                                       // 11
@@ -199,29 +199,29 @@ const muiTheme = createTheme({
           transition: 'all 0.18s ease',
         },
         containedPrimary: {
-          background: `linear-gradient(135deg, ${brand.blue[400]} 0%, ${brand.blue[500]} 50%, ${brand.blue[600]} 100%)`,
-          boxShadow: `0 2px 8px rgba(59,130,246, 0.28)`,
+          background: `linear-gradient(135deg, ${brand.orange[400]} 0%, ${brand.orange[500]} 50%, ${brand.orange[600]} 100%)`,
+          boxShadow: `0 2px 8px rgba(248,111,3, 0.28)`,
           '&:hover': {
-            background: `linear-gradient(135deg, ${brand.blue[500]} 0%, ${brand.blue[600]} 50%, ${brand.blue[700]} 100%)`,
-            boxShadow: `0 4px 16px rgba(59,130,246, 0.40)`,
+            background: `linear-gradient(135deg, ${brand.orange[500]} 0%, ${brand.orange[600]} 50%, ${brand.orange[700]} 100%)`,
+            boxShadow: `0 4px 16px rgba(248,111,3, 0.40)`,
             transform: 'translateY(-1px)',
           },
           '&:active': {
             transform: 'translateY(0)',
-            boxShadow: `0 2px 6px rgba(59,130,246, 0.22)`,
+            boxShadow: `0 2px 6px rgba(248,111,3, 0.22)`,
           },
         },
         outlinedPrimary: {
-          borderColor: brand.blue[500],
-          color: brand.blue[500],
+          borderColor: brand.orange[500],
+          color: brand.orange[500],
           '&:hover': {
-            backgroundColor: brand.blue[50],
-            borderColor: brand.blue[600],
+            backgroundColor: brand.orange[50],
+            borderColor: brand.orange[600],
           },
         },
         textPrimary: {
           '&:hover': {
-            backgroundColor: brand.blue[50],
+            backgroundColor: brand.orange[50],
           },
         },
         sizeSmall: {
@@ -244,8 +244,8 @@ const muiTheme = createTheme({
           borderRadius: 10,
           transition: 'all 0.16s ease',
           '&:hover': {
-            backgroundColor: brand.blue[50],
-            color: brand.blue[500],
+            backgroundColor: brand.orange[50],
+            color: brand.orange[500],
           },
         },
       },
@@ -316,14 +316,14 @@ const muiTheme = createTheme({
             borderColor: '#E2E8F0',
           },
           '&:hover fieldset': {
-            borderColor: brand.blue[300],
+            borderColor: brand.orange[300],
           },
           '&.Mui-focused': {
             backgroundColor: brand.white,
-            boxShadow: `0 0 0 3px rgba(59,130,246,0.12)`,
+            boxShadow: `0 0 0 3px rgba(248,111,3,0.12)`,
           },
           '&.Mui-focused fieldset': {
-            borderColor: brand.blue[500],
+            borderColor: brand.orange[500],
             borderWidth: '1.5px',
           },
         },
@@ -351,12 +351,12 @@ const muiTheme = createTheme({
           fontSize: '0.75rem',
         },
         colorPrimary: {
-          backgroundColor: brand.blue[50],
-          color: brand.blue[600],
-          border: `1px solid ${brand.blue[100]}`,
+          backgroundColor: brand.orange[50],
+          color: brand.orange[600],
+          border: `1px solid ${brand.orange[100]}`,
         },
         filledPrimary: {
-          backgroundColor: brand.blue[500],
+          backgroundColor: brand.orange[500],
           color: brand.white,
         },
       },
@@ -371,8 +371,8 @@ const muiTheme = createTheme({
           fontSize: '0.6875rem',
         },
         colorDefault: {
-          backgroundColor: brand.blue[100],
-          color: brand.blue[600],
+          backgroundColor: brand.orange[100],
+          color: brand.orange[600],
         },
       },
     },
@@ -386,7 +386,7 @@ const muiTheme = createTheme({
           height: 6,
         },
         barColorPrimary: {
-          background: `linear-gradient(90deg, ${brand.blue[400]}, ${brand.blue[500]})`,
+          background: `linear-gradient(90deg, ${brand.orange[400]}, ${brand.orange[500]})`,
           borderRadius: 100,
         },
       },
@@ -446,10 +446,10 @@ const muiTheme = createTheme({
           borderRadius: 10,
           transition: 'all 0.15s ease',
           '&.Mui-selected': {
-            backgroundColor: brand.blue[50],
-            color: brand.blue[600],
+            backgroundColor: brand.orange[50],
+            color: brand.orange[600],
             '&:hover': {
-              backgroundColor: brand.blue[100],
+              backgroundColor: brand.orange[100],
             },
           },
           '&:hover': {
@@ -468,7 +468,7 @@ const muiTheme = createTheme({
           textTransform: 'none',
           minHeight: 40,
           '&.Mui-selected': {
-            color: brand.blue[500],
+            color: brand.orange[500],
           },
         },
       },
@@ -476,7 +476,7 @@ const muiTheme = createTheme({
     MuiTabs: {
       styleOverrides: {
         indicator: {
-          backgroundColor: brand.blue[500],
+          backgroundColor: brand.orange[500],
           height: 3,
           borderRadius: '3px 3px 0 0',
         },
@@ -488,9 +488,9 @@ const muiTheme = createTheme({
       styleOverrides: {
         switchBase: {
           '&.Mui-checked': {
-            color: brand.blue[500],
+            color: brand.orange[500],
             '& + .MuiSwitch-track': {
-              backgroundColor: brand.blue[400],
+              backgroundColor: brand.orange[400],
               opacity: 1,
             },
           },
@@ -515,7 +515,7 @@ const muiTheme = createTheme({
         root: {
           color: '#CBD5E1',
           '&.Mui-checked': {
-            color: brand.blue[500],
+            color: brand.orange[500],
           },
         },
       },
@@ -530,7 +530,7 @@ const muiTheme = createTheme({
         root: {
           color: '#CBD5E1',
           '&.Mui-checked': {
-            color: brand.blue[500],
+            color: brand.orange[500],
           },
         },
       },
@@ -625,7 +625,7 @@ const muiTheme = createTheme({
             borderBottom: 'none',
           },
           '& .MuiTableRow-root:hover': {
-            backgroundColor: brand.blue[50],
+            backgroundColor: brand.orange[50],
           },
         },
       },
@@ -662,11 +662,11 @@ const muiTheme = createTheme({
           fontSize: '0.8125rem',
           fontWeight: 500,
           '&[aria-selected="true"]': {
-            backgroundColor: `${brand.blue[50]} !important`,
-            color: brand.blue[600],
+            backgroundColor: `${brand.orange[50]} !important`,
+            color: brand.orange[600],
           },
           '&:hover': {
-            backgroundColor: brand.blue[50],
+            backgroundColor: brand.orange[50],
           },
         },
       },
@@ -692,15 +692,15 @@ const muiTheme = createTheme({
           fontWeight: 500,
           transition: 'all 0.14s ease',
           '&:hover': {
-            backgroundColor: brand.blue[50],
-            color: brand.blue[600],
+            backgroundColor: brand.orange[50],
+            color: brand.orange[600],
           },
           '&.Mui-selected': {
-            backgroundColor: brand.blue[50],
-            color: brand.blue[600],
+            backgroundColor: brand.orange[50],
+            color: brand.orange[600],
             fontWeight: 700,
             '&:hover': {
-              backgroundColor: brand.blue[100],
+              backgroundColor: brand.orange[100],
             },
           },
         },
@@ -752,7 +752,7 @@ const muiTheme = createTheme({
             borderBottom: '1px solid #F1F5F9',
           },
           '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-            color: brand.blue[500],
+            color: brand.orange[500],
           },
         },
       },
@@ -766,10 +766,10 @@ const muiTheme = createTheme({
           fontWeight: 600,
           fontSize: '0.8125rem',
           '&.Mui-selected': {
-            backgroundColor: brand.blue[500],
+            backgroundColor: brand.orange[500],
             color: brand.white,
             '&:hover': {
-              backgroundColor: brand.blue[600],
+              backgroundColor: brand.orange[600],
             },
           },
         },
@@ -781,10 +781,10 @@ const muiTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-active': {
-            color: brand.blue[500],
+            color: brand.orange[500],
           },
           '&.Mui-completed': {
-            color: brand.blue[600],
+            color: brand.orange[600],
           },
         },
       },
