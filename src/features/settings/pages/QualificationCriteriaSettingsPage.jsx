@@ -224,12 +224,33 @@ const QualificationCriteriaSettingsPage = () => {
     if (isSuperAdmin && !targetCompanyId) return;
     try {
       setLoading(true);
-      const [fetchedCriteria, fetchedSettings] = await Promise.all([
+      const [criteriaRes, settingsRes] = await Promise.allSettled([
         getQualificationCriteria(targetCompanyId),
         getQualificationSettings(targetCompanyId),
       ]);
-      setCriteria(fetchedCriteria || []);
-      if (fetchedSettings) setSettings(fetchedSettings);
+
+      if (criteriaRes.status === 'fulfilled') {
+        const rawCriteria = Array.isArray(criteriaRes.value) ? criteriaRes.value : [];
+        // Deduplicate criteria by key defensively
+        const seenKeys = new Set();
+        const deduplicatedCriteria = [];
+        for (const c of rawCriteria) {
+          if (!seenKeys.has(c.key)) {
+            seenKeys.add(c.key);
+            deduplicatedCriteria.push(c);
+          }
+        }
+        setCriteria(deduplicatedCriteria);
+      } else {
+        console.error('Failed to load qualification criteria:', criteriaRes.reason);
+        toast.error(criteriaRes.reason?.message || 'Failed to load qualification criteria');
+      }
+
+      if (settingsRes.status === 'fulfilled' && settingsRes.value) {
+        setSettings(settingsRes.value);
+      } else if (settingsRes.status === 'rejected') {
+        console.error('Failed to load qualification settings:', settingsRes.reason);
+      }
     } catch (err) {
       console.error('Failed to load qualification settings:', err);
       toast.error(err?.message || 'Failed to load qualification criteria settings');

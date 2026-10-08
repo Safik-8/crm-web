@@ -71,17 +71,25 @@ const QualifyOpportunityModal = ({ opportunity, isOpen, onClose, onQualified }) 
 
   const computeScore = () => {
     let score = 0;
+    let totalPossible = 0;
     criteria.forEach((c) => {
+      const maxPts = Number(c.maxPoints) || 0;
+      totalPossible += maxPts;
       const val = formData[c.key];
       if (c.fieldType === 'boolean' && Boolean(val)) {
-        score += Number(c.maxPoints) || 0;
+        score += maxPts;
       } else if (c.fieldType === 'select' && Array.isArray(c.options)) {
         const matchedOpt = c.options.find((opt) => opt.value === val);
         if (matchedOpt) score += Number(matchedOpt.points) || 0;
       } else if (c.fieldType === 'number' && val !== undefined && val !== null && !isNaN(val)) {
-        score += Math.min(Number(c.maxPoints) || 0, Math.max(0, Number(val)));
+        score += Math.min(maxPts, Math.max(0, Number(val)));
       }
     });
+
+    if (totalPossible <= 0) return 0;
+    if (totalPossible !== 100) {
+      return Math.min(100, Math.max(0, Math.round((score / totalPossible) * 100)));
+    }
     return Math.min(100, Math.max(0, score));
   };
 
