@@ -56,7 +56,7 @@ const CoursePagination = ({ pagination, onPageChange, isLoading }) => {
           <span className="font-bold text-slate-700">{from}–{to}</span>
           {' '}of{' '}
           <span className="font-bold text-slate-700">{total}</span>
-          {' '}courses
+          {' '}services
         </p>
 
         {/* Controls */}

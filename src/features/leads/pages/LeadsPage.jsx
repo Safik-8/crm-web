@@ -889,7 +889,7 @@ export const LeadsPage = () => {
                     </button>
                   )}
                   <button
-                    onClick={() =>
+                    onClick={() => {
                       clearFilters({
                         companyId: '',
                         branchId: '',
@@ -900,9 +900,21 @@ export const LeadsPage = () => {
                         priority: '',
                         assignedToId: '',
                         dateFrom: '',
-                        dateTo: ''
-                      })
-                    }
+                        dateTo: '',
+                        isQualified: ''
+                      });
+                      setTempFilters({
+                        sourceId: '',
+                        courseId: '',
+                        statusId: '',
+                        priority: '',
+                        assignedToId: '',
+                        dateFrom: '',
+                        dateTo: '',
+                        branchId: '',
+                        teamId: ''
+                      });
+                    }}
                     className="flex items-center gap-1.5 px-3.5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[12px] transition-all cursor-pointer  active:scale-95"
                   >
                     <SearchX size={14} />
@@ -996,19 +1008,42 @@ export const LeadsPage = () => {
           errorMessage={error?.message || 'Something went wrong.'}
           onRetry={refetch}
           hasActiveFilters={hasActiveFilters}
-          onClearFilters={() =>
+          onClearFilters={() => {
             clearFilters({
+              companyId: '',
+              branchId: '',
+              teamId: '',
               sourceId: '',
               courseId: '',
               statusId: '',
               priority: '',
               assignedToId: '',
               dateFrom: '',
-              dateTo: ''
-            })
+              dateTo: '',
+              isQualified: ''
+            });
+            setTempFilters({
+              sourceId: '',
+              courseId: '',
+              statusId: '',
+              priority: '',
+              assignedToId: '',
+              dateFrom: '',
+              dateTo: '',
+              branchId: '',
+              teamId: ''
+            });
+          }}
+          emptyTitle={
+            hasActiveFilters
+              ? (search.trim() ? `No leads matching "${search.trim()}"` : "No matching leads found")
+              : "No leads registered"
           }
-          emptyTitle="No leads registered"
-          emptyDescription="Manually add a lead or import them from Excel to get started."
+          emptyDescription={
+            hasActiveFilters
+              ? "Try adjusting your search terms or clearing filters to find what you're looking for."
+              : "Manually add a lead or import them from Excel to get started."
+          }
           rowClassName="group"
           sortBy={sortBy}
           sortOrder={sortOrder}
