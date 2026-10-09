@@ -69,18 +69,18 @@ const LoginForm = () => {
       {/* Top accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
 
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="-mt-3 -mb-6 flex justify-center w-full">
+      <div className="flex flex-col items-center text-center mb-6 pt-1">
+        <div className="flex justify-center w-full mb-3">
           <img
             src="/logos/logo.svg"
-            alt="StackCode"
-            className="w-full max-w-[200px] sm:max-w-[230px] h-auto object-contain transition-opacity duration-300 hover:opacity-90"
+            alt="StackDot"
+            className="h-11 sm:h-12 w-auto max-w-[190px] sm:max-w-[210px] object-contain transition-opacity duration-300 hover:opacity-95"
           />
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 font-sora mt-4">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 font-sora">
           Welcome back
         </h2>
-        <span className="mt-1 text-[10px] text-gray-500 font-bold uppercase tracking-widest block">
+        <span className="mt-1 text-[11px] text-gray-500 font-semibold uppercase tracking-wider block">
           Sign in to your dashboard
         </span>
       </div>
