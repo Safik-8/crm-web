@@ -398,6 +398,9 @@ export const OpportunitiesPage = () => {
   // ── Metrics ────────────────────────────────────────────────────────────────
   const totalPipelineRevenue = opportunities.reduce((acc, opp) => acc + Number(opp.expectedRevenue || 0), 0);
   const totalWonRevenue = opportunities.filter((opp) => opp.status === 'WON').reduce((acc, opp) => acc + Number(opp.expectedRevenue || 0), 0);
+  const activeOpportunitiesCount = opportunities.filter(
+    (opp) => !['WON', 'LOST', 'CANCELLED'].includes(opp.status?.toUpperCase())
+  ).length;
 
   const hasActiveFilters = !!(searchTerm || stageFilter || companyFilter || branchFilter);
 
@@ -467,7 +470,9 @@ export const OpportunitiesPage = () => {
           <div className="bg-white p-4 border border-slate-200 flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-500 font-medium block mb-1">Active Opportunities</span>
-              <span className="text-xl font-bold text-slate-900">{opportunities.length} Deals</span>
+              <span className="text-xl font-bold text-slate-900">
+                {activeOpportunitiesCount} {activeOpportunitiesCount === 1 ? 'Deal' : 'Deals'}
+              </span>
             </div>
             <div className="w-10 h-10 rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
               <Target className="w-5 h-5" />

@@ -45,10 +45,12 @@ export const fetchNotificationHistory = async (params = {}) => {
   if (params.startDate) query.append('startDate', params.startDate);
   if (params.endDate) query.append('endDate', params.endDate);
   if (params.scope) query.append('scope', params.scope);
+  query.append('daysLimit', '0'); // CRITICAL: Full history page requires all-time scope, not 3-day window
 
   return apiClient(`/notifications?${query.toString()}`, {
     method: 'GET',
     silent: true,
+    signal: params.signal,
   });
 };
 

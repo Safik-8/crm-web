@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Eye, RefreshCw, Users2, SlidersHorizontal, UserCheck, UserX, IndianRupee, TrendingUp, Search, MoreVertical, Power } from 'lucide-react';
 import { Menu, MenuItem } from '@mui/material';
 import { 
@@ -72,6 +73,7 @@ const getThisMonthRange = () => {
 };
 
 const CustomersPage = () => {
+  const queryClient = useQueryClient();
   const { formatCurrency, formatDate } = useFormatters();
   const { user, hasPermission } = useAuth();
   const { forceHideLoader } = useLoader();
@@ -112,17 +114,17 @@ const CustomersPage = () => {
   }, [customers]);
 
   const statusData = useMemo(() => {
-    let active = 0;
-    let inactive = 0;
-    customers.forEach(c => {
-      if (c.status === 'ACTIVE') active++;
-      else inactive++;
-    });
+    const active = stats?.active !== undefined && stats?.active !== null
+      ? stats.active
+      : customers.filter(c => c.status === 'ACTIVE').length;
+    const inactive = stats?.inactive !== undefined && stats?.inactive !== null
+      ? stats.inactive
+      : customers.filter(c => c.status !== 'ACTIVE').length;
     return [
       { name: 'Active', value: active, color: '#10B981' },
       { name: 'Inactive', value: inactive, color: '#F59E0B' }
     ];
-  }, [customers]);
+  }, [stats, customers]);
 
   const { isSuperAdmin, isCompanyWide, isBranchLevel } = getRoleHierarchy(user);
   const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
@@ -133,8 +135,8 @@ const CustomersPage = () => {
   const isBranchDisabled = canFilterCompany && !companyId;
   const isOwnerDisabled = canFilterCompany && !companyId;
 
-  const fetchCustomers = async (currentPage = page) => {
-    setLoadingState('loading');
+  const fetchCustomers = async (currentPage = page, isSilent = false) => {
+    if (!isSilent) setLoadingState('loading');
     try {
       const params = {
         page: currentPage,
@@ -167,8 +169,10 @@ const CustomersPage = () => {
       });
       setLoadingState(items.length ? 'success' : 'empty');
     } catch (error) {
-      setLoadingState('error');
-      toast.error(error?.message || 'Failed to load customers');
+      if (!isSilent) {
+        setLoadingState('error');
+        toast.error(error?.message || 'Failed to load customers');
+      }
     }
   };
 
@@ -294,8 +298,30 @@ const CustomersPage = () => {
     try {
       const response = await updateCustomerStatus(customer.id, nextStatus);
       const updated = response?.data || response;
-      setCustomers((prev) => prev.map((item) => (item.id === customer.id ? { ...item, status: updated?.status || nextStatus } : item)));
-      toast.success(`Customer marked ${nextStatus.toLowerCase()}`);
+      const actualNewStatus = updated?.status || nextStatus;
+
+      // 1. Update customer in list
+      setCustomers((prev) => prev.map((item) => (item.id === customer.id ? { ...item, status: actualNewStatus } : item)));
+
+      // 2. Optimistically update summary stats (cards and chart)
+      setStats((prev) => {
+        if (!prev) return prev;
+        const wasActive = customer.status === 'ACTIVE';
+        return {
+          ...prev,
+          active: wasActive ? Math.max(0, (prev.active || 0) - 1) : (prev.active || 0) + 1,
+          inactive: wasActive ? (prev.inactive || 0) + 1 : Math.max(0, (prev.inactive || 0) - 1),
+        };
+      });
+
+      // 3. Invalidate React Query caches for customers and dashboard
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+      // 4. Background refetch to ensure authoritative state from API
+      fetchCustomers(page, true);
+
+      toast.success(`Customer marked ${actualNewStatus.toLowerCase()}`);
     } catch (error) {
       toast.error(error?.message || 'Failed to update customer status');
     } finally {

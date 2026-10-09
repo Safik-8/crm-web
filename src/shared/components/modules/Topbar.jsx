@@ -447,6 +447,11 @@ const Topbar = ({ toggleSidebar }) => {
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
   const togglePanel = useCallback(() => setIsPanelOpen((prev) => !prev), []);
 
+  // Ensure notification panel closes immediately when navigating across pages
+  useEffect(() => {
+    setIsPanelOpen(false);
+  }, [location.pathname]);
+
   // Filter allowed search items strictly by user permissions
   const accessibleSearchItems = useMemo(() => {
     return SEARCH_NAV_ITEMS.filter((item) => {

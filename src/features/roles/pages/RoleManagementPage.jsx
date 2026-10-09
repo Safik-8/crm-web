@@ -1111,7 +1111,10 @@ const RoleManagementPage = () => {
       header: 'Users',
       align: 'left',
       cell: (role) => (
-        <span className="font-bold text-[13px] text-slate-700">
+        <span
+          className="font-bold text-[13px] text-slate-700"
+          title={`${role._count?.userRoles ?? 0} active user(s) assigned to ${role.name} in this company`}
+        >
           {role._count?.userRoles ?? 0}
         </span>
       ),

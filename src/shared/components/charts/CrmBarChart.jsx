@@ -115,7 +115,7 @@ export default function CrmBarChart({
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11, fill: '#64748b' }}
-                  tickFormatter={formatXAxis || defaultFormatXAxis}
+                  tickFormatter={formatXAxis ? (val) => formatXAxis(val) : defaultFormatXAxis}
                 />
                 <YAxis
                   type="category"
@@ -124,7 +124,7 @@ export default function CrmBarChart({
                   axisLine={false}
                   tick={customYTick || { fontSize: 11, fill: '#334155', fontWeight: 600 }}
                   width={yAxisWidth}
-                  tickFormatter={formatYAxis}
+                  tickFormatter={formatYAxis ? (val) => formatYAxis(val) : undefined}
                 />
               </>
             ) : (
@@ -134,13 +134,13 @@ export default function CrmBarChart({
                   tickLine={false}
                   axisLine={false}
                   tick={customXTick || { fontSize: 11, fill: '#475569', fontWeight: 600 }}
-                  tickFormatter={formatXAxis || defaultFormatXAxis}
+                  tickFormatter={formatXAxis ? (val) => formatXAxis(val) : defaultFormatXAxis}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11, fill: '#64748b' }}
-                  tickFormatter={formatYAxis}
+                  tickFormatter={formatYAxis ? (val) => formatYAxis(val) : undefined}
                 />
               </>
             )}

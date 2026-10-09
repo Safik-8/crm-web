@@ -117,13 +117,13 @@ export default function CrmLineChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#64748b', fontSize: 12 }}
-              tickFormatter={formatXAxis}
+              tickFormatter={formatXAxis ? (val) => formatXAxis(val) : undefined}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#64748b', fontSize: 12 }}
-              tickFormatter={formatYAxis}
+              tickFormatter={formatYAxis ? (val) => formatYAxis(val) : undefined}
             />
 
             <Tooltip

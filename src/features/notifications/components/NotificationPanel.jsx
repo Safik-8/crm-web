@@ -361,7 +361,10 @@ const NotificationPanel = ({ isOpen, onClose, triggerRef }) => {
           </p>
           <Link
             to="/notifications"
-            onClick={onClose}
+            onClick={() => {
+              setAnimState('closed');
+              onClose();
+            }}
             className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
           >
             View All History <ExternalLink size={11} />

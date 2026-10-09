@@ -55,6 +55,7 @@ const MODULE_OPTIONS = [
   { value: 'KPI', label: 'KPI System' },
   { value: 'REPORT', label: 'Reports & Exports' },
   { value: 'SETTINGS', label: 'System Settings' },
+  { value: 'SYSTEM', label: 'System & Background' },
 ];
 
 // Standardized Action Type Options (With legacy AUTH mapping)
