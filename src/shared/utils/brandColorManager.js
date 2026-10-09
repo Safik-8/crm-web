@@ -113,12 +113,17 @@ export function applyBrandTheme(primaryHex) {
   Object.entries(palette).forEach(([key, val]) => {
     if (key !== 'raw') {
       root.style.setProperty(`--brand-${key}`, val);
+      root.style.setProperty(`--color-orange-${key}`, val);
     }
   });
 
   // Bridge legacy direct variables
   root.style.setProperty('--color-primary', palette[500]);
   root.style.setProperty('--color-primary-hover', palette[600]);
+  root.style.setProperty('--color-brand', palette[500]);
+  if (palette.rgb) {
+    root.style.setProperty('--brand-rgb', palette.rgb);
+  }
 
   return palette;
 }

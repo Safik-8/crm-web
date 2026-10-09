@@ -14,6 +14,18 @@
   --brand-800: #0f139d;
   --brand-900: #080c74;
   --brand-rgb: 71, 76, 225;
+
+  /* Direct :root aliases so Tailwind and custom styles immediately inherit brand tokens */
+  --color-orange-50:  var(--brand-50);
+  --color-orange-100: var(--brand-100);
+  --color-orange-200: var(--brand-200);
+  --color-orange-300: var(--brand-300);
+  --color-orange-400: var(--brand-400);
+  --color-orange-500: var(--brand-500);
+  --color-orange-600: var(--brand-600);
+  --color-orange-700: var(--brand-700);
+  --color-orange-800: var(--brand-800);
+  --color-orange-900: var(--brand-900);
 }
 
 /* 
