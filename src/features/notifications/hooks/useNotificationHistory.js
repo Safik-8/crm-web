@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   fetchNotificationHistory,
   markNotificationRead,
@@ -28,24 +28,43 @@ export const useNotificationHistory = () => {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
+  const abortRef = useRef(null);
 
   const isSupervisor = (user?.primaryRoleRank ?? 0) >= 60;
 
   const loadData = useCallback(async () => {
+    // Cancel previous in-flight request
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+
     setIsLoading(true);
     setIsError(false);
+
+    const params = {
+      page,
+      limit: 20,
+      status,
+      priority: priority || undefined,
+      moduleName: moduleName || undefined,
+      search: search || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      scope,
+      signal: abortRef.current.signal,
+    };
+
     try {
-      const res = await fetchNotificationHistory({
-        page,
-        limit: 20,
-        status,
-        priority: priority || undefined,
-        moduleName: moduleName || undefined,
-        search: search || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        scope,
-      });
+      let res;
+      try {
+        res = await fetchNotificationHistory(params);
+      } catch (firstErr) {
+        if (firstErr?.name === 'AbortError' || firstErr?.message?.includes('aborted')) return;
+        // Enterprise auto-retry: Allow transient auth refresh to settle
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        res = await fetchNotificationHistory(params);
+      }
+
+      if (!res || res._aborted) return;
 
       const list = res?.data?.notifications ?? res?.notifications ?? [];
       const pag  = res?.data?.pagination ?? res?.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 1 };
@@ -54,6 +73,7 @@ export const useNotificationHistory = () => {
       setPagination(pag);
       setSelectedIds([]);
     } catch (err) {
+      if (err?.name === 'AbortError' || err?.message?.includes('aborted')) return;
       console.error('[useNotificationHistory] Fetch failed:', err);
       setIsError(true);
     } finally {
@@ -63,6 +83,9 @@ export const useNotificationHistory = () => {
 
   useEffect(() => {
     loadData();
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [loadData]);
 
   // Bulk Selection Toggles

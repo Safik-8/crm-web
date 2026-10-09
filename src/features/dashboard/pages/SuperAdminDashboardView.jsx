@@ -40,14 +40,11 @@ const SuperAdminDashboardView = () => {
     { icon: UserCheck, title: 'Active Customers', value: metrics.activeCustomers, color: 'purple', onClick: () => navigate('/customers') },
   ];
 
-  const dummyBranches = [
-    { name: 'NEXUS SOUTH MEGA BRANCH', revenue: 110000, deals: 45 },
-    { name: 'NEXUS NORTH MEGA BRANCH', revenue: 62000, deals: 28 },
-    { name: 'NEXUS EAST MEGA BRANCH', revenue: 85000, deals: 35 },
-    { name: 'NEXUS WEST MEGA BRANCH', revenue: 95000, deals: 40 },
-  ];
-
-  const topBranchChartData = dummyBranches;
+  const topBranchChartData = (metrics.topBranches ?? []).map((b) => ({
+    name: b.branchName || `Branch ${b.branchId || 'Unknown'}`,
+    revenue: Number(b._sum?.finalAmount ?? 0),
+    deals: b._count?.id ?? 0,
+  }));
 
   const HeaderActions = (
     <>
@@ -154,7 +151,17 @@ const SuperAdminDashboardView = () => {
               </div>
             );
           })()
-        ) : null}
+        ) : (
+          <div className="bg-white border border-slate-200 shadow-sm p-5 flex flex-col h-80 justify-center items-center text-center">
+            <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-3">
+              <GitBranch size={22} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-700">No Branch Revenue Data</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-xs">
+              No closed-won deals recorded for registered branches in the selected period.
+            </p>
+          </div>
+        )}
         <LeadAgingWidget data={aging} isLoading={agingLoading} />
       </div>
 

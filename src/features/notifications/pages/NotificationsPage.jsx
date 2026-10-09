@@ -178,11 +178,15 @@ const NotificationsPage = () => {
     { value: 'SYSTEM', label: 'System' },
   ];
 
-  const scopeOptions = [
-    { value: 'personal', label: 'Personal Inbox' },
-    { value: 'company', label: 'Company Audit' },
-    { value: 'branch', label: 'Branch Audit' },
-  ];
+  const scopeOptions = isSupervisor
+    ? [
+        { value: 'personal', label: 'Personal Inbox' },
+        { value: 'company', label: 'Company Audit' },
+        { value: 'branch', label: 'Branch Audit' },
+      ]
+    : [
+        { value: 'personal', label: 'Personal Inbox' },
+      ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">

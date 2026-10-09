@@ -7,7 +7,8 @@ import {
  * Short currency formatter (e.g. ₹1.2Cr, ₹5L, ₹10k, ₹500 or $1.2M, $500k)
  */
 export const formatCurrencyShort = (val, symbol = "₹") => {
-  return baseFormatCurrencyShort(val, symbol);
+  const sym = typeof symbol === "string" ? symbol : "₹";
+  return baseFormatCurrencyShort(val, sym);
 };
 
 /**
