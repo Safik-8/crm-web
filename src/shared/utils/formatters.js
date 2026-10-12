@@ -45,7 +45,7 @@ export const formatCurrencyShort = (value, symbol = "₹") => {
   if (value === null || value === undefined || value === "") return "—"
   const num = Number(value)
   if (isNaN(num)) return "—"
-  const sym = symbol || "₹"
+  const sym = typeof symbol === "string" ? symbol : "₹"
 
   if (sym === "₹") {
     // Indian numbering system (Lakh / Crore)

@@ -56,9 +56,9 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
             className={`h-2.5 w-2.5 rounded-full flex-shrink-0 transition-all duration-300 ${isRefetching ? 'bg-zinc-300 animate-pulse' : ''
               }`}
             style={{
-              backgroundColor: !isRefetching ? (stage.colorCode || (stage.isDefault ? '#f86f03' : isClosureCol ? '#10b981' : '#a1a1aa')) : undefined,
+              backgroundColor: !isRefetching ? (stage.colorCode || (stage.isDefault ? '#474ce1' : isClosureCol ? '#10b981' : '#a1a1aa')) : undefined,
               boxShadow: !isRefetching && (stage.colorCode || stage.isDefault || isClosureCol)
-                ? `0 0 0 3px ${(stage.colorCode || (stage.isDefault ? '#f86f03' : '#10b981'))}25`
+                ? `0 0 0 3px ${(stage.colorCode || (stage.isDefault ? '#474ce1' : '#10b981'))}25`
                 : undefined
             }}
           />

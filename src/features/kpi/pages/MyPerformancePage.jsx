@@ -10,11 +10,14 @@ import TextField from '../../../shared/components/elements/TextField';
 
 import SearchInput from '../../../shared/components/elements/SearchInput';
 import PageHeader from '../../../shared/components/modules/PageHeader';
+import { useBrandTheme } from '../../../app/providers/ThemeProvider';
 
 import { getRoleHierarchy } from '../../../lib/utils/roleHierarchy';
 
 export default function MyPerformancePage() {
   const { user } = useAuth();
+  const { currentBrandColor } = useBrandTheme() || {};
+  const brandColor = currentBrandColor || '#f97316';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKpiType, setSelectedKpiType] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
@@ -57,7 +60,7 @@ export default function MyPerformancePage() {
 
   const barSeries = [
     { dataKey: 'Target', name: 'Target Value', fill: '#cbd5e1', radius: [6, 6, 0, 0] },
-    { dataKey: 'Achieved', name: 'Achieved Value', fill: '#f97316', radius: [6, 6, 0, 0] },
+    { dataKey: 'Achieved', name: 'Achieved Value', fill: brandColor, radius: [6, 6, 0, 0] },
   ];
 
   if (isError) {

@@ -203,7 +203,7 @@ const TimelineTab = ({ leadId, branchId }) => {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
+              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-orange-500 focus:ring-3 focus:ring-orange-500/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
             />
           </div>
 
@@ -214,7 +214,7 @@ const TimelineTab = ({ leadId, branchId }) => {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-[#F86F03] focus:ring-3 focus:ring-[#F86F03]/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
+              className="w-full text-[13px] px-3.5 py-2.5 border border-[#E2E8F0] rounded-[10px] focus:outline-none focus:border-orange-500 focus:ring-3 focus:ring-orange-500/14 bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] text-slate-700 font-medium transition-all"
             />
           </div>
         </div>

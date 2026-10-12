@@ -103,11 +103,11 @@ const CourseDetailModal = ({ isOpen, onClose, course = null }) => {
         {/* Section 2: Detailed Description */}
         <div className="space-y-1">
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-2">
-            Course Description
+            Service Description
           </h3>
           <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl mt-2">
             <p className="text-[13px] text-slate-600 leading-relaxed font-medium whitespace-pre-wrap break-words">
-              {course.description || 'No description has been configured for this course yet.'}
+              {course.description || 'No description has been configured for this service yet.'}
             </p>
           </div>
         </div>

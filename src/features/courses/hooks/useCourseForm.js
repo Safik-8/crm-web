@@ -78,7 +78,7 @@ export const useCourseForm = (onSuccess, initialValues = null, isOpen = false) =
   const validate = () => {
     const tempErrors = {};
 
-    if (!values.name?.trim()) tempErrors.name = 'Course name is required';
+    if (!values.name?.trim()) tempErrors.name = 'Service name is required';
     
     // Validate companyId is selected (creation only)
     if (!isEditMode && !values.companyId) {

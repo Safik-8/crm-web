@@ -102,12 +102,12 @@ const Table = ({
   // ── Empty State ────────────────────────────────────────────────────────────
   const EmptyState = () => {
     const Icon = emptyIcon || (hasActiveFilters ? SearchX : Inbox);
-    const title = emptyTitle || (hasActiveFilters ? 'No results found' : 'No data available');
-    const description =
-      emptyDescription ||
-      (hasActiveFilters
-        ? "Try adjusting your search or filters to find what you're looking for."
-        : 'There is no information to display at this time.');
+    const title = hasActiveFilters
+      ? 'No matching results found'
+      : (emptyTitle || 'No data available');
+    const description = hasActiveFilters
+      ? "Try adjusting your search terms or clearing filters to find what you're looking for."
+      : (emptyDescription || 'There is no information to display at this time.');
 
     return (
       <tr>

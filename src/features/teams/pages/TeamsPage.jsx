@@ -253,7 +253,7 @@ const TeamsPage = () => {
                 <button
                   type="button"
                   onClick={handleOpenCreateForm}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-[#F97316] hover:bg-[#EA580C] text-white text-[13px] font-semibold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-orange-500 hover:bg-orange-600 text-white text-[13px] font-semibold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
                 >
                   <Plus size={16} />
                   <span>Add Team</span>

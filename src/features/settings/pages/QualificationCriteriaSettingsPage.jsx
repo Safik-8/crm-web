@@ -224,12 +224,33 @@ const QualificationCriteriaSettingsPage = () => {
     if (isSuperAdmin && !targetCompanyId) return;
     try {
       setLoading(true);
-      const [fetchedCriteria, fetchedSettings] = await Promise.all([
+      const [criteriaRes, settingsRes] = await Promise.allSettled([
         getQualificationCriteria(targetCompanyId),
         getQualificationSettings(targetCompanyId),
       ]);
-      setCriteria(fetchedCriteria || []);
-      if (fetchedSettings) setSettings(fetchedSettings);
+
+      if (criteriaRes.status === 'fulfilled') {
+        const rawCriteria = Array.isArray(criteriaRes.value) ? criteriaRes.value : [];
+        // Deduplicate criteria by key defensively
+        const seenKeys = new Set();
+        const deduplicatedCriteria = [];
+        for (const c of rawCriteria) {
+          if (!seenKeys.has(c.key)) {
+            seenKeys.add(c.key);
+            deduplicatedCriteria.push(c);
+          }
+        }
+        setCriteria(deduplicatedCriteria);
+      } else {
+        console.error('Failed to load qualification criteria:', criteriaRes.reason);
+        toast.error(criteriaRes.reason?.message || 'Failed to load qualification criteria');
+      }
+
+      if (settingsRes.status === 'fulfilled' && settingsRes.value) {
+        setSettings(settingsRes.value);
+      } else if (settingsRes.status === 'rejected') {
+        console.error('Failed to load qualification settings:', settingsRes.reason);
+      }
     } catch (err) {
       console.error('Failed to load qualification settings:', err);
       toast.error(err?.message || 'Failed to load qualification criteria settings');
@@ -543,7 +564,7 @@ const QualificationCriteriaSettingsPage = () => {
                   type="button"
                   onClick={handleSaveMatrix}
                   disabled={isSaving || !isValidMatrix}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-[#F97316] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-[40px] px-5 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap"
                 >
                   {isSaving ? (
                     <RefreshCcw size={15} className="animate-spin" />

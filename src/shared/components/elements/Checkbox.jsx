@@ -32,10 +32,10 @@ const Checkbox = ({
             sx={{
               color: hasError ? '#EF4444' : '#CBD5E1',
               '&.Mui-checked': {
-                color: '#F86F03',
+                color: 'primary.main',
               },
               '&:hover': {
-                backgroundColor: 'rgba(248, 111, 3, 0.04)',
+                backgroundColor: 'rgba(var(--brand-rgb, 248, 111, 3), 0.04)',
               },
               p: 1.5,
               borderRadius: '8px',

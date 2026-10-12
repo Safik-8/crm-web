@@ -15,6 +15,7 @@ import TextField from '../../../shared/components/elements/TextField';
 import { SYSTEM_REPORTS_METADATA } from '../constants/reportConstants';
 import { apiClient } from '../../../lib/api/api';
 import { useExport } from '../../../shared/hooks/useExport';
+import { getTenantLogo } from '../../../shared/utils/brandColorManager';
 
 const ReportResultView = ({ reportType, reportData, filters, builderOptions, onPageChange, onSaveConfig, loading, tableLoading = false, error, toast }) => {
   const { user } = useAuth();
@@ -844,7 +845,7 @@ const ReportResultView = ({ reportType, reportData, filters, builderOptions, onP
            can cleanly hide #root and show only this div — enabling proper multi-page output. */}
       {printItems && (() => {
         const tenantCompanyName = user?.company?.name || user?.companyName || getScopeName('companies', filters?.companyId) || 'ClassDesk';
-        const tenantCompanyLogo = user?.company?.logo || '/src/assets/logos/logo-official.png';
+        const tenantCompanyLogo = getTenantLogo(user);
         const companyInitials = tenantCompanyName
           .split(' ')
           .map(n => (n ? n[0] : ''))

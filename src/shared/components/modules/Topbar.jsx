@@ -447,6 +447,11 @@ const Topbar = ({ toggleSidebar }) => {
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
   const togglePanel = useCallback(() => setIsPanelOpen((prev) => !prev), []);
 
+  // Ensure notification panel closes immediately when navigating across pages
+  useEffect(() => {
+    setIsPanelOpen(false);
+  }, [location.pathname]);
+
   // Filter allowed search items strictly by user permissions
   const accessibleSearchItems = useMemo(() => {
     return SEARCH_NAV_ITEMS.filter((item) => {
@@ -538,7 +543,7 @@ const Topbar = ({ toggleSidebar }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[60px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 flex h-[60px] sm:h-[64px] w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5 backdrop-blur-xl">
 
         {/* Left: hamburger + breadcrumbs */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">

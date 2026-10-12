@@ -178,11 +178,15 @@ const NotificationsPage = () => {
     { value: 'SYSTEM', label: 'System' },
   ];
 
-  const scopeOptions = [
-    { value: 'personal', label: 'Personal Inbox' },
-    { value: 'company', label: 'Company Audit' },
-    { value: 'branch', label: 'Branch Audit' },
-  ];
+  const scopeOptions = isSupervisor
+    ? [
+        { value: 'personal', label: 'Personal Inbox' },
+        { value: 'company', label: 'Company Audit' },
+        { value: 'branch', label: 'Branch Audit' },
+      ]
+    : [
+        { value: 'personal', label: 'Personal Inbox' },
+      ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
@@ -253,7 +257,7 @@ const NotificationsPage = () => {
               type="button"
               onClick={handleExport}
               disabled={notifications.length === 0}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#F86F03] hover:bg-[#E06202] transition-colors disabled:opacity-50 cursor-pointer h-[38px] rounded-lg"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-hover transition-colors disabled:opacity-50 cursor-pointer h-[38px] rounded-lg"
             >
               <Download size={14} />
               Export Excel

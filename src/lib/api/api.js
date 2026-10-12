@@ -84,8 +84,8 @@ export const apiClient = async (endpoint, options = {}) => {
 
   const headers = {
     ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
-    ...(inMemoryToken ? { 'Authorization': `Bearer ${inMemoryToken}` } : {}),
     ...(fetchOptions.headers || {}),
+    ...(inMemoryToken ? { 'Authorization': `Bearer ${inMemoryToken}` } : {}),
   };
 
   const config = {
@@ -169,9 +169,9 @@ export const apiClient = async (endpoint, options = {}) => {
     return data;
   } catch (error) {
     // ── Swallow AbortError silently (request cancellation) ───────────────────
-    if (error?.name === 'AbortError') {
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
       // Do not re-throw; callers can check their own abort signal if needed.
-      return null;
+      return { _aborted: true };
     }
     throw error;
   } finally {

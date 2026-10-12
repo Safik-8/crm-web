@@ -75,12 +75,27 @@ export const useNotifications = () => {
     setHasError(false);
 
     try {
-      const res = await fetchNotifications({
-        page: 1,
-        limit: 50,
-        daysLimit: 3,
-        signal: abortRef.current.signal,
-      });
+      let res;
+      try {
+        res = await fetchNotifications({
+          page: 1,
+          limit: 50,
+          daysLimit: 3,
+          signal: abortRef.current.signal,
+        });
+      } catch (firstErr) {
+        if (firstErr?.name === 'AbortError' || firstErr?.message?.includes('aborted')) return;
+        // Enterprise auto-retry: Allow transient auth refresh to settle
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        res = await fetchNotifications({
+          page: 1,
+          limit: 50,
+          daysLimit: 3,
+          signal: abortRef.current.signal,
+        });
+      }
+
+      if (!res || res._aborted) return;
 
       // Normalise: backend may return { data: [...] } or { data: { notifications: [...] } }
       const list =
@@ -105,7 +120,7 @@ export const useNotifications = () => {
       setHasMore(pagination?.hasMore ?? false);
     } catch (err) {
       // AbortError means the panel was closed — not a real error
-      if (err?.name !== 'AbortError') {
+      if (err?.name !== 'AbortError' && !err?.message?.includes('aborted')) {
         setHasError(true);
       }
     } finally {
