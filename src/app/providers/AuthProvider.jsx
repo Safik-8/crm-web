@@ -225,6 +225,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await apiClient('/auth/me', { method: 'GET' });
       if (response?.success && response?.data?.user) {
+        if (response.data.accessToken) {
+          setAccessToken(response.data.accessToken);
+        }
         setUser(response.data.user);
       }
     } catch (error) {
@@ -238,6 +241,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await apiClient('/auth/me', { method: 'GET' });
         if (isMounted && response?.success && response?.data?.user) {
+          if (response.data.accessToken) {
+            setAccessToken(response.data.accessToken);
+          }
           setUser(response.data.user);
         } else {
           setUser(null);
