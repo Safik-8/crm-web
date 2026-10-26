@@ -119,6 +119,12 @@ export const useUpdateOpportunityMutation = () => {
 
       queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['revenue-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['revenue-report'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success(res?.message || 'Opportunity updated successfully');
     },
     onError: (error) => {
@@ -165,6 +171,12 @@ export const useCloseOpportunityMutation = () => {
 
       queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: OPPORTUNITY_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['revenue-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['revenue-report'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success(res?.message || 'Opportunity outcome updated successfully');
     },
     onError: (error) => {

@@ -1,29 +1,44 @@
-// crm-web/src/features/dashboard/pages/IseDashboardView.jsx
 import { useState } from 'react';
 import {
   Layers, Phone, CheckCircle, Calendar,
-  Clock, TrendingUp, LayoutDashboard
+  Clock, TrendingUp, LayoutDashboard, RefreshCw
 } from 'lucide-react';
 import KpiCard from '../components/KpiCard';
 import TargetProgressBar from '../components/TargetProgressBar';
 import ReminderWidget from '../components/ReminderWidget';
 import FollowupsDrawer from '../components/FollowupsDrawer';
 import QuickActionsBar from '../components/QuickActionsBar';
+import SelectField from '../../../shared/components/elements/SelectField';
+import Button from '../../../shared/components/elements/Button';
 import PageHeader from '../../../shared/components/modules/PageHeader';
 import { useDashboardMetrics, useKpiTargets, useCallQueue } from '../hooks/useRoleDashboard';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 
+const PERIOD_OPTIONS = [
+  { id: 'ALL', name: 'All Time' },
+  { id: 'MONTHLY', name: 'This Month' },
+  { id: 'QUARTERLY', name: 'This Quarter' },
+  { id: 'YEARLY', name: 'This Year' },
+];
+
 const IseDashboardView = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [period, setPeriod] = useState('MONTHLY');
   const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
   const [followupFilter, setFollowupFilter]         = useState('today');
-  const params = { rankingPeriod: 'MONTHLY', companyId: user?.companyId };
+  const params = { rankingPeriod: period, companyId: user?.companyId };
 
-  const { data: metrics = {}, isLoading } = useDashboardMetrics(params);
+  const { data: metrics = {}, isLoading, isFetching, refetch } = useDashboardMetrics(params);
   const { data: kpis = [], isLoading: kl } = useKpiTargets(params);
   const { data: callQueue = [], isLoading: ql } = useCallQueue(params);
+
+  const revenueTitle =
+    period === 'ALL'       ? 'Total Revenue' :
+    period === 'QUARTERLY' ? 'Quarterly Revenue' :
+    period === 'YEARLY'    ? 'Yearly Revenue' :
+                             'Monthly Revenue';
 
   const scrollToCallQueue = () => {
     const el = document.getElementById('call-queue-widget');
@@ -51,7 +66,7 @@ const IseDashboardView = () => {
     { icon: Clock, title: "Today's Follow-ups", value: metrics.followupsToday, color: 'sky', onClick: () => { setFollowupFilter('today'); setFollowupDrawerOpen(true); } },
     { icon: CheckCircle, title: 'Qualified Leads', value: metrics.qualifiedLeads, color: 'orange', onClick: () => navigate('/leads?isQualified=true') },
     { icon: Calendar, title: 'Pending Follow-ups', value: metrics.pendingFollowups, color: 'purple', onClick: () => { setFollowupFilter('overdue'); setFollowupDrawerOpen(true); } },
-    { icon: TrendingUp, title: 'Revenue', value: metrics.revenue, prefix: '₹', color: 'rose', onClick: () => navigate('/my-performance') },
+    { icon: TrendingUp, title: revenueTitle, value: metrics.revenue ?? metrics.monthlyRevenue ?? 0, prefix: '₹', color: 'rose', onClick: () => navigate('/my-performance') },
   ];
 
   return (
@@ -60,7 +75,46 @@ const IseDashboardView = () => {
         title="My Dashboard"
         description="Daily call workbench"
         icon={LayoutDashboard}
-        actions={<QuickActionsBar actions={['add_lead', 'followup']} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="w-36">
+              <SelectField
+                value={period}
+                onChange={(val) => setPeriod(val)}
+                options={PERIOD_OPTIONS}
+                searchable={false}
+                sx={{ minWidth: 130 }}
+              />
+            </div>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              startIcon={<RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />}
+              sx={{
+                height: '38px',
+                borderColor: '#E2E8F0',
+                color: '#475569',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: 600,
+                padding: '0 14px',
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+                '&:hover': {
+                  borderColor: '#CBD5E1',
+                  backgroundColor: '#F8FAFC',
+                },
+              }}
+            >
+              Refresh
+            </Button>
+            <QuickActionsBar actions={['add_lead', 'followup']} />
+          </div>
+        }
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

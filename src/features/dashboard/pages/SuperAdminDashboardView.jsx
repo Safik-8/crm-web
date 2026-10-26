@@ -25,6 +25,7 @@ const SuperAdminDashboardView = () => {
   const { data: activities = [], isLoading: activitiesLoading } = useActivityFeed(params);
 
   const revenueTitle =
+    period === 'ALL' ? 'Total Revenue' :
     period === 'QUARTERLY' ? 'Quarterly Revenue' :
       period === 'YEARLY' ? 'Yearly Revenue' :
         'Monthly Revenue';
@@ -36,7 +37,7 @@ const SuperAdminDashboardView = () => {
     { icon: Layers, title: 'Total Leads', value: metrics.totalLeads, color: 'orange', onClick: () => navigate('/leads') },
     { icon: Target, title: 'Active Opportunities', value: metrics.activeOpportunities, color: 'emerald', onClick: () => navigate('/opportunities') },
     { icon: Handshake, title: 'Deals Won', value: metrics.dealsWon, color: 'rose', onClick: () => navigate('/deals?outcome=WON') },
-    { icon: TrendingUp, title: revenueTitle, value: metrics.monthlyRevenue, prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
+    { icon: TrendingUp, title: revenueTitle, value: metrics.monthlyRevenue ?? metrics.revenue ?? 0, prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
     { icon: UserCheck, title: 'Active Customers', value: metrics.activeCustomers, color: 'purple', onClick: () => navigate('/customers') },
   ];
 
@@ -54,6 +55,7 @@ const SuperAdminDashboardView = () => {
           onChange={(val) => setPeriod(val)}
           searchable={false}
           options={[
+            { value: 'ALL', label: 'All Time' },
             { value: 'MONTHLY', label: 'This Month' },
             { value: 'QUARTERLY', label: 'This Quarter' },
             { value: 'YEARLY', label: 'This Year' },

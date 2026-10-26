@@ -30,8 +30,7 @@ import { toast } from '../../../shared/utils/toast';
 import { isTerminalStage, requiresReason, isClosureStage } from '../../pipelines/utils/stageRules';
 import ClosurePopupModal from '../../pipelines/components/ClosurePopupModal';
 import { createFromPipelineClosure } from '../../opportunities/services/opportunityService';
-import { courseService } from '../../courses/services/courseService';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 /**
@@ -70,6 +69,7 @@ const LeadsKanbanPage = () => {
   const { id: pipelineId } = useParams();
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
+  const queryClient = useQueryClient();
   const { forceHideLoader } = useLoader();
   const { pipelines, loading: loadingPipelines } = usePipelines();
 
@@ -562,6 +562,9 @@ const LeadsKanbanPage = () => {
         toast.success(toastMsg);
         setShowClosurePopup(false);
         setPendingClosureLead(null);
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+        queryClient.invalidateQueries({ queryKey: ['revenue-metrics'] });
         refetch(); // Board refetches — lead is now in Closure stage column and locked
       } catch (err) {
         // Keep popup open so user can correct and retry

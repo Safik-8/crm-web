@@ -197,7 +197,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
         >
           {/* Page-like Header */}
           <div className="bg-white p-4 border border-slate-200 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap min-w-0 flex-1">
               <button
                 onClick={onClose}
                 className="p-1.5 -ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center mr-1"
@@ -255,18 +255,28 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
               {!hasOpenOpp && canCreateOpp && (
                 <Button
                   variant="contained"
                   size="small"
-                  startIcon={<Target size={15} />}
+                  startIcon={<Target size={15} className="shrink-0" />}
                   onClick={() => setIsCreateOppOpen(true)}
                   sx={{
                     backgroundColor: 'var(--brand-500, #474ce1)',
                     fontSize: '12px',
                     fontWeight: 600,
-                    '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' },
+                    whiteSpace: 'nowrap',
+                    textTransform: 'none',
+                    minWidth: 'max-content',
+                    px: 2,
+                    py: 1,
+                    borderRadius: '8px',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      backgroundColor: 'var(--brand-600, #242ae1)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    },
                   }}
                 >
                   Create Opportunity

@@ -19,6 +19,7 @@ import { useAuth }        from '../../../app/providers/AuthProvider';
 import { useNavigate }    from 'react-router-dom';
 
 const PERIOD_OPTIONS = [
+  { id: 'ALL', name: 'All Time' },
   { id: 'MONTHLY', name: 'This Month' },
   { id: 'QUARTERLY', name: 'This Quarter' },
   { id: 'YEARLY', name: 'This Year' },
@@ -41,6 +42,7 @@ const BranchDashboardView = () => {
   const { data: activities = [], isLoading: actl } = useActivityFeed(params);
 
   const revenueTitle =
+    period === 'ALL'       ? 'Total Revenue' :
     period === 'QUARTERLY' ? 'Quarterly Revenue' :
     period === 'YEARLY'    ? 'Yearly Revenue' :
                              'Monthly Revenue';

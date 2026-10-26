@@ -29,6 +29,7 @@ const CompanyAdminDashboardView = () => {
   const { data: activities = [], isLoading: activitiesLoading } = useActivityFeed(params);
 
   const revenueTitle =
+    period === 'ALL'       ? 'Total Revenue' :
     period === 'QUARTERLY' ? 'Quarterly Revenue' :
     period === 'YEARLY'    ? 'Yearly Revenue' :
                              'Monthly Revenue';
@@ -39,7 +40,7 @@ const CompanyAdminDashboardView = () => {
     { icon: Layers,        title: 'Total Leads',          value: metrics.totalLeads,         color: 'sky',     onClick: () => navigate('/leads') },
     { icon: Target,        title: 'Opportunities',         value: metrics.activeOpportunities, color: 'orange',  onClick: () => navigate('/opportunities') },
     { icon: Handshake,     title: 'Deals Won',            value: metrics.dealsWon,           color: 'emerald', onClick: () => navigate('/deals?outcome=WON') },
-    { icon: TrendingUp,    title: revenueTitle,           value: metrics.monthlyRevenue,     prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
+    { icon: TrendingUp,    title: revenueTitle,           value: metrics.monthlyRevenue ?? metrics.revenue ?? 0,     prefix: '₹', color: 'blue', onClick: () => navigate('/reports/revenue') },
     { icon: UserCheck,     title: 'Active Customers',     value: metrics.activeCustomers,    color: 'purple',  onClick: () => navigate('/customers') },
     { icon: Clock,         title: "Today's Follow-ups",  value: metrics.followupsToday,     color: 'rose',    onClick: () => setFollowupDrawerOpen(true) },
   ];
@@ -58,6 +59,7 @@ const CompanyAdminDashboardView = () => {
           onChange={(val) => setPeriod(val)}
           searchable={false}
           options={[
+            { value: 'ALL', label: 'All Time' },
             { value: 'MONTHLY', label: 'This Month' },
             { value: 'QUARTERLY', label: 'This Quarter' },
             { value: 'YEARLY', label: 'This Year' },
