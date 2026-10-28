@@ -93,18 +93,26 @@ export const PipelineStageBuilderPage = () => {
   }, [fetchData]);
 
   // Rename & Delete Hooks
-  const handleRenameSuccess = useCallback(({ stageId, newName }) => {
+  const handleRenameSuccess = useCallback((result, fallbackName) => {
+    const stageId = typeof result === 'object' && result !== null ? result.stageId : result;
+    const newName = typeof result === 'object' && result !== null ? result.newName : fallbackName;
+    const colorCode = typeof result === 'object' && result !== null ? result.colorCode : undefined;
+
     setMasterStages(prev =>
-      prev.map(s => (s.id === stageId ? { ...s, name: newName } : s))
+      prev.map(s => (s.id === stageId ? { ...s, name: newName, ...(colorCode ? { colorCode } : {}) } : s))
     );
     setSelectedStages(prev =>
-      prev.map(s => (s.id === stageId ? { ...s, name: newName } : s))
+      prev.map(s => (s.id === stageId ? { ...s, name: newName, ...(colorCode ? { colorCode } : {}) } : s))
     );
   }, []);
 
-  const stageRename = useStageRename({ onSuccess: handleRenameSuccess });
+  const stageRename = useStageRename({
+    onSuccess: handleRenameSuccess,
+    getAllStageNames: () => masterStages.map(s => s.name),
+  });
 
-  const handleDeleteSuccess = useCallback(({ stageId }) => {
+  const handleDeleteSuccess = useCallback((result) => {
+    const stageId = typeof result === 'object' && result !== null ? result.stageId : result;
     setMasterStages(prev => prev.filter(s => s.id !== stageId));
     setSelectedStages(prev =>
       enforceAnchorPositions(prev.filter(s => s.id !== stageId))
@@ -431,7 +439,9 @@ export const PipelineStageBuilderPage = () => {
         hasLeads={stageDelete.hasLeads}
         leadCount={stageDelete.leadCount}
         isLoading={stageDelete.isDeleting(stageDelete.stageToDelete?.id)}
+        isDeleting={stageDelete.isDeleting(stageDelete.stageToDelete?.id)}
         onConfirm={stageDelete.confirmDelete}
+        onCancel={stageDelete.closeModal}
         onClose={stageDelete.closeModal}
       />
     </div>

@@ -8,6 +8,8 @@ import { Loader2, Check, X } from 'lucide-react';
 const InlineStageNameEditor = ({
   value,
   onChange,
+  color,
+  onColorChange,
   onCommit,
   onCancel,
   loading = false,
@@ -29,6 +31,23 @@ const InlineStageNameEditor = ({
 
   return (
     <div className={`flex items-center gap-2 flex-1 min-w-0 ${className}`}>
+      {/* Color Picker Swatch */}
+      {onColorChange && (
+        <label className="relative cursor-pointer flex-shrink-0" title="Change stage color">
+          <input
+            type="color"
+            value={color || '#3b82f6'}
+            onChange={(e) => onColorChange(e.target.value)}
+            disabled={loading}
+            className="sr-only"
+          />
+          <span
+            className="w-5 h-5 rounded-full border-2 border-white shadow-sm ring-1 ring-slate-300 flex items-center justify-center transition-transform hover:scale-110 block"
+            style={{ backgroundColor: color || '#3b82f6' }}
+          />
+        </label>
+      )}
+
       {/* Input */}
       <input
         ref={inputRef}

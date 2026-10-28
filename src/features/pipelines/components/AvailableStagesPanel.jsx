@@ -172,7 +172,7 @@ const AvailableStagesPanel = ({
                 )}
 
                 {/* Color Dot */}
-                {stage.colorCode && (
+                {!isEditingThis && stage.colorCode && (
                   <span
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: stage.colorCode }}
@@ -184,6 +184,8 @@ const AvailableStagesPanel = ({
                   <InlineStageNameEditor
                     value={stageRename.editValue}
                     onChange={stageRename.setEditValue}
+                    color={stageRename.editColor}
+                    onColorChange={stageRename.setEditColor}
                     onCommit={stageRename.commitEdit}
                     onCancel={stageRename.cancelEdit}
                     loading={stageRename.renaming}

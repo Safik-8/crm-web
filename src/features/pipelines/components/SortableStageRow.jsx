@@ -25,6 +25,8 @@ const SortableStageRow = ({
   isEditing = false,
   editValue = '',
   onEditChange,
+  editColor,
+  onEditColorChange,
   onEditCommit,
   onEditCancel,
   renaming = false,
@@ -103,7 +105,7 @@ const SortableStageRow = ({
       </div>
 
       {/* Stage color dot */}
-      {stage.colorCode && (
+      {!isEditing && stage.colorCode && (
         <span
           className="w-2.5 h-2.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: stage.colorCode }}
@@ -116,6 +118,8 @@ const SortableStageRow = ({
         <InlineStageNameEditor
           value={editValue}
           onChange={onEditChange}
+          color={editColor}
+          onColorChange={onEditColorChange}
           onCommit={onEditCommit}
           onCancel={onEditCancel}
           loading={renaming}

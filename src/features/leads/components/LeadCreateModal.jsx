@@ -171,9 +171,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
       errs.name = 'Name must not contain numbers';
     }
 
-    if (!mobile) {
-      errs.mobile = 'Mobile number is required';
-    } else if (!/^\d{10}$/.test(mobile)) {
+    if (mobile && !/^\d{10}$/.test(mobile)) {
       errs.mobile = 'Mobile number must be exactly 10 digits';
     }
 
@@ -404,8 +402,7 @@ export const LeadCreateModal = ({ isOpen, onClose, onCreated, initialPipelineId 
             <TextField
               id="lead-mobile"
               label="Mobile Number"
-              placeholder="10-digit mobile number"
-              required
+              placeholder="10-digit mobile number (optional)"
               value={values.mobile}
               onChange={(val) => handleFieldChange('mobile', val)}
               errorText={errors.mobile}

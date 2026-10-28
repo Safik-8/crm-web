@@ -7,13 +7,25 @@ import DynamicFormModal from '../../../shared/components/elements/DynamicFormMod
  * Confirmation dialog for global stage deletion.
  * Powered by reusable DynamicFormModal.
  */
-const DeleteStageModal = ({ stage, onConfirm, onCancel, isDeleting = false }) => {
-  if (!stage) return null;
+const DeleteStageModal = ({
+  isOpen,
+  stage,
+  onConfirm,
+  onCancel,
+  onClose,
+  isDeleting = false,
+  isLoading = false,
+}) => {
+  const active = isOpen !== undefined ? isOpen : !!stage;
+  const handleClose = onCancel || onClose;
+  const busy = isDeleting || isLoading;
+
+  if (!stage || !active) return null;
 
   return (
     <DynamicFormModal
-      isOpen={!!stage}
-      onClose={onCancel}
+      isOpen={active}
+      onClose={handleClose}
       title="Delete Stage"
       subtitle="This action cannot be undone"
       icon={AlertTriangle}
@@ -21,7 +33,7 @@ const DeleteStageModal = ({ stage, onConfirm, onCancel, isDeleting = false }) =>
       submitText="Delete Stage"
       cancelText="Cancel"
       danger={true}
-      isLoading={isDeleting}
+      isLoading={busy}
     >
       <div className="space-y-4">
         <div className="bg-slate-50 rounded-xl border border-slate-100 px-4 py-3.5 space-y-2">

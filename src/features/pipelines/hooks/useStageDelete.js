@@ -3,36 +3,38 @@ import { deleteStage } from '../services/stageService';
 import { toast } from 'sonner';
 
 export const useStageDelete = ({ onSuccess }) => {
-  const [pendingStage, setPendingStage] = useState(null);
+  const [stageToDelete, setStageToDelete] = useState(null);
   const [deletingIds, setDeletingIds] = useState(new Set());
   const inFlightRef = useRef(false);
   // Keep onSuccess in a ref so confirmDelete never closes over a stale version
   const onSuccessRef = useRef(onSuccess);
   onSuccessRef.current = onSuccess;
 
-  const requestDelete = useCallback((stage) => {
+  const openModal = useCallback((stage) => {
     if (!stage || stage.isDefault) return;
     if (deletingIds.has(stage.id)) return;
-    setPendingStage(stage);
+    setStageToDelete(stage);
   }, [deletingIds]);
 
-  const cancelDelete = useCallback(() => {
-    setPendingStage(null);
+  const closeModal = useCallback(() => {
+    setStageToDelete(null);
   }, []);
 
   const confirmDelete = useCallback(async () => {
-    if (!pendingStage || inFlightRef.current) return;
+    if (!stageToDelete || inFlightRef.current) return;
 
-    const stage = pendingStage;
+    const stage = stageToDelete;
     inFlightRef.current = true;
-    setPendingStage(null);
+    setStageToDelete(null);
 
     setDeletingIds(prev => new Set([...prev, stage.id]));
 
     try {
       await deleteStage(stage.id);
-      // Use ref to always call the latest onSuccess — never stale
-      onSuccessRef.current(stage.id);
+      // Use ref to always call the latest onSuccess — support both ({ stageId, stage }) and (stageId)
+      if (typeof onSuccessRef.current === 'function') {
+        onSuccessRef.current({ stageId: stage.id, stage });
+      }
       toast.success('Stage deleted successfully');
     } catch (err) {
       const msg = err?.message || '';
@@ -43,7 +45,9 @@ export const useStageDelete = ({ onSuccess }) => {
       } else if (status === 403) {
         toast.error('You do not have permission to delete this stage.');
       } else if (status === 404) {
-        onSuccessRef.current(stage.id);
+        if (typeof onSuccessRef.current === 'function') {
+          onSuccessRef.current({ stageId: stage.id, stage });
+        }
         toast.success('Stage removed');
       } else {
         toast.error('Failed to delete stage. Please try again.');
@@ -56,14 +60,18 @@ export const useStageDelete = ({ onSuccess }) => {
       });
       inFlightRef.current = false;
     }
-  }, [pendingStage]); // no onSuccess dep — using ref instead
+  }, [stageToDelete]);
 
   return {
-    pendingStage,
+    isOpen: !!stageToDelete,
+    stageToDelete,
+    pendingStage: stageToDelete,
+    openModal,
+    requestDelete: openModal,
+    closeModal,
+    cancelDelete: closeModal,
+    confirmDelete,
     deletingIds,
     isDeleting: (id) => deletingIds.has(id),
-    requestDelete,
-    cancelDelete,
-    confirmDelete,
   };
 };

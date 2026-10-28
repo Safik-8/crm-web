@@ -66,7 +66,7 @@ const LeadFormModal = ({ pipelineId, onClose, onCreated }) => {
 
   const fields = [
     { key: 'name', label: 'Full Name', icon: User, type: 'text', placeholder: 'e.g. Ravi Kumar', required: true },
-    { key: 'mobile', label: 'Mobile', icon: Phone, type: 'tel', placeholder: '10-digit number', required: true },
+    { key: 'mobile', label: 'Mobile', icon: Phone, type: 'tel', placeholder: '10-digit number (optional)', required: false },
     { key: 'date', label: 'Date', icon: Calendar, type: 'date', required: true },
     { key: 'interested_for', label: 'Interested In', icon: BookOpen, type: 'text', placeholder: 'e.g. MBA, BBA, Full Stack…', required: true },
     {
