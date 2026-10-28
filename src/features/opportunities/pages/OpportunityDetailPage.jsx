@@ -607,8 +607,17 @@ export const OpportunityDetailPage = () => {
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-xs truncate">{st.name}</span>
+                  <div className="flex items-center justify-between mb-1.5 gap-1">
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="font-bold text-xs truncate">{st.name}</span>
+                      {(st.stageType === 'WON' || st.code === 'WON' || st.name?.toLowerCase() === 'closure') && (
+                        <span className={`text-[9px] font-extrabold uppercase px-1 py-0.2 rounded border shrink-0 ${
+                          isActive ? 'bg-white/20 text-white border-white/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`} title="Winning stage">
+                          Won
+                        </span>
+                      )}
+                    </div>
                     {isPast ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     ) : isActive ? (

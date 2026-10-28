@@ -60,6 +60,11 @@ const KanbanColumn = ({ stage, opportunities, onCardClick }) => {
             style={{ backgroundColor: stage.colorCode || '#6366f1' }}
           />
           <h3 className="font-semibold text-slate-800 text-sm">{stage.name}</h3>
+          {(stage.stageType === 'WON' || stage.code === 'WON' || stage.name?.toLowerCase() === 'closure') && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0" title="Opportunities moved to this stage are marked as Won">
+              Won
+            </span>
+          )}
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700">
             {opportunities.length}
           </span>

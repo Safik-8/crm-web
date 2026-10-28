@@ -48,19 +48,19 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const isStartStage = (s) => 
-  s.stageType === 'QUALIFICATION' || 
-  s.code === 'QUALIFICATION' || 
+const isStartStage = (s) =>
+  s.stageType === 'QUALIFICATION' ||
+  s.code === 'QUALIFICATION' ||
   s.name?.toLowerCase() === 'qualification' ||
-  s.stageType === 'PROSPECT' || 
-  s.code === 'PROSPECT' || 
+  s.stageType === 'PROSPECT' ||
+  s.code === 'PROSPECT' ||
   s.name?.toLowerCase() === 'prospect';
 
-  const isTerminalStage = (s) => {
-    const type = (s.stageType || s.code || '').toUpperCase();
-    const name = (s.name || '').toLowerCase();
-    return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled', 'closure'].includes(name);
-  };
+const isTerminalStage = (s) => {
+  const type = (s.stageType || s.code || '').toUpperCase();
+  const name = (s.name || '').toLowerCase();
+  return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled', 'closure'].includes(name);
+};
 
 // ─── Sortable Row Component ──────────────────────────────────────────────────
 const SortableStageRow = ({ stage, onRemove, onEdit }) => {
@@ -86,23 +86,21 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center justify-between bg-white border rounded-none px-4 py-3 transition-all ${
-        isDragging
+      className={`group flex items-center justify-between bg-white border rounded-none px-4 py-3 transition-all ${isDragging
           ? 'border-orange-300 scale-[1.01] ring-2 ring-orange-100'
           : isLocked
-          ? 'border-slate-100 bg-slate-50/50'
-          : 'border-slate-200 border-l-[3px] border-l-orange-300 hover:border-slate-300'
-      }`}
+            ? 'border-slate-100 bg-slate-50/50'
+            : 'border-slate-200 border-l-[3px] border-l-orange-300 hover:border-slate-300'
+        }`}
     >
       <div className="flex items-center gap-3">
         {/* Drag Handle or Lock */}
         <div
           {...(isLocked ? {} : { ...attributes, ...listeners })}
-          className={`flex-shrink-0 flex items-center justify-center p-1 ${
-            isLocked
+          className={`flex-shrink-0 flex items-center justify-center p-1 ${isLocked
               ? 'cursor-not-allowed text-slate-300'
               : 'text-slate-500 hover:text-slate-800 cursor-grab active:cursor-grabbing touch-none'
-          }`}
+            }`}
         >
           {isLocked ? <Lock size={13} strokeWidth={2.5} /> : <GripVertical size={16} strokeWidth={2.5} />}
         </div>
@@ -116,6 +114,11 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
         {/* Name and Code */}
         <div>
           <span className="text-sm font-bold text-slate-900">{stage.name}</span>
+          {(stage.stageType === 'WON' || stage.code === 'WON' || stage.name?.toLowerCase() === 'closure') && (
+            <span className="ml-1.5 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="Winning stage">
+              Won
+            </span>
+          )}
           <span className="ml-2 text-[10px] font-mono font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
             {stage.code}
           </span>
@@ -126,16 +129,14 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
         <span className="text-xs font-bold text-slate-700 mr-2">
           {stage.defaultProbabilityPct}%
         </span>
-        {!isSystem && (
-          <button
-            type="button"
-            onClick={() => onEdit(stage)}
-            className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-            title="Edit Stage"
-          >
-            <Pencil size={14} strokeWidth={2.2} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => onEdit(stage)}
+          className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+          title="Edit Stage"
+        >
+          <Pencil size={14} strokeWidth={2.2} />
+        </button>
         {!isSystem && (
           <button
             type="button"
@@ -160,7 +161,7 @@ export const OpportunityStageManagement = () => {
   // Filters & State
   const [companyFilter, setCompanyFilter] = useState('1');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // DnD & Ordered Lists
   const [selectedStages, setSelectedStages] = useState([]);
 
@@ -223,7 +224,7 @@ export const OpportunityStageManagement = () => {
     const result = [];
     if (first) result.push(first);
     result.push(...middle);
-    
+
     // Sort lasts: Won/Closure first, then Lost, then Cancelled
     const terminalOrder = ['WON', 'LOST', 'CANCELLED'];
     const getTerminalWeight = (s) => {
@@ -255,7 +256,7 @@ export const OpportunityStageManagement = () => {
 
   const handleDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;
-    
+
     setSelectedStages((prev) => {
       const oldIndex = prev.findIndex((s) => s.id === active.id);
       const newIndex = prev.findIndex((s) => s.id === over.id);
@@ -312,8 +313,8 @@ export const OpportunityStageManagement = () => {
     const selectedIds = new Set(selectedStages.map((s) => s.id));
     const stageOrders = masterStages.map((stage) => {
       const isSelected = selectedIds.has(stage.id);
-      const displayOrder = isSelected 
-        ? selectedStages.findIndex((s) => s.id === stage.id) + 1 
+      const displayOrder = isSelected
+        ? selectedStages.findIndex((s) => s.id === stage.id) + 1
         : 999;
       return {
         id: stage.id,
@@ -382,9 +383,9 @@ export const OpportunityStageManagement = () => {
     const list = !searchTerm.trim()
       ? [...masterStages]
       : masterStages.filter((s) =>
-          s.name.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-          s.code?.toLowerCase().includes(searchTerm.toLowerCase().trim())
-        );
+        s.name.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        s.code?.toLowerCase().includes(searchTerm.toLowerCase().trim())
+      );
     return enforceOpportunityAnchorPositions(list);
   }, [masterStages, searchTerm]);
 
@@ -601,11 +602,10 @@ export const OpportunityStageManagement = () => {
                 return (
                   <div
                     key={stage.id}
-                    className={`flex items-center justify-between px-3.5 py-2.5 border rounded-none transition-all ${
-                      isSelected
+                    className={`flex items-center justify-between px-3.5 py-2.5 border rounded-none transition-all ${isSelected
                         ? 'bg-orange-50/20 border-slate-200 border-l-[3px] border-l-orange-300'
                         : 'bg-white border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <Checkbox
@@ -621,6 +621,11 @@ export const OpportunityStageManagement = () => {
                       />
                       <div>
                         <span className="text-sm font-bold text-slate-900">{stage.name}</span>
+                        {(stage.stageType === 'WON' || stage.code === 'WON' || stage.name?.toLowerCase() === 'closure') && (
+                          <span className="ml-1.5 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="Winning stage">
+                            Won
+                          </span>
+                        )}
                         <span className="ml-2 text-[10px] font-mono font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
                           {stage.code}
                         </span>
@@ -628,14 +633,13 @@ export const OpportunityStageManagement = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {!stage.isSystem && (
-                        <button
-                          onClick={() => handleEditClick(stage)}
-                          className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
-                        >
-                          <Pencil size={14} strokeWidth={2.2} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleEditClick(stage)}
+                        className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                        title="Edit Stage"
+                      >
+                        <Pencil size={14} strokeWidth={2.2} />
+                      </button>
                       {!stage.isSystem && (
                         <button
                           onClick={() => handleDeleteClick(stage)}
@@ -707,43 +711,43 @@ export const OpportunityStageManagement = () => {
                 ))}
               </div>
             ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <div className="space-y-2">
-                {/* 1. Qualification Stage (Static, first) */}
-                {firstStage && (
-                  <SortableStageRow
-                    key={firstStage.id}
-                    stage={firstStage}
-                    onRemove={handleRemoveFromOrder}
-                    onEdit={handleEditClick}
-                  />
-                )}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <div className="space-y-2">
+                  {/* 1. Qualification Stage (Static, first) */}
+                  {firstStage && (
+                    <SortableStageRow
+                      key={firstStage.id}
+                      stage={firstStage}
+                      onRemove={handleRemoveFromOrder}
+                      onEdit={handleEditClick}
+                    />
+                  )}
 
-                {/* 2. Custom Middle Stages (Sortable) */}
-                <SortableContext items={middleStages.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2">
-                    {middleStages.map((stage) => (
-                      <SortableStageRow
-                        key={stage.id}
-                        stage={stage}
-                        onRemove={handleRemoveFromOrder}
-                        onEdit={handleEditClick}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
+                  {/* 2. Custom Middle Stages (Sortable) */}
+                  <SortableContext items={middleStages.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {middleStages.map((stage) => (
+                        <SortableStageRow
+                          key={stage.id}
+                          stage={stage}
+                          onRemove={handleRemoveFromOrder}
+                          onEdit={handleEditClick}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
 
-                {/* 3. Terminal Stages (Static, last) */}
-                {terminalStages.map((stage) => (
-                  <SortableStageRow
-                    key={stage.id}
-                    stage={stage}
-                    onRemove={handleRemoveFromOrder}
-                    onEdit={handleEditClick}
-                  />
-                ))}
-              </div>
-            </DndContext>
+                  {/* 3. Terminal Stages (Static, last) */}
+                  {terminalStages.map((stage) => (
+                    <SortableStageRow
+                      key={stage.id}
+                      stage={stage}
+                      onRemove={handleRemoveFromOrder}
+                      onEdit={handleEditClick}
+                    />
+                  ))}
+                </div>
+              </DndContext>
             )}
           </div>
         </div>
@@ -762,7 +766,6 @@ export const OpportunityStageManagement = () => {
             type: 'text',
             required: true,
             placeholder: 'e.g., Value Proposition',
-            disabled: modalMode === 'edit' && selectedStage?.isSystem,
           },
           {
             key: 'colorCode',
@@ -814,15 +817,15 @@ export const OpportunityStageManagement = () => {
         initialValues={
           selectedStage
             ? {
-                name: selectedStage.name,
-                colorCode: selectedStage.colorCode,
-                defaultProbabilityPct: selectedStage.defaultProbabilityPct,
-              }
+              name: selectedStage.name,
+              colorCode: selectedStage.colorCode,
+              defaultProbabilityPct: selectedStage.defaultProbabilityPct,
+            }
             : {
-                name: '',
-                colorCode: '#6366f1',
-                defaultProbabilityPct: calculateDefaultProbability(),
-              }
+              name: '',
+              colorCode: '#6366f1',
+              defaultProbabilityPct: calculateDefaultProbability(),
+            }
         }
         onSubmit={handleFormSubmit}
         submitText={modalMode === 'create' ? 'Save Stage' : 'Update Stage'}
