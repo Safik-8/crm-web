@@ -63,7 +63,7 @@ const DEFAULT_STAGES = [
   { id: 3, name: 'Proposal', colorCode: '#8b5cf6', stageType: 'REGULAR', code: 'PROPOSAL' },
   { id: 4, name: 'Negotiation', colorCode: '#f59e0b', stageType: 'REGULAR', code: 'NEGOTIATION' },
   { id: 5, name: 'Final Review', colorCode: '#10b981', stageType: 'REGULAR', code: 'FINAL_REVIEW' },
-  { id: 6, name: 'Won', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
+  { id: 6, name: 'Closure', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
   { id: 7, name: 'Lost', colorCode: '#ef4444', stageType: 'LOST', code: 'LOST' },
   { id: 8, name: 'Cancelled', colorCode: '#6b7280', stageType: 'CANCELLED', code: 'CANCELLED' },
 ];
@@ -513,7 +513,7 @@ export const OpportunitiesPage = () => {
     const targetStageId = Number(newStageId);
     const targetStageObj = stages.find((s) => Number(s.id) === targetStageId);
 
-    const isWon = targetStageObj?.stageType === 'WON' || targetStageObj?.code === 'WON' || targetStageObj?.name?.toLowerCase() === 'won';
+    const isWon = targetStageObj?.stageType === 'WON' || targetStageObj?.code === 'WON' || ['won', 'closure'].includes(targetStageObj?.name?.toLowerCase());
     const isLost = targetStageObj?.stageType === 'LOST' || targetStageObj?.code === 'LOST' || targetStageObj?.name?.toLowerCase() === 'lost';
     const isCancelled = targetStageObj?.stageType === 'CANCELLED' || targetStageObj?.code === 'CANCELLED' || targetStageObj?.name?.toLowerCase() === 'cancelled';
 
@@ -532,7 +532,7 @@ export const OpportunitiesPage = () => {
     setLocalOpportunities((prev) =>
       prev.map((opp) =>
         Number(opp.id) === Number(opportunityId)
-          ? { ...opp, stageId: targetStageId, stage: targetStageObj || opp.stage }
+          ? { ...opp, stageId: targetStageId, stage: targetStageObj || opp.stage, status: 'OPEN' }
           : opp
       )
     );
@@ -758,7 +758,7 @@ export const OpportunitiesPage = () => {
                   } else {
                     const statusOpts = [
                       { label: 'Open', type: 'status', value: 'OPEN' },
-                      { label: 'Won', type: 'status', value: 'WON' },
+                      { label: 'Closure', type: 'status', value: 'WON' },
                       { label: 'Lost', type: 'status', value: 'LOST' },
                       { label: 'Cancelled', type: 'status', value: 'CANCELLED' },
                     ];
@@ -770,7 +770,7 @@ export const OpportunitiesPage = () => {
                 searchable={true}
                 options={[
                   { value: 'OPEN', label: 'Open' },
-                  { value: 'WON', label: 'Won' },
+                  { value: 'WON', label: 'Closure' },
                   { value: 'LOST', label: 'Lost' },
                   { value: 'CANCELLED', label: 'Cancelled' },
                 ]}
@@ -1068,7 +1068,7 @@ export const OpportunitiesPage = () => {
                   }`}
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>CLOSED WON</span>
+                  <span>CLOSURE</span>
                 </button>
 
                 <button

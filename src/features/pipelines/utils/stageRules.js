@@ -19,7 +19,7 @@ export const LOCKED_STAGE_TYPES = ['CLOSURE'];
 export const TERMINAL_STAGE_TYPES = ['CLOSURE'];
 
 /** Names of system-mandatory stages (case-insensitive — backward compat) */
-const MANDATORY_NAMES = ['prospect', 'closure'];
+const MANDATORY_NAMES = ['prospect', 'closure', 'counselling done', 'counseling done'];
 
 /** StageTypes that are system-anchored (cannot remove/reorder) */
 const MANDATORY_TYPES = ['PROSPECT', 'CLOSURE'];
@@ -38,14 +38,16 @@ export const isMandatoryStage = (stage) => {
 /** Returns true if a stage is the Prospect anchor (must be first) */
 export const isProspectStage = (stage) => {
   if (stage?.stageType === 'PROSPECT') return true;
-  return stage?.name?.toLowerCase() === 'prospect' ||
-    (stage?.isDefault && stage?.name?.toLowerCase() !== 'closure');
+  const name = stage?.name?.toLowerCase();
+  return name === 'prospect' ||
+    (stage?.isDefault && name !== 'closure' && name !== 'counselling done' && name !== 'counseling done');
 };
 
 /** Returns true if a stage is the Closure anchor (must be last) */
 export const isClosureStage = (stage) => {
   if (stage?.stageType === 'CLOSURE') return true;
-  return stage?.name?.toLowerCase() === 'closure';
+  const name = stage?.name?.toLowerCase();
+  return name === 'closure' || name === 'counselling done' || name === 'counseling done';
 };
 
 /** Returns true if a stage is WON */
@@ -64,7 +66,7 @@ export const isTerminalStage = (stage) => {
   if (LOCKED_STAGE_TYPES.includes(stage?.stageType)) return true;
   // name-based fallback for legacy data
   const name = stage?.name?.toLowerCase();
-  return name === 'closure';
+  return name === 'closure' || name === 'counselling done' || name === 'counseling done';
 };
 
 /**

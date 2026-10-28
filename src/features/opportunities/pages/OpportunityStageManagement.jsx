@@ -56,11 +56,11 @@ const isStartStage = (s) =>
   s.code === 'PROSPECT' || 
   s.name?.toLowerCase() === 'prospect';
 
-const isTerminalStage = (s) => {
-  const type = (s.stageType || s.code || '').toUpperCase();
-  const name = (s.name || '').toLowerCase();
-  return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled'].includes(name);
-};
+  const isTerminalStage = (s) => {
+    const type = (s.stageType || s.code || '').toUpperCase();
+    const name = (s.name || '').toLowerCase();
+    return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled', 'closure'].includes(name);
+  };
 
 // ─── Sortable Row Component ──────────────────────────────────────────────────
 const SortableStageRow = ({ stage, onRemove, onEdit }) => {
@@ -224,13 +224,16 @@ export const OpportunityStageManagement = () => {
     if (first) result.push(first);
     result.push(...middle);
     
-    // Sort lasts: Won first, then Lost, then Cancelled
+    // Sort lasts: Won/Closure first, then Lost, then Cancelled
     const terminalOrder = ['WON', 'LOST', 'CANCELLED'];
     const getTerminalWeight = (s) => {
       const type = (s.stageType || s.code || '').toUpperCase();
       const idx = terminalOrder.indexOf(type);
       if (idx !== -1) return idx;
       const name = (s.name || '').toLowerCase();
+      if (name === 'closure' || name === 'won') return 0;
+      if (name === 'lost') return 1;
+      if (name === 'cancelled') return 2;
       return terminalOrder.indexOf(name.toUpperCase());
     };
     lasts.sort((a, b) => getTerminalWeight(a) - getTerminalWeight(b));
@@ -392,13 +395,16 @@ export const OpportunityStageManagement = () => {
     const lasts = selectedStages.filter((s) => isTerminalStage(s));
     const middle = selectedStages.filter((s) => !isStartStage(s) && !isTerminalStage(s));
 
-    // Sort lasts: Won first, then Lost, then Cancelled
+    // Sort lasts: Won/Closure first, then Lost, then Cancelled
     const terminalOrder = ['WON', 'LOST', 'CANCELLED'];
     const getTerminalWeight = (s) => {
       const type = (s.stageType || s.code || '').toUpperCase();
       const idx = terminalOrder.indexOf(type);
       if (idx !== -1) return idx;
       const name = (s.name || '').toLowerCase();
+      if (name === 'closure' || name === 'won') return 0;
+      if (name === 'lost') return 1;
+      if (name === 'cancelled') return 2;
       return terminalOrder.indexOf(name.toUpperCase());
     };
     lasts.sort((a, b) => getTerminalWeight(a) - getTerminalWeight(b));
@@ -659,7 +665,7 @@ export const OpportunityStageManagement = () => {
                 Stage Order
               </h2>
               <p className="text-xs text-slate-400 font-medium leading-normal">
-                Drag to reorder stages. Qualification stays first; Won, Lost, and Cancelled stay last.
+                Drag to reorder stages. Qualification stays first; Closure, Lost, and Cancelled stay last.
               </p>
             </div>
             <Button

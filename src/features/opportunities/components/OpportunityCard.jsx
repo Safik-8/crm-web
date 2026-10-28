@@ -15,7 +15,8 @@ export const OpportunityCard = ({ opportunity, onClick, isOverlay = false }) => 
   const cardId = `card-${opportunity.id}`;
 
   const canMove = useMemo(() => {
-    if (opportunity.status !== 'OPEN') return false;
+    // Only WON (Closure) opportunities are locked from moving
+    if (opportunity.status === 'WON') return false;
     if (!user) return false;
     const rank = Number(user.primaryRoleRank || 0);
     const isSuperAdmin = user.primaryRole === 'SUPER_ADMIN' || rank >= 100;

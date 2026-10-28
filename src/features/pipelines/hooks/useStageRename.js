@@ -26,7 +26,7 @@ export const useStageRename = ({ onSuccess, getAllStageNames }) => {
 
   /** Open the inline editor for a stage */
   const startEdit = useCallback((stage) => {
-    if (!stage || stage.isDefault) return;
+    if (!stage) return;
     setEditingStage(stage);
     setEditValue(stage.name || '');
     setEditColor(stage.colorCode || '#3b82f6');

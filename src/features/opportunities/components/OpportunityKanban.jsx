@@ -20,7 +20,7 @@ const DEFAULT_STAGES = [
   { id: 3, name: 'Proposal', colorCode: '#8b5cf6', stageType: 'REGULAR', code: 'PROPOSAL' },
   { id: 4, name: 'Negotiation', colorCode: '#f59e0b', stageType: 'REGULAR', code: 'NEGOTIATION' },
   { id: 5, name: 'Final Review', colorCode: '#10b981', stageType: 'REGULAR', code: 'FINAL_REVIEW' },
-  { id: 6, name: 'Won', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
+  { id: 6, name: 'Closure', colorCode: '#10b981', stageType: 'WON', code: 'WON' },
   { id: 7, name: 'Lost', colorCode: '#ef4444', stageType: 'LOST', code: 'LOST' },
   { id: 8, name: 'Cancelled', colorCode: '#6b7280', stageType: 'CANCELLED', code: 'CANCELLED' },
 ];
@@ -288,7 +288,7 @@ export const OpportunityKanban = ({
           const stageOpportunities = opportunities.filter((opp) => {
             const colType = (stage.stageType || stage.code || '').toUpperCase();
             const colName = (stage.name || '').toLowerCase().trim();
-            const isColWon = colType === 'WON' || colName === 'won';
+            const isColWon = colType === 'WON' || colName === 'won' || colName === 'closure';
             const isColLost = colType === 'LOST' || colName === 'lost';
             const isColCancelled = colType === 'CANCELLED' || colName === 'cancelled';
             const isColTerminal = isColWon || isColLost || isColCancelled;

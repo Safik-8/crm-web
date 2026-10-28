@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Inbox, SearchX, Lock } from 'lucide-react';
 import LeadCard from './LeadCard';
-import { isTerminalStage } from '../../pipelines/utils/stageRules';
+import { isTerminalStage, isClosureStage } from '../../pipelines/utils/stageRules';
 
 /**
  * Prefix helpers — keep DnD ids collision-free between entities.
@@ -33,7 +33,7 @@ const KanbanColumn = memo(({ stage, leads, loading, isRefetching, isFiltered, on
   // Prefixed droppable ID prevents collision with card IDs (lead.id and stage.id share numeric space)
   const droppableId = stageDropId(stage.id);
   const isTerminal = isTerminalStage(stage);
-  const isClosureCol = stage.name?.toLowerCase() === 'closure';
+  const isClosureCol = stage.stageType === 'CLOSURE' || isClosureStage(stage);
 
   const { setNodeRef, isOver } = useDroppable({
     id: droppableId,

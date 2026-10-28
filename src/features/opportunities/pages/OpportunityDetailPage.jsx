@@ -198,11 +198,11 @@ export const OpportunityDetailPage = () => {
   const { formatCurrency, formatDate, formatDateTime, currencySymbol } = useFormatters();
 
   const handleStageClick = (st) => {
-    if (!opportunity || opportunity.status !== 'OPEN') return;
+    if (!opportunity || opportunity.status === 'WON') return;
     const activeId = optimisticStageId || opportunity.stageId || opportunity.stage?.id || 1;
     if (st.id === activeId) return;
 
-    const isWon = st.stageType === 'WON' || st.code === 'WON' || st.name?.toLowerCase() === 'won';
+    const isWon = st.stageType === 'WON' || st.code === 'WON' || ['won', 'closure'].includes(st.name?.toLowerCase());
     const isLost = st.stageType === 'LOST' || st.code === 'LOST' || st.name?.toLowerCase() === 'lost';
     const isCancelled = st.stageType === 'CANCELLED' || st.code === 'CANCELLED' || st.name?.toLowerCase() === 'cancelled';
 
@@ -217,7 +217,7 @@ export const OpportunityDetailPage = () => {
   };
 
   const handleConfirmStageMove = async () => {
-    if (!stageToMove || !opportunity || opportunity.status !== 'OPEN') return;
+    if (!stageToMove || !opportunity || opportunity.status === 'WON') return;
     const targetStage = stageToMove;
     setOptimisticStageId(targetStage.id); // INSTANT 0ms visual update!
     setIsMoveModalOpen(false);
@@ -594,7 +594,7 @@ export const OpportunityDetailPage = () => {
                 <button
                   key={st.id}
                   type="button"
-                  disabled={opportunity.status !== 'OPEN' || updateMutation.isPending || !canManageOpp}
+                  disabled={opportunity.status === 'WON' || updateMutation.isPending || !canManageOpp}
                   onClick={() => handleStageClick(st)}
                   title={!canManageOpp ? `Assigned to ${opportunity.owner?.name || 'Manager'}. Only the assigned owner or manager can move this opportunity.` : `Move to ${st.name}`}
                   className={`p-3.5 rounded-md border text-left transition-all text-xs relative flex flex-col justify-between ${
@@ -1059,7 +1059,7 @@ export const OpportunityDetailPage = () => {
                     }`}
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>CLOSED WON</span>
+                  <span>CLOSURE</span>
                 </button>
 
                 <button

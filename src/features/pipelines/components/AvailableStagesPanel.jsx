@@ -220,13 +220,28 @@ const AvailableStagesPanel = ({
                 {!isEditingThis && (
                   <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto opacity-100">
                     {mandatory ? (
-                      <span
-                        className="text-[10px] font-black text-orange-600 uppercase tracking-widest
-                          bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg"
-                        title="Mandatory system stage — always required"
-                      >
-                        REQUIRED
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="text-[10px] font-black text-orange-600 uppercase tracking-widest
+                            bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg"
+                          title="Mandatory system stage — always required"
+                        >
+                          REQUIRED
+                        </span>
+                        {canRename && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); stageRename.startEdit(stage); }}
+                            className="p-2 rounded-lg bg-slate-100 text-slate-700
+                              hover:bg-orange-50 hover:text-orange-600
+                              transition-all focus:outline-none focus:ring-2 focus:ring-orange-200"
+                            title={`Rename ${stage.name}`}
+                            aria-label={`Rename ${stage.name}`}
+                          >
+                            <Pencil size={14} strokeWidth={2.2} />
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <>
                         {/* Status Toggle Button */}
