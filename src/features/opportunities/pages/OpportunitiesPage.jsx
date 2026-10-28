@@ -1,6 +1,6 @@
 // src/features/opportunities/pages/OpportunitiesPage.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Target,
   Plus,
@@ -35,6 +35,7 @@ import Pagination from '../../../shared/components/elements/Pagination';
 import { useQuery } from '@tanstack/react-query';
 import { companyService } from '../../company/services/companyService';
 import { branchService } from '../../branch/services/branchService';
+import { userService } from '../../users/services/userService';
 import { getOpportunityStages, getWinLossReasons } from '../services/opportunityService';
 
 import {
@@ -134,16 +135,37 @@ export const OpportunitiesPage = () => {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
 
-  const { isSuperAdmin, isCompanyWide } = getRoleHierarchy(user);
+  const { isSuperAdmin, isCompanyWide, isBranchLevel, isBranchManager } = getRoleHierarchy(user);
   const isCompanyAdmin = isCompanyWide && !isSuperAdmin;
+  const isBranchManagerOrAbove = isSuperAdmin || isCompanyWide || isBranchLevel || isBranchManager || (Number(user?.primaryRoleRank) >= 41);
   const canFilterByCompany = isSuperAdmin;
   const canFilterByBranch = isCompanyWide;
+  const canFilterByUser = isBranchManagerOrAbove;
   const canCreateOpportunity = hasPermission('create:opportunity') || hasPermission('OPPORTUNITY', 'canCreate');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read initial userFilter from URL search params (supports userFilter, userId, ownerId, roleId, ownerRole)
+  const initialUserFilter = useMemo(() => {
+    const rawUf = searchParams.get('userFilter');
+    if (rawUf) return rawUf;
+    const rawUid = searchParams.get('userId') || searchParams.get('ownerId');
+    if (rawUid) return `userId:${rawUid}`;
+    const rawRid = searchParams.get('roleId');
+    if (rawRid) return `roleId:${rawRid}`;
+    const rawRname = searchParams.get('ownerRole') || searchParams.get('roleName');
+    if (rawRname) return `roleName:${rawRname}`;
+    return '';
+  }, []);
 
   // ── Role Scoping (All vs Mine) ──────────────────────────────────────────
   const isIse = user?.primaryRole === 'ISE' || Number(user?.primaryRoleRank) <= 20;
   const canViewAll = !isIse;
-  const [scope, setScope] = useState(() => (isIse ? 'mine' : 'all'));
+  const [scope, setScope] = useState(() => {
+    const scopeParam = searchParams.get('scope');
+    if (scopeParam === 'mine' || scopeParam === 'all') return scopeParam;
+    return isIse ? 'mine' : 'all';
+  });
 
   useEffect(() => {
     if (isIse && scope !== 'mine') {
@@ -152,13 +174,24 @@ export const OpportunitiesPage = () => {
   }, [isIse, scope]);
 
   const [viewMode, setViewMode] = useState('kanban');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
   // stageFilter: { type: 'status'|'stageId', value: string } | null
-  const [stageFilter, setStageFilter] = useState(null);
+  const [stageFilter, setStageFilter] = useState(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) return { type: 'status', value: statusParam };
+    const stageIdParam = searchParams.get('stageId');
+    if (stageIdParam) return { type: 'stageId', value: stageIdParam };
+    return null;
+  });
   const [stageFilterOpen, setStageFilterOpen] = useState(false);
   const stageFilterRef = useRef(null);
-  const [companyFilter, setCompanyFilter] = useState('');
-  const [branchFilter, setBranchFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState(() => searchParams.get('companyId') || '');
+  const [branchFilter, setBranchFilter] = useState(() => searchParams.get('branchId') || '');
+  const [userFilter, setUserFilter] = useState(initialUserFilter);
+
+  // Initial mount guards to preserve deep links without cascading reset
+  const isInitialCompanyMount = useRef(true);
+  const isInitialBranchMount = useRef(true);
 
   // ── Filter Data Sources ────────────────────────────────────────────────────
   const companiesQuery = useQuery({
@@ -187,10 +220,184 @@ export const OpportunitiesPage = () => {
   const companies = companiesQuery.data || [];
   const branches = branchesQuery.data || [];
 
-  // When company filter changes, clear branch filter
+  // When company filter changes (user-driven), clear branch & user filter
   useEffect(() => {
+    if (isInitialCompanyMount.current) {
+      isInitialCompanyMount.current = false;
+      return;
+    }
     setBranchFilter('');
+    setUserFilter('');
   }, [companyFilter]);
+
+  // When branch filter changes (user-driven), clear user filter
+  useEffect(() => {
+    if (isInitialBranchMount.current) {
+      isInitialBranchMount.current = false;
+      return;
+    }
+    setUserFilter('');
+  }, [branchFilter]);
+
+  // ── Users for Assignee / Role Filtering ────────────────────────────────────
+  const usersQuery = useQuery({
+    queryKey: ['opportunity-filter-users', companyFilter || user?.companyId, branchFilter || user?.branchId],
+    queryFn: async () => {
+      const params = {
+        limit: 200,
+        status: 'ACTIVE',
+      };
+      if (canFilterByCompany && companyFilter) {
+        params.companyId = companyFilter;
+      } else if (user?.companyId) {
+        params.companyId = user.companyId;
+      }
+
+      if (canFilterByBranch && branchFilter) {
+        params.branchId = branchFilter;
+      } else if (!isCompanyWide && user?.branchId) {
+        params.branchId = user.branchId;
+      }
+
+      const res = await userService.getUsers(params);
+      const raw = res?.data || res;
+      return Array.isArray(raw?.users) ? raw.users : (Array.isArray(raw) ? raw : []);
+    },
+    enabled: canFilterByUser,
+    staleTime: 30000,
+  });
+
+  const userOptions = useMemo(() => {
+    const rawUsers = usersQuery.data || [];
+    const actorRank = Number(user?.primaryRoleRank ?? 0);
+    const isSuperAdminActor = actorRank >= 100 || user?.primaryRole === 'SUPER_ADMIN';
+
+    const getRoleInfo = (u) => {
+      const ur = u.userRoles?.find((r) => r.isPrimary) || u.userRoles?.[0];
+      const role = ur?.role;
+      const roleId = role?.id;
+      const roleName = role?.name || u.primaryRole || '';
+      const roleRank = Number(role?.rank ?? u.primaryRoleRank ?? 0);
+      return { roleId, roleName, roleRank };
+    };
+
+    // Dynamic HRBAC visibility:
+    // Super Admin: sees all users across company/branch
+    // Managers (actorRank >= 41): see users with roleRank <= actorRank in their scoped tenant/branch
+    const filteredUsers = rawUsers.filter((u) => {
+      if (isSuperAdminActor) return true;
+      const { roleRank } = getRoleInfo(u);
+      return roleRank <= actorRank;
+    });
+
+    // Helper to format role names cleanly (e.g., BRANCH_MANAGER -> Branch Manager, BDE -> BDE)
+    const formatRoleLabel = (str) => {
+      if (!str) return '';
+      if (/^[A-Z]{2,4}$/.test(str)) return str;
+      return str
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
+
+    // Dynamically discover all distinct roles present among eligible users in this scope
+    const rolesMap = new Map();
+    filteredUsers.forEach((u) => {
+      const { roleId, roleName, roleRank } = getRoleInfo(u);
+      if (roleName) {
+        const key = roleId ? `id:${roleId}` : `name:${roleName}`;
+        if (!rolesMap.has(key)) {
+          rolesMap.set(key, {
+            id: roleId,
+            name: roleName,
+            rank: roleRank,
+            userCount: 1,
+          });
+        } else {
+          rolesMap.get(key).userCount += 1;
+        }
+      }
+    });
+
+    // Sort discovered roles by rank descending
+    const discoveredRoles = Array.from(rolesMap.values()).sort((a, b) => b.rank - a.rank);
+
+    const options = [];
+
+    // 1. Dynamic Role-Level Options (Discovered purely from active users in scope)
+    discoveredRoles.forEach((role) => {
+      const displayRole = formatRoleLabel(role.name);
+      options.push({
+        value: role.id ? `roleId:${role.id}` : `roleName:${role.name}`,
+        label: `All ${displayRole}s (${role.userCount})`,
+      });
+    });
+
+    // 2. Individual Users sorted by role rank descending, then alphabetical by name
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+      const infoA = getRoleInfo(a);
+      const infoB = getRoleInfo(b);
+      if (infoB.roleRank !== infoA.roleRank) {
+        return infoB.roleRank - infoA.roleRank;
+      }
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    sortedUsers.forEach((u) => {
+      const { roleName } = getRoleInfo(u);
+      const displayRole = formatRoleLabel(roleName);
+      options.push({
+        value: `userId:${u.id}`,
+        label: `${u.name}${displayRole ? ` (${displayRole})` : ''}`,
+      });
+    });
+
+    return options;
+  }, [usersQuery.data, user?.primaryRoleRank, user?.primaryRole]);
+
+  const handleUserFilterChange = (val) => {
+    setUserFilter(val || '');
+    if (val && scope === 'mine') {
+      setScope('all');
+    }
+  };
+
+  // Synchronize active filters with URL SearchParams for shareable URLs and browser navigation
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+    if (scope && scope !== (isIse ? 'mine' : 'all')) {
+      nextParams.set('scope', scope);
+    }
+    if (searchTerm) {
+      nextParams.set('search', searchTerm);
+    }
+    if (companyFilter) {
+      nextParams.set('companyId', companyFilter);
+    }
+    if (branchFilter) {
+      nextParams.set('branchId', branchFilter);
+    }
+    if (userFilter) {
+      if (userFilter.startsWith('userId:')) {
+        nextParams.set('userId', userFilter.replace('userId:', ''));
+      } else if (userFilter.startsWith('roleId:')) {
+        nextParams.set('roleId', userFilter.replace('roleId:', ''));
+      } else if (userFilter.startsWith('roleName:') || userFilter.startsWith('role:')) {
+        nextParams.set('ownerRole', userFilter.replace(/^role(Name)?:/, ''));
+      } else {
+        nextParams.set('userFilter', userFilter);
+      }
+    }
+    if (stageFilter?.type === 'status' && stageFilter.value) {
+      nextParams.set('status', stageFilter.value);
+    } else if (stageFilter?.type === 'stageId' && stageFilter.value) {
+      nextParams.set('stageId', String(stageFilter.value));
+    }
+
+    if (nextParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [scope, searchTerm, companyFilter, branchFilter, userFilter, stageFilter, isIse, searchParams, setSearchParams]);
 
   // Close stage filter dropdown on outside click
   useEffect(() => {
@@ -265,13 +472,23 @@ export const OpportunitiesPage = () => {
   });
 
   // ── Main Data Query ────────────────────────────────────────────────────────
+  const isRoleId = userFilter?.startsWith('roleId:');
+  const isRoleName = userFilter?.startsWith('roleName:') || userFilter?.startsWith('role:');
+  const isUserId = userFilter?.startsWith('userId:');
+  const rawOwnerId = !isRoleId && !isRoleName && !isUserId && userFilter ? userFilter : null;
+
   const queryParams = {
     search: searchTerm,
     scope: scope,
+    limit: 100,
     ...(stageFilter?.type === 'status' && { status: stageFilter.value }),
     ...(stageFilter?.type === 'stageId' && { stageId: stageFilter.value }),
     ...(companyFilter && { companyId: companyFilter }),
     ...(branchFilter && { branchId: branchFilter }),
+    ...(isRoleId && { roleId: userFilter.replace('roleId:', '') }),
+    ...(isRoleName && { ownerRole: userFilter.replace(/^role(Name)?:/, '') }),
+    ...(isUserId && { ownerId: userFilter.replace('userId:', '') }),
+    ...(rawOwnerId && { ownerId: rawOwnerId }),
   };
   const { data, isLoading, isError, error, isFetching } = useOpportunitiesQuery(queryParams);
 
@@ -402,10 +619,15 @@ export const OpportunitiesPage = () => {
     (opp) => !['WON', 'LOST', 'CANCELLED'].includes(opp.status?.toUpperCase())
   ).length;
 
-  const hasActiveFilters = !!(searchTerm || stageFilter || companyFilter || branchFilter);
-
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  // Reset pagination to page 1 whenever any filter or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, stageFilter, companyFilter, branchFilter, userFilter, scope]);
+
+  const hasActiveFilters = !!(searchTerm || stageFilter || companyFilter || branchFilter || userFilter);
   const totalOpportunities = opportunities.length;
   const totalPages = Math.ceil(totalOpportunities / limit) || 1;
   const paginatedOpportunities = viewMode === 'spreadsheet'
@@ -498,7 +720,10 @@ export const OpportunitiesPage = () => {
         )}
         <button
           type="button"
-          onClick={() => setScope('mine')}
+          onClick={() => {
+            setScope('mine');
+            setUserFilter('');
+          }}
           className={`pb-3 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer ${
             scope === 'mine'
               ? 'text-orange-600 border-b-2 border-orange-600'
@@ -582,6 +807,21 @@ export const OpportunitiesPage = () => {
               </div>
             )}
 
+            {/* User / Role Filter — BM and Above */}
+            {canFilterByUser && (
+              <div className="w-full sm:w-52">
+                <SelectField
+                  placeholder="All Users / Roles"
+                  value={userFilter}
+                  onChange={handleUserFilterChange}
+                  allowEmptyOption
+                  searchable={true}
+                  isLoading={usersQuery.isLoading}
+                  options={userOptions}
+                />
+              </div>
+            )}
+
             {/* Clear Filters */}
             {hasActiveFilters && (
               <button
@@ -591,6 +831,9 @@ export const OpportunitiesPage = () => {
                   setStageFilter(null);
                   setCompanyFilter('');
                   setBranchFilter('');
+                  setUserFilter('');
+                  setPage(1);
+                  setSearchParams({}, { replace: true });
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all cursor-pointer whitespace-nowrap"
               >
