@@ -76,14 +76,14 @@ const IseDashboardView = () => {
         description="Daily call workbench"
         icon={LayoutDashboard}
         actions={
-          <div className="flex items-center gap-2">
-            <div className="w-36">
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-start xl:justify-end">
+            <div className="w-32 sm:w-36 shrink-0">
               <SelectField
                 value={period}
                 onChange={(val) => setPeriod(val)}
                 options={PERIOD_OPTIONS}
                 searchable={false}
-                sx={{ minWidth: 130 }}
+                sx={{ minWidth: 120 }}
               />
             </div>
             <Button
@@ -100,9 +100,10 @@ const IseDashboardView = () => {
                 borderRadius: '10px',
                 fontSize: '12px',
                 fontWeight: 600,
-                padding: '0 14px',
+                padding: '0 12px',
                 textTransform: 'none',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
                 boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                 '&:hover': {
                   borderColor: '#CBD5E1',
@@ -117,7 +118,7 @@ const IseDashboardView = () => {
         }
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {KPI_CARDS.map(card => <KpiCard key={card.title} {...card} isLoading={isLoading} />)}
       </div>
 

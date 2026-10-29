@@ -118,7 +118,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Team Filter Dropdown */}
             {uniqueTeams.length > 1 && (
-              <div className="w-48">
+              <div className="w-full sm:w-48">
                 <SelectField
                   value={selectedTeam}
                   onChange={(val) => setSelectedTeam(val)}
@@ -129,7 +129,7 @@ const BranchTeamPerformanceWidget = ({ teamMembers = [], isLoading = false }) =>
             )}
 
             {/* Sort Dropdown */}
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <SelectField
                 value={sortBy}
                 onChange={(val) => setSortBy(val)}

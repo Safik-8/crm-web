@@ -84,6 +84,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
     {
       key: 'add_lead',
       label: 'Add Lead',
+      shortLabel: 'Add Lead',
       icon: Plus,
       allowed: canCreateLead,
       onClick: () => setShowLeadModal(true),
@@ -91,6 +92,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
     {
       key: 'followup',
       label: 'Schedule Follow-up',
+      shortLabel: 'Follow-up',
       icon: Calendar,
       allowed: canCreateFollowup,
       onClick: () => {
@@ -101,6 +103,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
     {
       key: 'opportunity',
       label: 'Create Opportunity',
+      shortLabel: 'Opportunity',
       icon: Target,
       allowed: canCreateOpportunity,
       onClick: () => setShowOppSlideover(true),
@@ -108,6 +111,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
     {
       key: 'customers',
       label: 'View Customers',
+      shortLabel: 'Customers',
       icon: Users,
       allowed: canViewCustomers,
       onClick: () => navigate('/customers'),
@@ -121,7 +125,7 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        {visibleActions.map(({ key, label, icon: Icon, onClick }) => (
+        {visibleActions.map(({ key, label, shortLabel, icon: Icon, onClick }) => (
           <Button
             key={key}
             variant="outlined"
@@ -130,15 +134,17 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
             startIcon={<Icon size={14} />}
             sx={{
               height: '38px',
+              minHeight: '38px',
               borderColor: '#E2E8F0',
               color: '#334155',
               backgroundColor: '#FFFFFF',
               borderRadius: '10px',
               fontWeight: 600,
               fontSize: '12px',
-              padding: '0 14px',
+              padding: '0 12px',
               textTransform: 'none',
               whiteSpace: 'nowrap',
+              flexShrink: 0,
               boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
               '&:hover': {
                 borderColor: '#CBD5E1',
@@ -151,7 +157,8 @@ const QuickActionsBar = ({ actions = ['add_lead', 'followup', 'opportunity', 'cu
               },
             }}
           >
-            {label}
+            <span className="hidden 2xl:inline">{label}</span>
+            <span className="inline 2xl:hidden">{shortLabel || label}</span>
           </Button>
         ))}
       </div>
