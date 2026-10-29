@@ -49,23 +49,25 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 const isStartStage = (s) =>
-  s.stageType === 'QUALIFICATION' ||
-  s.code === 'QUALIFICATION' ||
-  s.name?.toLowerCase() === 'qualification' ||
-  s.stageType === 'PROSPECT' ||
-  s.code === 'PROSPECT' ||
-  s.name?.toLowerCase() === 'prospect';
+  s?.stageType === 'QUALIFICATION' ||
+  s?.code === 'QUALIFICATION' ||
+  s?.name?.toLowerCase() === 'qualification' ||
+  s?.stageType === 'PROSPECT' ||
+  s?.code === 'PROSPECT' ||
+  s?.name?.toLowerCase() === 'prospect';
 
 const isTerminalStage = (s) => {
-  const type = (s.stageType || s.code || '').toUpperCase();
-  const name = (s.name || '').toLowerCase();
+  const type = (s?.stageType || s?.code || '').toUpperCase();
+  const name = (s?.name || '').toLowerCase();
   return ['WON', 'LOST', 'CANCELLED'].includes(type) || ['won', 'lost', 'cancelled', 'closure'].includes(name);
 };
 
+const isAnchorStage = (s) => isStartStage(s) || isTerminalStage(s);
+
 // ─── Sortable Row Component ──────────────────────────────────────────────────
-const SortableStageRow = ({ stage, onRemove, onEdit }) => {
-  const isSystem = stage.isSystem;
-  const isLocked = isSystem || isStartStage(stage) || isTerminalStage(stage);
+const SortableStageRow = ({ stage, onRemove, onEdit, canManageStages }) => {
+  const isAnchor = isAnchorStage(stage);
+  const isLocked = isAnchor || !canManageStages;
   const {
     attributes,
     listeners,
@@ -129,15 +131,17 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
         <span className="text-xs font-bold text-slate-700 mr-2">
           {stage.defaultProbabilityPct}%
         </span>
-        <button
-          type="button"
-          onClick={() => onEdit(stage)}
-          className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-          title="Edit Stage"
-        >
-          <Pencil size={14} strokeWidth={2.2} />
-        </button>
-        {!isSystem && (
+        {canManageStages && (
+          <button
+            type="button"
+            onClick={() => onEdit(stage)}
+            className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            title="Edit Stage"
+          >
+            <Pencil size={14} strokeWidth={2.2} />
+          </button>
+        )}
+        {canManageStages && !stage.isSystem && !isAnchor && (
           <button
             type="button"
             onClick={() => onRemove(stage.id)}
@@ -155,8 +159,13 @@ const SortableStageRow = ({ stage, onRemove, onEdit }) => {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export const OpportunityStageManagement = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const isSuperAdmin = user?.primaryRole === 'SUPER_ADMIN';
+
+  // RBAC Permission checks
+  const canManageStages = isSuperAdmin || hasPermission('manage:stages') || hasPermission('OPPORTUNITY_PIPELINE', 'canEdit');
+  const canCreateStages = isSuperAdmin || hasPermission('OPPORTUNITY_PIPELINE', 'canCreate');
+  const canDeleteStages = isSuperAdmin || hasPermission('OPPORTUNITY_PIPELINE', 'canDelete');
 
   // Filters & State
   const [companyFilter, setCompanyFilter] = useState('1');
@@ -255,6 +264,7 @@ export const OpportunityStageManagement = () => {
   };
 
   const handleDragEnd = ({ active, over }) => {
+    if (!canManageStages) return;
     if (!over || active.id === over.id) return;
 
     setSelectedStages((prev) => {
@@ -283,7 +293,7 @@ export const OpportunityStageManagement = () => {
 
   // Handlers for available stages (left panel selection)
   const toggleStageInSelection = (stage) => {
-    if (stage.isSystem) return;
+    if (!canManageStages || stage.isSystem || isAnchorStage(stage)) return;
 
     const isSelected = selectedStages.some((s) => s.id === stage.id);
     if (isSelected) {
@@ -305,6 +315,9 @@ export const OpportunityStageManagement = () => {
   };
 
   const handleRemoveFromOrder = (stageId) => {
+    if (!canManageStages) return;
+    const target = selectedStages.find((s) => s.id === stageId);
+    if (target?.isSystem || isAnchorStage(target)) return;
     setSelectedStages((prev) => prev.filter((s) => s.id !== stageId));
   };
 
@@ -564,22 +577,24 @@ export const OpportunityStageManagement = () => {
                   placeholder="Search stages..."
                 />
               </div>
-              <Button
-                onClick={handleAddClick}
-                variant="contained"
-                size="small"
-                startIcon={<Plus size={14} />}
-                sx={{
-                  height: '38px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--brand-500, #474ce1)',
-                  fontWeight: 700,
-                  px: 2.5,
-                  '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
-                }}
-              >
-                Add
-              </Button>
+              {canCreateStages && (
+                <Button
+                  onClick={handleAddClick}
+                  variant="contained"
+                  size="small"
+                  startIcon={<Plus size={14} />}
+                  sx={{
+                    height: '38px',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--brand-500, #474ce1)',
+                    fontWeight: 700,
+                    px: 2.5,
+                    '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
+                  }}
+                >
+                  Add
+                </Button>
+              )}
             </div>
           </div>
 
@@ -611,7 +626,7 @@ export const OpportunityStageManagement = () => {
                       <Checkbox
                         id={`stage-${stage.id}`}
                         checked={isSelected}
-                        disabled={stage.isSystem}
+                        disabled={!canManageStages || stage.isSystem || isAnchorStage(stage)}
                         onChange={() => toggleStageInSelection(stage)}
                         sx={{ width: 'auto', p: 0 }}
                       />
@@ -633,17 +648,20 @@ export const OpportunityStageManagement = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditClick(stage)}
-                        className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
-                        title="Edit Stage"
-                      >
-                        <Pencil size={14} strokeWidth={2.2} />
-                      </button>
-                      {!stage.isSystem && (
+                      {canManageStages && (
+                        <button
+                          onClick={() => handleEditClick(stage)}
+                          className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                          title="Edit Stage"
+                        >
+                          <Pencil size={14} strokeWidth={2.2} />
+                        </button>
+                      )}
+                      {canDeleteStages && !stage.isSystem && !isAnchorStage(stage) && (
                         <button
                           onClick={() => handleDeleteClick(stage)}
                           className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                          title="Delete Stage"
                         >
                           <Trash2 size={14} strokeWidth={2.2} />
                         </button>
@@ -672,27 +690,29 @@ export const OpportunityStageManagement = () => {
                 Drag to reorder stages. Qualification stays first; Closure, Lost, and Cancelled stay last.
               </p>
             </div>
-            <Button
-              type="button"
-              onClick={handleSave}
-              disabled={bulkUpdateMutation.isPending}
-              isLoading={bulkUpdateMutation.isPending}
-              variant="contained"
-              size="small"
-              startIcon={<Check size={15} strokeWidth={3} />}
-              sx={{
-                height: '38px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--brand-500, #474ce1)',
-                fontWeight: 700,
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
-                shrink: 0,
-                '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
-              }}
-            >
-              Save Stages
-            </Button>
+            {canManageStages && (
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={bulkUpdateMutation.isPending}
+                isLoading={bulkUpdateMutation.isPending}
+                variant="contained"
+                size="small"
+                startIcon={<Check size={15} strokeWidth={3} />}
+                sx={{
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--brand-500, #474ce1)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  shrink: 0,
+                  '&:hover': { backgroundColor: 'var(--brand-600, #242ae1)' }
+                }}
+              >
+                Save Stages
+              </Button>
+            )}
           </div>
 
           {/* DnD Area */}
@@ -720,6 +740,7 @@ export const OpportunityStageManagement = () => {
                       stage={firstStage}
                       onRemove={handleRemoveFromOrder}
                       onEdit={handleEditClick}
+                      canManageStages={canManageStages}
                     />
                   )}
 
@@ -732,6 +753,7 @@ export const OpportunityStageManagement = () => {
                           stage={stage}
                           onRemove={handleRemoveFromOrder}
                           onEdit={handleEditClick}
+                          canManageStages={canManageStages}
                         />
                       ))}
                     </div>
@@ -744,6 +766,7 @@ export const OpportunityStageManagement = () => {
                       stage={stage}
                       onRemove={handleRemoveFromOrder}
                       onEdit={handleEditClick}
+                      canManageStages={canManageStages}
                     />
                   ))}
                 </div>

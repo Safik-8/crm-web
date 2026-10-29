@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors
 } from '@dnd-kit/core';
@@ -35,6 +36,7 @@ export const PipelineStageBuilderPage = () => {
   const { id: pipelineId } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const queryClient = useQueryClient();
 
   const [pipeline, setPipeline] = useState(null);
   const [masterStages, setMasterStages] = useState([]);
@@ -236,10 +238,20 @@ export const PipelineStageBuilderPage = () => {
 
     setSaving(true);
     try {
+      const orderedIds = selectedStages.map(s => s.id);
       const payload = {
-        stageIds: selectedStages.map(s => s.id),
+        stageIds: orderedIds,
+        orderedStageIds: orderedIds,
       };
       await assignPipelineStages(pipelineId, payload);
+
+      // Invalidate relevant caches immediately so board & pipeline lists render fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['kanban'] }),
+        queryClient.invalidateQueries({ queryKey: ['pipelines'] }),
+        queryClient.invalidateQueries({ queryKey: ['pipeline', pipelineId] }),
+      ]);
+
       toast.success('Pipeline stages saved successfully!');
       navigate(`/pipelines/${pipelineId}/board`);
     } catch (err) {
