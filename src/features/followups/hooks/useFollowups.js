@@ -68,7 +68,7 @@ export const useCompleteFollowupMutation = () => {
       qc.invalidateQueries({ queryKey: ['leads'] });
       qc.invalidateQueries({ queryKey: ['notification-badge'] });
       qc.invalidateQueries({ queryKey: ['reminder-summary'] });
-      toast.success('Follow-up marked as completed');
+      toast.success('Follow-up completed successfully');
     },
     onError: (err) => toast.error(err?.message || 'Failed to complete follow-up'),
   });

@@ -1,6 +1,7 @@
 // src/features/followups/components/CompleteFollowupModal.jsx
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, CheckCircle } from 'lucide-react';
 import TextField from '../../../shared/components/elements/TextField';
 import Button from '../../../shared/components/elements/Button';
@@ -8,6 +9,9 @@ import { useCompleteFollowupMutation } from '../hooks/useFollowups';
 
 /**
  * CompleteFollowupModal — Modal to mark a follow-up as completed with optional completion notes.
+ *
+ * Rendered via ReactDOM.createPortal into document.body so it always
+ * sits above any drawer / slideover regardless of stacking context.
  *
  * @param {Object}   props
  * @param {Object}   props.followup - The followup record being completed
@@ -46,7 +50,8 @@ const CompleteFollowupModal = ({ followup, onClose, onSuccess }) => {
     inset: 0,
     background: 'rgba(15, 23, 42, 0.5)',
     backdropFilter: 'blur(4px)',
-    zIndex: 1300,
+    // Higher than DynamicFormSlideover (1300) so it always renders on top
+    zIndex: 1500,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -64,9 +69,9 @@ const CompleteFollowupModal = ({ followup, onClose, onSuccess }) => {
     overflow: 'hidden',
   };
 
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
+  const modal = (
+    <div style={overlayStyle}>
+      <div style={cardStyle}>
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -119,6 +124,8 @@ const CompleteFollowupModal = ({ followup, onClose, onSuccess }) => {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };
 
 export default CompleteFollowupModal;

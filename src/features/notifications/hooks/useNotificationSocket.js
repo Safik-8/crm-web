@@ -16,13 +16,32 @@ export const useNotificationSocket = () => {
 
     // 1. Handle incoming real-time notifications
     const handleNewNotification = (notification) => {
-      // If the notification was triggered by the current user themselves, skip popup toast
-      // (local UI mutations already display their own direct action toast)
-      const isSelfTriggered = notification.senderId && user?.id && Number(notification.senderId) === Number(user.id);
+      // Check if notification was triggered by the current user
+      const isSelfTriggered = Boolean(
+        notification.senderId &&
+        user?.id &&
+        Number(notification.senderId) === Number(user.id)
+      );
 
-      if (!isSelfTriggered) {
+      // Suppress popup toasts for routine follow-up lifecycle events
+      // (Schedule, Complete, Cancel) because local UI mutations already display
+      // their own clean green toast. These notifications are still preserved in
+      // the notification center drawer (bell icon).
+      const isFollowupActionToast =
+        notification.title === 'Follow-up Scheduled' ||
+        notification.title === 'Follow-up Completed' ||
+        notification.title === 'Follow-up Cancelled' ||
+        notification.notificationType === 'FOLLOWUP_COMPLETED' ||
+        (typeof notification.message === 'string' && (
+          notification.message.startsWith('[SCHEDULED]') ||
+          notification.message.startsWith('[COMPLETED]') ||
+          notification.message.startsWith('[CANCELLED]')
+        ));
+
+      // Only display the floating SaaS toast for external/system alerts,
+      // NOT for self-triggered actions or routine follow-up action broadcasts.
+      if (!isSelfTriggered && !isFollowupActionToast) {
         const targetUrl = resolveNotificationActionUrl(notification);
-        // Trigger SaaS-grade toast for alerts from other users, assignments, or background jobs
         toast(notification.title || 'New Notification', {
           description: notification.message,
           duration: 5000,
@@ -67,6 +86,5 @@ export const useNotificationSocket = () => {
       socket.off('notification:count', handleCountUpdate);
       socket.off('connect', handleReconnect);
     };
-  }, [socket, navigate]);
+  }, [socket, user?.id, navigate]);
 };
-
