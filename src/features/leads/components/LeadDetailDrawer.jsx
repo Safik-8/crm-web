@@ -473,7 +473,7 @@ const LeadDetailDrawer = ({ lead: initialLead, stageName, onClose, initialTab, i
                   </div>
                 )}
                 {activeTab === 'notes' && <div className="fade-in"><NotesTab leadId={lead.id} /></div>}
-                {activeTab === 'communications' && <div className="fade-in"><CommunicationsTab leadId={lead.id} /></div>}
+                {activeTab === 'communications' && <div className="fade-in"><CommunicationsTab leadId={lead.id} lead={lead} /></div>}
                 {activeTab === 'timeline' && <div className="fade-in"><TimelineTab leadId={lead.id} branchId={lead.branchId} /></div>}
                 {activeTab === 'stage-history' && <div className="fade-in"><StageHistoryTab leadId={lead.id} /></div>}
                 {activeTab === 'followups' && <div className="fade-in"><FollowupsTab leadId={lead.id} initialFilter={initialFilter} /></div>}

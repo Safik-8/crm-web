@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Phone, PhoneIncoming, PhoneOff, Mail, Calendar, MessageSquare, Trash2, Send, Clock, RotateCw, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  Phone, PhoneIncoming, PhoneOff, Mail, Calendar, MessageSquare,
+  Trash2, Send, Clock, RotateCw, CalendarClock, CalendarSync, Plus
+} from 'lucide-react';
 import Button from '../../../../shared/components/elements/Button';
 import { SearchableSelect } from '../../../../shared/components/elements/SearchableSelect';
 import {
@@ -7,17 +10,26 @@ import {
   useCreateCommunicationLogMutation,
   useDeleteCommunicationLogMutation
 } from '../../hooks/useLeads';
+import { useFollowupsByLeadQuery } from '../../../followups/hooks/useFollowups';
+import FollowupForm from '../../../followups/components/FollowupForm';
 
 /**
- * CommunicationsTab — Logs and displays communication history (Calls, Emails, Meetings, WhatsApp).
+ * CommunicationsTab — Logs and displays communication history (Calls, Emails, Meetings, WhatsApp),
+ * with a high-end, compact Next Follow-up banner allowing instant scheduling and rescheduling.
  *
  * @param {Object} props
  * @param {number} props.leadId - ID of the target lead
+ * @param {Object} [props.lead] - Target lead details
  */
-const CommunicationsTab = ({ leadId }) => {
+const CommunicationsTab = ({ leadId, lead = null }) => {
   const { data: logsRes, isLoading, refetch } = useLeadCommunicationLogsQuery(leadId);
   const createLogMutation = useCreateCommunicationLogMutation();
   const deleteLogMutation = useDeleteCommunicationLogMutation();
+
+  // Follow-ups query for upcoming schedule
+  const { data: followupsRes } = useFollowupsByLeadQuery(leadId);
+  const [isFollowupModalOpen, setIsFollowupModalOpen] = useState(false);
+  const [editingFollowup, setEditingFollowup] = useState(null);
 
   const [type, setType] = useState('CALL');
   const [callOutcome, setCallOutcome] = useState('RECEIVED'); // 'RECEIVED' | 'NOT_RECEIVED'
@@ -30,6 +42,48 @@ const CommunicationsTab = ({ leadId }) => {
   });
 
   const logs = logsRes?.data?.logs || logsRes?.logs || logsRes || [];
+
+  // Determine the next upcoming pending follow-up
+  const followupsList = followupsRes?.data?.followups || followupsRes?.followups || (Array.isArray(followupsRes) ? followupsRes : []);
+  const pendingFollowups = followupsList
+    .filter((f) => f.status === 'PENDING')
+    .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+  const nextFollowup = pendingFollowups[0] || null;
+
+  const formatFollowupDate = (dtString) => {
+    if (!dtString) return { text: '', isUrgent: false };
+    const d = new Date(dtString);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = d.toDateString() === tomorrow.toDateString();
+
+    const timeStr = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    if (isToday) {
+      return { text: `Today at ${timeStr}`, isUrgent: d < now, label: 'Today' };
+    }
+    if (isTomorrow) {
+      return { text: `Tomorrow at ${timeStr}`, isUrgent: false, label: 'Tomorrow' };
+    }
+    const dateStr = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    return { text: `${dateStr} • ${timeStr}`, isUrgent: d < now, label: dateStr };
+  };
+
+  const getFollowupTypeLabel = (fType) => {
+    switch (fType?.toUpperCase()) {
+      case 'CALL':     return '📞 Call';
+      case 'MEETING':  return '🤝 Meeting';
+      case 'DEMO':     return '🖥️ Demo';
+      case 'WHATSAPP': return '💬 WhatsApp';
+      case 'EMAIL':    return '✉️ Email';
+      case 'VISIT':    return '🏢 Visit';
+      default:         return fType || 'Follow-up';
+    }
+  };
+
+  const nextDateInfo = nextFollowup ? formatFollowupDate(nextFollowup.scheduledAt) : null;
 
   const handleLogCommunication = (e) => {
     e.preventDefault();
@@ -77,7 +131,65 @@ const CommunicationsTab = ({ leadId }) => {
   ];
 
   return (
-    <div className="space-y-4 flex flex-col h-full">
+    <div className="space-y-3.5 flex flex-col h-full">
+      {/* ── Top Micro Follow-up Bar (Clean, Aesthetic & Space-Efficient) ── */}
+      {nextFollowup ? (
+        <div className="flex items-center justify-between gap-2.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white border border-blue-200/70 shadow-2xs transition-all shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-6 w-6 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CalendarClock size={13} className="stroke-[2.5]" />
+            </div>
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap text-xs">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded">
+                Next Follow-up
+              </span>
+              <span className="font-bold text-slate-800">{getFollowupTypeLabel(nextFollowup.followupType)}</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-semibold text-slate-700">{nextDateInfo?.text}</span>
+              {nextDateInfo?.isUrgent && (
+                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 uppercase tracking-wider">
+                  Due Now
+                </span>
+              )}
+              {nextFollowup.notes && (
+                <span className="text-[11px] text-slate-400 truncate max-w-[160px] hidden md:inline" title={nextFollowup.notes}>
+                  — "{nextFollowup.notes}"
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingFollowup(nextFollowup);
+              setIsFollowupModalOpen(true);
+            }}
+            className="shrink-0 h-6.5 px-2.5 rounded-lg text-[11px] font-bold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50/80 hover:border-blue-400 hover:shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+          >
+            <CalendarSync size={11} className="stroke-[2.2]" />
+            <span>Reschedule</span>
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50/70 border border-slate-200/60 transition-all shrink-0">
+          <div className="flex items-center gap-2 text-slate-500 text-xs">
+            <Clock size={13} className="text-slate-400 stroke-[2]" />
+            <span className="font-medium text-slate-500 text-[11px]">No upcoming follow-up scheduled</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingFollowup(null);
+              setIsFollowupModalOpen(true);
+            }}
+            className="shrink-0 h-6.5 px-2.5 rounded-lg text-[11px] font-bold text-slate-700 bg-white border border-slate-200 hover:border-orange-300 hover:text-orange-600 hover:shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+          >
+            <Plus size={11} className="stroke-[2.5]" />
+            <span>Schedule Follow-up</span>
+          </button>
+        </div>
+      )}
+
       {/* Log Interaction Form */}
       <form onSubmit={handleLogCommunication} className="border border-slate-200 rounded-2xl p-3 bg-white space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -263,6 +375,17 @@ const CommunicationsTab = ({ leadId }) => {
           })
         )}
       </div>
+
+      {/* Follow-up Schedule / Reschedule Modal */}
+      {isFollowupModalOpen && (
+        <FollowupForm
+          leadId={leadId}
+          lead={lead}
+          followup={editingFollowup}
+          onClose={() => setIsFollowupModalOpen(false)}
+          onSuccess={() => setIsFollowupModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
