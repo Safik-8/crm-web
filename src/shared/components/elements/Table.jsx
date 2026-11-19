@@ -75,7 +75,7 @@ const Table = ({
     <tr>
       <td colSpan={columns.length} className="py-14 px-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-400 shadow-sm mx-auto">
+          <div className="h-16 w-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-400  mx-auto">
             <AlertCircle size={30} strokeWidth={1.5} />
           </div>
           <div>
@@ -113,7 +113,7 @@ const Table = ({
       <tr>
         <td colSpan={columns.length} className="py-14 px-6 text-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 shadow-sm mx-auto">
+            <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300  mx-auto">
               {typeof Icon === 'function' || typeof Icon === 'object' ? (
                 <Icon size={30} strokeWidth={1.5} />
               ) : (
@@ -141,7 +141,7 @@ const Table = ({
   };
 
   return (
-    <div className={`bg-white border border-slate-200 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white border border-slate-200  overflow-hidden ${className}`}>
       <div className="overflow-x-auto scrollbar-hide relative">
         <table className="w-full text-left border-collapse">
           <thead>

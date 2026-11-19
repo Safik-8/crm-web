@@ -100,7 +100,10 @@ export const useCreateLeadMutation = () => {
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED' && error?.code !== 'DUPLICATE_LEAD_WARNING') {
-        const msg = error?.message || 'Failed to create lead';
+        const detailMsg = Array.isArray(error?.details) && error.details.length > 0
+          ? error.details.map(d => d.message || `${d.field}: invalid`).join(', ')
+          : null;
+        const msg = detailMsg || error?.message || 'Failed to create lead';
         toast.error(msg);
       }
     },
@@ -121,7 +124,10 @@ export const useUpdateLeadMutation = () => {
     },
     onError: (error) => {
       if (error?.statusCode !== 403 && error?.code !== 'FORBIDDEN' && error?.code !== 'PERMISSION_DENIED' && error?.code !== 'DUPLICATE_LEAD_WARNING') {
-        const msg = error?.message || 'Failed to update lead';
+        const detailMsg = Array.isArray(error?.details) && error.details.length > 0
+          ? error.details.map(d => d.message || `${d.field}: invalid`).join(', ')
+          : null;
+        const msg = detailMsg || error?.message || 'Failed to update lead';
         toast.error(msg);
       }
     },

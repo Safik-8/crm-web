@@ -59,6 +59,11 @@ export const LeadEditModal = ({
   const [duplicateWarning, setDuplicateWarning] = useState(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
+  const isLeadConvertedOrClosed =
+    lead?.qualificationStatus === 'CONVERTED' ||
+    lead?.status?.code === 'CLOSED' ||
+    lead?.stage?.stageType === 'CLOSURE';
+
   // Sync values on open/lead change
   useEffect(() => {
     if (lead) {
@@ -201,6 +206,12 @@ export const LeadEditModal = ({
       errs.budget = 'Budget cannot be negative';
     }
 
+    // Check if status is CLOSED and notes is empty
+    const selectedStatus = statusesOptions.find((s) => String(s.id) === String(values.statusId));
+    if (selectedStatus?.name?.toLowerCase() === 'closed' && !values.notes?.trim()) {
+      errs.notes = 'A proper closure reason must be provided in notes when closing a lead';
+    }
+
     setErrors(errs);
 
     if (Object.keys(errs).length > 0) {
@@ -272,6 +283,13 @@ export const LeadEditModal = ({
       } else {
         setShowDuplicateDialog(false);
         setDuplicateWarning(null);
+        if (Array.isArray(err?.details) && err.details.length > 0) {
+          const fieldErrors = {};
+          err.details.forEach(d => {
+            if (d.field) fieldErrors[d.field] = d.message;
+          });
+          setErrors(prev => ({ ...prev, ...fieldErrors }));
+        }
       }
     }
   };
@@ -337,7 +355,7 @@ export const LeadEditModal = ({
         {/* Section 0: Scope Assignment (Super Admin & Company Admin Only) */}
         {(isSuperAdmin || isCompanyAdmin) && (
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+            <h3 className="text-xs  uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
               Territory Scope
             </h3>
 
@@ -392,7 +410,7 @@ export const LeadEditModal = ({
 
         {/* Section 1: Contact Details */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+          <h3 className="text-xs  uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
             Contact Details
           </h3>
 
@@ -457,7 +475,7 @@ export const LeadEditModal = ({
 
         {/* Section 2: Engagement parameters */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+          <h3 className="text-xs  uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
             Engagement & Routing
           </h3>
 
@@ -496,7 +514,7 @@ export const LeadEditModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               id="lead-status"
-              label="Status"
+              label={isLeadConvertedOrClosed ? "Status (Closed / Converted)" : "Status"}
               placeholder="Select Status..."
               allowEmptyOption
               value={values.statusId}
@@ -506,7 +524,7 @@ export const LeadEditModal = ({
               startIcon={Activity}
               searchable={true}
               isLoading={isLoadingFormData}
-              disabled={!targetCompanyId}
+              disabled={!targetCompanyId || isLeadConvertedOrClosed}
             />
 
             <SelectField
@@ -534,7 +552,7 @@ export const LeadEditModal = ({
 
             <SelectField
               id="lead-pipeline"
-              label="Kanban Board / Pipeline"
+              label={isLeadConvertedOrClosed ? "Kanban Board / Pipeline (Locked)" : "Kanban Board / Pipeline"}
               placeholder="Select Pipeline (Optional)..."
               allowEmptyOption
               value={selectedPipelineId}
@@ -544,7 +562,7 @@ export const LeadEditModal = ({
               }}
               options={pipelinesOptions}
               isLoading={isLoadingPipelines}
-              disabled={!targetCompanyId}
+              disabled={!targetCompanyId || isLeadConvertedOrClosed}
               startIcon={GitMerge}
               searchable={true}
             />
@@ -568,7 +586,7 @@ export const LeadEditModal = ({
 
         {/* Section 3: Geographic info */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+          <h3 className="text-xs  uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
             Location Info
           </h3>
 
@@ -602,7 +620,7 @@ export const LeadEditModal = ({
 
         {/* Section 4: Notes */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
+          <h3 className="text-xs  uppercase tracking-wider text-orange-500 border-b border-orange-100 pb-1.5 mb-4">
             Remarks / Notes
           </h3>
 
@@ -614,6 +632,7 @@ export const LeadEditModal = ({
             rows={3}
             value={values.notes}
             onChange={(val) => handleFieldChange('notes', val)}
+            errorText={errors.notes}
             startIcon={FileText}
           />
         </div>
@@ -621,12 +640,12 @@ export const LeadEditModal = ({
 
       {/* Duplicate Alert Overlay Dialog */}
       {showDuplicateDialog && duplicateWarning && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/60 ">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300">
             <div className="p-6">
               <div className="flex items-center gap-3 text-amber-600 mb-4">
                 <Compass className="w-6 h-6 stroke-[2]" />
-                <h3 className="font-bold text-lg text-slate-900 font-display">Duplicate Record Found</h3>
+                <h3 className=" text-lg text-slate-900 font-display">Duplicate Record Found</h3>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed mb-5">
                 A lead with this contact information already exists in your company registry:

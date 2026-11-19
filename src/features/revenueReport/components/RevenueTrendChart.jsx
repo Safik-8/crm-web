@@ -14,7 +14,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6 animate-pulse">
+      <div className="bg-white p-6 border border-slate-200/80  mb-6 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-1/4 mb-4"></div>
         <div className="h-64 bg-slate-100 rounded"></div>
       </div>
@@ -83,7 +83,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
   };
 
   return (
-    <div className="bg-white p-6 border border-slate-200/80 shadow-sm mb-6">
+    <div className="bg-white p-6 border border-slate-200/80  mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">Revenue Trend Analysis</h2>
@@ -101,7 +101,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
               onClick={() => setViewMode('monthly')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 viewMode === 'monthly'
-                  ? 'bg-white text-slate-900 shadow-sm'
+                  ? 'bg-white text-slate-900 '
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -111,7 +111,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
               onClick={() => setViewMode('quarterly')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 viewMode === 'quarterly'
-                  ? 'bg-white text-slate-900 shadow-sm'
+                  ? 'bg-white text-slate-900 '
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -124,7 +124,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('area')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'area' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'area' ? 'bg-white text-orange-600 ' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Area Chart"
             >
@@ -133,7 +133,7 @@ export const RevenueTrendChart = ({ trendData = {}, isLoading = false }) => {
             <button
               onClick={() => setChartType('bar')}
               className={`p-1.5 rounded-lg transition-colors ${
-                chartType === 'bar' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                chartType === 'bar' ? 'bg-white text-orange-600 ' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Bar Chart"
             >

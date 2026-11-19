@@ -72,7 +72,7 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
       render: (value, onChange, formValues, errorText) => (
         <div className="w-full mt-1">
           <span className={`block font-semibold text-[12px] mb-1.5 ml-0.5 ${errorText ? 'text-red-500' : 'text-slate-600'}`}>
-            Target Company <span className="text-orange-500 font-bold ml-0.5">*</span>
+            Target Company <span className="text-orange-500 font-medium ml-0.5">*</span>
           </span>
           <SearchableSelect
             options={companies}
@@ -99,7 +99,7 @@ const PipelineModal = ({ onClose, onSubmit, initial }) => {
       render: (value, onChange, formValues, errorText) => (
         <div className="w-full mt-1">
           <span className={`block font-semibold text-[12px] mb-1.5 ml-0.5 ${errorText ? 'text-red-500' : 'text-slate-600'}`}>
-            Target Branch <span className="text-orange-500 font-bold ml-0.5">*</span>
+            Target Branch <span className="text-orange-500 font-medium ml-0.5">*</span>
           </span>
           <SearchableSelect
             options={branches}
@@ -299,11 +299,11 @@ const PipelinesPage = () => {
       )}
 
       {/* Pipeline cards */}
-      <div className="grid p-4 bg-white border border-slate-200 shadow-sm grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid p-4 bg-white border border-slate-200 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {pipelines.map(pipeline => (
           <div key={pipeline.id}
             onClick={() => handleOpenBoard(pipeline.id)}
-            className="bg-white rounded border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group p-5 flex flex-col gap-4">
+            className="bg-white rounded border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group p-5 flex flex-col gap-4">
             {/* Card top */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
@@ -311,7 +311,7 @@ const PipelinesPage = () => {
                   <GitBranch size={20} className="text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-bold font-heading text-slate-900 leading-tight">{pipeline.name}</h3>
+                  <h3 className="font-medium font-heading text-slate-900 leading-tight">{pipeline.name}</h3>
                   <p className="text-xs text-slate-400 mt-0.5">
                     {pipeline.stages.length ?? pipeline._count?.stages ?? '–'} stages &middot; {pipeline.leadCount ?? pipeline._count?.leads ?? '0'} leads
                   </p>
@@ -339,7 +339,7 @@ const PipelinesPage = () => {
             {/* Card actions */}
             <div className="flex gap-2 pt-1 border-t border-slate-50" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => handleOpenBoard(pipeline.id)}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow shadow-primary/20">
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors shadow shadow-primary/20">
                 <Kanban size={14} /> Open Board
               </button>
               {canManageStages && (

@@ -124,7 +124,7 @@ export const SystemSettingsPage = () => {
 
   if (!canViewSettings) {
     return (
-      <div className="p-8 text-center bg-white border border-slate-200 rounded-none max-w-lg mx-auto my-12 shadow-xs space-y-4">
+      <div className="p-8 text-center bg-white border border-slate-200 rounded-none max-w-lg mx-auto my-12  space-y-4">
         <div className="w-12 h-12 rounded-[10px] bg-rose-50 text-rose-500 border border-rose-100 flex items-center justify-center mx-auto">
           <ShieldOff className="w-6 h-6" />
         </div>
@@ -141,7 +141,7 @@ export const SystemSettingsPage = () => {
   if (isSuperAdmin && !selectedCompanyId) {
     return (
       <div className="space-y-4 max-w-[1600px] mx-auto">
-        <div className="bg-white border border-slate-200 rounded-none p-12 text-center shadow-xs space-y-5">
+        <div className="bg-white border border-slate-200 rounded-none p-12 text-center  space-y-5">
           <div className="w-14 h-14 mx-auto rounded-[12px] bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center">
             <Building className="w-7 h-7" />
           </div>
@@ -213,7 +213,7 @@ export const SystemSettingsPage = () => {
 
   if (isError) {
     return (
-      <div className="p-8 text-center bg-rose-50 border border-rose-200 rounded-none max-w-lg mx-auto my-12 shadow-xs">
+      <div className="p-8 text-center bg-rose-50 border border-rose-200 rounded-none max-w-lg mx-auto my-12 ">
         <ShieldAlert className="w-10 h-10 text-rose-500 mx-auto mb-3" />
         <h3 className="text-base font-bold text-slate-900">Failed to Load Settings</h3>
         <p className="text-xs text-rose-600 mt-1">{error?.message || "An error occurred fetching configurations"}</p>
@@ -252,7 +252,7 @@ export const SystemSettingsPage = () => {
           />
         </div>
 
-        <div className="flex-1 min-w-0 w-full bg-white border border-slate-200 rounded-none p-5 sm:p-7 shadow-xs">
+        <div className="flex-1 min-w-0 w-full bg-white border border-slate-200 rounded-none p-5 sm:p-7 ">
           {isRestrictedTab ? (
             <div className="p-8 text-center bg-amber-50 border border-amber-200 rounded-none space-y-3">
               <ShieldAlert className="w-8 h-8 text-amber-500 mx-auto" />

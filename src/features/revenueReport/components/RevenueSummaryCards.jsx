@@ -8,7 +8,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white p-5 border border-slate-200/80 shadow-sm animate-pulse">
+          <div key={i} className="bg-white p-5 border border-slate-200/80 animate-pulse">
             <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
             <div className="h-8 bg-slate-200 rounded w-3/4 mb-2"></div>
             <div className="h-4 bg-slate-200 rounded w-1/3"></div>
@@ -105,7 +105,7 @@ export const RevenueSummaryCards = ({ metrics = {}, period = 'ALL', isLoading = 
         return (
           <div
             key={idx}
-            className="bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
+            className="bg-white p-5 border border-slate-200/80 hover:shadow transition-shadow duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3">

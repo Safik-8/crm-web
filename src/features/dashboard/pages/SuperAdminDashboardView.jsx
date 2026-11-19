@@ -119,7 +119,7 @@ const SuperAdminDashboardView = () => {
             navigate('/reports/sales-performance');
           }
         }}
-        className="bg-white border border-slate-200 shadow-sm p-5 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group"
+        className="bg-white border border-slate-200 p-5 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group"
       >
         <div>
           <p className="text-3xl font-extrabold text-blue-600">{metrics.conversionRate ?? 0}%</p>
@@ -135,7 +135,7 @@ const SuperAdminDashboardView = () => {
           (() => {
             const isManyBranches = topBranchChartData.length > 4;
             return (
-              <div className={`bg-white border border-slate-200 shadow-sm p-5 flex flex-col ${isManyBranches ? 'h-96' : 'h-80'}`}>
+              <div className={`bg-white border border-slate-200 p-5 flex flex-col ${isManyBranches ? 'h-96' : 'h-80'}`}>
                 <h3 className="text-sm font-bold text-slate-700 mb-4 shrink-0">Top Branches by Revenue</h3>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">
                   <CrmBarChart
@@ -155,7 +155,7 @@ const SuperAdminDashboardView = () => {
             );
           })()
         ) : (
-          <div className="bg-white border border-slate-200 shadow-sm p-5 flex flex-col h-80 justify-center items-center text-center">
+          <div className="bg-white border border-slate-200 p-5 flex flex-col h-80 justify-center items-center text-center">
             <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-3">
               <GitBranch size={22} />
             </div>

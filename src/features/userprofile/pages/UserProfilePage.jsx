@@ -526,7 +526,7 @@ const UserProfilePage = () => {
             title={profile?.profilePhoto ? 'Click to view photo in full size' : ''}
           >
             {profile?.profilePhoto ? (
-              <div className="relative overflow-hidden rounded-full ring-4 ring-orange-500/10 shadow-sm">
+              <div className="relative overflow-hidden rounded-full ring-4 ring-orange-500/10 ">
                 <img
                   src={profile.profilePhoto}
                   alt={fullName}
@@ -1057,7 +1057,7 @@ const UserProfilePage = () => {
                                 key={session.id}
                                 className={`flex items-start justify-between p-4 rounded-xl border transition-all duration-150 ${
                                   session.isCurrent
-                                    ? 'bg-emerald-50/15 border-emerald-200/50 shadow-sm'
+                                    ? 'bg-emerald-50/15 border-emerald-200/50 '
                                     : 'bg-white border-zinc-200/60 hover:border-zinc-300'
                                 }`}
                               >
@@ -1220,7 +1220,7 @@ const UserProfilePage = () => {
               ) : (
                 fullName.charAt(0).toUpperCase()
               )}
-              <label htmlFor="drawer-photo" className="absolute -bottom-1.5 -right-1.5 p-1 bg-white border border-zinc-200 text-zinc-500 rounded-lg hover:text-orange-500 transition-colors shadow-sm cursor-pointer">
+              <label htmlFor="drawer-photo" className="absolute -bottom-1.5 -right-1.5 p-1 bg-white border border-zinc-200 text-zinc-500 rounded-lg hover:text-orange-500 transition-colors  cursor-pointer">
                 <Camera size={14} />
               </label>
               <input 

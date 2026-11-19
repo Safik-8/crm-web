@@ -603,10 +603,10 @@ const ReportsPage = () => {
                           <Star className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
                         </button>
                       </div>
-                      <h3 className="font-heading font-extrabold text-slate-800 text-base mb-1 group-hover:text-primary transition-colors">
+                      <h3 className="font-heading font-medium text-slate-800 text-base mb-1 group-hover:text-primary transition-colors">
                         {report.reportName}
                       </h3>
-                      <p className="text-slate-500 text-xs font-semibold leading-relaxed mb-4">
+                      <p className="text-slate-500 text-xs font-medium leading-relaxed mb-4">
                         {report.description}
                       </p>
                     </div>

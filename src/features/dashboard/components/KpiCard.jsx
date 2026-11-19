@@ -41,9 +41,9 @@ const KpiCard = ({
           onClick(e);
         }
       }}
-      className={`bg-white border border-slate-200 shadow-sm p-4 flex flex-col justify-between h-full min-h-[130px] transition-all select-none ${
+      className={`bg-white border border-slate-200  p-4 flex flex-col justify-between h-full min-h-[130px] transition-all select-none ${
         isClickable
-          ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-slate-300 group'
+          ? 'cursor-pointer hover:shadow hover:-translate-y-0.5 hover:border-slate-300 group'
           : 'hover:border-slate-300'
       } ${c.border} ${isLoading ? 'animate-pulse' : ''}`}
     >
